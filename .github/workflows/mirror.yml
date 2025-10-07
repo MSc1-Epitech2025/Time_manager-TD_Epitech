@@ -1,22 +1,19 @@
-name: Mirror Repository
-
+name: mirror
 on:
   push:
     branches:
       - main
 
 jobs:
-  Push:
+  sync:
     runs-on: ubuntu-latest
-    if: github.repository == 'Gaspard-M19/Time_manager-TD_Epitech'
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Mirror to Epitech repository
-        uses: pixta-dev/repository-mirroring-action@v1
-        with:
-          target_repo_url: git@github.com:EpitechMscProPromo2027/T-DEV-700-project-PAR_36.git
-          ssh_private_key: ${{ secrets.SCHOOL }}`
+      - name: Push to school repo
+        run: |
+          git remote add school https://x-access-token:${{ secrets.SCHOOL }}git@github.com:EpitechMscProPromo2027/T-DEV-700-project-PAR_36.git
+          git push school main
