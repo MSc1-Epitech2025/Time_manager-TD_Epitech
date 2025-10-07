@@ -8,7 +8,7 @@ on:
 jobs:
   Push:
     runs-on: ubuntu-latest
-    if: github.repository == 'Time_manager-TD_Epitech'
+    if: github.repository == 'Gaspard-M19/Time_manager-TD_Epitech'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
