@@ -6,9 +6,22 @@ on:
       - main
 
 jobs:
-  Push:
+  mirror:
+    name: Mirror to Epitech Repo
     runs-on: ubuntu-latest
-    if: github.repository == 'MSc1-Epitech2025/Time_manager-TD_Epitech'
+    if: github.repository == 'name: Mirror Repository
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  mirror:
+    name: Mirror to Epitech Repo
+    runs-on: ubuntu-latest
+    if: github.repository == 'Gaspard-M19/Time_manager-TD_Epitech'
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -19,4 +32,16 @@ jobs:
         uses: pixta-dev/repository-mirroring-action@v1
         with:
           target_repo_url: git@github.com:EpitechMscProPromo2027/T-DEV-700-project-PAR_36.git
-          ssh_private_key: ${{ secrets.SCHOOL }}`
+          ssh_private_key: ${{ secrets.SCHOOL }}'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Mirror to Epitech repository
+        uses: pixta-dev/repository-mirroring-action@v1
+        with:
+          target_repo_url: git@github.com:EpitechMscProPromo2027/T-DEV-700-project-PAR_36.git
+          ssh_private_key: ${{ secrets.SCHOOL }}
