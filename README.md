@@ -33,7 +33,7 @@ docker compose up --build
 or via npm:
 
 ```bash
-npm run docker:up
+npm run docker:build
 ```
 
 ### ⏹️ Stop and remove containers
