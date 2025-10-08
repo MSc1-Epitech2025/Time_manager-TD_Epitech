@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.example.time_manager.TimeManagerApplicationTests" tests="1" skipped="0" failures="0" errors="0" timestamp="2025-10-08T12:11:18" hostname="7116ab9d2851" time="1.59">
+<testsuite name="com.example.time_manager.TimeManagerApplicationTests" tests="1" skipped="0" failures="0" errors="0" timestamp="2025-10-08T12:46:26" hostname="a47250594711" time="1.089">
   <properties/>
-  <testcase name="contextLoads()" classname="com.example.time_manager.TimeManagerApplicationTests" time="1.59"/>
-  <system-out><![CDATA[12:11:15.057 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.example.time_manager.TimeManagerApplicationTests]: TimeManagerApplicationTests does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
-12:11:15.366 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.example.time_manager.TimeManagerApplication for test class com.example.time_manager.TimeManagerApplicationTests
+  <testcase name="contextLoads()" classname="com.example.time_manager.TimeManagerApplicationTests" time="1.089"/>
+  <system-out><![CDATA[12:46:23.368 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.example.time_manager.TimeManagerApplicationTests]: TimeManagerApplicationTests does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+12:46:23.590 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.example.time_manager.TimeManagerApplication for test class com.example.time_manager.TimeManagerApplicationTests
 
   .   ____          _            __ _ _
  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
@@ -14,9 +14,9 @@
 
  :: Spring Boot ::                (v3.5.6)
 
-2025-10-08T12:11:16.517Z  INFO 1140 --- [time-manager] [    Test worker] c.e.t.TimeManagerApplicationTests        : Starting TimeManagerApplicationTests using Java 21.0.5 with PID 1140 (started by root in /app)
-2025-10-08T12:11:16.519Z  INFO 1140 --- [time-manager] [    Test worker] c.e.t.TimeManagerApplicationTests        : The following 1 profile is active: "dev"
-2025-10-08T12:11:18.761Z  INFO 1140 --- [time-manager] [    Test worker] c.e.t.TimeManagerApplicationTests        : Started TimeManagerApplicationTests in 2.897 seconds (process running for 5.003)
+2025-10-08T12:46:24.429Z  INFO 829 --- [time-manager] [    Test worker] c.e.t.TimeManagerApplicationTests        : Starting TimeManagerApplicationTests using Java 21.0.5 with PID 829 (started by root in /app)
+2025-10-08T12:46:24.431Z  INFO 829 --- [time-manager] [    Test worker] c.e.t.TimeManagerApplicationTests        : The following 1 profile is active: "dev"
+2025-10-08T12:46:26.352Z  INFO 829 --- [time-manager] [    Test worker] c.e.t.TimeManagerApplicationTests        : Started TimeManagerApplicationTests in 2.39 seconds (process running for 4.441)
 ]]></system-out>
   <system-err><![CDATA[Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build as described in Mockito's documentation: https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html#0.3
 WARNING: A Java agent has been loaded dynamically (/home/gradle/.gradle/caches/modules-2/files-2.1/net.bytebuddy/byte-buddy-agent/1.17.7/fbf3d6d649ed37fc9e9c59480a05be0a26e3c2da/byte-buddy-agent-1.17.7.jar)

@@ -45,6 +45,7 @@ services:
       - "${DB_PORT_HOST}:${DB_PORT_CONTAINER}"
     volumes:
       - mariadb_data:/var/lib/mysql
+      - ./backend/db:/docker-entrypoint-initdb.d
 
 volumes:
   mariadb_data:

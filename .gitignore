@@ -44,8 +44,7 @@ __screenshots__/
 Thumbs.db
 
 .env
-.gradle
-
-/build/
+backend/build/
+backend/.gradle/
 /out/
 /bin/
