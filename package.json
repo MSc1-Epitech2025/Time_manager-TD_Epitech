@@ -1,6 +1,9 @@
 {
   "scripts": {
     "docker:build": "docker compose up --build",
-    "docker:down": "docker-compose down -v"
+    "docker:down": "docker compose down -v"
+  },
+  "devDependencies": {
+    "@angular/cli": "^20.3.5"
   }
 }
