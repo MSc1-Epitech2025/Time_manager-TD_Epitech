@@ -1,0 +1,90 @@
+version: "3.9"
+
+services:
+  frontend:
+    build:
+      context: ${FRONTEND_CONTEXT}
+      dockerfile: ${FRONTEND_DOCKERFILE}
+    container_name: ${FRONTEND_CONTAINER_NAME}
+    ports:
+      - "${FRONTEND_PORT}:4200"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run start -- --host 0.0.0.0
+    environment:
+      - CHOKIDAR_USEPOLLING=${CHOKIDAR_USEPOLLING}
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ${BACKEND_CONTEXT}
+      dockerfile: ${BACKEND_DOCKERFILE}
+    container_name: ${BACKEND_CONTAINER_NAME}
+    ports:
+      - "${BACKEND_PORT}:8080"
+    volumes:
+      - ./backend:/app
+      - ~/.gradle:/home/gradle/.gradle
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+    depends_on:
+      - mariadb
+    restart: always
+
+  mariadb:
+    image: ${DB_IMAGE}
+    container_name: ${DB_CONTAINER_NAME}
+    restart: always
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME}
+    ports:
+      - "${DB_PORT_HOST}:${DB_PORT_CONTAINER}"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      - ./backend/db:/docker-entrypoint-initdb.d
+
+volumes:
+  mariadb_data:
+
+
+# docker-compose for production build with MariaDB
+#version: "3.9"
+#
+#services:
+#  backend:
+#    build:
+#      context: ./backend
+#      dockerfile: Dockerfile
+#    container_name: backend
+#    ports:
+#      - "8080:8080"
+#    environment:
+#      SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/time_manager
+#      SPRING_DATASOURCE_USERNAME: root
+#      SPRING_DATASOURCE_PASSWORD: root
+#      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+#      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.MariaDBDialect
+#    depends_on:
+#      - mariadb
+#    restart: always
+#
+#  mariadb:
+#    image: mariadb:11
+#    container_name: mariadb
+#    restart: always
+#    environment:
+#      MARIADB_ROOT_PASSWORD: root
+#      MARIADB_DATABASE: time_manager
+#      MARIADB_USER: app_user
+#      MARIADB_PASSWORD: app_pass
+#    ports:
+#      - "3307:3306"
+#    volumes:
+#      - mariadb_data:/var/lib/mysql
+#
+#volumes:
+#  mariadb_data:
