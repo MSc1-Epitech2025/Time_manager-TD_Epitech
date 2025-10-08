@@ -1,2 +1,7 @@
 .idea
 .env
+.gradle
+
+/build/
+/out/
+/bin/

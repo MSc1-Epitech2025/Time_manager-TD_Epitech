@@ -1,10 +1,7 @@
-# Time_manager-TD_Epitech
-
-### Backend Sprint Boot 
 # Read Me First
 The following was discovered as part of building this project:
 
-* The original package name 'com.example.Time Manager' is invalid and this project uses 'com.example.Time.Manager' instead.
+* The original package name 'com.example.time-manager' is invalid and this project uses 'com.example.time_manager' instead.
 
 # Getting Started
 
@@ -14,13 +11,6 @@ For further reference, please consider the following sections:
 * [Official Gradle documentation](https://docs.gradle.org)
 * [Spring Boot Gradle Plugin Reference Guide](https://docs.spring.io/spring-boot/3.5.6/gradle-plugin)
 * [Create an OCI image](https://docs.spring.io/spring-boot/3.5.6/gradle-plugin/packaging-oci-image.html)
-* [MariaDB Vector Database](https://docs.spring.io/spring-ai/reference/api/vectordbs/mariadb.html)
-* [Spring Data JPA](https://docs.spring.io/spring-boot/3.5.6/reference/data/sql.html#data.sql.jpa-and-spring-data)
-
-### Guides
-The following guides illustrate how to use some features concretely:
-
-* [Accessing Data with JPA](https://spring.io/guides/gs/accessing-data-jpa/)
 
 ### Additional Links
 These additional references should also help you:
