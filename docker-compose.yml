@@ -3,46 +3,46 @@ version: "3.9"
 services:
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: frontend
+      context: ${FRONTEND_CONTEXT}
+      dockerfile: ${FRONTEND_DOCKERFILE}
+    container_name: ${FRONTEND_CONTAINER_NAME}
     ports:
-      - "4200:4200"
+      - "${FRONTEND_PORT}:4200"
     volumes:
       - ./frontend:/app
       - /app/node_modules
     command: npm run start -- --host 0.0.0.0
     environment:
-      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_USEPOLLING=${CHOKIDAR_USEPOLLING}
     depends_on:
       - backend
     restart: unless-stopped
 
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: backend
+      context: ${BACKEND_CONTEXT}
+      dockerfile: ${BACKEND_DOCKERFILE}
+    container_name: ${BACKEND_CONTAINER_NAME}
     ports:
-      - "8080:8080"
+      - "${BACKEND_PORT}:8080"
     volumes:
       - ./backend:/app
       - ~/.gradle:/home/gradle/.gradle
     environment:
-      SPRING_PROFILES_ACTIVE: dev
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
     depends_on:
       - mariadb
     restart: always
 
   mariadb:
-    image: mariadb:11
-    container_name: mariadb
+    image: ${DB_IMAGE}
+    container_name: ${DB_CONTAINER_NAME}
     restart: always
     environment:
-      MARIADB_ROOT_PASSWORD: root
-      MARIADB_DATABASE: time_manager
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME}
     ports:
-      - "3307:3306"
+      - "${DB_PORT_HOST}:${DB_PORT_CONTAINER}"
     volumes:
       - mariadb_data:/var/lib/mysql
 
