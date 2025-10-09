@@ -49,3 +49,5 @@ backend/build/
 backend/.gradle/
 /out/
 /bin/
+
+.vscode
