@@ -28,7 +28,6 @@ services:
     volumes:
       - ./backend:/app
       - gradle_cache:/home/gradle/.gradle
-      
     command: gradle bootRun --no-daemon
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-dev}
@@ -50,11 +49,23 @@ services:
     volumes:
       - mariadb_data:/var/lib/mysql
       - ./backend/db:/docker-entrypoint-initdb.d
-    
+
+  reverse-proxy:
+    image: nginx:latest
+    container_name: nginx_reverse_proxy
+    ports:
+      - "3030:80"
+    volumes:
+      - ./reverse-proxy/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+      - backend
+    restart: always
+
+
 volumes:
   mariadb_data:
   gradle_cache:
-
 
 
 # docker-compose for production build with MariaDB
