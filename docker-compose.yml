@@ -31,7 +31,12 @@ services:
       
     command: gradle bootRun --no-daemon
     environment:
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-dev}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      DB_CONTAINER_NAME: ${DB_CONTAINER_NAME:-mariadb}
+      DB_PORT_CONTAINER: ${DB_PORT_CONTAINER:-3306}
+      DB_NAME: ${DB_NAME:-time_manager}
+      DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+      
     depends_on:
       - mariadb
     restart: always
