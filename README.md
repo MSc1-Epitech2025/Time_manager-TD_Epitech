@@ -7,6 +7,7 @@
 * a **frontend built with Angular** (TypeScript + SCSS + live reload)
 * a **backend built with Spring Boot** (Gradle, Java 21)
 * a **database powered by MariaDB**
+* a **Reverse Proxy** (Nginx)
 
 Everything runs inside **Docker containers** to ensure a consistent and reproducible development environment.
 
@@ -58,11 +59,12 @@ docker compose down -v
 
 ## 🌐 Service Access
 
-| Service                               | URL                                            | Description                                 |
-| ------------------------------------- | ---------------------------------------------- | ------------------------------------------- |
-| **Frontend (Angular)**                | [http://localhost:4200](http://localhost:4200) | Angular web app (dev mode with live reload) |
-| **Backend (Spring Boot)**             | [http://localhost:8080](http://localhost:8080) | REST API server                             |
-| **Database (MariaDB)**                | `localhost:3307`                               | SQL access (user: `root`, password: `root`) |
+| Service                   | URL                                            | Description                                      |
+|---------------------------|------------------------------------------------|--------------------------------------------------|
+| **Frontend (Angular)**    | [http://localhost:4200](http://localhost:4200) | Angular web app (dev mode with live reload)      |
+| **Backend (Spring Boot)** | [http://localhost:8080](http://localhost:8080) | REST API server                                  |
+| **Database (MariaDB)**    | `localhost:3307`                               | SQL access (user: `root`, password: `root`)      |
+| **Reverse proxy (Nginx)** | [http://localhost:3030](http://localhost:3030) | Reserve proxy for secure api call make by client |
 ---
 
 ## 🧱 Project Structure
@@ -79,6 +81,9 @@ Time_manager-TD_Epitech/
 │   ├── Dockerfile
 │   ├── package.json
 │   └── src/
+│
+├── reverse-proxy/               # Reverse proxy (nginx)
+│   └── nginx.conf
 │
 ├── docker-compose.yml      # Docker orchestration
 ├── .env                    # Environment variables
@@ -175,14 +180,3 @@ You can enable it later by uncommenting the *production build* section and creat
   ```bash
   mysql -h 127.0.0.1 -P 3307 -u root -p
   ```
-
----
-
-## ✨ Possible Improvements
-
-* Add **Adminer** or **phpMyAdmin** to visualize and manage the database
-* Implement **unit tests** (Angular & JUnit)
-* Set up **CI/CD with GitHub Actions** for automatic build and deployment
-* Add **production build optimizations** (minified assets, cache headers, etc.)
-
----
