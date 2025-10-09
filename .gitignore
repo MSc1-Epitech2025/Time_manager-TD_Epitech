@@ -43,6 +43,7 @@ __screenshots__/
 .DS_Store
 Thumbs.db
 
+.angular
 .env
 backend/build/
 /build/
