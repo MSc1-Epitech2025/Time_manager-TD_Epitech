@@ -9,7 +9,7 @@ RUN gradle dependencies --no-daemon || true
 
 EXPOSE 8080
 
-CMD bash -c "gradle build --continuous --no-daemon & gradle bootRun --no-daemon"
+CMD ["gradle", "bootRun", "--no-daemon"]
 
 
 # DockerFile for production build

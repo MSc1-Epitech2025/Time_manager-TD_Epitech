@@ -58,14 +58,16 @@ CREATE TABLE work_schedules ( -- planning
 );
 
 CREATE TABLE absence (
-                         id INT PRIMARY KEY AUTO_INCREMENT,
-                         user_id CHAR(36) NOT NULL,
-                         day_of_week ENUM('MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN') NOT NULL,
-                         type ENUM('SICK', 'VACATION', 'PERSONAL', 'FORMATION') NOT NULL,
-                         period ENUM('AM', 'PM') NOT NULL,
-                         start_time TIME NOT NULL,
-                         end_time TIME NOT NULL,
-                         reason TEXT,
-                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id CHAR(36) NOT NULL,
+    absence_date DATE NOT NULL,
+    type ENUM('SICK', 'VACATION', 'PERSONAL', 'FORMATION') NOT NULL,
+    period ENUM('AM', 'PM') NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    reason TEXT,
+    supporting_document_URL VARCHAR(500),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
