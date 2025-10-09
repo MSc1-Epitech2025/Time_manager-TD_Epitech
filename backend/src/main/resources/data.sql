@@ -54,11 +54,11 @@ VALUES
 -- ==========================================================
 -- ABSENCE (simulate a sick leave)
 -- ==========================================================
-INSERT INTO absence (user_id, day_of_week, type, period, start_time, end_time, reason)
+INSERT INTO absence (user_id, absence_date, type, period, start_time, end_time, reason)
 VALUES
-  ((SELECT id FROM users WHERE email = 'clement.hamimi@epitech.eu'), 'TUE', 'SICK', 'AM', '09:00:00', '12:00:00', 'Flu symptoms'),
-  ((SELECT id FROM users WHERE email = 'clement.hamimi@epitech.eu'), 'TUE', 'SICK', 'PM', '13:00:00', '17:00:00', 'Doctor appointment'),
-  ((SELECT id FROM users WHERE email = 'armand.braud@epitech.eu'), 'FRI', 'PERSONAL', 'PM', '13:00:00', '17:00:00', 'Family event');
+  ((SELECT id FROM users WHERE email = 'clement.hamimi@epitech.eu'), '2025-10-07', 'SICK', 'AM', '09:00:00', '12:00:00', 'Flu symptoms'),
+  ((SELECT id FROM users WHERE email = 'clement.hamimi@epitech.eu'), '2025-10-07', 'SICK', 'PM', '13:00:00', '17:00:00', 'Doctor appointment'),
+  ((SELECT id FROM users WHERE email = 'armand.braud@epitech.eu'), '2025-10-10', 'PERSONAL', 'PM', '13:00:00', '17:00:00', 'Family event');
 
 
 -- ==========================================================
