@@ -2,6 +2,7 @@ FROM gradle:8.10-jdk21
 
 WORKDIR /app
 
+COPY src/main/resources /app/src/main/resources
 COPY build.gradle settings.gradle gradlew gradlew.bat ./
 COPY gradle gradle
 

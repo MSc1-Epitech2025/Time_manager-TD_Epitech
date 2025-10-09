@@ -28,6 +28,7 @@ services:
     volumes:
       - ./backend:/app
       - gradle_cache:/home/gradle/.gradle
+      
     command: gradle bootRun --no-daemon
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-dev}
@@ -49,7 +50,7 @@ services:
     volumes:
       - mariadb_data:/var/lib/mysql
       - ./backend/db:/docker-entrypoint-initdb.d
-
+    
 volumes:
   mariadb_data:
   gradle_cache:
