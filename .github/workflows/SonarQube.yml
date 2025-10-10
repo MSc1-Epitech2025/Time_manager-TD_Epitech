@@ -1,5 +1,3 @@
-# todo: disabled for the moment, need to remake sonarqube in localhost on docker (view issue on project), i will do it later
-
 #name: SonarQube
 #
 #on:
