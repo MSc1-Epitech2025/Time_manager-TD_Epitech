@@ -1,1 +1,51 @@
-/* You can add global styles to this file, and also import other style files */
+@use '@angular/material' as mat;
+
+/* ===== Variables de ta palette (CSS vars) ===== */
+:root {
+  --c-primary: #7C3AED;   /* violet intense */
+  --c-secondary: #A78BFA; /* mauve clair */
+  --c-accent: #EC4899;    /* fuchsia */
+  --c-bg: #F9FAFB;        /* fond clair */
+  --c-card: #FFFFFF;
+  --c-text: #1E1E28;
+  --c-muted: #6B7280;
+  --c-border: #E4E4E7;
+}
+.theme-dark {
+  --c-primary: #A78BFA;
+  --c-secondary: #C084FC;
+  --c-accent: #F472B6;
+  --c-bg: #0F0F1A;
+  --c-card: #1F1E2E;
+  --c-text: #F1EE2E; /* contraste doux > on utilisera surtout Material pour le texte */
+  --c-text: #F8FAFC; /* lisibilité */
+  --c-muted: #A1A1AA;
+  --c-border: #27272A;
+}
+
+/* ===== Thèmes Angular Material (M3) ===== */
+@include mat.core();
+
+$theme-light: mat.define-theme((
+  color: (theme-type: light, primary: mat.$magenta-palette, tertiary: mat.$violet-palette),
+  density: (scale: 0)
+));
+$theme-dark: mat.define-theme((
+  color: (theme-type: dark, primary: mat.$magenta-palette, tertiary: mat.$violet-palette),
+  density: (scale: 0)
+));
+
+/* On applique tout Material sous un wrapper de classe */
+.theme-light { @include mat.all-component-themes($theme-light); background: var(--c-bg); color: var(--c-text); }
+.theme-dark  { @include mat.all-component-themes($theme-dark);  background: var(--c-bg); color: var(--c-text); }
+
+/* Police globale (optionnel) */
+:root { font-family: Inter, system-ui, -apple-system, Roboto, Arial, sans-serif; }
+
+/* Améliorations Material */
+.mat-mdc-form-field { --mdc-outlined-text-field-container-shape: 14px; }
+button[mat-stroked-button], button[mat-flat-button] { border-radius: 14px !important; height: 44px; font-weight: 700; }
+
+html, body { height: 100%; }
+body { margin: 0; }
+* { box-sizing: border-box; }

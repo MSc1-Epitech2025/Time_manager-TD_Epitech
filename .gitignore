@@ -11,6 +11,7 @@
 ./node_modules
 npm-debug.log
 yarn-error.log
+/frontend/node_modules
 
 # IDEs and editors
 .idea/
@@ -52,3 +53,5 @@ backend/.gradle/
 /bin/
 
 .vscode
+
+/frontend/.angular
