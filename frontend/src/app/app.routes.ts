@@ -1,15 +1,22 @@
 import { Routes } from '@angular/router';
-import { authCanMatch, authCanActivate } from './core/auth-guard';
+import { authCanMatch, authCanActivate } from './core/auth-guard'; // <- même nom que ton fichier
 
 export const routes: Routes = [
-    // Page de connexion
+    // login
     {
         path: 'login',
-        loadComponent: () =>
-            import('./pages/login/login').then((m) => m.LoginComponent),
+        loadComponent: () => import('./pages/login/login').then(m => m.LoginComponent),
     },
-
-    // Dashboard employé
+    // employer test
+    {
+        path: 'employer',
+        canMatch: [authCanMatch],
+        canActivate: [authCanActivate],
+        loadComponent: () => import('./pages/employer/employer').then(m => m.EmployerComponent),
+    },
+    { path: '', pathMatch: 'full', redirectTo: 'employer' },
+    { path: '**', redirectTo: 'login' },
+    // employee dashboard
     {
         path: 'dashboard',
         loadComponent: () =>

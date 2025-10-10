@@ -1,1 +1,28 @@
-<p>employer works!</p>
+<main class="container">
+    <mat-card class="card">
+        <mat-card-header>
+            <div class="title">
+                <h1>Espace employé</h1>
+                <p class="subtitle">{{ now | date: 'EEEE d MMMM' }}</p>
+            </div>
+            <span class="spacer"></span>
+            <button mat-stroked-button color="primary" (click)="logout()">Se déconnecter</button>
+        </mat-card-header>
+
+        <mat-divider></mat-divider>
+
+        <mat-card-content>
+            <section class="elapsed">
+                <div class="label">Temps écoulé aujourd'hui</div>
+                <div class="time">
+                    {{ formatSeconds((elapsed$ | async) ?? 0) }}
+                </div>
+            </section>
+
+            <section class="actions">
+                <button mat-raised-button color="primary" (click)="start()">Démarrer</button>
+                <button mat-button color="warn" (click)="stop()">Arrêter</button>
+            </section>
+        </mat-card-content>
+    </mat-card>
+</main>

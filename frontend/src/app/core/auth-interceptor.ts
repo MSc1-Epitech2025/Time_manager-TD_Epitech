@@ -1,9 +1,8 @@
-// src/app/core/auth.interceptor.ts
 import { Injectable, inject } from '@angular/core';
-import { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest, HttpErrorResponse } from '@angular/common/http';
+import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpErrorResponse } from '@angular/common/http';
 import { Observable, catchError, throwError } from 'rxjs';
-import { AuthService } from './auth';
 import { Router } from '@angular/router';
+import { AuthService } from './auth';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
@@ -18,7 +17,7 @@ export class AuthInterceptor implements HttpInterceptor {
       catchError((err: HttpErrorResponse) => {
         if (err.status === 401) {
           this.auth.logout();
-          this.router.navigate(['/login']);
+          this.router.navigate(['/login'], { queryParams: { reason: 'expired' } });
         }
         return throwError(() => err);
       })

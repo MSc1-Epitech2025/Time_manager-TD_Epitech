@@ -1,12 +1,14 @@
-// src/app/core/auth.guard.ts
 import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
+import { CanActivateFn, CanMatchFn, Router, UrlTree } from '@angular/router';
 import { AuthService } from './auth';
 
-export const authGuard: CanActivateFn = () => {
+function checkAuth(): boolean | UrlTree {
   const auth = inject(AuthService);
   const router = inject(Router);
-  if (auth.isAuthenticated) return true;
-  router.navigate(['/login']);
-  return false;
-};
+  return auth.isAuthenticated
+    ? true
+    : router.createUrlTree(['/login'], { queryParams: { reason: 'unauth' } });
+}
+
+export const authCanMatch: CanMatchFn = () => checkAuth();
+export const authCanActivate: CanActivateFn = () => checkAuth();
