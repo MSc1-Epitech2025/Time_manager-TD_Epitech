@@ -2,7 +2,7 @@ name: Force update main from dev
 
 on:
   schedule:
-    - cron: "0 */8 * * *" # toutes les 8 heures
+    - cron: "0 */8 * * *" # toutes les 8 heure
   workflow_dispatch: {}
 
 jobs:
