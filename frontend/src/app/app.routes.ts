@@ -1,11 +1,12 @@
 import { Routes } from '@angular/router';
+import { authCanMatch, authCanActivate } from './core/auth-guard';
 
 export const routes: Routes = [
     // Page de connexion
     {
         path: 'login',
         loadComponent: () =>
-            import('./pages/login/login').then(m => m.LoginComponent),
+            import('./pages/login/login').then((m) => m.LoginComponent),
     },
 
     // Dashboard employé
@@ -43,4 +44,17 @@ export const routes: Routes = [
     // Redirections
     { path: '', pathMatch: 'full', redirectTo: 'login' },
     { path: '**', redirectTo: 'login' },
+
+
+    {
+        path: 'employee',
+        canMatch: [authCanMatch],       // empêche le chargement si non-auth
+        canActivate: [authCanActivate], // ceinture + bretelles
+        loadComponent: () =>
+            import('./pages/employer/employer').then((m) => m.EmployerComponent),
+    },
+
+    // Par défaut on va sur la page privée : si pas de token, le guard renvoie vers /login
+    { path: '', pathMatch: 'full', redirectTo: 'employer' },
+    { path: '**', redirectTo: 'employer' },
 ];
