@@ -66,7 +66,6 @@ CREATE TABLE absence (
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
     reason TEXT,
-    supporting_document_URL VARCHAR(500),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
