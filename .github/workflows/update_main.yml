@@ -1,9 +1,6 @@
 name: Force update main from dev
 
 on:
-  push:
-    branches:
-      - 47-job-update-main
   schedule:
     - cron: "0 */8 * * *"
   workflow_dispatch:
