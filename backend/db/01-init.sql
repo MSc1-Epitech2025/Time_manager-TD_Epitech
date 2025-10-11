@@ -57,8 +57,9 @@ CREATE TABLE work_schedules ( -- planning
                                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- absence
 CREATE TABLE absence (
-    id SERIAL PRIMARY KEY,
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id CHAR(36) NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
@@ -71,14 +72,15 @@ CREATE TABLE absence (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB;
 
+-- absence_days
 CREATE TABLE absence_days (
-    id SERIAL PRIMARY KEY,
-    absence_id INT NOT NULL,
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    absence_id INT UNSIGNED NOT NULL,
     absence_date DATE NOT NULL,
     period ENUM('AM', 'PM', 'FULL_DAY') DEFAULT 'FULL_DAY',
     start_time TIME,
     end_time TIME,
     FOREIGN KEY (absence_id) REFERENCES absence(id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB;

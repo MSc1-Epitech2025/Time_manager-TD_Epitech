@@ -1,4 +1,3 @@
-
 -- ==========================================================
 -- USERS
 -- ==========================================================
@@ -10,7 +9,7 @@ VALUES
   (UUID(), 'Armand', 'Braud', 'armand.braud@epitech.eu', '0600000004', JSON_ARRAY('employee'), 'QA Engineer', '$2b$12$Wc2LamaRHkps9PShOR1Mq.xYYm2geR.RCDLVzhe3Zg.cBz7QFjSHS');
 
 -- ==========================================================
--- TEAMS
+-- TEAMS  (IDs fixés pour correspondre aux affectations)
 -- ==========================================================
 INSERT INTO teams (id, name, description)
 VALUES
@@ -19,47 +18,69 @@ VALUES
 
 -- ==========================================================
 -- TEAM MEMBERS
--- Gaspard (manager) manages Backend Team, Clement & Armand are members
 -- ==========================================================
-INSERT INTO team_members (id, team_id, user_id)
+INSERT INTO team_members (team_id, user_id)
 VALUES
-  (1, 1, (SELECT id FROM users WHERE email = 'gaspard.malmon@epitech.eu')), -- Gaspard (manager)
-  (2, 1, (SELECT id FROM users WHERE email = 'clement.hamimi@epitech.eu')), -- Clement
-  (3, 1, (SELECT id FROM users WHERE email = 'armand.braud@epitech.eu')); -- Armand
+  (1, (SELECT id FROM users WHERE email = 'gaspard.malmon@epitech.eu')), -- Gaspard (manager)
+  (1, (SELECT id FROM users WHERE email = 'clement.hamimi@epitech.eu')), -- Clement
+  (1, (SELECT id FROM users WHERE email = 'armand.braud@epitech.eu'));   -- Armand
 
 -- ==========================================================
 -- CLOCKS (check-in/out)
 -- ==========================================================
-INSERT INTO clocks (id, user_id, kind, `at`)
+INSERT INTO clocks (user_id, kind, `at`)
 VALUES
-  (1, (SELECT id FROM users WHERE email = 'clement.hamimi@epitech.eu'), 'IN',  '2025-10-08 08:59:00'),
-  (2, (SELECT id FROM users WHERE email = 'clement.hamimi@epitech.eu'), 'OUT', '2025-10-08 17:12:00'),
-  (3, (SELECT id FROM users WHERE email = 'armand.braud@epitech.eu'), 'IN',  '2025-10-08 09:05:00'),
-  (4, (SELECT id FROM users WHERE email = 'armand.braud@epitech.eu'), 'OUT', '2025-10-08 16:45:00');
+  ((SELECT id FROM users WHERE email = 'clement.hamimi@epitech.eu'), 'IN',  '2025-10-08 08:59:00'),
+  ((SELECT id FROM users WHERE email = 'clement.hamimi@epitech.eu'), 'OUT', '2025-10-08 17:12:00'),
+  ((SELECT id FROM users WHERE email = 'armand.braud@epitech.eu'),  'IN',  '2025-10-08 09:05:00'),
+  ((SELECT id FROM users WHERE email = 'armand.braud@epitech.eu'),  'OUT', '2025-10-08 16:45:00');
 
 -- ==========================================================
 -- WORK SCHEDULES (weekly planning)
 -- ==========================================================
-INSERT INTO work_schedules (id, user_id, day_of_week, period, start_time, end_time)
+INSERT INTO work_schedules (user_id, day_of_week, period, start_time, end_time)
 VALUES
-  (1, (SELECT id FROM users WHERE email = 'clement.hamimi@epitech.eu'), 'MON', 'AM', '09:00:00', '12:00:00'),
-  (2, (SELECT id FROM users WHERE email = 'clement.hamimi@epitech.eu'), 'MON', 'PM', '13:00:00', '17:00:00'),
-  (3, (SELECT id FROM users WHERE email = 'armand.braud@epitech.eu'), 'MON', 'AM', '09:00:00', '12:00:00'),
-  (4, (SELECT id FROM users WHERE email = 'armand.braud@epitech.eu'), 'MON', 'PM', '13:30:00', '17:30:00');
+  ((SELECT id FROM users WHERE email = 'clement.hamimi@epitech.eu'), 'MON', 'AM', '09:00:00', '12:00:00'),
+  ((SELECT id FROM users WHERE email = 'clement.hamimi@epitech.eu'), 'MON', 'PM', '13:00:00', '17:00:00'),
+  ((SELECT id FROM users WHERE email = 'armand.braud@epitech.eu'),  'MON', 'AM', '09:00:00', '12:00:00'),
+  ((SELECT id FROM users WHERE email = 'armand.braud@epitech.eu'),  'MON', 'PM', '13:30:00', '17:30:00');
 
 -- ==========================================================
--- ABSENCE (simulate a sick leave)
+-- ABSENCE + ABSENCE_DAYS (adaptation au nouveau modèle)
 -- ==========================================================
-INSERT INTO absence (id, user_id, absence_date, type, period, start_time, end_time, reason)
+-- Clément : 2025-10-07 SICK (AM + PM)
+INSERT INTO absence (user_id, start_date, end_date, type, reason)
 VALUES
-  (1, (SELECT id FROM users WHERE email = 'clement.hamimi@epitech.eu'), '2025-10-07', 'SICK', 'AM', '09:00:00', '12:00:00', 'Flu symptoms'),
-  (2, (SELECT id FROM users WHERE email = 'clement.hamimi@epitech.eu'), '2025-10-07', 'SICK', 'PM', '13:00:00', '17:00:00', 'Doctor appointment'),
-  (3, (SELECT id FROM users WHERE email = 'armand.braud@epitech.eu'), '2025-10-10', 'PERSONAL', 'PM', '13:00:00', '17:00:00', 'Family event');
+  ((SELECT id FROM users WHERE email = 'clement.hamimi@epitech.eu'),
+   '2025-10-07', '2025-10-07', 'SICK',
+   'Flu symptoms in the morning; doctor appointment in the afternoon');
+SET @abs_clement := LAST_INSERT_ID();
+
+INSERT INTO absence_days (absence_id, absence_date, period, start_time, end_time)
+VALUES
+  (@abs_clement, '2025-10-07', 'AM', '09:00:00', '12:00:00'),
+  (@abs_clement, '2025-10-07', 'PM', '13:00:00', '17:00:00');
+
+-- Armand : 2025-10-10 PERSONAL (PM)
+INSERT INTO absence (user_id, start_date, end_date, type, reason)
+VALUES
+  ((SELECT id FROM users WHERE email = 'armand.braud@epitech.eu'),
+   '2025-10-10', '2025-10-10', 'PERSONAL',
+   'Family event');
+SET @abs_armand := LAST_INSERT_ID();
+
+INSERT INTO absence_days (absence_id, absence_date, period, start_time, end_time)
+VALUES
+  (@abs_armand, '2025-10-10', 'PM', '13:00:00', '17:00:00');
 
 -- ==========================================================
 -- REPORTS (manager notifications)
 -- ==========================================================
-INSERT INTO reports (id, manager_id, title, body)
+INSERT INTO reports (manager_id, title, body)
 VALUES
-  (1, (SELECT id FROM users WHERE email = 'gaspard.malmon@epitech.eu'), 'Absence report: Clément', 'Clément was absent on Tuesday due to sickness.'),
-  (2, (SELECT id FROM users WHERE email = 'gaspard.malmon@epitech.eu'), 'Late arrival: Armand', 'Armand checked in at 09:05 on Monday, slightly late.');
+  ((SELECT id FROM users WHERE email = 'gaspard.malmon@epitech.eu'),
+   'Absence report: Clément',
+   'Clément was absent on Tuesday due to sickness.'),
+  ((SELECT id FROM users WHERE email = 'gaspard.malmon@epitech.eu'),
+   'Late arrival: Armand',
+   'Armand checked in at 09:05 on Monday, slightly late.');
