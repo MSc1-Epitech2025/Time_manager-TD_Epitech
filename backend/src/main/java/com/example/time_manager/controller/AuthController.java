@@ -1,10 +1,12 @@
 package com.example.time_manager.controller;
 
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.web.bind.annotation.*;
 
 import com.example.time_manager.dto.AuthRequest;
 import com.example.time_manager.dto.AuthResponse;
@@ -18,19 +20,24 @@ public class AuthController {
 
     private final UserService userService;
     private final JwtUtil jwtUtil;
+    private final AuthenticationManager authManager;
 
-    public AuthController(UserService userService, JwtUtil jwtUtil) {
+    public AuthController(UserService userService, JwtUtil jwtUtil, AuthenticationManager authManager) {
         this.userService = userService;
         this.jwtUtil = jwtUtil;
+        this.authManager = authManager;
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody AuthRequest request) {
-        if (userService.validateUser(request.getEmail(), request.getPassword())) {
+    public ResponseEntity<?> login(@RequestBody @Valid AuthRequest request) {
+        try {
+            authManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+            );
             String token = jwtUtil.generateToken(request.getEmail());
             return ResponseEntity.ok(new AuthResponse(token));
-        } else {
-            return ResponseEntity.status(401).body("Invalid email or password");
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }
     }
 
@@ -38,6 +45,10 @@ public class AuthController {
     public ResponseEntity<?> register(@RequestBody User user) {
         if (userService.findByEmail(user.getEmail()).isPresent()) {
             return ResponseEntity.badRequest().body("Email already exists");
+        }
+        // rôle par défaut si absent (évite NOT NULL côté DB)
+        if (user.getRole() == null || user.getRole().isBlank()) {
+            user.setRole("[\"employee\"]");
         }
         userService.saveUser(user);
         return ResponseEntity.ok("User registered successfully");
