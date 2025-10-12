@@ -1,5 +1,10 @@
 package com.example.time_manager.service;
 
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.example.time_manager.dto.report.ReportCreateRequest;
 import com.example.time_manager.dto.report.ReportResponse;
 import com.example.time_manager.dto.report.ReportUpdateRequest;
@@ -7,15 +12,12 @@ import com.example.time_manager.model.Report;
 import com.example.time_manager.model.User;
 import com.example.time_manager.repository.ReportRepository;
 import com.example.time_manager.repository.UserRepository;
-import jakarta.persistence.EntityNotFoundException;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import jakarta.persistence.EntityNotFoundException;
 
 /**
  * Business logic for Reports:
- * - Allow both directions: employee -> manager, manager -> employee
+ * - Any authenticated user can create a report to ANY target user (no direction restriction)
  * - Author can update/delete their own reports; ADMIN can manage all
  * - Visibility: a report is visible to its author, its target, or an ADMIN
  */
@@ -35,7 +37,7 @@ public class ReportService {
 
   /**
    * Create a report authored by the user identified by email (from JWT).
-   * Validates that the direction author -> target is allowed.
+   * No role-based direction restriction: author -> target is always allowed.
    */
   public ReportResponse createForAuthorEmail(String authorEmail, ReportCreateRequest req) {
     User author = userRepo.findByEmail(authorEmail)
@@ -43,11 +45,6 @@ public class ReportService {
 
     User target = userRepo.findById(req.targetUserId)
         .orElseThrow(() -> new EntityNotFoundException("Target user not found: " + req.targetUserId));
-
-    // Optional business rule: only employee->manager OR manager->employee (ADMIN can do anything)
-    if (!isDirectionAllowed(author, target)) {
-      throw new IllegalStateException("Report direction not allowed (employee->manager or manager->employee only).");
-    }
 
     Report r = new Report();
     r.setAuthor(author);
@@ -169,35 +166,16 @@ public class ReportService {
 
   /**
    * Naive role check from JSON string stored in User.role (e.g. ["employee","manager"]).
+   * Still used for ADMIN checks on read/update/delete.
    */
   private boolean hasRole(User u, String roleUpper) {
     String raw = u.getRole();
     if (raw == null || raw.isBlank()) return false;
     String up = roleUpper.toUpperCase();
-    String normalized = raw.replaceAll("[\\[\\]\\s\\\"]", "").toUpperCase(); // EMPLOYEE,MANAGER
+    String normalized = raw.replaceAll("[\\[\\]\\s\\\"]", "").toUpperCase(); // EMPLOYEE,MANAGER,ADMIN
     for (String r : normalized.split(",")) {
       if (r.equals(up)) return true;
     }
-    return false;
-  }
-
-  /**
-   * Business rule:
-   *  - ADMIN can always send to any user
-   *  - EMPLOYEE can send only to MANAGER
-   *  - MANAGER can send only to EMPLOYEE
-   */
-  private boolean isDirectionAllowed(User author, User target) {
-    if (hasRole(author, "ADMIN")) return true;
-
-    boolean authorIsManager = hasRole(author, "MANAGER");
-    boolean authorIsEmployee = hasRole(author, "EMPLOYEE");
-    boolean targetIsManager = hasRole(target, "MANAGER");
-    boolean targetIsEmployee = hasRole(target, "EMPLOYEE");
-
-    if (authorIsEmployee && targetIsManager) return true;
-    if (authorIsManager && targetIsEmployee) return true;
-
     return false;
   }
 }
