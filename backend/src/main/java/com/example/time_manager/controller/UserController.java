@@ -88,23 +88,22 @@ public class UserController {
     if (req.poste != null) u.setPoste(req.poste);
     if (req.role != null && isPrivileged) u.setRole(req.role);
     if (req.password != null && !req.password.isBlank()) {
-      // reset par admin/manager
       u.setPassword(req.password);
-      u = userService.saveUser(u); // ré-encode
+      u = userService.saveUser(u);
     } else {
       u = userRepo.save(u);
     }
     return toResp(u);
   }
 
-  // ====== Changement de mot de passe par l'utilisateur
+  // ====== User change their own password
   @PatchMapping("/me/password")
   public ResponseEntity<Void> changePassword(@RequestBody @Valid PasswordChangeRequest req, Authentication auth) {
     userService.changePassword(auth.getName(), req.currentPassword, req.newPassword);
     return ResponseEntity.noContent().build();
   }
 
-  // ====== Suppression (ADMIN)
+  // ====== Delete (ADMIN)
   @DeleteMapping("/{id}")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Void> delete(@PathVariable String id) {

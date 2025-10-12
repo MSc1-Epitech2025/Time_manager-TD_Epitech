@@ -22,7 +22,7 @@ public class TeamController {
 
     public TeamController(TeamService teamService) { this.teamService = teamService; }
 
-    // ===== READ (auth requis)
+    // ===== READ (ALL/EMPLOYEE)
     @GetMapping
     public List<TeamDto> list() {
         return teamService.findAll().stream().map(this::toDto).toList();

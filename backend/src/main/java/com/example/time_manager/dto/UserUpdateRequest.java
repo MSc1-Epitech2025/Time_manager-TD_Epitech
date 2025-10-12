@@ -11,5 +11,5 @@ public class UserUpdateRequest {
   public String role;
   public String poste;
   @Size(min=8, message="Password must be at least 8 chars")
-  public String password; // optionnel, si admin veut réinitialiser
+  public String password;
 }

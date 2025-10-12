@@ -44,6 +44,7 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
 
+    @SuppressWarnings("deprecation")
     @Bean
     public DaoAuthenticationProvider daoAuthenticationProvider(UserDetailsService uds, PasswordEncoder enc) {
         var p = new DaoAuthenticationProvider();

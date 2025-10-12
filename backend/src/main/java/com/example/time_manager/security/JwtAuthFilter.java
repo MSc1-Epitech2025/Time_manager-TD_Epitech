@@ -32,7 +32,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        // Bypass des endpoints d'auth (register/login)
         String path = request.getRequestURI();
         if (path.startsWith("/api/auth/")) {
             filterChain.doFilter(request, response);
@@ -47,7 +46,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             token = header.substring(7);
             try {
                 username = jwtUtil.extractUsername(token);
-            } catch (Exception ignore) { /* token invalide → laisser passer sans auth */ }
+            } catch (Exception ignore) { /* invalid token */ }
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {

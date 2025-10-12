@@ -46,7 +46,6 @@ public class AuthController {
         if (userService.findByEmail(user.getEmail()).isPresent()) {
             return ResponseEntity.badRequest().body("Email already exists");
         }
-        // rôle par défaut si absent (évite NOT NULL côté DB)
         if (user.getRole() == null || user.getRole().isBlank()) {
             user.setRole("[\"employee\"]");
         }
