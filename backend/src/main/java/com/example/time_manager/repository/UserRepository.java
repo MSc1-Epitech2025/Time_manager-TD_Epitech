@@ -10,9 +10,9 @@ import com.example.time_manager.model.User;
 @Repository
 public interface UserRepository extends JpaRepository<User, String> {
 
-    // Recherche d’un utilisateur par email
+    // Search user by email
     Optional<User> findByEmail(String email);
-    // Vérifie si un email existe déjà (utile pour /register)
+    // Check if email exists
     boolean existsByEmail(String email);
     
 }

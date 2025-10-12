@@ -19,8 +19,6 @@ public class User {
     private String email;
 
     private String phone;
-
-    // Stocké en JSON dans la DB MariaDB
     private String role;
     private String poste;
     private String password;

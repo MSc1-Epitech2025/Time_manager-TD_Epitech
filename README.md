@@ -180,3 +180,69 @@ You can enable it later by uncommenting the *production build* section and creat
   ```bash
   mysql -h 127.0.0.1 -P 3307 -u root -p
   ```
+
+---
+
+# 🔐 API (JWT) & Routes
+
+## Auth flow (TL;DR)
+1. **Register** a user → password is hashed (BCrypt) and default role is `["employee"]`.
+2. **Login** → receive a **JWT** (Bearer) to put in the `Authorization` header.
+3. Call **protected routes** with `Authorization: Bearer <token>`.
+
+> Available roles: `employee`, `manager`, `admin` (mapped to `ROLE_EMPLOYEE`, `ROLE_MANAGER`, `ROLE_ADMIN`).
+
+---
+
+## Endpoints
+
+### Auth
+| Method | Path                 | Body (JSON)                             | Auth | Role | Description |
+|:------:|----------------------|-----------------------------------------|:----:|:----:|-------------|
+| POST   | `/api/auth/register` | `{ firstName, lastName, email, password }` | ❌   | –    | Create a user (default role `["employee"]`) |
+| POST   | `/api/auth/login`    | `{ email, password }`                   | ❌   | –    | Returns `{ "token": "…" }` |
+
+**Example**
+```bash
+curl -X POST http://localhost:8080/api/auth/login   -H "Content-Type: application/json"   -d '{"email":"john@acme.io","password":"Str0ngP@ss"}'
+```
+
+### Users
+| Method | Path                      | Body (JSON)                        | Auth | Role                         | Description |
+|:------:|---------------------------|------------------------------------|:----:|:-----------------------------|-------------|
+| GET    | `/api/users/me`           | –                                  | ✅   | any                          | Current user profile |
+| GET    | `/api/users`              | –                                  | ✅   | `manager` or `admin`         | List users |
+| GET    | `/api/users/{id}`         | –                                  | ✅   | `manager`/`admin` or **self**| Get a user |
+| POST   | `/api/users`              | `UserCreateRequest`                | ✅   | `admin`                      | Create a user |
+| PUT    | `/api/users/{id}`         | `UserUpdateRequest`                | ✅   | `manager`/`admin` or **self**| Update a user (role editable by manager/admin) |
+| PATCH  | `/api/users/me/password`  | `{ currentPassword, newPassword }` | ✅   | any                          | Change own password |
+| DELETE | `/api/users/{id}`         | –                                  | ✅   | `admin`                      | Delete a user |
+
+### Teams
+| Method | Path                            | Body (JSON)             | Auth | Role                | Description |
+|:------:|---------------------------------|-------------------------|:----:|:--------------------|-------------|
+| GET    | `/api/teams`                    | –                       | ✅   | any                 | List teams |
+| GET    | `/api/teams/{id}`               | –                       | ✅   | any                 | Team details |
+| GET    | `/api/teams/{id}/members`       | –                       | ✅   | any                 | Team members |
+| POST   | `/api/teams`                    | `{ name, description }` | ✅   | `manager`/`admin`   | Create a team |
+| PUT    | `/api/teams/{id}`               | `{ name?, description? }` | ✅ | `manager`/`admin`   | Update a team |
+| DELETE | `/api/teams/{id}`               | –                       | ✅   | `manager`/`admin`   | Delete a team |
+| POST   | `/api/teams/{id}/members`       | `{ userId }`            | ✅   | `manager`/`admin`   | Add a member |
+| DELETE | `/api/teams/{id}/members/{uid}` | –                       | ✅   | `manager`/`admin`   | Remove a member |
+
+**Example**
+```bash
+TOKEN="<JWT>"
+curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/teams
+```
+
+---
+
+## Security & Roles
+- Auth: JWT Bearer (`Authorization: Bearer <token>`).
+- RBAC: write operations on Teams/Users are protected via `@PreAuthorize`.
+- Default role at register: `["employee"]` (promote via Users endpoints).
+
+## Postman tips
+- Variables: `base_url = http://localhost:8080/api`, `token = <JWT>`
+- Example: `GET {{base_url}}/teams` with `Authorization: Bearer {{token}}`.
