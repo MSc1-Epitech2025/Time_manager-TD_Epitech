@@ -1,17 +1,30 @@
 package com.example.time_manager.controller;
 
-import com.example.time_manager.dto.*;
-import com.example.time_manager.model.User;
-import com.example.time_manager.repository.UserRepository;
-import com.example.time_manager.service.UserService;
-import jakarta.validation.Valid;
+import java.net.URI;
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.net.URI;
-import java.util.List;
+import com.example.time_manager.dto.user.PasswordChangeRequest;
+import com.example.time_manager.dto.user.UserCreateRequest;
+import com.example.time_manager.dto.user.UserResponse;
+import com.example.time_manager.dto.user.UserUpdateRequest;
+import com.example.time_manager.model.User;
+import com.example.time_manager.repository.UserRepository;
+import com.example.time_manager.service.UserService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/users")
@@ -32,7 +45,7 @@ public class UserController {
     return toResp(u);
   }
 
-  // ====== Lecture (admin/manager : liste ; un utilisateur peut lire son propre profil)
+  // ====== READ (admin/manager)
   @GetMapping
   @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
   public List<UserResponse> list() {
@@ -43,9 +56,7 @@ public class UserController {
   @PreAuthorize("hasAnyRole('ADMIN','MANAGER') or #id == authentication.name")
   public UserResponse getById(@PathVariable String id, Authentication auth) {
     var u = userRepo.findById(id).orElseThrow();
-    // si non admin/manager, autoriser seulement si c'est le même user (par email vs id) :
     if (!auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().startsWith("ROLE_ADMIN") || a.getAuthority().startsWith("ROLE_MANAGER"))) {
-      // tolère lecture si c'est lui-même (id match)
       if (!u.getEmail().equals(auth.getName())) {
         throw new org.springframework.security.access.AccessDeniedException("Forbidden");
       }
@@ -53,7 +64,7 @@ public class UserController {
     return toResp(u);
   }
 
-  // ====== Création (ADMIN)
+  // ====== Create (ADMIN)
   @PostMapping
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<UserResponse> create(@RequestBody @Valid UserCreateRequest req) {
@@ -65,17 +76,15 @@ public class UserController {
     entity.setRole(req.role != null && !req.role.isBlank() ? req.role : "[\"employee\"]");
     entity.setPoste(req.poste);
     entity.setPassword(req.password);
-    var saved = userService.saveUser(entity); // encode le mot de passe
+    var saved = userService.saveUser(entity);
     var body = toResp(saved);
     return ResponseEntity.created(URI.create("/api/users/" + saved.getId())).body(body);
   }
 
-  // ====== Mise à jour (ADMIN/MANAGER) — un user peut MAJ son propre profil basique (sans role)
   @PutMapping("/{id}")
   @PreAuthorize("hasAnyRole('ADMIN','MANAGER') or #id == authentication.name")
   public UserResponse update(@PathVariable String id, @RequestBody @Valid UserUpdateRequest req, Authentication auth) {
     var u = userRepo.findById(id).orElseThrow();
-    // Si pas admin/manager, empêcher le changement de role et d'email d'autrui
     var isPrivileged = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().matches("ROLE_(ADMIN|MANAGER)"));
     if (!isPrivileged && !u.getEmail().equals(auth.getName())) {
       throw new org.springframework.security.access.AccessDeniedException("Forbidden");

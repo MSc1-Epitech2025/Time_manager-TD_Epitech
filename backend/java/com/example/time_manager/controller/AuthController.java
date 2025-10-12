@@ -8,8 +8,8 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
-import com.example.time_manager.dto.AuthRequest;
-import com.example.time_manager.dto.AuthResponse;
+import com.example.time_manager.dto.auth.AuthRequest;
+import com.example.time_manager.dto.auth.AuthResponse;
 import com.example.time_manager.model.User;
 import com.example.time_manager.security.JwtUtil;
 import com.example.time_manager.service.UserService;

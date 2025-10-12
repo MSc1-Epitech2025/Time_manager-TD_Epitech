@@ -1,6 +1,6 @@
 package com.example.time_manager.service;
 
-import com.example.time_manager.dto.TeamDto;
+import com.example.time_manager.dto.team.TeamDto;
 import com.example.time_manager.model.Team;
 import com.example.time_manager.model.TeamMember;
 import com.example.time_manager.model.User;

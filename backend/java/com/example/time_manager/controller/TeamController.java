@@ -1,8 +1,8 @@
 package com.example.time_manager.controller;
 
-import com.example.time_manager.dto.MemberChangeDto;
-import com.example.time_manager.dto.TeamDto;
-import com.example.time_manager.dto.UserSummary;
+import com.example.time_manager.dto.team.MemberChangeDto;
+import com.example.time_manager.dto.team.TeamDto;
+import com.example.time_manager.dto.user.UserSummary;
 import com.example.time_manager.model.Team;
 import com.example.time_manager.service.TeamService;
 import jakarta.persistence.EntityNotFoundException;

@@ -1,4 +1,4 @@
-package com.example.time_manager.dto;
+package com.example.time_manager.dto.user;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;

@@ -1,4 +1,4 @@
-package com.example.time_manager.dto;
+package com.example.time_manager.dto.user;
 
 public class UserSummary {
     public String id;
