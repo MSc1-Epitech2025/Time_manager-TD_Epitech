@@ -14,6 +14,19 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.util.List;
 
+/**
+ * REST API for Reports.
+ * Visibility rules are enforced in the service layer.
+ *
+ * Summary:
+ * - Any authenticated user can create a report (employee->manager, manager->employee)
+ * - ADMIN can list all reports
+ * - Everyone can list:
+ *     - "my authored" reports
+ *     - "my received" reports
+ * - A report is readable if (ADMIN or author or target)
+ * - A report is updatable/deletable if (ADMIN or author)
+ */
 @RestController
 @RequestMapping("/api/reports")
 public class ReportController {
@@ -22,50 +35,80 @@ public class ReportController {
 
   public ReportController(ReportService reportService) { this.reportService = reportService; }
 
-  // ======= READ
-  @GetMapping
-  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
-  public List<ReportResponse> list(Authentication auth) {
-    boolean isAdmin = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-    if (isAdmin) return reportService.listAll();
-    return reportService.listForManagerEmail(auth.getName());
-  }
+  /* ======================== CREATE ======================== */
 
-  @GetMapping("/{id}")
-  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
-  public ReportResponse get(@PathVariable Long id, Authentication auth) {
-    var r = reportService.get(id);
-    boolean isAdmin = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-    if (!isAdmin && (r.managerEmail == null || !r.managerEmail.equals(auth.getName()))) {
-      throw new org.springframework.security.access.AccessDeniedException("Forbidden");
-    }
-    return r;
-  }
-
-  // ======= WRITE (admin/manager)
+  /**
+   * Create a report as the currently authenticated user (author).
+   * Body: { targetUserId, title, body? }
+   */
   @PostMapping
-  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
-  public ResponseEntity<ReportResponse> create(@RequestBody @Valid ReportCreateRequest req) {
-    var saved = reportService.create(req);
+  @PreAuthorize("isAuthenticated()")
+  public ResponseEntity<ReportResponse> create(@RequestBody @Valid ReportCreateRequest req, Authentication auth) {
+    var saved = reportService.createForAuthorEmail(auth.getName(), req);
     return ResponseEntity.created(URI.create("/api/reports/" + saved.id)).body(saved);
   }
 
-  @PutMapping("/{id}")
-  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
-  public ReportResponse update(@PathVariable Long id, @RequestBody @Valid ReportUpdateRequest req) {
-    return reportService.update(id, req);
+  /* ======================== READ ======================== */
+
+  /** ADMIN: list all reports (descending by createdAt). */
+  @GetMapping
+  @PreAuthorize("hasRole('ADMIN')")
+  public List<ReportResponse> listAllForAdmin() {
+    return reportService.listAllForAdmin();
   }
 
+  /** My authored reports (written by me). */
+  @GetMapping("/me/authored")
+  @PreAuthorize("isAuthenticated()")
+  public List<ReportResponse> myAuthored(Authentication auth) {
+    return reportService.listAuthoredByEmail(auth.getName());
+  }
+
+  /** Reports addressed to me (I am the target). */
+  @GetMapping("/me/received")
+  @PreAuthorize("isAuthenticated()")
+  public List<ReportResponse> myReceived(Authentication auth) {
+    return reportService.listReceivedByEmail(auth.getName());
+  }
+
+  /**
+   * Get a report by ID if visible to me:
+   * visible when I am ADMIN, author or target.
+   */
+  @GetMapping("/{id}")
+  @PreAuthorize("isAuthenticated()")
+  public ReportResponse get(@PathVariable Long id, Authentication auth) {
+    return reportService.getVisibleTo(auth.getName(), id);
+  }
+
+  /* ======================== UPDATE / DELETE ======================== */
+
+  /** Update allowed if ADMIN or author. */
+  @PutMapping("/{id}")
+  @PreAuthorize("isAuthenticated()")
+  public ReportResponse update(@PathVariable Long id,
+                               @RequestBody @Valid ReportUpdateRequest req,
+                               Authentication auth) {
+    return reportService.updateVisibleTo(auth.getName(), id, req);
+  }
+
+  /** Delete allowed if ADMIN or author. */
   @DeleteMapping("/{id}")
-  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
-  public ResponseEntity<Void> delete(@PathVariable Long id) {
-    reportService.delete(id);
+  @PreAuthorize("isAuthenticated()")
+  public ResponseEntity<Void> delete(@PathVariable Long id, Authentication auth) {
+    reportService.deleteVisibleTo(auth.getName(), id);
     return ResponseEntity.noContent().build();
   }
 
-  // Map common JPA errors → HTTP codes
+  /* ======================== Exception mapping ======================== */
+
   @ExceptionHandler(EntityNotFoundException.class)
   public ResponseEntity<Void> notFound(EntityNotFoundException ex) {
     return ResponseEntity.notFound().build();
+  }
+
+  @ExceptionHandler(IllegalStateException.class)
+  public ResponseEntity<String> badDirection(IllegalStateException ex) {
+    return ResponseEntity.badRequest().body(ex.getMessage());
   }
 }

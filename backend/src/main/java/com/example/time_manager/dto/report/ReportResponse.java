@@ -4,8 +4,13 @@ import java.time.Instant;
 
 public class ReportResponse {
   public Long id;
-  public String managerId;
-  public String managerEmail;
+
+  public String authorId;
+  public String authorEmail;
+
+  public String targetUserId;
+  public String targetEmail;
+
   public String title;
   public String body;
   public Instant createdAt;

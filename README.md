@@ -242,6 +242,20 @@ curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/teams
 | GET    | `/api/clocks/me`                | –                        | ✅   | any                 | List clock entries for the current user|
 | GET    | `/api/clocks/users/{userId}`    | –                        | ✅   | `manager`/`admin`   | List clock entries for a specific user |
 | POST   | `/api/clocks/users/{userId}`    | `{ kind: "IN" | "OUT", at? }`  | ✅   | `manager`/`admin`   | Create a clock entry for a specific user |
+
+### Report
+
+| Method | Path                       | Body (JSON)                                   | Auth | Role                   | Description |
+|:-----:|----------------------------|-----------------------------------------------|:---:|:-----------------------|-------------|
+| GET   | `/api/reports`             | –                                             | ✅  | `admin`       | List all reports. |
+| GET   | `/api/reports/me/authored` | –                                             | ✅  | any           | List reports authored by me. |
+| GET   | `/api/reports/me/received` | –                                             | ✅  | any           | List reports addressed to me. |
+| GET   | `/api/reports/{id}`        | –                                             | ✅  | any           | Get a report if I’m admin or the author or the target. |
+| POST  | `/api/reports`             | `{ targetUserId: string, title: string, body?: string }` | ✅ | any   | Create a report as current user (employee→manager or manager→employee). |
+| PUT   | `/api/reports/{id}`        | `{ title?: string, body?: string, targetUserId?: string }` | ✅ | author or `admin` | Update a report (author or admin). |
+| DELETE| `/api/reports/{id}`        | –                                             | ✅  | author or `admin`      | Delete a report (author or admin). |
+
+
 ---
 
 ## Security & Roles
