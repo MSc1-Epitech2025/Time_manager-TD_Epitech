@@ -235,7 +235,13 @@ curl -X POST http://localhost:8080/api/auth/login   -H "Content-Type: applicatio
 TOKEN="<JWT>"
 curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/teams
 ```
-
+### Clocks
+| Method | Path                            | Body (JSON)              | Auth | Role                | Description |
+|:------:|---------------------------------|--------------------------|:----:|:--------------------|-------------|
+| POST   | `/api/clocks`                   |`{ kind: "IN" | "OUT", at?}`| ✅   | any                 | Create a clock entry for the current user |
+| GET    | `/api/clocks/me`                | –                        | ✅   | any                 | List clock entries for the current user|
+| GET    | `/api/clocks/users/{userId}`    | –                        | ✅   | `manager`/`admin`   | List clock entries for a specific user |
+| POST   | `/api/clocks/users/{userId}`    | `{ kind: "IN" | "OUT", at? }`  | ✅   | `manager`/`admin`   | Create a clock entry for a specific user |
 ---
 
 ## Security & Roles

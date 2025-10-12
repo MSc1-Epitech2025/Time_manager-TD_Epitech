@@ -1,4 +1,4 @@
-package com.example.time_manager.dto;
+package com.example.time_manager.dto.team;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

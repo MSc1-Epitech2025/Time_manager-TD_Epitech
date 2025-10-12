@@ -1,4 +1,4 @@
-package com.example.time_manager.dto;
+package com.example.time_manager.dto.auth;
 
 public class AuthRequest {
     private String email;
