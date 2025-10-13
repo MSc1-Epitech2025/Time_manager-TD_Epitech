@@ -1,5 +1,6 @@
 package com.example.time_manager.service;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.security.authentication.BadCredentialsException;
@@ -18,6 +19,10 @@ public class UserService {
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+    }
+
+    public List<User> findAllUsers() {
+        return userRepository.findAll();
     }
 
     public Optional<User> findByEmail(String email) {
