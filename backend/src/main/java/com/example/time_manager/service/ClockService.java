@@ -29,19 +29,19 @@ public class ClockService {
     /* ======================= CREATE ======================= */
 
     public ClockResponse createForMe(String email, ClockCreateRequest req) {
-        return punch(email, req.kind, null, req.at);
+        return punch(email, req.kind(), null, req.at());
     }
 
     public ClockResponse createForUser(String userId, ClockCreateRequest req) {
-        return punch(null, req.kind, userId, req.at);
+        return punch(null, req.kind(), userId, req.at());
     }
 
     private ClockResponse punch(String email, ClockKind kind, String explicitUserId, Instant at) {
         final User user = (explicitUserId != null)
                 ? userRepo.findById(explicitUserId)
-                    .orElseThrow(() -> new EntityNotFoundException("User not found: " + explicitUserId))
+                .orElseThrow(() -> new EntityNotFoundException("User not found: " + explicitUserId))
                 : userRepo.findByEmail(email)
-                    .orElseThrow(() -> new EntityNotFoundException("User not found: " + email));
+                .orElseThrow(() -> new EntityNotFoundException("User not found: " + email));
 
         var last = clockRepo.findTopByUserIdOrderByAtDesc(user.getId());
         if (last.isPresent() && last.get().getKind() == kind) {
