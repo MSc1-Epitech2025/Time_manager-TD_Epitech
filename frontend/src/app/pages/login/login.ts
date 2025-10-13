@@ -175,6 +175,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     };
   }
 
+
   toggleTheme() {
     this.setTheme(this.theme() === 'light' ? 'dark' : 'light');
   }
