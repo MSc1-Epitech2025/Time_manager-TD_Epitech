@@ -1,0 +1,66 @@
+<div class="manager-dashboard">
+    <!-- Barre latérale -->
+    <aside class="sidebar">
+        <div class="logo">Logo</div>
+
+        <nav class="menu">
+            <button class="nav-btn active" routerLink="/manager">
+                <mat-icon>dashboard</mat-icon>
+                Dashboard
+            </button>
+            <button class="nav-btn" (click)="goToPlanning()">
+                <mat-icon>calendar_month</mat-icon>
+                Planning
+            </button>
+        </nav>
+
+        <button class="logout-btn" (click)="logout()">
+            <mat-icon>logout</mat-icon> Déconnexion
+        </button>
+    </aside>
+
+    <!-- Contenu principal -->
+    <main class="content">
+        <div class="header">
+            <h2>Tableau de bord - Manager</h2>
+        </div>
+
+        <div class="main-grid">
+            <!-- Liste des employés -->
+            <mat-card class="team-card">
+                <h3>Mon équipe</h3>
+                <mat-form-field appearance="outline" class="search-field">
+                    <mat-icon matPrefix>search</mat-icon>
+                    <input matInput placeholder="Rechercher un employé" [(ngModel)]="searchTerm"
+                        (input)="filterEmployees()" />
+                </mat-form-field>
+
+                <ul class="employee-list">
+                    <li *ngFor="let emp of filteredEmployees" (click)="selectEmployee(emp)"
+                        [class.selected]="selectedEmployee?.id === emp.id">
+                        <div class="name">{{ emp.name }}</div>
+                        <div class="team">{{ emp.team }}</div>
+                    </li>
+                </ul>
+            </mat-card>
+
+            <!-- Graphique employé sélectionné -->
+            <mat-card class="chart-card" *ngIf="selectedEmployee">
+                <h3>{{ selectedEmployee.name }}</h3>
+                <p>Équipe : {{ selectedEmployee.team }}</p>
+
+                <div class="chart-container">
+                    <canvas baseChart [data]="pieChartData" [options]="chartOptions" chartType="pie"></canvas>
+                </div>
+
+                <button mat-raised-button color="accent" class="export-btn" (click)="exportExcel()">
+                    <mat-icon>download</mat-icon> Exporter Excel
+                </button>
+            </mat-card>
+
+            <mat-card class="chart-card placeholder" *ngIf="!selectedEmployee">
+                <p>Sélectionnez un employé pour voir ses statistiques</p>
+            </mat-card>
+        </div>
+    </main>
+</div>

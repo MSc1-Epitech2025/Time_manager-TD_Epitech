@@ -1,0 +1,15 @@
+<div class="employee-detail">
+    <mat-card>
+        <h2>{{ employeeData?.name }}</h2>
+        <p>Équipe : {{ employeeData?.team }}</p>
+
+        <div class="chart-container">
+            <canvas baseChart [data]="pieChartData" [options]="chartOptions" chartType="pie">
+            </canvas>
+        </div>
+
+        <button mat-raised-button color="accent" (click)="exportExcel()">
+            <mat-icon>download</mat-icon> Télécharger le rapport Excel
+        </button>
+    </mat-card>
+</div>
