@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="employee-dashboard.scss">
     <link rel="stylesheet" href="https://unpkg.com/primeicons/primeicons.css">
 </head>
+
 <body>
     <div class="dashboard">
         <!-- Sidebar -->
@@ -14,17 +16,30 @@
             <div class="logo">Logo</div>
 
             <nav class="menu">
-                <button class="menu-btn active"><i class="pi pi-home"></i> Dashboard</button>
-                <button class="menu-btn"><i class="pi pi-calendar"></i> Calendar</button>
+                <button class="menu-btn active">
+                    <mat-icon>dashboard</mat-icon>
+                    Dashboard
+                </button>
+                <button class="menu-btn">
+                    <mat-icon>calendar_month</mat-icon>
+                     Calendar
+                    </button>
             </nav>
 
-            <button class="logout-btn"><i class="pi pi-sign-out"></i> Disconnection</button>
+            <button class="logout-btn" (click)="logout()">
+                <mat-icon>logout</mat-icon> Disconnection
+            </button>
         </aside>
 
         <!-- Contenu principal -->
         <main class="main-content">
             <!-- Header -->
-            <header class="header">
+            <div class="header">
+                <h2>Dashboard - Employee</h2>
+            </div>
+
+            <!-- Profil et statut de travail -->
+            <header class="content-grid">
                 <div class="profile-card">
                     <img src="assets/profile-placeholder.png" alt="Profil" class="profile-img">
                     <div class="profile-info">
@@ -34,7 +49,8 @@
                 </div>
 
                 <div class="work-status">
-                    <p class="status-text">You have been working since : <span>{{formatDuration(todayTotalSeconds )}}</span></p>
+                    <p class="status-text">You have been working since : <span>{{formatDuration(todayTotalSeconds
+                            )}}</span></p>
                     <div class="status-buttons">
                         <button class="btn btn-pause" (click)=toggleWorkStatus()>{{status}}</button>
                     </div>
@@ -45,7 +61,11 @@
             <section class="content-grid">
                 <div class="card large">
                     <h3>Working day</h3>
-                    <app-employee-detail></app-employee-detail> 
+                    <mat-card class="chart-card">
+                        <div class="chart-container">
+                            <canvas baseChart [data]="pieChartData" [options]="chartOptions" chartType="pie"></canvas>
+                        </div>
+                    </mat-card>
                 </div>
 
                 <div class="card small">
@@ -56,4 +76,5 @@
         </main>
     </div>
 </body>
+
 </html>
