@@ -53,5 +53,5 @@ backend/.gradle/
 /bin/
 
 .vscode
-
+.iml
 /frontend/.angular
