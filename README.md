@@ -59,11 +59,11 @@ docker compose down -v
 
 ## 🌐 Service Access
 
-| Service                   | URL                                            | Description                                      |
+| Service                   | URL                  | Description            |
 |---------------------------|------------------------------------------------|--------------------------------------------------|
 | **Frontend (Angular)**    | [http://localhost:4200](http://localhost:4200) | Angular web app (dev mode with live reload)      |
-| **Backend (Spring Boot)** | [http://localhost:8080](http://localhost:8080) | REST API server                                  |
-| **Database (MariaDB)**    | `localhost:3307`                               | SQL access (user: `root`, password: `root`)      |
+| **Backend (Spring Boot)** | [http://localhost:8080](http://localhost:8080) | REST API server        |
+| **Database (MariaDB)**    | `localhost:3307`     | SQL access (user: `root`, password: `root`)      |
 | **Reverse proxy (Nginx)** | [http://localhost:3030](http://localhost:3030) | Reserve proxy for secure api call make by client |
 ---
 
@@ -197,7 +197,7 @@ You can enable it later by uncommenting the *production build* section and creat
 ## Endpoints
 
 ### Auth
-| Method | Path                 | Body (JSON)                             | Auth | Role | Description |
+| Method | Path                 | Body (JSON)   | Auth | Role | Description |
 |:------:|----------------------|-----------------------------------------|:----:|:----:|-------------|
 | POST   | `/api/auth/register` | `{ firstName, lastName, email, password }` | ❌   | –    | Create a user (default role `["employee"]`) |
 | POST   | `/api/auth/login`    | `{ email, password }`                   | ❌   | –    | Returns `{ "token": "…" }` |
@@ -264,6 +264,19 @@ curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/teams
 | POST  | `/api/work-schedules/users/{userId}`           | `{ dayOfWeek: "MON"|"TUE"|...|"SUN", period: "AM"|"PM", startTime: "HH:mm[:ss]", endTime: "HH:mm[:ss]" }` | ✅  | `manager` / `admin` | **Upsert** a single slot (unique on `user + dayOfWeek + period`). |
 | PUT   | `/api/work-schedules/users/{userId}/batch`     | `{ replaceAll?: true, entries: [ { dayOfWeek, period, startTime, endTime }, ... ] }`        | ✅  | `manager` / `admin` | Replace all slots (if `replaceAll=true`) or upsert multiple entries. |
 | DELETE| `/api/work-schedules/users/{userId}`           | – (query: `day=MON..SUN`, `period=AM|PM`)                                                    | ✅  | `manager` / `admin` | Delete a single slot for a user. |
+
+### abscences
+
+| Method | Path      | Body (JSON)|Auth | Role                         | Description |
+|:-----:|------------|------------|:---:|:-----------------------------|-------------|
+| POST  | `/api/absences`                       | `{ startDate, endDate, type, reason?, supportingDocumentUrl?, periodByDate?: { "YYYY-MM-DD": "AM|PM|FULL_DAY" } }` | ✅  | any | Create an absence for the authenticated user Generates `absence_days`. |
+| GET   | `/api/absences/me`| – | ✅  | any| List **my** absences (with generated days). |
+| GET   | `/api/absences/users/{userId}`        | –| ✅  | `manager` / `admin`          | List absences for a specific user. |
+| GET   | `/api/absences`                       | –| ✅  | `admin`                      | List **all** absences. |
+| GET   | `/api/absences/{id}`                  | –| ✅  | visible to owner/manager/admin | Get one absence if requester is **owner**, **manager**, or **admin**. |
+| PUT   | `/api/absences/{id}`                  | `{ startDate?, endDate?, type?, reason?, supportingDocumentUrl?, periodByDate? }`                        | ✅  | owner (if `PENDING`) or admin | Update an absence. If `periodByDate` is provided, `absence_days` are regenerated. |
+| PATCH | `/api/absences/{id}/status`           | `{ status: "APPROVED" | "REJECTED" }`               | ✅  | `manager` / `admin`          | Approve or reject an absence (records `approvedBy`, `approvedAt`). |
+| DELETE| `/api/absences/{id}`                  | –| ✅  | owner (if `PENDING`) or admin | Delete an absence and its generated days. |
 
 
 ---
