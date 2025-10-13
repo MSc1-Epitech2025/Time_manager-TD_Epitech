@@ -10,7 +10,7 @@ export const routes: Routes = [
 
     // Dashboard employé
     {
-        path: 'dashboard',
+        path: 'empDashboard',
         loadComponent: () =>
             import('./pages/employee-dashboard/employee-dashboard')
                 .then(m => m.EmployeeDashboard),
