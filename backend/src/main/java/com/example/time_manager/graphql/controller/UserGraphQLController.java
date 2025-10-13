@@ -21,7 +21,7 @@ public class UserGraphQLController {
         this.jwtUtil = jwtUtil;
     }
 
-    // ==== QUERY ====x
+    // ==== QUERY ====
     @QueryMapping
     public List<User> users() {
         return userService.findAllUsers();
@@ -35,16 +35,18 @@ public class UserGraphQLController {
     // ==== MUTATION ====
     @MutationMapping
     public AuthResponse login(@Argument AuthRequest input) {
-        if (!userService.validateUser(input.email(), input.password())) {
+        // ✅ Utilisation correcte des getters
+        if (!userService.validateUser(input.getEmail(), input.getPassword())) {
             throw new RuntimeException("Invalid credentials");
         }
 
-        String token = jwtUtil.generateToken(input.email());
+        String token = jwtUtil.generateToken(input.getEmail());
         return new AuthResponse(token);
     }
 
     @MutationMapping
     public User register(@Argument CreateUserInput input) {
+        // CreateUserInput est un record → on garde les appels direct (.firstName(), etc.)
         User user = new User();
         user.setFirstName(input.firstName());
         user.setLastName(input.lastName());

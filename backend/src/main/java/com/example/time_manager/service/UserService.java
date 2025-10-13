@@ -33,12 +33,20 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
-      public void changePassword(String email, String currentPwd, String newPwd) {
-    var user = userRepository.findByEmail(email).orElseThrow();
-    if (!passwordEncoder.matches(currentPwd, user.getPassword())) {
-      throw new BadCredentialsException("Invalid current password");
+
+    public void changePassword(String email, String currentPwd, String newPwd) {
+        var user = userRepository.findByEmail(email).orElseThrow();
+        if (!passwordEncoder.matches(currentPwd, user.getPassword())) {
+            throw new BadCredentialsException("Invalid current password");
+        }
+        user.setPassword(passwordEncoder.encode(newPwd));
+        userRepository.save(user);
     }
-    user.setPassword(passwordEncoder.encode(newPwd));
-    userRepository.save(user);
-  }
+
+    // ✅ Ajoute cette méthode pour ton login GraphQL
+    public boolean validateUser(String email, String password) {
+        return userRepository.findByEmail(email)
+                .map(user -> passwordEncoder.matches(password, user.getPassword()))
+                .orElse(false);
+    }
 }

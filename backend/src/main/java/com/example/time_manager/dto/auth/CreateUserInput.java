@@ -1,4 +1,4 @@
-package com.example.time_manager.graphql.dto;
+package com.example.time_manager.dto.auth;
 
 public record CreateUserInput(
         String firstName,
