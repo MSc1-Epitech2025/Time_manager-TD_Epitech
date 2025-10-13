@@ -1,8 +1,8 @@
 package com.example.time_manager.graphql.controller;
 
-import com.example.time_manager.dto.AuthResponse;
-import com.example.time_manager.graphql.dto.AuthRequestInput;
-import com.example.time_manager.graphql.dto.CreateUserInput;
+import com.example.time_manager.dto.auth.AuthResponse;
+import com.example.time_manager.dto.auth.AuthRequest;
+import com.example.time_manager.dto.auth.CreateUserInput;
 import com.example.time_manager.model.User;
 import com.example.time_manager.security.JwtUtil;
 import com.example.time_manager.service.UserService;
@@ -21,7 +21,7 @@ public class UserGraphQLController {
         this.jwtUtil = jwtUtil;
     }
 
-    // ==== QUERY ====
+    // ==== QUERY ====x
     @QueryMapping
     public List<User> users() {
         return userService.findAllUsers();
@@ -34,7 +34,7 @@ public class UserGraphQLController {
 
     // ==== MUTATION ====
     @MutationMapping
-    public AuthResponse login(@Argument AuthRequestInput input) {
+    public AuthResponse login(@Argument AuthRequest input) {
         if (!userService.validateUser(input.email(), input.password())) {
             throw new RuntimeException("Invalid credentials");
         }
