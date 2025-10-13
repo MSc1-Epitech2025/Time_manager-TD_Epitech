@@ -33,6 +33,6 @@ type Query {
 }
 
 type Mutation {
-    login(input: AuthRequestInput!): AuthResponse!
+    login(input: AuthRequestInput!): AuthResponse
     register(input: CreateUserInput!): User!
 }

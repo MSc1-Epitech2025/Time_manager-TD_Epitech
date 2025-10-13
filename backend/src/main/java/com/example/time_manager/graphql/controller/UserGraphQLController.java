@@ -1,6 +1,8 @@
 package com.example.time_manager.graphql.controller;
 
 import com.example.time_manager.dto.AuthResponse;
+import com.example.time_manager.graphql.dto.AuthRequestInput;
+import com.example.time_manager.graphql.dto.CreateUserInput;
 import com.example.time_manager.model.User;
 import com.example.time_manager.security.JwtUtil;
 import com.example.time_manager.service.UserService;
@@ -31,16 +33,14 @@ public class UserGraphQLController {
     }
 
     // ==== MUTATION ====
-    public record AuthRequestInput(String email, String password) {}
-    public record CreateUserInput(String firstName, String lastName, String email, String phone, String role, String poste, String password) {}
-
     @MutationMapping
     public AuthResponse login(@Argument AuthRequestInput input) {
-        if (userService.validateUser(input.email(), input.password())) {
-            String token = jwtUtil.generateToken(input.email());
-            return new AuthResponse(token);
+        if (!userService.validateUser(input.email(), input.password())) {
+            throw new RuntimeException("Invalid credentials");
         }
-        throw new RuntimeException("Invalid credentials");
+
+        String token = jwtUtil.generateToken(input.email());
+        return new AuthResponse(token);
     }
 
     @MutationMapping
