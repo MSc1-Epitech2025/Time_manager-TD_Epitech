@@ -40,7 +40,7 @@ public class UserGraphQLController {
             throw new RuntimeException("Invalid credentials");
         }
 
-        String token = jwtUtil.generateToken(input.getEmail());
+        String token = jwtUtil.generateAccessToken(input.getEmail());
         return new AuthResponse(token);
     }
 

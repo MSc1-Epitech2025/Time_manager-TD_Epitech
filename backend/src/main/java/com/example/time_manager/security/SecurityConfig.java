@@ -58,9 +58,6 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/auth/**",
-                                "/graphql",
-                                "/graphql/**",
-                                "/graphiql",
                                 "/graphiql/**",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**"
