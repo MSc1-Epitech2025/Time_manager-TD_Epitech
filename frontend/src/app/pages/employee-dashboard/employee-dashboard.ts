@@ -1,8 +1,10 @@
 import { Component, OnDestroy } from '@angular/core';
+import { EmployeeDetailComponent } from '../employee-detail/employee-detail';
 
 @Component({
   selector: 'app-employee-dashboard',
   templateUrl: './employee-dashboard.html',
+  imports: [EmployeeDetailComponent],
   styleUrls: ['./employee-dashboard.scss']
 })
 export class EmployeeDashboard implements OnDestroy {
