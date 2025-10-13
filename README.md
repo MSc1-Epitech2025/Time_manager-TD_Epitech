@@ -255,6 +255,16 @@ curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/teams
 | PUT   | `/api/reports/{id}`        | `{ title?: string, body?: string, targetUserId?: string }` | ✅ | author or `admin` | Update a report (author or admin). |
 | DELETE| `/api/reports/{id}`        | –                                             | ✅  | author or `admin`      | Delete a report (author or admin). |
 
+### Work_Shedule
+
+| Method | Path                                           | Body (JSON)                                                                                  | Auth | Role                | Description |
+|:-----:|------------------------------------------------|----------------------------------------------------------------------------------------------|:---:|:--------------------|-------------|
+| GET   | `/api/work-schedules/me`                       | –                                                                                            | ✅  | any                 | Get **my** weekly schedule (AM/PM slots). |
+| GET   | `/api/work-schedules/users/{userId}`           | –                                                                                            | ✅  | `manager` / `admin` | Get a user's weekly schedule. |
+| POST  | `/api/work-schedules/users/{userId}`           | `{ dayOfWeek: "MON"|"TUE"|...|"SUN", period: "AM"|"PM", startTime: "HH:mm[:ss]", endTime: "HH:mm[:ss]" }` | ✅  | `manager` / `admin` | **Upsert** a single slot (unique on `user + dayOfWeek + period`). |
+| PUT   | `/api/work-schedules/users/{userId}/batch`     | `{ replaceAll?: true, entries: [ { dayOfWeek, period, startTime, endTime }, ... ] }`        | ✅  | `manager` / `admin` | Replace all slots (if `replaceAll=true`) or upsert multiple entries. |
+| DELETE| `/api/work-schedules/users/{userId}`           | – (query: `day=MON..SUN`, `period=AM|PM`)                                                    | ✅  | `manager` / `admin` | Delete a single slot for a user. |
+
 
 ---
 
