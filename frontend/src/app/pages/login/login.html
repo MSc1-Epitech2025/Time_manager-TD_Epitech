@@ -2,6 +2,7 @@
     <aside class="art" (mousemove)="onMouseMove($event)" (mouseleave)="onMouseLeave()">
         <div class="wave"></div>
 
+        <!-- ✅ 4 bulles dynamiques -->
         <div class="bubble" *ngFor="let b of bubbles; index as i" [ngStyle]="getBubbleStyle(i)"></div>
 
         <div class="welcome">
