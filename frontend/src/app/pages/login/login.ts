@@ -39,6 +39,11 @@ interface Bubble {
 })
 export class LoginComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private notify = inject(NotificationService);
+
+  private auth = inject(AuthService);
 
   hidePwd = signal(true);
   loading = signal(false);
@@ -169,6 +174,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       height: `${b.r * 2}px`
     };
   }
+
 
   toggleTheme() {
     this.setTheme(this.theme() === 'light' ? 'dark' : 'light');

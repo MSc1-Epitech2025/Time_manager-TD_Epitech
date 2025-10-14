@@ -49,3 +49,10 @@ button[mat-stroked-button], button[mat-flat-button] { border-radius: 14px !impor
 html, body { height: 100%; }
 body { margin: 0; }
 * { box-sizing: border-box; }
+
+.snack-success { background: #16a34a !important; }
+.snack-warn    { background: #f59e0b !important; }
+.snack-error   { background: #dc2626 !important; }
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
