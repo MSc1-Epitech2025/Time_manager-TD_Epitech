@@ -29,23 +29,17 @@ public class SecurityConfig {
     public HttpFirewall allowEverythingFirewall() {
         StrictHttpFirewall firewall = new StrictHttpFirewall();
 
-        // Autoriser tous les encodages courants
         firewall.setAllowUrlEncodedPercent(true);
         firewall.setAllowUrlEncodedSlash(true);
         firewall.setAllowBackSlash(true);
         firewall.setAllowUrlEncodedDoubleSlash(true);
         firewall.setAllowSemicolon(true);
         firewall.setAllowUrlEncodedPeriod(true);
-
-        // ⚙️ Cette option permet toutes les méthodes HTTP (utile pour GraphQL)
         firewall.setUnsafeAllowAnyHttpMethod(true);
 
         return firewall;
     }
 
-    /**
-     * ✅ Lie explicitement le firewall custom à la configuration Spring Security
-     */
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer(HttpFirewall firewall) {
         return (web) -> web.httpFirewall(firewall);
@@ -59,10 +53,12 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/auth/**",
                                 "/graphiql/**",
+                                "/graphql",
+                                "/graphql/**",
+                                "/graphiql",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**"
                         ).permitAll()
-                        .requestMatchers("/graphql/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
