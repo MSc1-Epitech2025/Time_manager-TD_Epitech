@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authCanMatch, authCanActivate } from './core/auth-guard'; // <- même nom que ton fichier
+import { authCanMatch, authCanActivate } from './core/auth-guard';
 
 export const routes: Routes = [
     // login

@@ -39,10 +39,6 @@ interface Bubble {
 })
 export class LoginComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
-  private route = inject(ActivatedRoute);
-  private router = inject(Router);
-  private notify = inject(NotificationService);
-
   private auth = inject(AuthService);
 
   hidePwd = signal(true);
@@ -194,8 +190,6 @@ export class LoginComponent implements OnInit, OnDestroy {
     password: ['', [Validators.required, Validators.minLength(6)]],
     remember: [true]
   });
-
-private auth = inject(AuthService);
 
 submit() {
   if (this.form.invalid) {
