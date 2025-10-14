@@ -1,21 +1,15 @@
-/* Conteneur split */
 .login-shell {
     position: fixed;
-    /* ✅ colle au viewport */
     inset: 0;
-    /* top/right/bottom/left = 0 */
     display: grid;
     grid-template-columns: 1.1fr 1fr;
     overflow: hidden;
 
-    /* ✅ évite tout scroll dû aux ombres/effets */
     @media (max-width: 980px) {
         grid-template-columns: 1fr;
     }
 }
 
-
-/* --------- Panneau gauche (illustration) --------- */
 .art {
     position: relative;
     background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-secondary) 70%);
@@ -38,62 +32,71 @@
 
     .bubble {
         position: absolute;
-        border-radius: 999px;
-        filter: blur(0.5px);
-        background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, .8), rgba(255, 255, 255, .1) 40%, transparent 60%);
-
-        &.b1 {
-            width: 160px;
-            height: 160px;
-            left: 8%;
-            top: 22%;
-        }
-
-        &.b2 {
-            width: 220px;
-            height: 220px;
-            right: 14%;
-            top: 28%;
-        }
-
-        &.b3 {
-            width: 140px;
-            height: 140px;
-            left: 26%;
-            bottom: 14%;
-        }
+        border-radius: 50%;
+        pointer-events: none;
+        transition: transform 0.05s linear;
+        background: radial-gradient(circle at 30% 30%,
+                rgba(255, 255, 255, 0.95),
+                rgba(255, 255, 255, 0.4) 45%,
+                rgba(255, 255, 255, 0.15) 70%,
+                transparent 90%);
+        box-shadow: 0 0 40px rgba(255, 255, 255, 0.3);
     }
 
-    .welcome {
-        position: relative;
-        z-index: 1;
-        text-align: left;
 
-        h2 {
-            margin: 0 0 6px;
-            font-size: clamp(28px, 3.2vw, 40px);
-            font-weight: 800;
-            letter-spacing: .4px;
-        }
-
-        p {
-            margin: 0;
-            opacity: .95;
-        }
+    &.b1 {
+        width: 160px;
+        height: 160px;
+        left: 8%;
+        top: 22%;
+        animation-delay: 0s;
     }
 
-    footer {
-        position: absolute;
-        bottom: 24px;
-        left: 0;
-        right: 0;
-        text-align: center;
-        opacity: .9;
-        font-weight: 600;
+    &.b2 {
+        width: 220px;
+        height: 220px;
+        right: 14%;
+        top: 28%;
+        animation-delay: 1s;
+    }
+
+    &.b3 {
+        width: 140px;
+        height: 140px;
+        left: 26%;
+        bottom: 14%;
+        animation-delay: 2s;
     }
 }
 
-/* --------- Panneau droit (formulaire) --------- */
+@keyframes float {
+    from {
+        transform: translateY(0px);
+    }
+
+    to {
+        transform: translateY(-25px);
+    }
+}
+
+.welcome {
+    position: relative;
+    z-index: 1;
+    text-align: left;
+
+    h2 {
+        margin: 0 0 6px;
+        font-size: clamp(28px, 3.2vw, 40px);
+        font-weight: 800;
+        letter-spacing: .4px;
+    }
+
+    p {
+        margin: 0;
+        opacity: .95;
+    }
+}
+
 .panel {
     background: var(--c-bg);
     display: grid;
@@ -105,21 +108,10 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: clamp(14px, 2.2vw, 22px);
-
-        .hello {
-            margin: 0;
-            color: var(--c-muted);
-        }
-
-        .accent {
-            margin: 2px 0 0;
-            color: var(--c-primary);
-            font-weight: 800;
-        }
     }
 
     .theme-toggle {
-        gap: 8px;
+        gap: 0px;
     }
 
     .auth-card {
@@ -146,7 +138,6 @@
         width: 100%;
     }
 
-    /* Bouton principal avec ton dégradé */
     .cta {
         background-image: linear-gradient(90deg, var(--c-secondary), var(--c-primary));
         color: white !important;
@@ -167,7 +158,6 @@
     }
 }
 
-/* Mode sombre: petites retouches supplémentaires */
 .theme-dark .panel .auth-card {
     box-shadow:
         0 10px 25px rgba(167, 139, 250, .10),

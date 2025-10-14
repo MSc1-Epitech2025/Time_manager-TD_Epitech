@@ -1,19 +1,17 @@
 <div class="login-shell">
-    <!-- Panneau gauche (illustration) -->
-    <aside class="art">
+    <aside class="art" (mousemove)="onMouseMove($event)" (mouseleave)="onMouseLeave()">
         <div class="wave"></div>
-        <div class="bubble b1"></div>
-        <div class="bubble b2"></div>
-        <div class="bubble b3"></div>
+
+        <div class="bubble" *ngFor="let b of bubbles; index as i" [ngStyle]="getBubbleStyle(i)"></div>
 
         <div class="welcome">
-            <h2>Welcome Page</h2>
+            <h2>Login Page</h2>
             <p>Sign in to your account</p>
         </div>
-        <footer>www.yoursite.com</footer>
     </aside>
 
-    <!-- Panneau droit (formulaire) -->
+
+
     <section class="panel">
         <div class="panel-head">
             <div class="greet">
@@ -24,7 +22,6 @@
 
             <button mat-stroked-button type="button" class="theme-toggle" (click)="toggleTheme()">
                 <mat-icon>{{ theme() === 'dark' ? 'light_mode' : 'dark_mode' }}</mat-icon>
-                <span>{{ theme() === 'dark' ? 'Thème clair' : 'Thème sombre' }}</span>
             </button>
         </div>
 
