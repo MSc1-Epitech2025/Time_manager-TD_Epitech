@@ -1,0 +1,91 @@
+package com.example.time_manager.graphql.controller;
+
+import com.example.time_manager.dto.report.ReportCreateRequest;
+import com.example.time_manager.dto.report.ReportResponse;
+import com.example.time_manager.dto.report.ReportUpdateRequest;
+import com.example.time_manager.service.ReportService;
+import jakarta.validation.Valid;
+import org.springframework.graphql.data.method.annotation.Argument;
+import org.springframework.graphql.data.method.annotation.MutationMapping;
+import org.springframework.graphql.data.method.annotation.QueryMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
+
+import java.util.List;
+
+@Controller
+public class ReportGraphQLController {
+
+    private final ReportService reportService;
+
+    public ReportGraphQLController(ReportService reportService) {
+        this.reportService = reportService;
+    }
+
+    /* ======================== QUERIES ======================== */
+
+    /** Liste complète (ADMIN seulement).
+     *  Tolère autorités au format 'ADMIN' ou 'ROLE_ADMIN'. */
+    @QueryMapping
+    @PreAuthorize("hasAuthority('ADMIN') or hasRole('ADMIN')")
+    public List<ReportResponse> reports() {
+        return reportService.listAll();
+    }
+
+    /** Mes rapports = je suis l’auteur. */
+    @QueryMapping
+    @PreAuthorize("isAuthenticated()")
+    public List<ReportResponse> myReports(Authentication auth) {
+        String email = auth.getName();
+        return reportService.listMineByEmail(email);
+    }
+
+    /** Rapports qui me concernent = je suis la cible. */
+    @QueryMapping
+    @PreAuthorize("isAuthenticated()")
+    public List<ReportResponse> reportsForMe(Authentication auth) {
+        String email = auth.getName();
+        return reportService.listReceivedByEmail(email);
+    }
+
+    /** Détail d’un report si visible (ADMIN, auteur, ou cible). */
+    @QueryMapping
+    @PreAuthorize("isAuthenticated()")
+    public ReportResponse report(@Argument Long id, Authentication auth) {
+        String email = auth.getName();
+        return reportService.loadVisibleByEmail(email, id);
+    }
+
+    /* ======================== MUTATIONS ======================== */
+
+    /** Création d’un report (auteur = utilisateur connecté). */
+    @MutationMapping
+    @PreAuthorize("isAuthenticated()")
+    public ReportResponse createReport(
+        @Argument("input") @Valid ReportCreateRequest input,
+        Authentication auth
+    ) {
+        String email = auth.getName();
+        return reportService.create(email, input);
+    }
+
+    @MutationMapping
+    @PreAuthorize("isAuthenticated()")
+    public ReportResponse updateReport(
+        @Argument("id") Long id,                            
+        @Argument("input") @Valid ReportUpdateRequest input,
+        Authentication auth
+    ) {
+        String email = auth.getName();
+        return reportService.update(email, id, input);
+    }
+    /** Suppression (autorisée si ADMIN ou auteur — logique appliquée dans le service). */
+    @MutationMapping
+    @PreAuthorize("isAuthenticated()")
+    public Boolean deleteReport(@Argument Long id, Authentication auth) {
+        String email = auth.getName();
+        reportService.delete(email, id);
+        return true;
+    }
+}

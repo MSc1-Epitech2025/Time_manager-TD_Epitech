@@ -76,11 +76,22 @@ VALUES
 -- ==========================================================
 -- REPORTS (manager notifications)
 -- ==========================================================
-INSERT INTO reports (manager_id, title, body)
+INSERT INTO reports (author_id, target_user_id, title, body)
 VALUES
   ((SELECT id FROM users WHERE email = 'gaspard.malmon@epitech.eu'),
+   (SELECT id FROM users WHERE email = 'clement.hamimi@epitech.eu'),
    'Absence report: Clément',
    'Clément was absent on Tuesday due to sickness.'),
+
   ((SELECT id FROM users WHERE email = 'gaspard.malmon@epitech.eu'),
+   (SELECT id FROM users WHERE email = 'armand.braud@epitech.eu'),
    'Late arrival: Armand',
    'Armand checked in at 09:05 on Monday, slightly late.');
+INSERT INTO reports (author_id, target_user_id, title, body)
+VALUES (
+  (SELECT id FROM users WHERE email = 'gaspard.malmon@epitech.eu'),
+  (SELECT id FROM users WHERE email = 'alex.fraioli@epitech.eu'),
+  'Notice: Alex PTO policy check',
+  'Alex, please review the updated PTO policy and confirm by Friday.'
+);
+

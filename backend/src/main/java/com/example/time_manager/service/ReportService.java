@@ -43,14 +43,14 @@ public class ReportService {
     User author = userRepo.findByEmail(authorEmail)
         .orElseThrow(() -> new EntityNotFoundException("Author not found: " + authorEmail));
 
-    User target = userRepo.findById(req.targetUserId)
-        .orElseThrow(() -> new EntityNotFoundException("Target user not found: " + req.targetUserId));
+    User target = userRepo.findById(req.getTargetUserId())
+        .orElseThrow(() -> new EntityNotFoundException("Target user not found: " + req.getTargetUserId()));
 
     Report r = new Report();
     r.setAuthor(author);
     r.setTarget(target);
-    r.setTitle(req.title);
-    r.setBody(req.body);
+    r.setTitle(req.getTitle());
+    r.setBody(req.getBody());
 
     r = reportRepo.save(r);
     return toDto(r);
@@ -61,21 +61,24 @@ public class ReportService {
   /** ADMIN: list all reports. */
   @Transactional(readOnly = true)
   public List<ReportResponse> listAllForAdmin() {
-    return reportRepo.findAllByOrderByCreatedAtDesc().stream().map(this::toDto).toList();
+    return reportRepo.findAllByOrderByCreatedAtDesc()
+        .stream().map(this::toDto).toList();
   }
 
   /** "My authored reports" = reports created by me. */
   @Transactional(readOnly = true)
   public List<ReportResponse> listAuthoredByEmail(String email) {
     User me = userByEmail(email);
-    return reportRepo.findByAuthor_IdOrderByCreatedAtDesc(me.getId()).stream().map(this::toDto).toList();
+    return reportRepo.findByAuthor_IdOrderByCreatedAtDesc(me.getId())
+        .stream().map(this::toDto).toList();
   }
 
   /** "Reports for me" = I am the target. */
   @Transactional(readOnly = true)
   public List<ReportResponse> listReceivedByEmail(String email) {
     User me = userByEmail(email);
-    return reportRepo.findByTarget_IdOrderByCreatedAtDesc(me.getId()).stream().map(this::toDto).toList();
+    return reportRepo.findByTarget_IdOrderByCreatedAtDesc(me.getId())
+        .stream().map(this::toDto).toList();
   }
 
   /**
@@ -115,12 +118,12 @@ public class ReportService {
       throw new org.springframework.security.access.AccessDeniedException("Forbidden");
     }
 
-    if (req.title != null) r.setTitle(req.title);
-    if (req.body != null)  r.setBody(req.body);
+    if (req.getTitle() != null) r.setTitle(req.getTitle());
+    if (req.getBody() != null)  r.setBody(req.getBody());
 
-    if (req.targetUserId != null) {
-      User target = userRepo.findById(req.targetUserId)
-          .orElseThrow(() -> new EntityNotFoundException("Target user not found: " + req.targetUserId));
+    if (req.getTargetUserId() != null) {
+      User target = userRepo.findById(req.getTargetUserId())
+          .orElseThrow(() -> new EntityNotFoundException("Target user not found: " + req.getTargetUserId()));
       r.setTarget(target);
     }
 
@@ -177,5 +180,34 @@ public class ReportService {
       if (r.equals(up)) return true;
     }
     return false;
+  }
+
+  /* ======================== ALIAS pour le contrôleur GraphQL ======================== */
+
+  @Transactional(readOnly = true)
+  public List<ReportResponse> listAll() {
+    return listAllForAdmin();
+  }
+
+  @Transactional(readOnly = true)
+  public List<ReportResponse> listMineByEmail(String email) {
+    return listAuthoredByEmail(email);
+  }
+
+  @Transactional(readOnly = true)
+  public ReportResponse loadVisibleByEmail(String email, Long id) {
+    return getVisibleTo(email, id);
+  }
+
+  public ReportResponse create(String authorEmail, ReportCreateRequest req) {
+    return createForAuthorEmail(authorEmail, req);
+  }
+
+  public ReportResponse update(String email, Long id, ReportUpdateRequest req) {
+    return updateVisibleTo(email, id, req);
+  }
+
+  public void delete(String email, Long id) {
+    deleteVisibleTo(email, id);
   }
 }
