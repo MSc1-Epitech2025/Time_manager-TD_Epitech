@@ -1,11 +1,17 @@
 package com.example.time_manager.dto.report;
-
-import jakarta.validation.constraints.Size;
-
 public class ReportUpdateRequest {
-  @Size(max = 255)
-  public String title;
-  public String body;
+  private String title;
+  private String body;
+  private String targetUserId;
 
-  public String targetUserId;
+  public ReportUpdateRequest() {}
+
+  public String getTitle() { return title; }
+  public void setTitle(String title) { this.title = title; }
+
+  public String getBody() { return body; }
+  public void setBody(String body) { this.body = body; }
+
+  public String getTargetUserId() { return targetUserId; }
+  public void setTargetUserId(String targetUserId) { this.targetUserId = targetUserId; }
 }

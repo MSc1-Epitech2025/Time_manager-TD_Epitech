@@ -1,15 +1,25 @@
+// com.example.time_manager.dto.report.ReportCreateRequest
 package com.example.time_manager.dto.report;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 
 public class ReportCreateRequest {
   @NotBlank
-  public String targetUserId;
+  private String targetUserId;
 
   @NotBlank
-  @Size(max = 255)
-  public String title;
+  private String title;
 
-  public String body;
+  private String body;
+
+  public ReportCreateRequest() {}
+
+  public String getTargetUserId() { return targetUserId; }
+  public void setTargetUserId(String targetUserId) { this.targetUserId = targetUserId; }
+
+  public String getTitle() { return title; }
+  public void setTitle(String title) { this.title = title; }
+
+  public String getBody() { return body; }
+  public void setBody(String body) { this.body = body; }
 }

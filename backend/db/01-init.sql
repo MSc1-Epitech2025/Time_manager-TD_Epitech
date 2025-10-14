@@ -37,13 +37,20 @@ CREATE TABLE clocks (
                         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE reports (  -- notifications
-                         id INT PRIMARY KEY AUTO_INCREMENT,
-                         manager_id CHAR(36),
-                         title VARCHAR(255) NOT NULL,
-                         body TEXT,
-                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                         FOREIGN KEY (manager_id) REFERENCES users(id) ON DELETE SET NULL
+-- (Ré)crée la table reports avec author_id + target_user_id
+DROP TABLE IF EXISTS reports;
+
+CREATE TABLE reports (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  author_id CHAR(36) NOT NULL,
+  target_user_id CHAR(36) NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  body TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_reports_author
+    FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_reports_target
+    FOREIGN KEY (target_user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE work_schedules ( -- planning
