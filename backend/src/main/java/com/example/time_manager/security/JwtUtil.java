@@ -44,12 +44,10 @@ public class JwtUtil {
     private Key refreshKey() { return Keys.hmacShaKeyFor(Base64.getDecoder().decode(refreshSecretB64)); }
 
     // ====== ACCESS TOKEN API ======
-    /** Version rétro-compatible (sans claims additionnels) */
     public String generateAccessToken(String username) {
         return generateAccessToken(username, null, null);
     }
 
-    /** Nouvelle version : ajoute le prénom et le rôle dans le token */
     public String generateAccessToken(String username, String firstName, String role) {
         Instant now = Instant.now();
         return Jwts.builder()
@@ -58,9 +56,8 @@ public class JwtUtil {
             .setIssuedAt(Date.from(now))
             .setExpiration(Date.from(now.plus(Duration.ofMinutes(expMinutes))))
             .setId(UUID.randomUUID().toString())
-            // --- custom claims ---
-            .claim(CLAIM_GIVEN_NAME, firstName) // ignoré si null
-            .claim(CLAIM_ROLE,       role)       // ignoré si null
+            .claim(CLAIM_GIVEN_NAME, firstName)
+            .claim(CLAIM_ROLE,       role)      
             .signWith(accessKey(), SignatureAlgorithm.HS256)
             .compact();
     }
@@ -91,15 +88,10 @@ public class JwtUtil {
     }
 
     // ====== REFRESH TOKEN API ======
-    /** Rétro-compatible */
     public String generateRefreshToken(String username) {
         return generateRefreshToken(username, null, null);
     }
 
-    /**
-     * Optionnel : inclure aussi le prénom et le rôle dans le refresh token.
-     * Si tu préfères un refresh minimal, n’utilise pas cette surcharge.
-     */
     public String generateRefreshToken(String username, String firstName, String role) {
         Instant now = Instant.now();
         return Jwts.builder()
@@ -119,7 +111,6 @@ public class JwtUtil {
         return username.equals(c.getSubject()) && c.getExpiration().after(new Date());
     }
 
-    /** Helper utilisé par /api/auth/refresh pour lire le "sub" du REFRESH token. */
     public String parseRefreshSubject(String refreshToken) {
         return parseRefreshClaims(refreshToken).getSubject();
     }
