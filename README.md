@@ -200,7 +200,7 @@ You can enable it later by uncommenting the *production build* section and creat
 | Method | Path                 | Body (JSON)   | Auth | Role | Description |
 |:------:|----------------------|-----------------------------------------|:----:|:----:|-------------|
 | POST   | `/api/auth/register` | `{ firstName, lastName, email, password }` | ❌   | –    | Create a user (default role `["employee"]`) |
-| POST   | `/api/auth/login`    | `{ email, password }`                   | ❌   | –    | Returns `{ "token": "…" }` |
+| POST   | `/api/auth/login`    | `{ email, password }`                   | ❌   | –    | Returns `{ "accessToken": "…", "reverseToken": "…" }` |
 
 **Example**
 ```bash

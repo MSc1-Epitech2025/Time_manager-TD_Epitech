@@ -63,7 +63,7 @@ CREATE TABLE absence (
     user_id CHAR(36) NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
-    type ENUM('SICK', 'VACATION', 'PERSONAL', 'FORMATION', 'OTHER') NOT NULL,
+    type ENUM('SICK', 'VACATION', 'PERSONAL', 'FORMATION', 'OTHER', 'RTT') NOT NULL,
     reason TEXT,
     supporting_document_url VARCHAR(500),
     status ENUM('PENDING', 'APPROVED', 'REJECTED') DEFAULT 'PENDING',
@@ -84,3 +84,43 @@ CREATE TABLE absence_days (
     end_time TIME,
     FOREIGN KEY (absence_id) REFERENCES absence(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
+-- leave types (to define different types of leaves)
+CREATE TABLE leave_accounts (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id CHAR(36) NOT NULL,
+  leave_type ENUM('VACATION','RTT','SICK','PERSONAL') NOT NULL,
+  opening_balance DECIMAL(6,2) DEFAULT 0.00,       
+  accrual_per_month DECIMAL(5,3) DEFAULT 0.000,    
+  max_carryover DECIMAL(6,2) DEFAULT NULL,         
+  carryover_expire_on DATE DEFAULT NULL,           
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_leave_account (user_id, leave_type),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (leave_type) REFERENCES leave_types(code)
+) ENGINE=InnoDB;
+
+--english: Movement log (acquisitions, consumptions, adjustments)
+CREATE TABLE leave_ledger (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  account_id INT UNSIGNED NOT NULL,
+  entry_date DATE NOT NULL,
+  kind ENUM('ACCRUAL','DEBIT','ADJUSTMENT','CARRYOVER_EXPIRE') NOT NULL,
+  amount DECIMAL(6,2) NOT NULL,                
+  reference_absence_id INT UNSIGNED NULL,
+  note VARCHAR(255),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_ledger_account_date (account_id, entry_date),
+  FOREIGN KEY (account_id) REFERENCES leave_accounts(id) ON DELETE CASCADE,
+  FOREIGN KEY (reference_absence_id) REFERENCES absence(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+--current leave balance
+CREATE OR REPLACE VIEW v_leave_balances AS
+SELECT
+  la.id AS account_id,
+  la.user_id,
+  la.leave_type,
+  la.opening_balance
+  + IFNULL((SELECT SUM(lg.amount) FROM leave_ledger lg WHERE lg.account_id = la.id), 0) AS current_balance
+FROM leave_accounts la;

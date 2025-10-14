@@ -154,7 +154,7 @@ public class AbsenceService {
       throw new org.springframework.security.access.AccessDeniedException("Forbidden");
     }
 
-    if (req.status == null || req.status == AbsenceStatus.PENDING) {
+    if (req.status == AbsenceStatus.PENDING) {
       throw new IllegalArgumentException("Status must be APPROVED or REJECTED");
     }
 
