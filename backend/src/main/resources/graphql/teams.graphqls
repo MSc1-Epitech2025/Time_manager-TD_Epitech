@@ -2,7 +2,6 @@ type Team {
   id: ID!
   name: String!
   description: String
-  # champ résolu via un resolver -> Team.members -> List<User>
   members: [User!]!
 }
 
@@ -25,13 +24,16 @@ extend type Query {
   teams: [Team!]!
   team(id: ID!): Team
   teamMembers(teamId: ID!): [User!]!
+  allTeams: [Team!]!
+  myTeams: [Team!]!
+  myManagedTeams: [Team!]!
+  teamManagers(teamId: ID!): [User!]!
 }
 
 extend type Mutation {
   createTeam(input: TeamInput!): Team!
   updateTeam(input: TeamUpdateInput!): Team!
   deleteTeam(id: ID!): Boolean!
-
-  addTeamMember(teamId: ID!, input: MemberChangeInput!): Boolean!   # true si ajouté (ou déjà présent)
-  removeTeamMember(teamId: ID!, input: MemberChangeInput!): Boolean! # true si supprimé (ou absent)
+  addTeamMember(teamId: ID!, input: MemberChangeInput!): Boolean!
+  removeTeamMember(teamId: ID!, input: MemberChangeInput!): Boolean!
 }
