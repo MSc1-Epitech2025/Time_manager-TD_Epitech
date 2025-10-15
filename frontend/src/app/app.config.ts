@@ -9,9 +9,9 @@ import {
 } from '@angular/common/http';
 
 // services + interceptor (chemins à adapter si besoin)
-import { AuthService } from './core/auth';
-import { TimerService } from './core/timer';
-import { AuthInterceptor } from './core/auth-interceptor';
+import { AuthService } from './core/services/auth';
+import { TimerService } from './core/services/timer';
+import { AuthInterceptor } from './core/services/auth-interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
