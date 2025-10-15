@@ -1,9 +1,15 @@
 package com.example.time_manager.dto.team;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 
 public class MemberChangeDto {
-    @NotBlank @Size(min=36, max=36, message="userId must be a UUID (36 chars)")
-    public String userId;
+
+    @NotBlank
+    private String userId;
+
+    public MemberChangeDto() {}
+    public MemberChangeDto(String userId) { this.userId = userId; }
+
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
 }
