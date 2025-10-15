@@ -1,14 +1,19 @@
 package com.example.time_manager.graphql.controller;
 
-import com.example.time_manager.dto.auth.AuthResponse;
+import java.util.List;
+
+import org.springframework.graphql.data.method.annotation.Argument;
+import org.springframework.graphql.data.method.annotation.MutationMapping;
+import org.springframework.graphql.data.method.annotation.QueryMapping;
+import org.springframework.stereotype.Controller;
 import com.example.time_manager.dto.auth.AuthRequest;
+import com.example.time_manager.dto.auth.AuthResponse;
 import com.example.time_manager.dto.auth.CreateUserInput;
 import com.example.time_manager.model.User;
 import com.example.time_manager.security.JwtUtil;
 import com.example.time_manager.service.UserService;
-import org.springframework.graphql.data.method.annotation.*;
-import org.springframework.stereotype.Controller;
-import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
+
 
 @Controller
 public class UserGraphQLController {
@@ -51,5 +56,12 @@ public class UserGraphQLController {
         user.setPoste(input.poste());
         user.setPassword(input.password());
         return userService.saveUser(user);
+    }
+    
+    @MutationMapping
+    @PreAuthorize("hasRole('ADMIN')") 
+    public Boolean deleteUser(@Argument String id) {
+    userService.deleteById(id);
+    return true;
     }
 }
