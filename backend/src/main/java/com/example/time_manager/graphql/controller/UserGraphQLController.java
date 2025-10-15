@@ -40,15 +40,10 @@ public class UserGraphQLController {
         if (!userService.validateUser(input.getEmail(), input.getPassword())) {
             throw new RuntimeException("Invalid credentials");
         }
-
         User user = userService.findByEmail(input.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        String token = jwtUtil.generateAccessToken(
-                user.getEmail(),
-                user.getFirstName(),
-                user.getRole() 
-        );
+                .orElseThrow(() -> new RuntimeException("User not found after validation"));
+        String token = jwtUtil.generateAccessToken(user.getEmail(), user.getId());
+        // String refresh = jwtUtil.generateRefreshToken(user.getEmail(), user.getId());
 
         return new AuthResponse(token);
     }
