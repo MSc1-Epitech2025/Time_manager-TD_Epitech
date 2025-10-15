@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authCanMatch, authCanActivate } from './core/services/auth-guard';
+import { authCanMatch, authCanActivate, roleCanActivate } from './core/services/auth-guard';
 
 export const routes: Routes = [
     // --- Login ---
@@ -21,11 +21,10 @@ export const routes: Routes = [
     {
         path: 'manager',
         canMatch: [authCanMatch],
-        canActivate: [authCanActivate],
+        canActivate: [authCanActivate, roleCanActivate], // ✅ remplacement ici
         loadComponent: () => import('./pages/manager-dashboard/manager-dashboard')
             .then(m => m.ManagerDashboard),
     },
-
     // --- Manager detail ---
     {
         path: 'manager/employee/:id',

@@ -12,3 +12,21 @@ function checkAuth(): boolean | UrlTree {
 
 export const authCanMatch: CanMatchFn = () => checkAuth();
 export const authCanActivate: CanActivateFn = () => checkAuth();
+
+export const roleCanActivate: CanActivateFn = (): boolean | UrlTree => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  const session = auth.session;
+
+  if (!session || !auth.isAuthenticated) {
+    return router.createUrlTree(['/login'], { queryParams: { reason: 'unauth' } });
+  }
+
+  const role = session.user.role?.toUpperCase?.() ?? '';
+  if (role.includes('MANAGER') || role.includes('ADMIN')) {
+    return true;
+  }
+
+  return router.createUrlTree(['/employee']);
+};

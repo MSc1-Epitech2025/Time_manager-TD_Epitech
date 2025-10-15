@@ -12,6 +12,8 @@ import { Router } from '@angular/router';
 import { ManagerService } from '../../core/services/manager';
 import { ReportService } from '../../core/services/report';
 
+import { AuthService } from '../../core/services/auth';
+
 @Component({
   selector: 'app-manager-dashboard',
   standalone: true,
@@ -57,7 +59,8 @@ export class ManagerDashboard {
   constructor(
     private router: Router,
     private managerService: ManagerService,
-    private reportService: ReportService
+    private reportService: ReportService,
+    private auth: AuthService,
   ) {}
 
   ngOnInit() {
@@ -96,6 +99,7 @@ export class ManagerDashboard {
   }
 
   logout() {
+    this.auth.logout();
     this.router.navigate(['/login']);
   }
 }
