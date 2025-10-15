@@ -1,8 +1,29 @@
 import { Component, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { NgChartsModule } from 'ng2-charts';
+import { ChartConfiguration, ChartOptions } from 'chart.js';
+import { Router } from '@angular/router';
+import { ManagerService } from '../../core/services/manager';
+import { ReportService } from '../../core/services/report';
 
 @Component({
   selector: 'app-employee-dashboard',
   templateUrl: './employee-dashboard.html',
+  imports: [ CommonModule,
+    FormsModule,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+    NgChartsModule,
+  ],
   styleUrls: ['./employee-dashboard.scss']
 })
 export class EmployeeDashboard implements OnDestroy {
@@ -10,11 +31,49 @@ export class EmployeeDashboard implements OnDestroy {
   timer: number = 0; 
   time :{hours: number, minutes: number } = {hours:0, minutes:0};
   //dataSource: Array<{ start: string; end?: string; durationSeconds: number }> = [];
-  user = { name: 'John Doe', position: 'Software Engineer' };
+  user : any = null;
   status: string = 'startWorking';
 
   private intervalId: number | null = null;
   private sessionStartTimestamp?: number;
+
+  pieChartData: ChartConfiguration<'pie'>['data'] = {
+    labels: ['Présence', 'Retards', 'Absences'],
+    datasets: [
+      {
+        data: [0, 0, 0],
+        backgroundColor: ['#A78BFA', '#F472B6', '#C084FC'],
+      },
+    ],
+  };
+
+  chartOptions: ChartOptions<'pie'> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: { color: '#F9FAFB' },
+      },
+    },
+  };
+
+  constructor(private router: Router,
+    private managerService: ManagerService,
+    private reportService: ReportService) {}
+
+    ngOnInit() {
+    this.managerService.getTeamEmployees().subscribe((data) => {
+      this.user = data[0];
+    });
+
+    const data = { presence: 80, late: 10, absent: 10 };
+    this.pieChartData.datasets[0].data = [
+      data.presence,
+      data.late,
+      data.absent,
+    ];
+  }
 
   toggleWorkStatus() {
     if (this.isWorking) {
@@ -121,5 +180,8 @@ export class EmployeeDashboard implements OnDestroy {
     if (this.intervalId !== null) {
       clearInterval(this.intervalId);
     }
+  }
+  logout() {
+    this.router.navigate(['/login']);
   }
 }
