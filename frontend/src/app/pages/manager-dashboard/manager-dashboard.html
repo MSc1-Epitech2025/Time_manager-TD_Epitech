@@ -1,5 +1,5 @@
 <div class="manager-dashboard">
-    <!-- Barre latérale -->
+    <!-- NavBar -->
     <aside class="sidebar">
         <div class="logo">Logo</div>
 
@@ -12,6 +12,11 @@
                 <mat-icon>calendar_month</mat-icon>
                 Planning
             </button>
+            <button class="nav-btn" (click)="goToEmp()">
+                <mat-icon>person</mat-icon>
+                Vue Employé
+            </button>
+
         </nav>
 
         <button class="logout-btn" (click)="logout()">

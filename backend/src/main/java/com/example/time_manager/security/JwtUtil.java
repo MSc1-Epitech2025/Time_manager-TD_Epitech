@@ -19,7 +19,11 @@ import io.jsonwebtoken.security.Keys;
 @Component
 public class JwtUtil {
 
-    // ====== PROPERTIES (injected from application.properties / .env) ======
+    // ====== CLAIM KEYS (OIDC-friendly) ======
+    public static final String CLAIM_GIVEN_NAME = "given_name";
+    public static final String CLAIM_ROLE       = "role"; // ex: "MANAGER" / "EMPLOYEE"
+
+    // ====== PROPERTIES ======
     @Value("${security.jwt.secret}")
     private String secretB64;
 
@@ -41,6 +45,10 @@ public class JwtUtil {
 
     // ====== ACCESS TOKEN API ======
     public String generateAccessToken(String username) {
+        return generateAccessToken(username, null, null);
+    }
+
+    public String generateAccessToken(String username, String firstName, String role) {
         Instant now = Instant.now();
         return Jwts.builder()
             .setIssuer(issuer)
@@ -48,6 +56,8 @@ public class JwtUtil {
             .setIssuedAt(Date.from(now))
             .setExpiration(Date.from(now.plus(Duration.ofMinutes(expMinutes))))
             .setId(UUID.randomUUID().toString())
+            .claim(CLAIM_GIVEN_NAME, firstName)
+            .claim(CLAIM_ROLE,       role)      
             .signWith(accessKey(), SignatureAlgorithm.HS256)
             .compact();
     }
@@ -58,8 +68,15 @@ public class JwtUtil {
     }
 
     public String extractUsername(String accessToken) {
-        // used by JwtAuthFilter to read "sub" from the ACCESS token
         return parseAccessClaims(accessToken).getSubject();
+    }
+
+    public String extractFirstName(String accessToken) {
+        return parseAccessClaims(accessToken).get(CLAIM_GIVEN_NAME, String.class);
+    }
+
+    public String extractRole(String accessToken) {
+        return parseAccessClaims(accessToken).get(CLAIM_ROLE, String.class);
     }
 
     private Claims parseAccessClaims(String token) {
@@ -72,6 +89,10 @@ public class JwtUtil {
 
     // ====== REFRESH TOKEN API ======
     public String generateRefreshToken(String username) {
+        return generateRefreshToken(username, null, null);
+    }
+
+    public String generateRefreshToken(String username, String firstName, String role) {
         Instant now = Instant.now();
         return Jwts.builder()
             .setIssuer(issuer)
@@ -79,6 +100,8 @@ public class JwtUtil {
             .setIssuedAt(Date.from(now))
             .setExpiration(Date.from(now.plus(Duration.ofDays(refreshDays))))
             .setId(UUID.randomUUID().toString())
+            .claim(CLAIM_GIVEN_NAME, firstName)
+            .claim(CLAIM_ROLE,       role)
             .signWith(refreshKey(), SignatureAlgorithm.HS256)
             .compact();
     }
@@ -88,9 +111,17 @@ public class JwtUtil {
         return username.equals(c.getSubject()) && c.getExpiration().after(new Date());
     }
 
-    /** Helper used by /api/auth/refresh to read the subject from a REFRESH token. */
     public String parseRefreshSubject(String refreshToken) {
         return parseRefreshClaims(refreshToken).getSubject();
+    }
+
+    /** Optionnel : helpers si tu ajoutes les claims au refresh token. */
+    public String extractRefreshFirstName(String refreshToken) {
+        return parseRefreshClaims(refreshToken).get(CLAIM_GIVEN_NAME, String.class);
+    }
+
+    public String extractRefreshRole(String refreshToken) {
+        return parseRefreshClaims(refreshToken).get(CLAIM_ROLE, String.class);
     }
 
     private Claims parseRefreshClaims(String token) {
@@ -101,7 +132,7 @@ public class JwtUtil {
             .getBody();
     }
 
-    // ====== GENERIC (if ever needed) ======
+    // ====== GENERIC ======
     public <T> T extractAccessClaim(String token, Function<Claims, T> resolver) {
         return resolver.apply(parseAccessClaims(token));
     }

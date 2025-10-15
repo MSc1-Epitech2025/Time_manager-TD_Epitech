@@ -12,6 +12,8 @@ import { Router } from '@angular/router';
 import { ManagerService } from '../../core/services/manager';
 import { ReportService } from '../../core/services/report';
 
+import { AuthService } from '../../core/services/auth';
+
 @Component({
   selector: 'app-manager-dashboard',
   standalone: true,
@@ -57,7 +59,8 @@ export class ManagerDashboard {
   constructor(
     private router: Router,
     private managerService: ManagerService,
-    private reportService: ReportService
+    private reportService: ReportService,
+    private auth: AuthService,
   ) {}
 
   ngOnInit() {
@@ -76,7 +79,6 @@ export class ManagerDashboard {
 
   selectEmployee(emp: any) {
     this.selectedEmployee = emp;
-    // Simule des KPI récupérés depuis le backend
     const data = { presence: 80, late: 10, absent: 10 };
     this.pieChartData.datasets[0].data = [
       data.presence,
@@ -89,6 +91,10 @@ export class ManagerDashboard {
     this.router.navigate(['/manager/planning']);
   }
 
+    goToEmp() {
+    this.router.navigate(['/employee']);
+  }
+
   exportExcel() {
     if (this.selectedEmployee) {
       this.reportService.exportEmployeeReport(this.selectedEmployee);
@@ -96,6 +102,7 @@ export class ManagerDashboard {
   }
 
   logout() {
+    this.auth.logout();
     this.router.navigate(['/login']);
   }
 }

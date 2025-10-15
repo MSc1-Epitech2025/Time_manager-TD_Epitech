@@ -8,8 +8,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 
 // Services (chemins à adapter si besoin)
-import { TimerService } from '../../core/timer';
-import { AuthService } from '../../core/auth';
+import { TimerService } from '../../core/services/timer';
+import { AuthService } from '../../core/services/auth';
 
 @Component({
   selector: 'app-employer',

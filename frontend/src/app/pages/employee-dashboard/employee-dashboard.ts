@@ -11,6 +11,8 @@ import { ChartConfiguration, ChartOptions } from 'chart.js';
 import { Router } from '@angular/router';
 import { ManagerService } from '../../core/services/manager';
 import { ReportService } from '../../core/services/report';
+import { Router } from '@angular/router';
+import { AuthService } from '../../core/services/auth';
 
 @Component({
   selector: 'app-employee-dashboard',
@@ -26,13 +28,19 @@ import { ReportService } from '../../core/services/report';
   ],
   styleUrls: ['./employee-dashboard.scss']
 })
+
 export class EmployeeDashboard implements OnDestroy {
   isWorking: boolean = false;
-  timer: number = 0; 
+  timer: number = 0;
   time :{hours: number, minutes: number } = {hours:0, minutes:0};
   //dataSource: Array<{ start: string; end?: string; durationSeconds: number }> = [];
   user : any = null;
   status: string = 'startWorking';
+
+    constructor(
+      private router: Router,
+      private auth: AuthService,
+    ) {}
 
   private intervalId: number | null = null;
   private sessionStartTimestamp?: number;
@@ -86,7 +94,7 @@ export class EmployeeDashboard implements OnDestroy {
   }
 
   startTimer() {
-    if (this.isWorking) return; 
+    if (this.isWorking) return;
     this.isWorking = true;
     this.sessionStartTimestamp = Date.now();
     this.timer = 0;
@@ -181,7 +189,10 @@ export class EmployeeDashboard implements OnDestroy {
       clearInterval(this.intervalId);
     }
   }
+
   logout() {
+    this.auth.logout();
     this.router.navigate(['/login']);
   }
 }
+

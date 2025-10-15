@@ -15,6 +15,8 @@ import { MatRippleModule } from '@angular/material/core';
 
 //aunth service
 import { AuthService } from '../../core/services/auth';
+import { ActivatedRoute, Router } from '@angular/router';
+import { NotificationService } from '../../core/services/notification';
 
 interface Bubble {
   x: number;
@@ -39,7 +41,6 @@ interface Bubble {
 })
 export class LoginComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
-  private auth = inject(AuthService);
 
   hidePwd = signal(true);
   loading = signal(false);
@@ -67,7 +68,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     const width = window.innerWidth * 0.55;
     const height = window.innerHeight;
 
-    const bubbleCount = 3 + Math.random()*7;
+    const bubbleCount = 3 + Math.random() * 7;
     this.bubbles = Array.from({ length: bubbleCount }).map(() => {
       const r = 20 + Math.random() * 80;
       return {
@@ -171,7 +172,6 @@ export class LoginComponent implements OnInit, OnDestroy {
     };
   }
 
-
   toggleTheme() {
     this.setTheme(this.theme() === 'light' ? 'dark' : 'light');
   }
@@ -191,26 +191,48 @@ export class LoginComponent implements OnInit, OnDestroy {
     remember: [true]
   });
 
+  private auth = inject(AuthService);
+  private notify = inject(NotificationService);
+  private router = inject(Router);
+
 submit() {
   if (this.form.invalid) {
     this.form.markAllAsTouched();
     return;
   }
-
   this.loading.set(true);
-  const { email, password } = this.form.value;
 
-  this.auth.login(email!, password!).subscribe((token) => {
-    this.loading.set(false);
-    if (token) {
-      console.log('Token reçu:', token);
-    } else {
-      alert('Identifiants invalides');
+  (async () => {
+    try {
+      const email = this.form.value.email!;
+      const password = this.form.value.password!;
+      const remember = !!this.form.value.remember;
+
+      const session = await this.auth.login(email, password, remember);
+      const role = session.user.role;
+
+      if (role.includes('MANAGER')) {
+        this.router.navigate(['/manager']);
+      } else if (role.includes('ADMIN')) {
+        this.router.navigate(['/manager']); // switch to /admin when admin page is ready
+      } else if (role.includes('EMPLOYEE')) {
+        this.router.navigate(['/employee']);
+      } else {
+        this.router.navigate(['/']);
+        console.error('Rôle utilisateur inconnu:', role);
+      }
+
+    } catch (e) {
+      this.notify.error('Identifiants invalides ou service indisponible.');
+      console.error(e);
+    } finally {
+      this.loading.set(false);
     }
-  });
+  })();
 }
 
-get email() { return this.form.get('email'); }
-get password() { return this.form.get('password'); }
+
+  get email() { return this.form.get('email'); }
+  get password() { return this.form.get('password'); }
 
 }
