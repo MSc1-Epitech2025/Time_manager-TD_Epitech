@@ -16,6 +16,7 @@ export const routes: Routes = [
     },
     { path: '', pathMatch: 'full', redirectTo: 'employer' },
     { path: '**', redirectTo: 'login' },
+    
     // employee dashboard
     {
         path: 'empDashboard',
