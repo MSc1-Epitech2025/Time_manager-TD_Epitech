@@ -43,10 +43,16 @@ public class UserService {
         userRepository.save(user);
     }
 
-    // ✅ Ajoute cette méthode pour ton login GraphQL
     public boolean validateUser(String email, String password) {
         return userRepository.findByEmail(email)
                 .map(user -> passwordEncoder.matches(password, user.getPassword()))
                 .orElse(false);
     }
+    public void deleteById(String id) {
+    if (!userRepository.existsById(id)) {
+        throw new jakarta.persistence.EntityNotFoundException("User not found: " + id);
+    }
+    userRepository.deleteById(id);
+    }
+
 }

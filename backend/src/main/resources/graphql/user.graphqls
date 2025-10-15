@@ -35,4 +35,5 @@ type Query {
 type Mutation {
     login(input: AuthRequestInput!): AuthResponse
     register(input: CreateUserInput!): User!
+    deleteUser(id: ID!): Boolean!
 }
