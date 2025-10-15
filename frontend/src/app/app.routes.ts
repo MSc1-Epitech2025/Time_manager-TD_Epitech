@@ -18,7 +18,7 @@ export const routes: Routes = [
     { path: '**', redirectTo: 'login' },
     // employee dashboard
     {
-        path: 'dashboard',
+        path: 'empDashboard',
         loadComponent: () =>
             import('./pages/employee-dashboard/employee-dashboard')
                 .then(m => m.EmployeeDashboard),
