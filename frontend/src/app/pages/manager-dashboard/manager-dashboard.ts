@@ -79,7 +79,6 @@ export class ManagerDashboard {
 
   selectEmployee(emp: any) {
     this.selectedEmployee = emp;
-    // Simule des KPI récupérés depuis le backend
     const data = { presence: 80, late: 10, absent: 10 };
     this.pieChartData.datasets[0].data = [
       data.presence,
@@ -90,6 +89,10 @@ export class ManagerDashboard {
 
   goToPlanning() {
     this.router.navigate(['/manager/planning']);
+  }
+
+    goToEmp() {
+    this.router.navigate(['/employee']);
   }
 
   exportExcel() {

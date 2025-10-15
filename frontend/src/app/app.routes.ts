@@ -1,5 +1,6 @@
+// app.routes.ts
 import { Routes } from '@angular/router';
-import { authCanMatch, authCanActivate, roleCanActivate } from './core/services/auth-guard';
+import { authCanMatch, authCanActivate, roleCanActivate, planningUrlGuard } from './core/services/auth-guard';
 
 export const routes: Routes = [
     // --- Login ---
@@ -21,10 +22,11 @@ export const routes: Routes = [
     {
         path: 'manager',
         canMatch: [authCanMatch],
-        canActivate: [authCanActivate, roleCanActivate], // ✅ remplacement ici
+        canActivate: [authCanActivate, roleCanActivate],
         loadComponent: () => import('./pages/manager-dashboard/manager-dashboard')
             .then(m => m.ManagerDashboard),
     },
+
     // --- Manager detail ---
     {
         path: 'manager/employee/:id',
@@ -34,16 +36,16 @@ export const routes: Routes = [
             .then(m => m.EmployeeDetailComponent),
     },
 
-    // --- Planning ---
+    // --- Planning (page principale) ---
     {
-        path: 'manager/planning',
+        path: 'planning',
         canMatch: [authCanMatch],
-        canActivate: [authCanActivate],
+        canActivate: [authCanActivate, planningUrlGuard], // <- pas de roleCanActivate ici
         loadComponent: () => import('./pages/planning/planning')
             .then(m => m.PlanningComponent),
     },
 
     // --- Default ---
-    { path: '', pathMatch: 'full', redirectTo: 'login' },
-    { path: '**', redirectTo: 'login' },
+    { path: '', pathMatch: 'full', redirectTo: 'planning' }, // optionnel mais recommandé
+    { path: '**', redirectTo: 'planning' },
 ];
