@@ -1,0 +1,37 @@
+type Team {
+  id: ID!
+  name: String!
+  description: String
+  # champ résolu via un resolver -> Team.members -> List<User>
+  members: [User!]!
+}
+
+input TeamInput {
+  name: String!
+  description: String
+}
+
+input TeamUpdateInput {
+  id: ID!
+  name: String
+  description: String
+}
+
+input MemberChangeInput {
+  userId: ID!
+}
+
+extend type Query {
+  teams: [Team!]!
+  team(id: ID!): Team
+  teamMembers(teamId: ID!): [User!]!
+}
+
+extend type Mutation {
+  createTeam(input: TeamInput!): Team!
+  updateTeam(input: TeamUpdateInput!): Team!
+  deleteTeam(id: ID!): Boolean!
+
+  addTeamMember(teamId: ID!, input: MemberChangeInput!): Boolean!   # true si ajouté (ou déjà présent)
+  removeTeamMember(teamId: ID!, input: MemberChangeInput!): Boolean! # true si supprimé (ou absent)
+}
