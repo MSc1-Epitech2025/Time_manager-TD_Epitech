@@ -49,6 +49,7 @@ export class EmployeeDashboard implements OnDestroy {
 
   chartOptions: ChartOptions<'pie'> = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         position: 'bottom',
