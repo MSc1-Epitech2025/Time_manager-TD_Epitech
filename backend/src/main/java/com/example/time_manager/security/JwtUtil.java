@@ -44,24 +44,18 @@ public class JwtUtil {
     private Key refreshKey() { return Keys.hmacShaKeyFor(Base64.getDecoder().decode(refreshSecretB64)); }
 
     // ====== ACCESS TOKEN API ======
-    public String generateAccessToken(String username) {
-        return generateAccessToken(username, null, null);
-    }
-
-    public String generateAccessToken(String username, String firstName, String role) {
-        Instant now = Instant.now();
-        return Jwts.builder()
-            .setIssuer(issuer)
-            .setSubject(username)
-            .setIssuedAt(Date.from(now))
-            .setExpiration(Date.from(now.plus(Duration.ofMinutes(expMinutes))))
-            .setId(UUID.randomUUID().toString())
-            .claim(CLAIM_GIVEN_NAME, firstName)
-            .claim(CLAIM_ROLE,       role)      
-            .signWith(accessKey(), SignatureAlgorithm.HS256)
-            .compact();
-    }
-
+public String generateAccessToken(String username, String userId) {
+    Instant now = Instant.now();
+    return Jwts.builder()
+        .setIssuer(issuer)
+        .setSubject(username)                
+        .claim("uid", userId)
+        .setIssuedAt(Date.from(now))
+        .setExpiration(Date.from(now.plus(Duration.ofMinutes(expMinutes))))
+        .setId(UUID.randomUUID().toString())
+        .signWith(accessKey(), SignatureAlgorithm.HS256)
+        .compact();
+}
     public boolean isAccessTokenValid(String token, String username) {
         Claims c = parseAccessClaims(token);
         return username.equals(c.getSubject()) && c.getExpiration().after(new Date());
@@ -88,23 +82,19 @@ public class JwtUtil {
     }
 
     // ====== REFRESH TOKEN API ======
-    public String generateRefreshToken(String username) {
-        return generateRefreshToken(username, null, null);
-    }
-
-    public String generateRefreshToken(String username, String firstName, String role) {
+    public String generateRefreshToken(String username, String userId) {
         Instant now = Instant.now();
         return Jwts.builder()
             .setIssuer(issuer)
             .setSubject(username)
+            .claim("uid", userId)               
             .setIssuedAt(Date.from(now))
             .setExpiration(Date.from(now.plus(Duration.ofDays(refreshDays))))
             .setId(UUID.randomUUID().toString())
-            .claim(CLAIM_GIVEN_NAME, firstName)
-            .claim(CLAIM_ROLE,       role)
             .signWith(refreshKey(), SignatureAlgorithm.HS256)
             .compact();
     }
+
 
     public boolean isRefreshTokenValid(String token, String username) {
         Claims c = parseRefreshClaims(token);

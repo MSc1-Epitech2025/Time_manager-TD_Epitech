@@ -1,10 +1,7 @@
 package com.example.time_manager.graphql.controller;
 
-import com.example.time_manager.dto.report.ReportCreateRequest;
-import com.example.time_manager.dto.report.ReportResponse;
-import com.example.time_manager.dto.report.ReportUpdateRequest;
-import com.example.time_manager.service.ReportService;
-import jakarta.validation.Valid;
+import java.util.List;
+
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
@@ -12,7 +9,12 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 
-import java.util.List;
+import com.example.time_manager.dto.report.ReportCreateRequest;
+import com.example.time_manager.dto.report.ReportResponse;
+import com.example.time_manager.dto.report.ReportUpdateRequest;
+import com.example.time_manager.service.ReportService;
+
+import jakarta.validation.Valid;
 
 @Controller
 public class ReportGraphQLController {
@@ -25,15 +27,12 @@ public class ReportGraphQLController {
 
     /* ======================== QUERIES ======================== */
 
-    /** Liste complète (ADMIN seulement).
-     *  Tolère autorités au format 'ADMIN' ou 'ROLE_ADMIN'. */
     @QueryMapping
     @PreAuthorize("hasAuthority('ADMIN') or hasRole('ADMIN')")
     public List<ReportResponse> reports() {
         return reportService.listAll();
     }
 
-    /** Mes rapports = je suis l’auteur. */
     @QueryMapping
     @PreAuthorize("isAuthenticated()")
     public List<ReportResponse> myReports(Authentication auth) {
@@ -41,7 +40,6 @@ public class ReportGraphQLController {
         return reportService.listMineByEmail(email);
     }
 
-    /** Rapports qui me concernent = je suis la cible. */
     @QueryMapping
     @PreAuthorize("isAuthenticated()")
     public List<ReportResponse> reportsForMe(Authentication auth) {
@@ -49,7 +47,6 @@ public class ReportGraphQLController {
         return reportService.listReceivedByEmail(email);
     }
 
-    /** Détail d’un report si visible (ADMIN, auteur, ou cible). */
     @QueryMapping
     @PreAuthorize("isAuthenticated()")
     public ReportResponse report(@Argument Long id, Authentication auth) {
@@ -59,7 +56,6 @@ public class ReportGraphQLController {
 
     /* ======================== MUTATIONS ======================== */
 
-    /** Création d’un report (auteur = utilisateur connecté). */
     @MutationMapping
     @PreAuthorize("isAuthenticated()")
     public ReportResponse createReport(
@@ -80,7 +76,6 @@ public class ReportGraphQLController {
         String email = auth.getName();
         return reportService.update(email, id, input);
     }
-    /** Suppression (autorisée si ADMIN ou auteur — logique appliquée dans le service). */
     @MutationMapping
     @PreAuthorize("isAuthenticated()")
     public Boolean deleteReport(@Argument Long id, Authentication auth) {
