@@ -44,12 +44,14 @@ public class JwtUtil {
     private Key refreshKey() { return Keys.hmacShaKeyFor(Base64.getDecoder().decode(refreshSecretB64)); }
 
     // ====== ACCESS TOKEN API ======
-public String generateAccessToken(String username, String userId) {
+public String generateAccessToken(String username, String userId, String firstName, String role) {
     Instant now = Instant.now();
     return Jwts.builder()
         .setIssuer(issuer)
-        .setSubject(username)                
-        .claim("uid", userId)
+        .setSubject(username)           
+        .claim("uid", userId)             
+        .claim(CLAIM_GIVEN_NAME, firstName)
+        .claim(CLAIM_ROLE, role)          
         .setIssuedAt(Date.from(now))
         .setExpiration(Date.from(now.plus(Duration.ofMinutes(expMinutes))))
         .setId(UUID.randomUUID().toString())
