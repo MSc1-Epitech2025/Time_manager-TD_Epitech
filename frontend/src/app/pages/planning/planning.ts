@@ -1,6 +1,5 @@
 // planning.ts
-import { Component, OnDestroy, OnInit, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CalendarOptions } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -16,13 +15,11 @@ type Absence = {
   end?: string;
   reason?: string;
 };
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-planning',
   standalone: true,
-  imports: [CommonModule, FullCalendarModule, MatButtonModule, MatIconModule],
+  imports: [CommonModule, FullCalendarModule],
   templateUrl: './planning.html',
   styleUrls: ['./planning.scss']
 })
