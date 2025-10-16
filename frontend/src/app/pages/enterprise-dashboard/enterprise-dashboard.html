@@ -1,0 +1,83 @@
+<div class="dashboard">
+  <!-- ===== Sidebar ===== -->
+  <aside class="sidebar">
+    <div class="logo">
+      <img src="assets/logo.png" alt="Logo" />
+    </div>
+
+    <nav class="menu">
+      <button class="menu-btn active">
+        <mat-icon>dashboard</mat-icon>
+        Dashboard
+      </button>
+
+      <button class="menu-btn" (click)="goToPlanning()">
+        <mat-icon>calendar_month</mat-icon>
+        Calendar
+      </button>
+
+      <button class="menu-btn">
+        <mat-icon>history</mat-icon>
+        Presence logs
+      </button>
+
+      <button class="menu-btn" (click)="goToTeamManagement()">
+        <mat-icon>groups</mat-icon>
+        Teams
+      </button>
+    </nav>
+
+    <button class="logout-btn" (click)="logout()">
+      <mat-icon>logout</mat-icon>
+      Disconnect
+    </button>
+  </aside>
+
+  <!-- ===== Main Content ===== -->
+  <main class="main-content">
+    <!-- Header -->
+    <header class="header">
+      <h2>Enterprise Dashboard</h2>
+    </header>
+
+    <!-- Profile Card fake data -->
+    <section class="profile-section">
+      <div class="profile-card">
+        <img src="assets/profile-placeholder.png" alt="Profile" class="profile-img" />
+        <div class="profile-info">
+          <h3>{{ user?.name || 'Entreprise Name' }}</h3>
+          <p>{{ user?.position || 'Admin' }}</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats Cards -->
+    <section class="stats-section">
+      <div class="stats-card">
+        <h3>25</h3>
+        <p>Employees</p>
+      </div>
+      <div class="stats-card">
+        <h3>5</h3>
+        <p>Teams</p>
+      </div>
+    </section>
+
+    <!-- Charts Section -->
+    <section class="chart-section">
+      <div class="card large">
+        <h3>Employee Statistics</h3>
+        <mat-card class="chart-card">
+          <div class="chart-container">
+            <canvas
+              baseChart
+              [data]="pieChartData"
+              [options]="chartOptions"
+              chartType="pie">
+            </canvas>
+          </div>
+        </mat-card>
+      </div>
+    </section>
+  </main>
+</div>

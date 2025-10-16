@@ -23,13 +23,23 @@ export const routes: Routes = [
                     .then(m => m.EmployeeDashboard),
             },
 
-            // Manager dashboard
-            {
-                path: 'manager',
-                canActivate: [roleCanActivate],
-                loadComponent: () => import('./pages/manager-dashboard/manager-dashboard')
-                    .then(m => m.ManagerDashboard),
-            },
+    // --- Manager dashboard ---
+    {
+        path: 'manager',
+        canMatch: [authCanMatch],
+        canActivate: [authCanActivate, roleCanActivate],
+        loadComponent: () => import('./pages/manager-dashboard/manager-dashboard')
+            .then(m => m.ManagerDashboard),
+    },
+
+    // --- Enterprise dashboard ---
+    {
+        path: 'enterprise',
+        
+        
+        loadComponent: () => import('./pages/enterprise-dashboard/enterprise-dashboard')
+            .then(m => m.EnterpriseDashboard),
+    },
 
             // Manager detail
             {
@@ -38,13 +48,14 @@ export const routes: Routes = [
                     .then(m => m.EmployeeDetailComponent),
             },
 
-            // Planning
-            {
-                path: 'planning',
-                canActivate: [planningUrlGuard],
-                loadComponent: () => import('./pages/planning/planning')
-                    .then(m => m.PlanningComponent),
-            },
+    // --- Planning (page principale) ---
+    {
+        path: 'planning',
+        canMatch: [authCanMatch],
+        canActivate: [authCanActivate, planningUrlGuard], // <- pas de roleCanActivate ici
+        loadComponent: () => import('./pages/planning/planning')
+            .then(m => m.PlanningComponent),
+    },
 
             // Default
             { path: '', pathMatch: 'full', redirectTo: 'planning' },
