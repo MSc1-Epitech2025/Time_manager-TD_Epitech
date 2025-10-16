@@ -26,6 +26,8 @@ export class AuthService {
   private session$ = new BehaviorSubject<Session | null>(null);
   private refreshPromise: Promise<string | null> | null = null;
 
+  public readonly sessionChanges$ = this.session$.asObservable();
+
   constructor(private http: HttpClient) { }
 
   get session(): Session | null { return this.session$.value; }

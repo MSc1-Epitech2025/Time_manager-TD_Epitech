@@ -61,7 +61,7 @@ export class ManagerDashboard {
     private managerService: ManagerService,
     private reportService: ReportService,
     private auth: AuthService,
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.managerService.getTeamEmployees().subscribe((data) => {
@@ -91,7 +91,7 @@ export class ManagerDashboard {
     this.router.navigate(['/manager/planning']);
   }
 
-    goToEmp() {
+  goToEmp() {
     this.router.navigate(['/employee']);
   }
 
