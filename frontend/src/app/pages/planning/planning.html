@@ -1,4 +1,15 @@
 <div class="planning-container">
-    <h2>Planning de l'équipe</h2>
+    <header class="planning-header">
+        <h2>
+            <mat-icon fontSet="material-icons-outlined" fontIcon="calendar_month"></mat-icon>
+            Planning de {{ userName }}
+        </h2>
+
+        <p *ngIf="isManager; else employeeMode" class="role-tag manager">Mode Manager</p>
+        <ng-template #employeeMode>
+            <p class="role-tag employee">Mode Employé</p>
+        </ng-template>
+    </header>
+
     <full-calendar [options]="calendarOptions"></full-calendar>
 </div>

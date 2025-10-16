@@ -99,7 +99,7 @@ export class AuthService {
     const session: Session = {
       accessToken: token,
       refreshToken: '',
-      expiresAt: Date.now() + 3600 * 1000,
+      expiresAt: Date.now() + 30 * 1000,
       user: { id, email: mail, role },
     };
 

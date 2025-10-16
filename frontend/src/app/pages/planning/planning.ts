@@ -1,4 +1,3 @@
-// planning.ts
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CalendarOptions } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -7,6 +6,7 @@ import { CommonModule } from '@angular/common';
 import { FullCalendarModule } from '@fullcalendar/angular';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { MatIconModule } from '@angular/material/icon';
 
 type Absence = {
   id: string;
@@ -19,9 +19,9 @@ type Absence = {
 @Component({
   selector: 'app-planning',
   standalone: true,
-  imports: [CommonModule, FullCalendarModule],
+  imports: [CommonModule, FullCalendarModule, MatIconModule],
   templateUrl: './planning.html',
-  styleUrls: ['./planning.scss']
+  styleUrls: ['./planning.scss'],
 })
 export class PlanningComponent implements OnInit, OnDestroy {
   private sub?: Subscription;
@@ -39,10 +39,10 @@ export class PlanningComponent implements OnInit, OnDestroy {
     select: (info) => this.onSelect(info.startStr, info.endStr),
   };
 
-  constructor(private route: ActivatedRoute) {}
+  constructor(private route: ActivatedRoute) { }
 
   ngOnInit(): void {
-    this.sub = this.route.queryParamMap.subscribe(qp => {
+    this.sub = this.route.queryParamMap.subscribe((qp) => {
       const manager = qp.get('manager');
       const employee = qp.get('employee');
       this.isManager = !!manager;
@@ -68,14 +68,16 @@ export class PlanningComponent implements OnInit, OnDestroy {
   private async loadAbsences() {
     const absences: Absence[] = [
       { id: 'a1', person: 'alice', start: '2025-10-10', reason: 'CP' },
-      { id: 'a2', person: 'paul',  start: '2025-10-12', reason: 'Maladie' },
+      { id: 'a2', person: 'paul', start: '2025-10-12', reason: 'Maladie' },
     ];
 
-    const events = absences.map(a => ({
+    const events = absences.map((a) => ({
       id: a.id,
       start: a.start,
       end: a.end,
-      title: this.isManager ? `${a.person} — ${a.reason ?? ''}`.trim() : `${a.person} — absent`,
+      title: this.isManager
+        ? `${a.person} — ${a.reason ?? ''}`.trim()
+        : `${a.person} — absent`,
     }));
 
     this.calendarOptions = { ...this.calendarOptions, events };
@@ -83,8 +85,15 @@ export class PlanningComponent implements OnInit, OnDestroy {
 
   private onSelect(start: string, end: string | undefined) {
     if (this.isManager) {
-      const who = prompt(`Créer absence du ${start} au ${end ?? start}\nSaisis des noms séparés par des virgules (ex: alice,paul)`, this.userName) ?? '';
-      const people = who.split(',').map(s => s.trim()).filter(Boolean);
+      const who =
+        prompt(
+          `Créer absence du ${start} au ${end ?? start}\nSaisis des noms séparés par des virgules (ex: alice,paul)`,
+          this.userName,
+        ) ?? '';
+      const people = who
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
       const reason = prompt('Raison (CP, RTT, …)') ?? '';
       this.createAbsence({ start, end, people, reason });
     } else {
@@ -92,9 +101,17 @@ export class PlanningComponent implements OnInit, OnDestroy {
     }
   }
 
-  private createAbsence(payload: { start: string; end?: string; people: string[]; reason?: string }) {
+  private createAbsence(payload: {
+    start: string;
+    end?: string;
+    people: string[];
+    reason?: string;
+  }) {
     console.log('createAbsence', payload);
-    alert(`Absence créée pour ${payload.people.join(', ')} du ${payload.start}${payload.end ? ' au ' + payload.end : ''}${this.isManager && payload.reason ? ' (' + payload.reason + ')' : ''}`);
+    alert(
+      `Absence créée pour ${payload.people.join(', ')} du ${payload.start}${payload.end ? ' au ' + payload.end : ''
+      }${this.isManager && payload.reason ? ' (' + payload.reason + ')' : ''}`,
+    );
     this.loadAbsences();
   }
 }

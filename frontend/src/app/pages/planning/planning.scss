@@ -1,17 +1,44 @@
 .planning-container {
-    background-color: #1E1E28;
-    color: #F9FAFB;
-    padding: 2rem;
+    background-color: #1e1e28;
+    color: #f9fafb;
     min-height: 100vh;
+    padding: 2rem;
+}
+
+.planning-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
 
     h2 {
-        margin-bottom: 1rem;
-        color: #A78BFA;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #a78bfa;
     }
 
-    full-calendar {
-        background-color: #2A2A3C;
+    .role-tag {
+        padding: 0.5rem 1rem;
         border-radius: 8px;
-        padding: 1rem;
+        font-weight: 500;
+
+        &.manager {
+            background-color: #a78bfa33;
+            color: #a78bfa;
+        }
+
+        &.employee {
+            background-color: #f472b633;
+            color: #f472b6;
+        }
     }
+}
+
+full-calendar {
+    background-color: #2a2a3c;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
