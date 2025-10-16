@@ -8,9 +8,11 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { NgChartsModule } from 'ng2-charts';
 import { ChartConfiguration, ChartOptions } from 'chart.js';
-import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom } from 'rxjs
+import { ManagerService } from '../../core/services/manager';
+import { ReportService } from '../../core/services/report';
+import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth';
 import { PlanningService, PlanningEvent } from '../../core/services/planning';
 import { NotificationService } from '../../core/services/notification';

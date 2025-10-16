@@ -41,6 +41,15 @@ export const routes: Routes = [
             .then(m => m.EnterpriseDashboard),
     },
 
+    // --- Manager detail ---
+    {
+        path: 'enterprise',
+        
+        
+        loadComponent: () => import('./pages/enterprise-dashboard/enterprise-dashboard')
+            .then(m => m.EnterpriseDashboard),
+    },
+
             // Manager detail
             {
                 path: 'manager/employee/:id',
@@ -57,9 +66,24 @@ export const routes: Routes = [
             .then(m => m.PlanningComponent),
     },
 
-            // Default
-            { path: '', pathMatch: 'full', redirectTo: 'planning' },
-            { path: '**', redirectTo: 'planning' },
-        ],
+    // --- Teams (Manager only) ---
+    {
+        path: 'teams',
+        
+        loadComponent: () => import('./pages/team-management/team-management')
+            .then(m => m.TeamManagement),
     },
+
+    // --- Logs history ---
+    {
+        path: 'logs',
+       
+        loadComponent: () => import('./pages/log-history/log-history')
+            .then(m => m.LogHistory),
+    },  
+   
+
+    // --- Default ---
+    { path: '', pathMatch: 'full', redirectTo: 'planning' }, // optionnel mais recommandé
+    { path: '**', redirectTo: 'planning' },
 ];
