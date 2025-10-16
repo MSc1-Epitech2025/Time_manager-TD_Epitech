@@ -10,68 +10,50 @@
 </head>
 
 <body>
-    <div class="dashboard">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="logo">Logo</div>
 
-            <nav class="menu">
-                <button class="menu-btn active">
-                    <mat-icon>dashboard</mat-icon>
-                    Dashboard
-                </button>
-                <button class="menu-btn">
-                    <mat-icon>calendar_month</mat-icon>
-                     Calendar
-                    </button>
-            </nav>
-            <button class="logout-btn"  (click)="logout()"><i class="pi pi-sign-out"></i> Disconnection</button>
-        </aside>
+    <!-- Contenu principal -->
+    <main class="main-content">
+        <!-- Header -->
+        <div class="header">
+            <h2>Dashboard - Employee</h2>
+        </div>
 
-        <!-- Contenu principal -->
-        <main class="main-content">
-            <!-- Header -->
-            <div class="header">
-                <h2>Dashboard - Employee</h2>
+        <!-- Profil et statut de travail -->
+        <header class="content-grid">
+            <div class="profile-card">
+                <img src="assets/profile-placeholder.png" alt="Profil" class="profile-img">
+                <div class="profile-info">
+                    <h3>{{user.name}}</h3>
+                    <p>{{user.position}}</p>
+                </div>
             </div>
 
-            <!-- Profil et statut de travail -->
-            <header class="content-grid">
-                <div class="profile-card">
-                    <img src="assets/profile-placeholder.png" alt="Profil" class="profile-img">
-                    <div class="profile-info">
-                        <h3>{{user.name}}</h3>
-                        <p>{{user.position}}</p>
+            <div class="work-status">
+                <p class="status-text">You have been working since : <span>{{formatDuration(todayTotalSeconds
+                        )}}</span></p>
+                <div class="status-buttons">
+                    <button class="btn btn-pause" (click)=toggleWorkStatus()>{{status}}</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Grille principale -->
+        <section class="content-grid">
+            <div class="card large">
+                <h3>Working day</h3>
+                <mat-card class="chart-card">
+                    <div class="chart-container">
+                        <canvas baseChart [data]="pieChartData" [options]="chartOptions" chartType="pie"></canvas>
                     </div>
-                </div>
+                </mat-card>
+            </div>
 
-                <div class="work-status">
-                    <p class="status-text">You have been working since : <span>{{formatDuration(todayTotalSeconds
-                            )}}</span></p>
-                    <div class="status-buttons">
-                        <button class="btn btn-pause" (click)=toggleWorkStatus()>{{status}}</button>
-                    </div>
-                </div>
-            </header>
-
-            <!-- Grille principale -->
-            <section class="content-grid">
-                <div class="card large">
-                    <h3>Working day</h3>
-                    <mat-card class="chart-card">
-                        <div class="chart-container">
-                            <canvas baseChart [data]="pieChartData" [options]="chartOptions" chartType="pie"></canvas>
-                        </div>
-                    </mat-card>
-                </div>
-
-                <div class="card small">
-                    <h3>Manager</h3>
-                    <img src="assets/manager-placeholder.png" alt="Supérieur" class="manager-img">
-                </div>
-            </section>
-        </main>
-    </div>
+            <div class="card small">
+                <h3>Manager</h3>
+                <img src="assets/manager-placeholder.png" alt="Supérieur" class="manager-img">
+            </div>
+        </section>
+    </main>
 </body>
 
 </html>

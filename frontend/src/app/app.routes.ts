@@ -1,6 +1,7 @@
 // app.routes.ts
 import { Routes } from '@angular/router';
-import { authCanMatch, authCanActivate, roleCanActivate, planningUrlGuard } from './core/services/auth-guard';
+import { authCanMatch, authCanActivate, roleCanActivate, planningUrlGuard } from './core/guards/auth-guard';
+import { ShellComponent } from './layout/shell/shell';
 
 export const routes: Routes = [
     // --- Login ---
@@ -9,43 +10,45 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/login/login').then(m => m.LoginComponent),
     },
 
-    // --- Employee dashboard ---
     {
-        path: 'employee',
+        path: '',
+        component: ShellComponent,
         canMatch: [authCanMatch],
         canActivate: [authCanActivate],
-        loadComponent: () => import('./pages/employee-dashboard/employee-dashboard')
-            .then(m => m.EmployeeDashboard),
-    },
+        children: [
+            // Employee dashboard
+            {
+                path: 'employee',
+                loadComponent: () => import('./pages/employee-dashboard/employee-dashboard')
+                    .then(m => m.EmployeeDashboard),
+            },
 
-    // --- Manager dashboard ---
-    {
-        path: 'manager',
-        canMatch: [authCanMatch],
-        canActivate: [authCanActivate, roleCanActivate],
-        loadComponent: () => import('./pages/manager-dashboard/manager-dashboard')
-            .then(m => m.ManagerDashboard),
-    },
+            // Manager dashboard
+            {
+                path: 'manager',
+                canActivate: [roleCanActivate],
+                loadComponent: () => import('./pages/manager-dashboard/manager-dashboard')
+                    .then(m => m.ManagerDashboard),
+            },
 
-    // --- Manager detail ---
-    {
-        path: 'manager/employee/:id',
-        canMatch: [authCanMatch],
-        canActivate: [authCanActivate],
-        loadComponent: () => import('./pages/employee-detail/employee-detail')
-            .then(m => m.EmployeeDetailComponent),
-    },
+            // Manager detail
+            {
+                path: 'manager/employee/:id',
+                loadComponent: () => import('./pages/employee-detail/employee-detail')
+                    .then(m => m.EmployeeDetailComponent),
+            },
 
-    // --- Planning (page principale) ---
-    {
-        path: 'planning',
-        canMatch: [authCanMatch],
-        canActivate: [authCanActivate, planningUrlGuard], // <- pas de roleCanActivate ici
-        loadComponent: () => import('./pages/planning/planning')
-            .then(m => m.PlanningComponent),
-    },
+            // Planning
+            {
+                path: 'planning',
+                canActivate: [planningUrlGuard],
+                loadComponent: () => import('./pages/planning/planning')
+                    .then(m => m.PlanningComponent),
+            },
 
-    // --- Default ---
-    { path: '', pathMatch: 'full', redirectTo: 'planning' }, // optionnel mais recommandé
-    { path: '**', redirectTo: 'planning' },
+            // Default
+            { path: '', pathMatch: 'full', redirectTo: 'planning' },
+            { path: '**', redirectTo: 'planning' },
+        ],
+    },
 ];

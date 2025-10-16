@@ -1,0 +1,36 @@
+<aside class="sidebar">
+    <div class="logo">Logo</div>
+
+    <nav class="menu">
+
+        <!-- admin -->
+        <button class="menu-btn" *ngIf="isAdmin()" [routerLink]="['/admin']" routerLinkActive="active">
+            <mat-icon>admin_panel_settings</mat-icon>
+            Admin
+        </button>
+
+        <!-- manager -->
+        <button class="menu-btn" *ngIf="isManager()" [routerLink]="['/manager']" routerLinkActive="active">
+            <mat-icon>supervisor_account</mat-icon>
+            Manager
+        </button>
+
+        <!-- employee -->
+        <button class="menu-btn" *ngIf="isEmployee()" [routerLink]="['/employee']" routerLinkActive="active">
+            <mat-icon>dashboard</mat-icon>
+            Dashboard
+        </button>
+
+        <!-- Dashboard / Planning commun -->
+        <button class="menu-btn" [routerLink]="['/planning']" routerLinkActive="active">
+            <mat-icon>calendar_month</mat-icon>
+            Calendar
+        </button>
+
+    </nav>
+
+    <button class="logout-btn" (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        Logout
+    </button>
+</aside>
