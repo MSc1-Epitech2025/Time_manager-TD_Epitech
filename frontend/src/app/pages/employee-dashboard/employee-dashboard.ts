@@ -11,13 +11,12 @@ import { ChartConfiguration, ChartOptions } from 'chart.js';
 import { Router } from '@angular/router';
 import { ManagerService } from '../../core/services/manager';
 import { ReportService } from '../../core/services/report';
-import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth';
 
 @Component({
   selector: 'app-employee-dashboard',
   templateUrl: './employee-dashboard.html',
-  imports: [ CommonModule,
+  imports: [CommonModule,
     FormsModule,
     MatCardModule,
     MatButtonModule,
@@ -32,15 +31,17 @@ import { AuthService } from '../../core/services/auth';
 export class EmployeeDashboard implements OnDestroy {
   isWorking: boolean = false;
   timer: number = 0;
-  time :{hours: number, minutes: number } = {hours:0, minutes:0};
+  time: { hours: number, minutes: number } = { hours: 0, minutes: 0 };
   //dataSource: Array<{ start: string; end?: string; durationSeconds: number }> = [];
-  user : any = null;
+  user: any = null;
   status: string = 'startWorking';
 
-    constructor(
-      private router: Router,
-      private auth: AuthService,
-    ) {}
+  constructor(
+    private router: Router,
+    private auth: AuthService,
+    private managerService: ManagerService,
+    private reportService: ReportService
+  ) { }
 
   private intervalId: number | null = null;
   private sessionStartTimestamp?: number;
@@ -66,11 +67,7 @@ export class EmployeeDashboard implements OnDestroy {
     },
   };
 
-  constructor(private router: Router,
-    private managerService: ManagerService,
-    private reportService: ReportService) {}
-
-    ngOnInit() {
+  ngOnInit() {
     this.managerService.getTeamEmployees().subscribe((data) => {
       this.user = data[0];
     });
@@ -113,7 +110,7 @@ export class EmployeeDashboard implements OnDestroy {
     const end = Date.now();
     const start = this.sessionStartTimestamp ?? end;
     const durationSeconds = Math.round((end - start) / 1000);
-    
+
     // reset session state
     this.sessionStartTimestamp = undefined;
     this.timer = 0;
@@ -151,7 +148,7 @@ export class EmployeeDashboard implements OnDestroy {
   // retourne le total de secondes travaillées pour une date donnée (inclut session en cours)
   getTotalSecondsForDate(date: Date): number {
     let total = 0;
-    
+
     // session en cours (si active)
     if (this.isWorking && this.sessionStartTimestamp) {
       const runningStart = new Date(this.sessionStartTimestamp);
