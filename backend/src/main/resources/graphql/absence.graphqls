@@ -1,0 +1,88 @@
+# ========= Enums côté modèle =========
+enum AbsenceType {
+  PAID_LEAVE
+  SICK_LEAVE
+  UNPAID_LEAVE
+  RTT
+  OTHER
+}
+
+enum AbsenceStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum AbsencePeriod {
+  FULL_DAY
+  MORNING
+  AFTERNOON
+  CUSTOM   # si vous gérez startTime/endTime en demi-journée personnalisée
+}
+
+# ========= Payloads (DTO) =========
+type AbsenceDay {
+  id: ID!
+  date: String!         
+  period: AbsencePeriod!
+  startTime: String     
+  endTime: String       
+}
+
+type Absence {
+  id: ID!
+  userId: ID!
+  startDate: String!
+  endDate: String!
+  type: AbsenceType!
+  reason: String
+  supportingDocumentUrl: String
+  status: AbsenceStatus!
+  approvedBy: ID
+  approvedAt: String
+  createdAt: String
+  updatedAt: String
+  days: [AbsenceDay!]!
+}
+
+input AbsenceCreateInput {
+  startDate: String!
+  endDate: String!
+  type: AbsenceType!
+  reason: String
+  supportingDocumentUrl: String
+  # clef= "yyyy-MM-dd", valeur = period
+  periodByDate: [PeriodByDateInput!]
+}
+
+input PeriodByDateInput {
+  date: String!     
+  period: AbsencePeriod!
+}
+
+input AbsenceUpdateInput {
+  startDate: String
+  endDate: String
+  type: AbsenceType
+  reason: String
+  supportingDocumentUrl: String
+  periodByDate: [PeriodByDateInput!]
+}
+
+input AbsenceStatusUpdateInput {
+  status: AbsenceStatus!  
+}
+
+extend type Query {
+  myAbsences: [Absence!]!                    
+  absencesByUser(userId: ID!): [Absence!]!   
+  allAbsences: [Absence!]!                   
+  absence(id: ID!): Absence                  
+}
+
+extend type Mutation {
+  createAbsence(input: AbsenceCreateInput!): Absence!
+  updateAbsence(id: ID!, input: AbsenceUpdateInput!): Absence!
+  setAbsenceStatus(id: ID!, input: AbsenceStatusUpdateInput!): Absence! 
+  deleteAbsence(id: ID!): Boolean!                                      
+}
