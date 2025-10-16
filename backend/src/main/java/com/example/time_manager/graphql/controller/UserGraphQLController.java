@@ -35,19 +35,24 @@ public class UserGraphQLController {
         return userService.findByEmail(email).orElse(null);
     }
 
-    @MutationMapping
-    public AuthResponse login(@Argument AuthRequest input) {
-        if (!userService.validateUser(input.getEmail(), input.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
-        }
-        User user = userService.findByEmail(input.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found after validation"));
-        String token = jwtUtil.generateAccessToken(user.getEmail(), user.getId());
-        // String refresh = jwtUtil.generateRefreshToken(user.getEmail(), user.getId());
-
-        return new AuthResponse(token);
+@MutationMapping
+public AuthResponse login(@Argument AuthRequest input) {
+    if (!userService.validateUser(input.getEmail(), input.getPassword())) {
+        throw new RuntimeException("Invalid credentials");
     }
+    User user = userService.findByEmail(input.getEmail())
+            .orElseThrow(() -> new RuntimeException("User not found after validation"));
 
+    String token = jwtUtil.generateAccessToken(
+        user.getEmail(),
+        user.getId().toString(),
+        user.getFirstName(),
+        user.getRole() 
+    );
+
+
+    return new AuthResponse(token);
+}
     @MutationMapping
     public User register(@Argument CreateUserInput input) {
         User user = new User();
