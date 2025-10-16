@@ -1,0 +1,110 @@
+<div class="dashboard">
+  <!-- ===== Sidebar ===== -->
+  <aside class="sidebar">
+    <div class="logo">
+      <img src="assets/logo.png" alt="Logo" />
+    </div>
+
+    <nav class="menu">
+      <button class="menu-btn" (click)="goToDashboard()">
+        <mat-icon>dashboard</mat-icon>
+        Dashboard
+      </button>
+
+      <button class="menu-btn" (click)="goToPlanning()">
+        <mat-icon>calendar_month</mat-icon>
+        Calendar
+      </button>
+
+      <button class="menu-btn">
+        <mat-icon>history</mat-icon>
+        Presence logs
+      </button>
+
+      <button class="menu-btn active">
+        <mat-icon>groups</mat-icon>
+        Teams
+      </button>
+    </nav>
+
+    <button class="logout-btn" (click)="logout()">
+      <mat-icon>logout</mat-icon>
+      Disconnect
+    </button>
+  </aside>
+
+  <!-- ===== Main Content ===== -->
+  <main class="main-content">
+    <!-- Header -->
+    <header class="header">
+      <h2>Team Management</h2>
+    </header>
+
+    <!-- Search bar-->
+     <section class="search-section">
+    <div class="search-container">
+      <mat-icon>search</mat-icon>
+      <input
+        type="text"
+        class="search-bar"
+        placeholder="Rechercher une équipe..."
+      />
+    </div>
+
+    <button class="add-team-btn" (click)="addTeam()">
+      <mat-icon>add</mat-icon>
+      Ajouter une équipe
+    </button>
+  </section>
+
+ <!-- === TEAM Section === -->
+  <section class="team-grid">
+    <!-- === TEAM CARD === -->
+    <div class="team-card" *ngFor="let team of teams">
+  <div class="team-header">
+    <div class="team-avatar">
+      {{ team.name.charAt(0).toUpperCase() }}
+    </div>
+    <div class="team-info">
+      <h4>{{ team.name }}</h4>
+      <span>{{ team.members.length }} membres</span>
+    </div>
+  </div>
+
+  <div class="team-members">
+    <img
+      *ngFor="let member of team.members.slice(0, 5)"
+      [src]="member.photo || 'assets/default-user.jpg'"
+      [alt]="member.name"
+    />
+    <span *ngIf="team.members.length > 5" class="more-members">
+      +{{ team.members.length - 5 }}
+    </span>
+  </div>
+
+  <div class="team-actions">
+    <button (click)="showEditModal(team.id)">
+      <mat-icon>edit</mat-icon>
+      Edit
+    </button>
+    <button (click)="deleteTeam(team.id)">
+      <mat-icon>delete</mat-icon>
+      Delete
+    </button>
+  </div>
+</div>
+
+  </section>
+  <div class="add-team-form" *ngIf="showAddTeamForm">
+    <form action="">
+        <label for="teamName">Name of the team</label>
+        <input type="text" class="input-form" id="teamName" placeholder="Name of team" required value="{{teams[teamSelected].name}}"/>
+        <button type="submit" class="btn-submit">Edit</button>
+    </form>
+    <button class="close-btn" (click)="closeModal()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  </main>
+</div>
