@@ -14,8 +14,8 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth';
 
 @Component({
-  selector: 'app-employee-dashboard',
-  templateUrl: './employee-dashboard.html',
+  selector: 'app-enterprise-dashboard',
+  templateUrl: './enterprise-dashboard.html',
   imports: [ CommonModule,
     FormsModule,
     MatCardModule,
@@ -25,10 +25,10 @@ import { AuthService } from '../../core/services/auth';
     MatInputModule,
     NgChartsModule,
   ],
-  styleUrls: ['./employee-dashboard.scss']
+  styleUrls: ['./enterprise-dashboard.scss']
 })
 
-export class EmployeeDashboard implements OnDestroy {
+export class EnterpriseDashboard implements OnDestroy {
   isWorking: boolean = false;
   timer: number = 0;
   time :{hours: number, minutes: number } = {hours:0, minutes:0};
@@ -180,17 +180,28 @@ export class EmployeeDashboard implements OnDestroy {
     const pad = (n: number) => n.toString().padStart(2, '0');
     return `${pad(h)}:${pad(m)}:${pad(s)}`;
   }
+
+  // ---------- routes ----------
+  
+  goToPlanning() {
+    this.router.navigate(['/manager/planning']);
+  }
+
+  logout() {
+    this.auth.logout();
+    this.router.navigate(['/login']);
+  }
+  goToTeamManagement() {
+    this.router.navigate(['/manager/teams']);
+  }
+
+
   // ---------- fin utilitaires ----------
 
   ngOnDestroy(): void {
     if (this.intervalId !== null) {
       clearInterval(this.intervalId);
     }
-  }
-
-  logout() {
-    this.auth.logout();
-    this.router.navigate(['/login']);
   }
 }
 
