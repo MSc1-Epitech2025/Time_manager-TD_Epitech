@@ -25,19 +25,36 @@ export type Session = {
 
 type UserResponse = {
   id: string;
-  firstName: string;
-  lastName: string;
+  firstName?: string | null;
+  lastName?: string | null;
   email: string;
-  phone?: string;
-  role: string;
-  poste?: string;
+  phone?: string | null;
+  role?: string | null;
+  poste?: string | null;
+};
+
+type GraphqlResponse<T> = {
+  data?: T;
+  errors?: Array<{ message: string }>;
 };
 
 const STORAGE_KEY = 'tm.session';
 const REMEMBER_KEY = 'tm.remember';
 const API_ROOT = 'http://localhost:8030';
 const GRAPHQL_ENDPOINT = `${API_ROOT}/graphql`;
-const USERS_ME_ENDPOINT = `${API_ROOT}/api/users/me`;
+const USER_BY_EMAIL_QUERY = `
+  query UserByEmail($email: String!) {
+    userByEmail(email: $email) {
+      id
+      firstName
+      lastName
+      email
+      phone
+      role
+      poste
+    }
+  }
+`;
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -147,9 +164,20 @@ export class AuthService {
     if (!sess) return null;
 
     try {
+      const email = sess.user.email;
+      if (!email) return null;
+
       const profile = await firstValueFrom(
-        this.http.get<UserResponse>(USERS_ME_ENDPOINT).pipe(
-          map((resp) => this.userFromResponse(resp)),
+        this.http.post<GraphqlResponse<{ userByEmail: UserResponse | null }>>(GRAPHQL_ENDPOINT, {
+          query: USER_BY_EMAIL_QUERY,
+          variables: { email },
+        }).pipe(
+          map((resp) => {
+            if (resp.errors?.length) {
+              throw new Error(resp.errors.map((e) => e.message).join(', '));
+            }
+            return this.userFromResponse(resp.data?.userByEmail ?? null);
+          }),
           catchError((err) => {
             console.warn('Impossible de récupérer le profil', err);
             return of(null);
@@ -293,12 +321,11 @@ export class AuthService {
     return {
       id: resp.id,
       email: resp.email,
-      firstName: resp.firstName,
-      lastName: resp.lastName,
-      poste: resp.poste,
-      phone: resp.phone,
+      firstName: resp.firstName ?? undefined,
+      lastName: resp.lastName ?? undefined,
+      poste: resp.poste ?? undefined,
+      phone: resp.phone ?? undefined,
       roles: this.extractRoles(resp.role),
     };
   }
 }
-

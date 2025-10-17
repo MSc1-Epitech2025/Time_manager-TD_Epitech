@@ -106,7 +106,7 @@ export class ManagerDashboard {
   }
 
   goToPlanning() {
-    this.router.navigate(['/manager/planning']);
+    this.router.navigate(['/planning']);
   }
 
   goToEmp() {
