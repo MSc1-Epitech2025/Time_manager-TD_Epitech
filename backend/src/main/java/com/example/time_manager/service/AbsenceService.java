@@ -5,22 +5,27 @@ import com.example.time_manager.dto.absence.AbsenceDayResponse;
 import com.example.time_manager.dto.absence.AbsenceResponse;
 import com.example.time_manager.dto.absence.AbsenceStatusUpdateRequest;
 import com.example.time_manager.dto.absence.AbsenceUpdateRequest;
+import com.example.time_manager.model.User;
 import com.example.time_manager.model.absence.Absence;
 import com.example.time_manager.model.absence.AbsenceDay;
 import com.example.time_manager.model.absence.AbsencePeriod;
 import com.example.time_manager.model.absence.AbsenceStatus;
-import com.example.time_manager.model.User;
 import com.example.time_manager.repository.AbsenceDayRepository;
 import com.example.time_manager.repository.AbsenceRepository;
+import com.example.time_manager.repository.TeamMemberRepository;
 import com.example.time_manager.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Transactional
@@ -29,173 +34,236 @@ public class AbsenceService {
   private final AbsenceRepository absenceRepo;
   private final AbsenceDayRepository dayRepo;
   private final UserRepository userRepo;
+  private final TeamMemberRepository teamMemberRepo;
 
   public AbsenceService(AbsenceRepository absenceRepo,
                         AbsenceDayRepository dayRepo,
-                        UserRepository userRepo) {
+                        UserRepository userRepo,
+                        TeamMemberRepository teamMemberRepo) {
     this.absenceRepo = absenceRepo;
     this.dayRepo = dayRepo;
     this.userRepo = userRepo;
+    this.teamMemberRepo = teamMemberRepo;
   }
 
   /* =================== CREATE =================== */
 
-  /** Create an absence for the authenticated user (by JWT email). */
   public AbsenceResponse createForEmail(String email, AbsenceCreateRequest req) {
     var user = userRepo.findByEmail(email)
         .orElseThrow(() -> new EntityNotFoundException("User not found: " + email));
-    validateDates(req.startDate, req.endDate);
+
+    validateDates(req.getStartDate(), req.getEndDate());
 
     var a = new Absence();
-    a.setUser(user);
-    a.setStartDate(req.startDate);
-    a.setEndDate(req.endDate);
-    a.setType(req.type);
-    a.setReason(req.reason);
-    a.setSupportingDocumentUrl(req.supportingDocumentUrl);
+    a.setUserId(user.getId());
+    a.setStartDate(req.getStartDate());
+    a.setEndDate(req.getEndDate());
+    a.setType(req.getType());
+    a.setReason(req.getReason());
+    a.setSupportingDocumentUrl(req.getSupportingDocumentUrl());
     a.setStatus(AbsenceStatus.PENDING);
 
     a = absenceRepo.save(a);
 
-    generateDays(a, req.periodByDate);
-    var days = dayRepo.findByAbsence_IdOrderByAbsenceDateAsc(a.getId());
+    generateDays(a, req.getPeriodByDate());
+    var days = dayRepo.findByAbsenceIdOrderByAbsenceDateAsc(a.getId());
     return toDto(a, days);
   }
 
   /* =================== READ =================== */
 
-  /** List my absences (current user via email). */
   @Transactional(readOnly = true)
   public List<AbsenceResponse> listMine(String email) {
     var me = userRepo.findByEmail(email)
         .orElseThrow(() -> new EntityNotFoundException("User not found: " + email));
-    var rows = absenceRepo.findByUser_IdOrderByStartDateDesc(me.getId());
+    var rows = absenceRepo.findByUserIdOrderByStartDateDesc(me.getId());
     return mapWithDays(rows);
   }
 
-  /** List absences for a specific user (manager/admin). */
   @Transactional(readOnly = true)
-  public List<AbsenceResponse> listForUser(String userId) {
-    var rows = absenceRepo.findByUser_IdOrderByStartDateDesc(userId);
+  public List<AbsenceResponse> listForUser(String targetUserId) {
+    String requesterId = currentUserId();
+    var requester = userRepo.findById(requesterId)
+        .orElseThrow(() -> new EntityNotFoundException("Requester not found: " + requesterId));
+
+    boolean isAdmin = hasRole(requester, "ADMIN");
+    boolean isManager = hasRole(requester, "MANAGER");
+    boolean isOwner = requesterId.equals(targetUserId);
+
+    if (!(isAdmin || isOwner || (isManager && canManagerActOn(requester, targetUserId)))) {
+      throw new org.springframework.security.access.AccessDeniedException("Forbidden");
+    }
+
+    var rows = absenceRepo.findByUserIdOrderByStartDateDesc(targetUserId);
     return mapWithDays(rows);
   }
 
-  /** List all absences (admin). */
-  @Transactional(readOnly = true)
-  public List<AbsenceResponse> listAll() {
+    @Transactional(readOnly = true)
+    public List<AbsenceResponse> listAll() {
+    // ceinture-bretelles côté service
+    if (!isAdmin()) {
+        throw new org.springframework.security.access.AccessDeniedException("Forbidden: admin only");
+    }
     var rows = absenceRepo.findAllByOrderByStartDateDesc();
     return mapWithDays(rows);
-  }
+    }
 
-  /** Get one absence if visible to requester (admin OR manager OR owner). */
   @Transactional(readOnly = true)
   public AbsenceResponse getVisibleTo(String email, Long id) {
-    var me = userRepo.findByEmail(email)
+    var requester = userRepo.findByEmail(email)
         .orElseThrow(() -> new EntityNotFoundException("User not found: " + email));
     var a = absenceRepo.findById(id)
         .orElseThrow(() -> new EntityNotFoundException("Absence not found: " + id));
 
-    boolean isAdmin = hasRole(me, "ADMIN");
-    boolean isManager = hasRole(me, "MANAGER");
-    boolean isOwner = a.getUser().getId().equals(me.getId());
+    boolean isAdmin   = hasRole(requester, "ADMIN");
+    boolean isManager = hasRole(requester, "MANAGER");
+    boolean isOwner   = a.getUserId().equals(requester.getId());
 
-    if (isAdmin || isManager || isOwner) {
-      var days = dayRepo.findByAbsence_IdOrderByAbsenceDateAsc(a.getId());
+    if (isAdmin || isOwner || (isManager && canManagerActOn(requester, a.getUserId()))) {
+      var days = dayRepo.findByAbsenceIdOrderByAbsenceDateAsc(a.getId());
       return toDto(a, days);
     }
     throw new org.springframework.security.access.AccessDeniedException("Forbidden");
   }
 
+  @Transactional(readOnly = true)
+public List<AbsenceResponse> listTeamAbsences(String managerEmail, Long teamId) {
+  var manager = userRepo.findByEmail(managerEmail)
+      .orElseThrow(() -> new EntityNotFoundException("User not found: " + managerEmail));
+
+  if (!hasRole(manager, "MANAGER")) {
+    throw new org.springframework.security.access.AccessDeniedException("Forbidden: manager only");
+  }
+
+  List<String> teamUserIds = new ArrayList<>();
+
+  if (teamId != null) {
+    // vérifie que le manager est bien membre de cette équipe
+    var managerTeams = teamMemberRepo.findTeamIdsByUserId(manager.getId());
+    if (managerTeams.stream().noneMatch(id -> id.equals(teamId))) {
+      throw new org.springframework.security.access.AccessDeniedException("Forbidden: not your team");
+    }
+    // récupère les membres
+    var users = teamMemberRepo.findUsersByTeamId(teamId);
+    for (var u : users) teamUserIds.add(u.getId());
+  } else {
+    // agrège toutes les équipes du manager
+    var managerTeams = teamMemberRepo.findTeamIdsByUserId(manager.getId());
+    for (Long tid : managerTeams) {
+      var users = teamMemberRepo.findUsersByTeamId(tid);
+      for (var u : users) teamUserIds.add(u.getId());
+    }
+  }
+
+  if (teamUserIds.isEmpty()) return List.of();
+
+  var rows = absenceRepo.findByUserIdInOrderByStartDateDesc(teamUserIds);
+  return mapWithDays((List<Absence>) rows);
+}
+
+
+  
+
   /* =================== UPDATE =================== */
 
-  /** Update if (ADMIN) or (OWNER and status=PENDING). May regenerate days if periodByDate provided. */
   public AbsenceResponse updateVisibleTo(String email, Long id, AbsenceUpdateRequest req) {
-    var me = userRepo.findByEmail(email)
+    var requester = userRepo.findByEmail(email)
         .orElseThrow(() -> new EntityNotFoundException("User not found: " + email));
     var a = absenceRepo.findById(id)
         .orElseThrow(() -> new EntityNotFoundException("Absence not found: " + id));
 
-    boolean isAdmin = hasRole(me, "ADMIN");
-    boolean isOwner = a.getUser().getId().equals(me.getId());
-    if (!(isAdmin || (isOwner && a.getStatus() == AbsenceStatus.PENDING))) {
+    boolean isAdmin = hasRole(requester, "ADMIN");
+    boolean isOwner = a.getUserId().equals(requester.getId());
+    boolean isManager = hasRole(requester, "MANAGER");
+
+    if (!(isAdmin || isOwner || (isManager && canManagerActOn(requester, a.getUserId())))) {
       throw new org.springframework.security.access.AccessDeniedException("Forbidden");
     }
+    if (!isAdmin && !isManager && !(isOwner && a.getStatus() == AbsenceStatus.PENDING)) {
+      throw new org.springframework.security.access.AccessDeniedException("Forbidden: owner can edit only while PENDING");
+    }
 
-    if (req.startDate != null) a.setStartDate(req.startDate);
-    if (req.endDate != null)   a.setEndDate(req.endDate);
-    if (req.type != null)      a.setType(req.type);
-    if (req.reason != null)    a.setReason(req.reason);
-    if (req.supportingDocumentUrl != null) a.setSupportingDocumentUrl(req.supportingDocumentUrl);
+    if (req.getStartDate() != null) a.setStartDate(req.getStartDate());
+    if (req.getEndDate()   != null) a.setEndDate(req.getEndDate());
+    if (req.getType()      != null) a.setType(req.getType());
+    if (req.getReason()    != null) a.setReason(req.getReason());
+    if (req.getSupportingDocumentUrl() != null) a.setSupportingDocumentUrl(req.getSupportingDocumentUrl());
 
     validateDates(a.getStartDate(), a.getEndDate());
     a = absenceRepo.save(a);
 
-    if (req.periodByDate != null) {
-      dayRepo.deleteByAbsence_Id(a.getId());
-      generateDays(a, req.periodByDate);
+    if (req.getPeriodByDate() != null) {
+      dayRepo.deleteByAbsenceId(a.getId());
+      generateDays(a, req.getPeriodByDate());
     }
 
-    var days = dayRepo.findByAbsence_IdOrderByAbsenceDateAsc(a.getId());
+    var days = dayRepo.findByAbsenceIdOrderByAbsenceDateAsc(a.getId());
     return toDto(a, days);
   }
 
   /* =================== STATUS (APPROVE/REJECT) =================== */
 
-  /** Approve / Reject (manager/admin). Records approver + timestamp. */
   public AbsenceResponse setStatus(String approverEmail, Long id, AbsenceStatusUpdateRequest req) {
     var approver = userRepo.findByEmail(approverEmail)
         .orElseThrow(() -> new EntityNotFoundException("User not found: " + approverEmail));
     var a = absenceRepo.findById(id)
         .orElseThrow(() -> new EntityNotFoundException("Absence not found: " + id));
 
-    boolean isAdmin = hasRole(approver, "ADMIN");
+    boolean isAdmin   = hasRole(approver, "ADMIN");
     boolean isManager = hasRole(approver, "MANAGER");
-    if (!(isAdmin || isManager)) {
+
+    if (!(isAdmin || (isManager && canManagerActOn(approver, a.getUserId())))) {
       throw new org.springframework.security.access.AccessDeniedException("Forbidden");
     }
 
-    if (req.status == AbsenceStatus.PENDING) {
+    if (req.getStatus() == AbsenceStatus.PENDING) {
       throw new IllegalArgumentException("Status must be APPROVED or REJECTED");
     }
 
-    a.setStatus(req.status);
-    a.setApprovedBy(approver);
-    a.setApprovedAt(java.time.Instant.now());
-
+    a.setStatus(req.getStatus());
+    a.setApprovedBy(approver.getId());
+    a.setApprovedAt(LocalDateTime.now());
     a = absenceRepo.save(a);
-    var days = dayRepo.findByAbsence_IdOrderByAbsenceDateAsc(a.getId());
+
+    var days = dayRepo.findByAbsenceIdOrderByAbsenceDateAsc(a.getId());
     return toDto(a, days);
   }
 
   /* =================== DELETE =================== */
 
-  /** Delete if (ADMIN) or (OWNER and status=PENDING). */
   public void deleteVisibleTo(String email, Long id) {
-    var me = userRepo.findByEmail(email)
+    var requester = userRepo.findByEmail(email)
         .orElseThrow(() -> new EntityNotFoundException("User not found: " + email));
     var a = absenceRepo.findById(id)
         .orElseThrow(() -> new EntityNotFoundException("Absence not found: " + id));
 
-    boolean isAdmin = hasRole(me, "ADMIN");
-    boolean isOwner = a.getUser().getId().equals(me.getId());
-    if (!(isAdmin || (isOwner && a.getStatus() == AbsenceStatus.PENDING))) {
+    boolean isAdmin = hasRole(requester, "ADMIN");
+    boolean isOwner = a.getUserId().equals(requester.getId());
+    boolean isManager = hasRole(requester, "MANAGER");
+
+    if (!(isAdmin || isOwner || (isManager && canManagerActOn(requester, a.getUserId())))) {
       throw new org.springframework.security.access.AccessDeniedException("Forbidden");
     }
+    if (!isAdmin && !isManager && !(isOwner && a.getStatus() == AbsenceStatus.PENDING)) {
+      throw new org.springframework.security.access.AccessDeniedException("Forbidden: owner can delete only while PENDING");
+    }
 
-    dayRepo.deleteByAbsence_Id(id);
+    dayRepo.deleteByAbsenceId(id);
     absenceRepo.deleteById(id);
   }
 
   /* =================== Helpers =================== */
 
   private void validateDates(LocalDate start, LocalDate end) {
+    if (start == null || end == null) {
+      throw new IllegalArgumentException("startDate and endDate are required");
+    }
     if (start.isAfter(end)) {
       throw new IllegalArgumentException("startDate must be on/before endDate");
     }
   }
 
-  /** Generate absence_days for [startDate..endDate], with optional per-day period overrides. */
-  private void generateDays(Absence a, java.util.Map<String, AbsencePeriod> periodByDate) {
+  private void generateDays(Absence a, Map<LocalDate, AbsencePeriod> periodByDate) {
     var days = new ArrayList<AbsenceDay>();
     for (LocalDate d = a.getStartDate(); !d.isAfter(a.getEndDate()); d = d.plusDays(1)) {
       var day = new AbsenceDay();
@@ -204,12 +272,11 @@ public class AbsenceService {
 
       AbsencePeriod p = AbsencePeriod.FULL_DAY;
       if (periodByDate != null) {
-        var override = periodByDate.get(d.toString()); // key: "YYYY-MM-DD"
+        AbsencePeriod override = periodByDate.get(d);
         if (override != null) p = override;
       }
       day.setPeriod(p);
 
-      // Optional default times for AM/PM (can be removed/changed per business rules)
       if (p == AbsencePeriod.AM) {
         day.setStartTime(LocalTime.of(8, 0));
         day.setEndTime(LocalTime.of(12, 0));
@@ -224,40 +291,43 @@ public class AbsenceService {
   }
 
   private List<AbsenceResponse> mapWithDays(List<Absence> rows) {
-    return rows.stream()
-        .map(a -> toDto(a, dayRepo.findByAbsence_IdOrderByAbsenceDateAsc(a.getId())))
-        .toList();
+    List<AbsenceResponse> out = new ArrayList<>();
+    for (Absence a : rows) {
+      var days = dayRepo.findByAbsenceIdOrderByAbsenceDateAsc(a.getId());
+      out.add(toDto(a, days));
+    }
+    return out;
   }
 
   private AbsenceResponse toDto(Absence a, List<AbsenceDay> days) {
     var dto = new AbsenceResponse();
-    dto.id = a.getId();
-    dto.userId = a.getUser().getId();
-    dto.startDate = a.getStartDate().toString();
-    dto.endDate = a.getEndDate().toString();
-    dto.type = a.getType();
-    dto.reason = a.getReason();
-    dto.supportingDocumentUrl = a.getSupportingDocumentUrl();
-    dto.status = a.getStatus();
-    dto.approvedBy = a.getApprovedBy() != null ? a.getApprovedBy().getId() : null;
-    dto.approvedAt = a.getApprovedAt();
-    dto.createdAt = a.getCreatedAt();
-    dto.updatedAt = a.getUpdatedAt();
+    dto.setId(a.getId());
+    dto.setUserId(a.getUserId());
+    dto.setStartDate(a.getStartDate());
+    dto.setEndDate(a.getEndDate());
+    dto.setType(a.getType());
+    dto.setReason(a.getReason());
+    dto.setSupportingDocumentUrl(a.getSupportingDocumentUrl());
+    dto.setStatus(a.getStatus());
+    dto.setApprovedBy(a.getApprovedBy());
+    dto.setApprovedAt(a.getApprovedAt());
+    dto.setCreatedAt(a.getCreatedAt() != null ? a.getCreatedAt().toLocalDateTime() : null);
+    dto.setUpdatedAt(a.getUpdatedAt() != null ? a.getUpdatedAt().toLocalDateTime() : null);
 
-    dto.days = new ArrayList<>();
-    for (var d : days) {
+    List<AbsenceDayResponse> dayDtos = new ArrayList<>();
+    for (AbsenceDay d : days) {
       var rd = new AbsenceDayResponse();
-      rd.id = d.getId();
-      rd.date = d.getAbsenceDate().toString();
-      rd.period = d.getPeriod();
-      rd.startTime = d.getStartTime() != null ? d.getStartTime().toString() : null;
-      rd.endTime = d.getEndTime() != null ? d.getEndTime().toString() : null;
-      dto.days.add(rd);
+      rd.setId(d.getId());
+      rd.setAbsenceDate(d.getAbsenceDate());
+      rd.setPeriod(d.getPeriod());
+      rd.setStartTime(d.getStartTime());
+      rd.setEndTime(d.getEndTime());
+      dayDtos.add(rd);
     }
+    dto.setDays(dayDtos);
     return dto;
   }
 
-  /** Naive role check from JSON in User.role (e.g. ["employee","manager"]). */
   private boolean hasRole(User u, String roleUpper) {
     String raw = u.getRole();
     if (raw == null || raw.isBlank()) return false;
@@ -267,4 +337,33 @@ public class AbsenceService {
     }
     return false;
   }
+
+  private String currentUserId() {
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    if (auth == null || auth.getName() == null) throw new SecurityException("Unauthenticated");
+    String subject = auth.getName();
+    if (subject.contains("@")) {
+      return userRepo.findByEmail(subject)
+          .map(User::getId)
+          .orElseThrow(() -> new IllegalStateException("No user for email subject: " + subject));
+    }
+    return subject;
+  }
+
+  private boolean canManagerActOn(User manager, String targetUserId) {
+    if (manager.getId().equals(targetUserId)) return true;
+    List<Long> managerTeams = teamMemberRepo.findTeamIdsByUserId(manager.getId());
+    if (managerTeams.isEmpty()) return false;
+    for (Long teamId : managerTeams) {
+      if (teamMemberRepo.existsByTeam_IdAndUser_Id(teamId, targetUserId)) return true;
+    }
+    return false;
+  }
+
+  private boolean isAdmin() {
+  Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+  if (auth == null || auth.getAuthorities() == null) return false;
+  return auth.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+}
+
 }
