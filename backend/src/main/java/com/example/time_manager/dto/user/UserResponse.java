@@ -8,4 +8,5 @@ public class UserResponse {
   public String phone;
   public String role;
   public String poste;
+  public String avatarUrl;
 }
