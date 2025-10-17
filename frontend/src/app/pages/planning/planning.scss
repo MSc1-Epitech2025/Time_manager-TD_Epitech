@@ -10,7 +10,7 @@
     align-items: center;
     gap: 1rem;
     justify-content: space-between;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 
     h2 {
         display: flex;
@@ -36,9 +36,35 @@
     }
 }
 
+.filters {
+    margin: 0 0 1rem;
+
+    .people-select {
+        width: 360px;
+        max-width: 100%;
+    }
+}
+
 full-calendar {
     background-color: #2a2a3c;
     border-radius: 12px;
-    padding: 1rem;
+    padding: 0.5rem 0.75rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+
+    /* Teinte douce pour les événements d'absence */
+    .absence-event {
+        .fc-event-main {
+            background: #a78bfa33;
+            color: #e9d5ff;
+            border-left: 3px solid #a78bfa;
+            padding-left: 6px;
+        }
+    }
+}
+
+/* Optionnel : titres colonnes / heures plus lisibles en sombre */
+.fc-theme-standard .fc-scrollgrid,
+.fc .fc-timegrid-slot-label-cushion,
+.fc .fc-col-header-cell-cushion {
+    color: #e5e7eb;
 }
