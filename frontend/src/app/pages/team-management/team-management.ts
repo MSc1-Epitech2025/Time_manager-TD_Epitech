@@ -5,13 +5,16 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
 import { MatInputModule } from '@angular/material/input';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth';
+import { CreateTeamModal } from '../../create-team-modal/create-team-modal';
 
 @Component({
   selector: 'app-team-management',
-  imports: [MatIconModule, MatButtonModule , CommonModule, FormsModule, MatCardModule, MatFormFieldModule, MatInputModule],
+  imports: [MatIconModule, MatButtonModule , CommonModule, FormsModule, MatCardModule, 
+    MatFormFieldModule, MatInputModule, ],
   templateUrl: './team-management.html',
   styleUrl: './team-management.scss'
 })
@@ -41,13 +44,21 @@ export class TeamManagement {
     ],
   },
 ];
+filteredTeams = this.teams;
 
 
-  constructor(private router: Router, private auth: AuthService) {}
+  constructor(private router: Router, private auth: AuthService, private modal: MatDialog) {}
+
+  refreshTeams() {
+    console.log('Refreshing team list');
+    // Request to backend to get updated team list
+  }
 
   searchTeams() {
+    this.filteredTeams = this.teams.filter(team => 
+      team.name.toLowerCase().includes(this.searchTerm.toLowerCase())
+    );
     console.log('Searching for teams with term:', this.searchTerm);
-    // Request to backend to search teams
   }
   viewTeamDetails(teamId: number) {
     console.log('Viewing team with ID:', teamId);
@@ -63,9 +74,15 @@ export class TeamManagement {
   }
 
   // ---- Crud ----
-  addTeam() {
+  addTeam(teamName: string, members: any[]) {
     console.log('Adding new team');
+    this.teams.push({
+      id: this.teams.length,
+      name: teamName,
+      members: members
+    });
     // Request to backend to add new team
+    this.refreshTeams();
   }
 
   editTeam(teamId: number) {
@@ -79,6 +96,20 @@ export class TeamManagement {
   }
 
   // ---- Modal ----
+
+  showAddModal() {
+    const dialogRef = this.modal.open(CreateTeamModal, {
+    width: '400px'
+  });
+
+  dialogRef.afterClosed().subscribe(result => {
+    if (result) {
+      console.log('Nouvelle équipe créée :', result);
+      this.addTeam(result.name, []);
+    }
+  });
+  
+  }
   showEditModal(teamId: number) {
     this.teamSelected = teamId;
     this.showAddTeamForm = true;

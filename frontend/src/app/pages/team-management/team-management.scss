@@ -200,9 +200,32 @@ $shadow: 0 6px 18px rgba(16, 24, 40, 0.08);
       }
     }
   }
+  
+  .search-btn {
+    display: flex;
+    align-items: center;
+    background: var(--c-primary);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 0.7rem 1.4rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: 0.25s ease;
+
+    mat-icon {
+      font-size: 26px;
+      color: #fff;
+    }
+  }
+
 
   .add-team-btn {
     background: var(--c-primary);
+    background-color: #7c3aed;
     color: #fff;
     border: none;
     border-radius: 10px;
