@@ -7,5 +7,6 @@ public record CreateUserInput(
   String phone,
   String role, 
   String poste,
-  String password
+  String password,
+  String avatarUrl
 ) {}

@@ -24,34 +24,35 @@ public class UserGraphQLController {
         this.userService = userService;
         this.jwtUtil = jwtUtil;
     }
+
     @QueryMapping
     public List<User> users() {
         return userService.findAllUsers();
     }
+
     @QueryMapping
     public User userByEmail(@Argument String email) {
         return userService.findByEmail(email).orElse(null);
     }
 
-@PreAuthorize("permitAll()")
-@MutationMapping
-public AuthResponse login(@Argument AuthRequest input) {
-    if (!userService.validateUser(input.getEmail(), input.getPassword())) {
-        throw new RuntimeException("Invalid credentials");
+    @PreAuthorize("permitAll()")
+    @MutationMapping
+    public AuthResponse login(@Argument AuthRequest input) {
+        if (!userService.validateUser(input.getEmail(), input.getPassword())) {
+            throw new RuntimeException("Invalid credentials");
+        }
+        User user = userService.findByEmail(input.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found after validation"));
+
+        String token = jwtUtil.generateAccessToken(
+            user.getEmail(),
+            user.getId().toString(),
+            user.getFirstName(),
+            user.getRole()
+        );
+        return new AuthResponse(token);
     }
-    User user = userService.findByEmail(input.getEmail())
-            .orElseThrow(() -> new RuntimeException("User not found after validation"));
 
-    String token = jwtUtil.generateAccessToken(
-        user.getEmail(),
-        user.getId().toString(),
-        user.getFirstName(),
-        user.getRole() 
-    );
-
-
-    return new AuthResponse(token);
-}   
     @PreAuthorize("hasRole('ADMIN')")
     @MutationMapping
     public User register(@Argument CreateUserInput input) {
@@ -63,13 +64,19 @@ public AuthResponse login(@Argument AuthRequest input) {
         user.setRole(input.role());
         user.setPoste(input.poste());
         user.setPassword(input.password());
+        user.setAvatarUrl(input.avatarUrl());
         return userService.saveUser(user);
     }
-    
+
     @MutationMapping
-    @PreAuthorize("hasRole('ADMIN')") 
+    @PreAuthorize("hasRole('ADMIN')")
     public Boolean deleteUser(@Argument String id) {
-    userService.deleteById(id);
-    return true;
+        userService.deleteById(id);
+        return true;
+    }
+
+    @MutationMapping
+    public User updateUserAvatar(@Argument String id, @Argument String avatarUrl) {
+        return userService.updateAvatar(id, avatarUrl);
     }
 }
