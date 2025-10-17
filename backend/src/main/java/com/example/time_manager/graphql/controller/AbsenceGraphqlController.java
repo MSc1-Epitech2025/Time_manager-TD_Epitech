@@ -24,6 +24,7 @@ import com.example.time_manager.service.AbsenceService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.annotation.Nullable;
 
+@PreAuthorize("isAuthenticated()")
 @Controller
 public class AbsenceGraphqlController {
 

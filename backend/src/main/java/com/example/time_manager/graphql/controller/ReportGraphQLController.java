@@ -16,6 +16,7 @@ import com.example.time_manager.service.ReportService;
 
 import jakarta.validation.Valid;
 
+@PreAuthorize("isAuthenticated()")
 @Controller
 public class ReportGraphQLController {
 
@@ -34,21 +35,18 @@ public class ReportGraphQLController {
     }
 
     @QueryMapping
-    @PreAuthorize("isAuthenticated()")
     public List<ReportResponse> myReports(Authentication auth) {
         String email = auth.getName();
         return reportService.listMineByEmail(email);
     }
 
     @QueryMapping
-    @PreAuthorize("isAuthenticated()")
     public List<ReportResponse> reportsForMe(Authentication auth) {
         String email = auth.getName();
         return reportService.listReceivedByEmail(email);
     }
 
     @QueryMapping
-    @PreAuthorize("isAuthenticated()")
     public ReportResponse report(@Argument Long id, Authentication auth) {
         String email = auth.getName();
         return reportService.loadVisibleByEmail(email, id);
@@ -57,7 +55,6 @@ public class ReportGraphQLController {
     /* ======================== MUTATIONS ======================== */
 
     @MutationMapping
-    @PreAuthorize("isAuthenticated()")
     public ReportResponse createReport(
         @Argument("input") @Valid ReportCreateRequest input,
         Authentication auth
@@ -67,7 +64,6 @@ public class ReportGraphQLController {
     }
 
     @MutationMapping
-    @PreAuthorize("isAuthenticated()")
     public ReportResponse updateReport(
         @Argument("id") Long id,                            
         @Argument("input") @Valid ReportUpdateRequest input,
@@ -77,7 +73,6 @@ public class ReportGraphQLController {
         return reportService.update(email, id, input);
     }
     @MutationMapping
-    @PreAuthorize("isAuthenticated()")
     public Boolean deleteReport(@Argument Long id, Authentication auth) {
         String email = auth.getName();
         reportService.delete(email, id);

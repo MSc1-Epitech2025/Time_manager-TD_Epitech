@@ -19,6 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.example.time_manager.service.leave.LeaveAccountingBridge;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -35,15 +36,18 @@ public class AbsenceService {
   private final AbsenceDayRepository dayRepo;
   private final UserRepository userRepo;
   private final TeamMemberRepository teamMemberRepo;
-
+  private final LeaveAccountingBridge leaveAccountingBridge; 
+  
   public AbsenceService(AbsenceRepository absenceRepo,
                         AbsenceDayRepository dayRepo,
                         UserRepository userRepo,
-                        TeamMemberRepository teamMemberRepo) {
+                        TeamMemberRepository teamMemberRepo,
+                        LeaveAccountingBridge leaveAccountingBridge) { 
     this.absenceRepo = absenceRepo;
     this.dayRepo = dayRepo;
     this.userRepo = userRepo;
     this.teamMemberRepo = teamMemberRepo;
+    this.leaveAccountingBridge = leaveAccountingBridge; 
   }
 
   /* =================== CREATE =================== */
@@ -100,7 +104,6 @@ public class AbsenceService {
 
     @Transactional(readOnly = true)
     public List<AbsenceResponse> listAll() {
-    // ceinture-bretelles côté service
     if (!isAdmin()) {
         throw new org.springframework.security.access.AccessDeniedException("Forbidden: admin only");
     }
@@ -138,16 +141,13 @@ public List<AbsenceResponse> listTeamAbsences(String managerEmail, Long teamId) 
   List<String> teamUserIds = new ArrayList<>();
 
   if (teamId != null) {
-    // vérifie que le manager est bien membre de cette équipe
     var managerTeams = teamMemberRepo.findTeamIdsByUserId(manager.getId());
     if (managerTeams.stream().noneMatch(id -> id.equals(teamId))) {
       throw new org.springframework.security.access.AccessDeniedException("Forbidden: not your team");
     }
-    // récupère les membres
     var users = teamMemberRepo.findUsersByTeamId(teamId);
     for (var u : users) teamUserIds.add(u.getId());
   } else {
-    // agrège toutes les équipes du manager
     var managerTeams = teamMemberRepo.findTeamIdsByUserId(manager.getId());
     for (Long tid : managerTeams) {
       var users = teamMemberRepo.findUsersByTeamId(tid);
@@ -192,6 +192,11 @@ public List<AbsenceResponse> listTeamAbsences(String managerEmail, Long teamId) 
     validateDates(a.getStartDate(), a.getEndDate());
     a = absenceRepo.save(a);
 
+    if (a.getStatus() == AbsenceStatus.APPROVED) {
+      leaveAccountingBridge.ensureDebitForApprovedAbsence(a);
+    }
+
+
     if (req.getPeriodByDate() != null) {
       dayRepo.deleteByAbsenceId(a.getId());
       generateDays(a, req.getPeriodByDate());
@@ -224,6 +229,11 @@ public List<AbsenceResponse> listTeamAbsences(String managerEmail, Long teamId) 
     a.setApprovedBy(approver.getId());
     a.setApprovedAt(LocalDateTime.now());
     a = absenceRepo.save(a);
+    switch (a.getStatus()) {
+      case APPROVED -> leaveAccountingBridge.ensureDebitForApprovedAbsence(a);
+      case REJECTED -> leaveAccountingBridge.removeDebitForAbsence(a.getId());
+      default -> { /* rien */ }
+    }
 
     var days = dayRepo.findByAbsenceIdOrderByAbsenceDateAsc(a.getId());
     return toDto(a, days);
@@ -247,7 +257,7 @@ public List<AbsenceResponse> listTeamAbsences(String managerEmail, Long teamId) 
     if (!isAdmin && !isManager && !(isOwner && a.getStatus() == AbsenceStatus.PENDING)) {
       throw new org.springframework.security.access.AccessDeniedException("Forbidden: owner can delete only while PENDING");
     }
-
+    leaveAccountingBridge.removeDebitForAbsence(id);
     dayRepo.deleteByAbsenceId(id);
     absenceRepo.deleteById(id);
   }

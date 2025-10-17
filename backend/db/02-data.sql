@@ -95,3 +95,114 @@ VALUES (
   'Alex, please review the updated PTO policy and confirm by Friday.'
 );
 
+-- ==========================================================
+-- LEAVE TYPES
+-- ==========================================================
+INSERT INTO leave_types (code, label) VALUES
+  ('VAC', 'Paid Vacation'),
+  ('RTT', 'Réduction du temps de travail')
+ON DUPLICATE KEY UPDATE label = VALUES(label);
+
+-- ==========================================================
+-- LEAVE ACCOUNTS (VAC + RTT) pour chaque user
+-- - opening_balance en jours
+-- - accrual_per_month en jours/mois (ex: 2.083 ≈ 25 j/an)
+-- - max_carryover et carryover_expire_on optionnels
+-- ==========================================================
+-- Alex
+INSERT INTO leave_accounts (user_id, leave_type, opening_balance, accrual_per_month, max_carryover, carryover_expire_on)
+VALUES
+  ((SELECT id FROM users WHERE email = 'alex.fraioli@epitech.eu'), 'VAC', 10.00, 2.083, 10.00, '2026-03-31'),
+  ((SELECT id FROM users WHERE email = 'alex.fraioli@epitech.eu'), 'RTT',  5.00, 0.000,  5.00, NULL)
+ON DUPLICATE KEY UPDATE
+  opening_balance = VALUES(opening_balance),
+  accrual_per_month = VALUES(accrual_per_month),
+  max_carryover = VALUES(max_carryover),
+  carryover_expire_on = VALUES(carryover_expire_on);
+
+-- Gaspard
+INSERT INTO leave_accounts (user_id, leave_type, opening_balance, accrual_per_month, max_carryover, carryover_expire_on)
+VALUES
+  ((SELECT id FROM users WHERE email = 'gaspard.malmon@epitech.eu'), 'VAC', 12.00, 2.083, 10.00, '2026-03-31'),
+  ((SELECT id FROM users WHERE email = 'gaspard.malmon@epitech.eu'), 'RTT',  6.00, 0.000,  6.00, NULL)
+ON DUPLICATE KEY UPDATE
+  opening_balance = VALUES(opening_balance),
+  accrual_per_month = VALUES(accrual_per_month),
+  max_carryover = VALUES(max_carryover),
+  carryover_expire_on = VALUES(carryover_expire_on);
+
+-- Clément
+INSERT INTO leave_accounts (user_id, leave_type, opening_balance, accrual_per_month, max_carryover, carryover_expire_on)
+VALUES
+  ((SELECT id FROM users WHERE email = 'clement.hamimi@epitech.eu'), 'VAC',  8.00, 2.083, 10.00, '2026-03-31'),
+  ((SELECT id FROM users WHERE email = 'clement.hamimi@epitech.eu'), 'RTT',  4.00, 0.000,  6.00, NULL)
+ON DUPLICATE KEY UPDATE
+  opening_balance = VALUES(opening_balance),
+  accrual_per_month = VALUES(accrual_per_month),
+  max_carryover = VALUES(max_carryover),
+  carryover_expire_on = VALUES(carryover_expire_on);
+
+-- Armand
+INSERT INTO leave_accounts (user_id, leave_type, opening_balance, accrual_per_month, max_carryover, carryover_expire_on)
+VALUES
+  ((SELECT id FROM users WHERE email = 'armand.braud@epitech.eu'), 'VAC',  7.00, 2.083, 10.00, '2026-03-31'),
+  ((SELECT id FROM users WHERE email = 'armand.braud@epitech.eu'), 'RTT',  3.00, 0.000,  6.00, NULL)
+ON DUPLICATE KEY UPDATE
+  opening_balance = VALUES(opening_balance),
+  accrual_per_month = VALUES(accrual_per_month),
+  max_carryover = VALUES(max_carryover),
+  carryover_expire_on = VALUES(carryover_expire_on);
+
+-- ==========================================================
+-- LEAVE LEDGER (exemples : accruals mensuels + quelques débits)
+-- NOTE: reference_absence_id est NULL ici (seed). En prod, tes approbations lieront l'absence.
+-- ==========================================================
+
+-- ===== Accruals VAC Sept & Oct 2025 =====
+INSERT INTO leave_ledger (account_id, entry_date, kind, amount, reference_absence_id, note)
+VALUES
+  -- Alex VAC
+  ((SELECT id FROM leave_accounts WHERE user_id = (SELECT id FROM users WHERE email='alex.fraioli@epitech.eu') AND leave_type='VAC'), '2025-09-30', 'ACCRUAL', 2.08, NULL, 'Monthly accrual Sep 2025'),
+  ((SELECT id FROM leave_accounts WHERE user_id = (SELECT id FROM users WHERE email='alex.fraioli@epitech.eu') AND leave_type='VAC'), '2025-10-15', 'ACCRUAL', 2.08, NULL, 'Monthly accrual Oct 2025 prorat.'),
+
+  -- Gaspard VAC
+  ((SELECT id FROM leave_accounts WHERE user_id = (SELECT id FROM users WHERE email='gaspard.malmon@epitech.eu') AND leave_type='VAC'), '2025-09-30', 'ACCRUAL', 2.08, NULL, 'Monthly accrual Sep 2025'),
+  ((SELECT id FROM leave_accounts WHERE user_id = (SELECT id FROM users WHERE email='gaspard.malmon@epitech.eu') AND leave_type='VAC'), '2025-10-15', 'ACCRUAL', 2.08, NULL, 'Monthly accrual Oct 2025 prorat.'),
+
+  -- Clément VAC
+  ((SELECT id FROM leave_accounts WHERE user_id = (SELECT id FROM users WHERE email='clement.hamimi@epitech.eu') AND leave_type='VAC'), '2025-09-30', 'ACCRUAL', 2.08, NULL, 'Monthly accrual Sep 2025'),
+  ((SELECT id FROM leave_accounts WHERE user_id = (SELECT id FROM users WHERE email='clement.hamimi@epitech.eu') AND leave_type='VAC'), '2025-10-15', 'ACCRUAL', 2.08, NULL, 'Monthly accrual Oct 2025 prorat.'),
+
+  -- Armand VAC
+  ((SELECT id FROM leave_accounts WHERE user_id = (SELECT id FROM users WHERE email='armand.braud@epitech.eu') AND leave_type='VAC'), '2025-09-30', 'ACCRUAL', 2.08, NULL, 'Monthly accrual Sep 2025'),
+  ((SELECT id FROM leave_accounts WHERE user_id = (SELECT id FROM users WHERE email='armand.braud@epitech.eu') AND leave_type='VAC'), '2025-10-15', 'ACCRUAL', 2.08, NULL, 'Monthly accrual Oct 2025 prorat.');
+
+-- ===== Quelques débits d'exemple =====
+-- Clément pose 1j de VAC (hors lien absence pour la démo)
+INSERT INTO leave_ledger (account_id, entry_date, kind, amount, reference_absence_id, note)
+VALUES (
+  (SELECT id FROM leave_accounts WHERE user_id = (SELECT id FROM users WHERE email='clement.hamimi@epitech.eu') AND leave_type='VAC'),
+  '2025-10-03', 'DEBIT', 1.00, NULL, 'Paid vacation day'
+);
+
+-- Armand pose 0.5j de RTT
+INSERT INTO leave_ledger (account_id, entry_date, kind, amount, reference_absence_id, note)
+VALUES (
+  (SELECT id FROM leave_accounts WHERE user_id = (SELECT id FROM users WHERE email='armand.braud@epitech.eu') AND leave_type='RTT'),
+  '2025-10-02', 'DEBIT', 0.50, NULL, 'RTT afternoon'
+);
+
+-- ===== Exemple d'ajustement et d'expiration de report =====
+-- Ajustement +0.5j pour Gaspard (correction manuelle)
+INSERT INTO leave_ledger (account_id, entry_date, kind, amount, reference_absence_id, note)
+VALUES (
+  (SELECT id FROM leave_accounts WHERE user_id = (SELECT id FROM users WHERE email='gaspard.malmon@epitech.eu') AND leave_type='VAC'),
+  '2025-10-05', 'ADJUSTMENT', 0.50, NULL, 'Manual correction'
+);
+
+-- Expiration d'1j de report pour Alex le 31/03/2026 (prévisionnel)
+INSERT INTO leave_ledger (account_id, entry_date, kind, amount, reference_absence_id, note)
+VALUES (
+  (SELECT id FROM leave_accounts WHERE user_id = (SELECT id FROM users WHERE email='alex.fraioli@epitech.eu') AND leave_type='VAC'),
+  '2026-03-31', 'CARRYOVER_EXPIRE', 1.00, NULL, 'Carryover expired'
+);

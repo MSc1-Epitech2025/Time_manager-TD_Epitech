@@ -107,7 +107,6 @@ public String generateAccessToken(String username, String userId, String firstNa
         return parseRefreshClaims(refreshToken).getSubject();
     }
 
-    /** Optionnel : helpers si tu ajoutes les claims au refresh token. */
     public String extractRefreshFirstName(String refreshToken) {
         return parseRefreshClaims(refreshToken).get(CLAIM_GIVEN_NAME, String.class);
     }

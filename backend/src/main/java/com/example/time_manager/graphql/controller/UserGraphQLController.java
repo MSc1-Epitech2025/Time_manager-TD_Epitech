@@ -14,7 +14,7 @@ import com.example.time_manager.security.JwtUtil;
 import com.example.time_manager.service.UserService;
 import org.springframework.security.access.prepost.PreAuthorize;
 
-
+@PreAuthorize("isAuthenticated()")
 @Controller
 public class UserGraphQLController {
     private final UserService userService;
@@ -24,17 +24,16 @@ public class UserGraphQLController {
         this.userService = userService;
         this.jwtUtil = jwtUtil;
     }
-
     @QueryMapping
     public List<User> users() {
         return userService.findAllUsers();
     }
-
     @QueryMapping
     public User userByEmail(@Argument String email) {
         return userService.findByEmail(email).orElse(null);
     }
 
+@PreAuthorize("permitAll()")
 @MutationMapping
 public AuthResponse login(@Argument AuthRequest input) {
     if (!userService.validateUser(input.getEmail(), input.getPassword())) {
@@ -52,7 +51,8 @@ public AuthResponse login(@Argument AuthRequest input) {
 
 
     return new AuthResponse(token);
-}
+}   
+    @PreAuthorize("hasRole('ADMIN')")
     @MutationMapping
     public User register(@Argument CreateUserInput input) {
         User user = new User();
