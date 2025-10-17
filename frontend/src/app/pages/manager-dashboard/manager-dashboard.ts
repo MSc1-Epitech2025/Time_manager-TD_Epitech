@@ -9,9 +9,8 @@ import { MatInputModule } from '@angular/material/input';
 import { NgChartsModule } from 'ng2-charts';
 import { ChartConfiguration, ChartOptions } from 'chart.js';
 import { Router } from '@angular/router';
-import { ManagerService } from '../../core/services/manager';
+import { ManagerService, EmployeeSummary } from '../../core/services/manager';
 import { ReportService } from '../../core/services/report';
-
 import { AuthService } from '../../core/services/auth';
 
 @Component({
@@ -31,13 +30,14 @@ import { AuthService } from '../../core/services/auth';
   styleUrls: ['./manager-dashboard.scss'],
 })
 export class ManagerDashboard {
-  employees: any[] = [];
-  filteredEmployees: any[] = [];
+  employees: EmployeeSummary[] = [];
+  filteredEmployees: EmployeeSummary[] = [];
   searchTerm = '';
-  selectedEmployee: any | null = null;
+  selectedEmployee: EmployeeSummary | null = null;
+  loadingEmployees = false;
 
   pieChartData: ChartConfiguration<'pie'>['data'] = {
-    labels: ['Présence', 'Retards', 'Absences'],
+    labels: ['Presence', 'Retards', 'Absences'],
     datasets: [
       {
         data: [0, 0, 0],
@@ -64,27 +64,45 @@ export class ManagerDashboard {
   ) { }
 
   ngOnInit() {
-    this.managerService.getTeamEmployees().subscribe((data) => {
-      this.employees = data;
-      this.filteredEmployees = data;
+    this.loadingEmployees = true;
+    this.managerService.getTeamEmployees().subscribe({
+      next: (data) => {
+        this.employees = data;
+        this.filteredEmployees = data;
+        this.loadingEmployees = false;
+        if (data.length) {
+          this.selectEmployee(data[0]);
+        }
+      },
+      error: (err) => {
+        console.error('Echec du chargement des employes', err);
+        this.loadingEmployees = false;
+        this.employees = [];
+        this.filteredEmployees = [];
+        this.selectedEmployee = null;
+      },
     });
   }
 
   filterEmployees() {
-    const term = this.searchTerm.toLowerCase();
-    this.filteredEmployees = this.employees.filter((emp) =>
-      emp.name.toLowerCase().includes(term)
-    );
+    const term = this.searchTerm.trim().toLowerCase();
+    this.filteredEmployees = this.employees.filter((emp) => {
+      const haystack = `${emp.name} ${emp.team ?? ''}`.toLowerCase();
+      return haystack.includes(term);
+    });
   }
 
-  selectEmployee(emp: any) {
+  selectEmployee(emp: EmployeeSummary) {
     this.selectedEmployee = emp;
-    const data = { presence: 80, late: 10, absent: 10 };
-    this.pieChartData.datasets[0].data = [
-      data.presence,
-      data.late,
-      data.absent,
-    ];
+    this.pieChartData = {
+      ...this.pieChartData,
+      datasets: [
+        {
+          ...this.pieChartData.datasets[0],
+          data: [emp.presence, emp.late, emp.absence],
+        },
+      ],
+    };
   }
 
   goToPlanning() {
@@ -106,3 +124,4 @@ export class ManagerDashboard {
     this.router.navigate(['/login']);
   }
 }
+

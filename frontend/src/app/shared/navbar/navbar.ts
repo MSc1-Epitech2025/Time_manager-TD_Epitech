@@ -20,20 +20,17 @@ export class NavbarComponent {
 
   sessionSig = toSignal<Session | null>(this.auth.sessionChanges$, { initialValue: null });
 
-  roleRaw = computed<unknown>(() => this.sessionSig()?.user?.role ?? null);
+  private roles = computed<Role[]>(() => this.sessionSig()?.user?.roles ?? []);
 
-  roleText = computed<string>(() => {
-    const r = this.roleRaw();
-    if (Array.isArray(r)) return r.map(v => String(v)).join(' ').toUpperCase();
-    if (typeof r === 'string') return r.toUpperCase();
-    return String(r ?? '').toUpperCase();
-  });
+  private hasRole(role: Role): boolean {
+    return this.roles().includes(role);
+  }
 
-  has = (name: string) => this.roleText().includes(name.toUpperCase());
-
-  isManager = computed(() => this.has('MANAGER'));
-  isAdmin = computed(() => this.has('ADMIN'));
-  isEmployee = computed(() => this.has('EMPLOYEE') || this.has('MANAGER') || this.has('ADMIN'));
+  isManager = computed(() => this.hasRole('MANAGER') || this.hasRole('ADMIN'));
+  isAdmin = computed(() => this.hasRole('ADMIN'));
+  isEmployee = computed(() =>
+    this.hasRole('EMPLOYEE') || this.hasRole('MANAGER') || this.hasRole('ADMIN')
+  );
 
   logout() {
     this.auth.logout();

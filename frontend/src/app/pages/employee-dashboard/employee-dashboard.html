@@ -1,59 +1,63 @@
-<!DOCTYPE html>
-<html lang="fr">
+<div class="employee-dashboard">
+  <main class="main-content">
+    <div class="header">
+      <h2>Dashboard - Employe</h2>
+    </div>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Employee</title>
-    <link rel="stylesheet" href="employee-dashboard.scss">
-    <link rel="stylesheet" href="https://unpkg.com/primeicons/primeicons.css">
-</head>
-
-<body>
-
-    <!-- Contenu principal -->
-    <main class="main-content">
-        <!-- Header -->
-        <div class="header">
-            <h2>Dashboard - Employee</h2>
+    <header class="content-grid profile-zone">
+      <div class="profile-card">
+        <img src="assets/profile-placeholder.png" alt="Profil" class="profile-img" />
+        <div class="profile-info">
+          <h3>{{ user.name }}</h3>
+          <p>{{ user.poste || 'Poste non renseigne' }}</p>
+          <span class="email">{{ user.email }}</span>
         </div>
+      </div>
 
-        <!-- Profil et statut de travail -->
-        <header class="content-grid">
-            <div class="profile-card">
-                <img src="assets/profile-placeholder.png" alt="Profil" class="profile-img">
-                <div class="profile-info">
-                    <h3>{{user.name}}</h3>
-                    <p>{{user.position}}</p>
-                </div>
-            </div>
+      <div class="work-status">
+        <p class="status-text">
+          Temps travaille aujourd'hui :
+          <span>{{ todayHoursMinutes.hours }}h {{ todayHoursMinutes.minutes }}m</span>
+        </p>
+        <p class="status-subtext" *ngIf="isWorking">Session en cours depuis {{ formattedTimer }}</p>
+        <button
+          class="btn btn-primary"
+          (click)="toggleWorkStatus()"
+          [disabled]="actionPending">
+          <mat-icon>{{ isWorking ? 'pause_circle' : 'play_circle' }}</mat-icon>
+          {{ statusLabel === 'Demarrer' ? 'Demarrer' : 'Mettre en pause' }}
+        </button>
+      </div>
+    </header>
 
-            <div class="work-status">
-                <p class="status-text">You have been working since : <span>{{formatDuration(todayTotalSeconds
-                        )}}</span></p>
-                <div class="status-buttons">
-                    <button class="btn btn-pause" (click)=toggleWorkStatus()>{{status}}</button>
-                </div>
-            </div>
-        </header>
+    <section class="content-grid metrics-zone">
+      <div class="card large">
+        <h3>Vue hebdomadaire</h3>
+        <mat-card class="chart-card">
+          <div class="chart-container" *ngIf="!loadingStats; else loading">
+            <canvas
+              baseChart
+              [data]="pieChartData"
+              [options]="chartOptions"
+              chartType="pie"></canvas>
+          </div>
+          <ng-template #loading>
+            <div class="loading">Chargement des statistiques...</div>
+          </ng-template>
+        </mat-card>
+      </div>
 
-        <!-- Grille principale -->
-        <section class="content-grid">
-            <div class="card large">
-                <h3>Working day</h3>
-                <mat-card class="chart-card">
-                    <div class="chart-container">
-                        <canvas baseChart [data]="pieChartData" [options]="chartOptions" chartType="pie"></canvas>
-                    </div>
-                </mat-card>
-            </div>
-
-            <div class="card small">
-                <h3>Manager</h3>
-                <img src="assets/manager-placeholder.png" alt="Supérieur" class="manager-img">
-            </div>
-        </section>
-    </main>
-</body>
-
-</html>
+      <div class="card small manager-card">
+        <h3>Actions rapides</h3>
+        <button mat-raised-button color="primary" (click)="goToPlanning()">
+          <mat-icon>calendar_month</mat-icon>
+          Consulter mon planning
+        </button>
+        <button mat-stroked-button color="accent" (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          Deconnexion
+        </button>
+      </div>
+    </section>
+  </main>
+</div>
