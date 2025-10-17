@@ -9,7 +9,9 @@ import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
 import { MatInputModule } from '@angular/material/input';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth';
-import { CreateTeamModal } from '../../create-team-modal/create-team-modal';
+import { CreateTeamModal } from '../../modal/create-team-modal/create-team-modal';
+import { EditTeamModalComponent } from '../../modal/edit-team-modal/edit-team-modal';
+import { DeleteTeamModalComponent } from '../../modal/delete-team-modal/delete-team-modal';
 
 @Component({
   selector: 'app-team-management',
@@ -51,6 +53,7 @@ filteredTeams = this.teams;
 
   refreshTeams() {
     console.log('Refreshing team list');
+    this.filteredTeams = this.teams;
     // Request to backend to get updated team list
   }
 
@@ -85,18 +88,50 @@ filteredTeams = this.teams;
     this.refreshTeams();
   }
 
-  editTeam(teamId: number) {
-    
+  
+  editTeam(teamId: number , teamData?: any) {
+    console.log('Editing team with ID:', teamId);
+    console.log('New team data:', teamData);
+    this.teams[teamId] = teamData;
     // requete backend pour modifier l'equipe
   }
-
+  
   deleteTeam(teamId: number) {
-    console.log('Deleting team with ID:', teamId);
+    this.teams.splice(teamId, 1);
+    console.log('Deleting team :', this.teams);
+    this.refreshTeams();
     // Request to backend to delete team
   }
-
+  
   // ---- Modal ----
+  
+  openEditTeamModal(team: any) {
+  const dialogRef = this.modal.open(EditTeamModalComponent, {
+    width: '500px',
+    data: { team }
+  });
 
+  dialogRef.afterClosed().subscribe(updatedTeam => {
+    if (updatedTeam) {
+      console.log('Équipe mise à jour :', updatedTeam);
+      this.editTeam(updatedTeam.id, updatedTeam);
+    }
+  });
+}
+
+openDeleteTeamModal(team: any) {
+  const dialogRef = this.modal.open(DeleteTeamModalComponent, {
+    width: '500px',
+    data: { team }
+  });
+
+  dialogRef.afterClosed().subscribe((updatedTeam) => {
+    if (updatedTeam && updatedTeam.isDestroyed) {
+      console.log('Équipe supprimée :', updatedTeam , "bool:", updatedTeam.isDestroyed);
+      this.deleteTeam(updatedTeam.id);
+    }
+  });
+}
   showAddModal() {
     const dialogRef = this.modal.open(CreateTeamModal, {
     width: '400px'
@@ -130,6 +165,10 @@ filteredTeams = this.teams;
   goToDashboard() {
     this.router.navigate(['/manager']);
   }
+
+  goToLogHistory() {
+    this.router.navigate(['/logs']);
+  } 
 
   logout() {
     this.auth.logout();
