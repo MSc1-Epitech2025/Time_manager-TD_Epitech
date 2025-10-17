@@ -9,6 +9,7 @@ CREATE TABLE users (
                        phone VARCHAR(50) UNIQUE,
                        role JSON NOT NULL, -- ['employee', 'manager', 'admin']
                        poste VARCHAR(100),
+                       avatar_url VARCHAR(500),
                        password VARCHAR(255) NOT NULL,
                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

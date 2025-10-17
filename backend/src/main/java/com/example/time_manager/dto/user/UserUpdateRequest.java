@@ -12,4 +12,5 @@ public class UserUpdateRequest {
   public String poste;
   @Size(min=8, message="Password must be at least 8 chars")
   public String password;
+  public String avatarUrl;
 }

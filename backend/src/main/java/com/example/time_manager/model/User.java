@@ -26,7 +26,8 @@ public class User {
     private String role;
     private String poste;
     private String password;
-
+    @Column(name = "avatar_url", length = 500)
+    private String avatarUrl;
     // === Constructors ===
 
     public User() {
@@ -68,4 +69,8 @@ public class User {
 
     public String getPassword() {return password;}
     public void setPassword(String password) {this.password = password;}
+
+    public String getAvatarUrl() { return avatarUrl; }
+    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+
 }

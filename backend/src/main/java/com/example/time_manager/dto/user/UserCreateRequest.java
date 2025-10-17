@@ -10,4 +10,5 @@ public class UserCreateRequest {
   public String phone;
   public String role;   // JSON string, ex: ["employee"]
   public String poste;
+  public String avatarUrl;
 }

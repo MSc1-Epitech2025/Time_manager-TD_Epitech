@@ -6,6 +6,7 @@ type User {
     phone: String
     role: String
     poste: String
+    avatarUrl: String
 }
 
 type AuthResponse {
@@ -25,6 +26,7 @@ input CreateUserInput {
     role: String
     poste: String
     password: String!
+    avatarUrl: String
 }
 
 type Query {
@@ -35,5 +37,6 @@ type Query {
 type Mutation {
     login(input: AuthRequestInput!): AuthResponse
     register(input: CreateUserInput!): User!
+    updateUserAvatar(id: ID!, avatarUrl: String!): User!
     deleteUser(id: ID!): Boolean!
 }
