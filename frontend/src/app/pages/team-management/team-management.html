@@ -16,7 +16,7 @@
         Calendar
       </button>
 
-      <button class="menu-btn">
+      <button class="menu-btn" (click)="goToLogHistory()">
         <mat-icon>history</mat-icon>
         Presence logs
       </button>
@@ -55,7 +55,6 @@
 
     <!-- === TEAM Section === -->
     <section class="team-grid">
-      <!-- === TEAM CARD === -->
       <div class="team-card" *ngFor="let team of filteredTeams">
         <div class="team-header">
           <div class="team-avatar">
@@ -76,28 +75,25 @@
         </div>
 
         <div class="team-actions">
-          <button>
-            <mat-icon>add</mat-icon>
-            Add member
-          </button>
-          <button (click)="showEditModal(team.id)">
+          
+          <button (click)="openEditTeamModal(team)">
             <mat-icon>edit</mat-icon>
             Edit
           </button>
-          <button (click)="deleteTeam(team.id)">
+          <button (click)="openDeleteTeamModal(team)">
             <mat-icon>delete</mat-icon>
             Delete
           </button>
         </div>
       </div>
     </section>
-    <!-- === END TEAM CARD === -->
+  
     <button class="add-team-btn" (click)="showAddModal()">
       <mat-icon>add</mat-icon>
       Add a team
     </button>
 
-    
+
     <div class="add-team-form" *ngIf="showAddTeamForm">
       <form action="">
         <label for="teamName">Name of the team</label>
