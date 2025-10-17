@@ -14,7 +14,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRippleModule } from '@angular/material/core';
 
 //aunth service
-import { AuthService } from '../../core/services/auth';
+import { AuthService, Role } from '../../core/services/auth';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NotificationService } from '../../core/services/notification';
 
@@ -209,17 +209,16 @@ submit() {
       const remember = !!this.form.value.remember;
 
       const session = await this.auth.login(email, password, remember);
-      const role = session.user.role;
+      const roles = session.user.roles ?? [];
+      const has = (role: Role) => roles.includes(role);
 
-      if (role.includes('MANAGER')) {
+      if (has('MANAGER') || has('ADMIN')) {
         this.router.navigate(['/manager']);
-      } else if (role.includes('ADMIN')) {
-        this.router.navigate(['/manager']); // switch to /admin when admin page is ready
-      } else if (role.includes('EMPLOYEE')) {
+      } else if (has('EMPLOYEE')) {
         this.router.navigate(['/employee']);
       } else {
         this.router.navigate(['/']);
-        console.error('Rôle utilisateur inconnu:', role);
+        console.error('Unknown user roles:', roles);
       }
 
     } catch (e) {
@@ -236,3 +235,4 @@ submit() {
   get password() { return this.form.get('password'); }
 
 }
+

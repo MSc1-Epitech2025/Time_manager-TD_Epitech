@@ -6,7 +6,7 @@ import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { ManagerService } from '../../core/services/manager';
+import { ManagerService, EmployeeKpi } from '../../core/services/manager';
 import { ReportService } from '../../core/services/report';
 
 @Component({
@@ -17,11 +17,12 @@ import { ReportService } from '../../core/services/report';
   styleUrls: ['./employee-detail.scss']
 })
 export class EmployeeDetailComponent implements OnInit {
-  employeeId!: number;
-  employeeData: any;
+  employeeId!: string;
+  employeeData: EmployeeKpi | null = null;
+  loading = false;
 
   pieChartData: ChartConfiguration<'pie'>['data'] = {
-    labels: ['Présence', 'Retard', 'Absence'],
+    labels: ['Presence', 'Retards', 'Absence'],
     datasets: [{
       data: [0, 0, 0],
       backgroundColor: ['#A78BFA', '#F472B6', '#C084FC']
@@ -40,14 +41,39 @@ export class EmployeeDetailComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.employeeId = Number(this.route.snapshot.paramMap.get('id'));
-    this.managerService.getEmployeeKpi(this.employeeId).subscribe(data => {
-      this.employeeData = data;
-      this.pieChartData.datasets[0].data = [data.presence, data.late, data.absent];
+    this.employeeId = this.route.snapshot.paramMap.get('id') ?? '';
+    if (!this.employeeId) return;
+
+    this.loading = true;
+    this.managerService.getEmployeeKpi(this.employeeId).subscribe({
+      next: (data) => {
+        this.loading = false;
+        if (!data) {
+          this.employeeData = null;
+          this.pieChartData.datasets[0].data = [0, 0, 0];
+          return;
+        }
+        this.employeeData = data;
+        this.pieChartData = {
+          ...this.pieChartData,
+          datasets: [{
+            ...this.pieChartData.datasets[0],
+            data: [data.presence, data.late, data.absent],
+          }]
+        };
+      },
+      error: (err) => {
+        console.error('Impossible de charger les KPI employe', err);
+        this.loading = false;
+        this.employeeData = null;
+      }
     });
   }
 
   exportExcel() {
-    this.reportService.exportEmployeeReport(this.employeeData);
+    if (this.employeeData) {
+      this.reportService.exportEmployeeReport(this.employeeData);
+    }
   }
 }
+

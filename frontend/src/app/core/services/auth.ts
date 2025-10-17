@@ -1,87 +1,102 @@
-// src/app/core/auth.ts
+// src/app/core/services/auth.ts
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, catchError, firstValueFrom, map, of } from 'rxjs';
 
-type Role = 'EMPLOYEE' | 'MANAGER' | 'ADMIN';
+export type Role = 'EMPLOYEE' | 'MANAGER' | 'ADMIN';
+
+export interface SessionUser {
+  id: string;
+  email: string;
+  roles: Role[];
+  firstName?: string;
+  lastName?: string;
+  fullName?: string;
+  poste?: string;
+  phone?: string;
+}
+
 export type Session = {
   accessToken: string;
-  refreshToken: string;
+  refreshToken: string | null;
   expiresAt: number;
-  user: { id: string; email: string; role: Role };
+  user: SessionUser;
 };
 
-type LoginResponse = {
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number;
-  user: { id: string; email: string; role: Role };
+type UserResponse = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  role: string;
+  poste?: string;
 };
 
 const STORAGE_KEY = 'tm.session';
 const REMEMBER_KEY = 'tm.remember';
+const API_ROOT = 'http://localhost:8030';
+const GRAPHQL_ENDPOINT = `${API_ROOT}/graphql`;
+const USERS_ME_ENDPOINT = `${API_ROOT}/api/users/me`;
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private session$ = new BehaviorSubject<Session | null>(null);
-  private refreshPromise: Promise<string | null> | null = null;
 
   public readonly sessionChanges$ = this.session$.asObservable();
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
-  get session(): Session | null { return this.session$.value; }
-  get isAuthenticated(): boolean { return !!this.session?.accessToken; }
-  get token(): string | null { return this.session?.accessToken ?? null; }
-
-  private get storage(): Storage {
-    const remember = (localStorage.getItem(REMEMBER_KEY) ?? 'true') === 'true';
-    return remember ? localStorage : sessionStorage;
+  get session(): Session | null {
+    return this.session$.value;
   }
 
-  private decodeToken(token: string): any {
-    try {
-      const payload = token.split('.')[1];
-      return JSON.parse(atob(payload));
-    } catch (e) {
-      console.error('Token invalide', e);
-      return null;
-    }
+  get isAuthenticated(): boolean {
+    return !!this.session?.accessToken;
+  }
+
+  get token(): string | null {
+    return this.session?.accessToken ?? null;
   }
 
   hydrateFromStorage() {
     const raw = sessionStorage.getItem(STORAGE_KEY) ?? localStorage.getItem(STORAGE_KEY);
     if (!raw) return;
-    try { this.session$.next(JSON.parse(raw) as Session); } catch { }
+    try {
+      const parsed = JSON.parse(raw);
+      const normalized = this.normalizeSession(parsed);
+      this.session$.next(normalized);
+    } catch (err) {
+      console.warn('Session stockée invalide', err);
+      this.clearStorage();
+    }
   }
 
   loginSuccess(session: Session, remember = true) {
     localStorage.setItem(REMEMBER_KEY, String(remember));
-    localStorage.removeItem(STORAGE_KEY);
-    sessionStorage.removeItem(STORAGE_KEY);
-    (remember ? localStorage : sessionStorage).setItem(STORAGE_KEY, JSON.stringify(session));
+    this.clearStorage();
+    this.persistSession(session, remember);
     this.session$.next(session);
   }
 
   logout() {
     this.session$.next(null);
-    sessionStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem(STORAGE_KEY);
+    this.clearStorage();
   }
 
   async login(email: string, password: string, remember = true) {
     const query = `
-    mutation {
-      login(input: { email: "${email}", password: "${password}" }) {
-        token
+      mutation Login($input: AuthRequestInput!) {
+        login(input: $input) {
+          token
+        }
       }
-    }
-  `;
+    `;
 
-    const response = await fetch('http://localhost:8030/graphql', {
+    const response = await fetch(GRAPHQL_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query }),
+      body: JSON.stringify({ query, variables: { input: { email, password } } }),
     });
 
     if (!response.ok) {
@@ -93,58 +108,197 @@ export class AuthService {
 
     if (!token) throw new Error('Le serveur n’a pas renvoyé de token');
 
-    const decoded = this.decodeToken(token);
-    const role = decoded?.role?.toUpperCase?.() ?? 'EMPLOYEE';
-    const id = decoded?.id ?? 'unknown';
-    const mail = decoded?.sub ?? email;
+    const decoded = this.decodeToken(token) ?? {};
+    const roles = this.extractRoles(decoded['role']);
+    const id = String(decoded['uid'] ?? decoded['id'] ?? '');
+    const mail = String(decoded['sub'] ?? email ?? '').toLowerCase();
+    const firstName = decoded['given_name'] ? String(decoded['given_name']) : undefined;
+    const expSeconds = typeof decoded['exp'] === 'number' ? decoded['exp'] : undefined;
+    const expiresAt = expSeconds ? expSeconds * 1000 : Date.now() + 15 * 60 * 1000;
 
     const session: Session = {
       accessToken: token,
-      refreshToken: '',
-      expiresAt: Date.now() + 30 * 1000,
-      user: { id, email: mail, role },
+      refreshToken: null,
+      expiresAt,
+      user: this.normalizeUser({
+        id,
+        email: mail,
+        roles,
+        firstName,
+      }),
     };
 
     this.loginSuccess(session, remember);
-    return session;
-  }
-
-  private accessTokenValid(): boolean {
-    const exp = this.session?.expiresAt ?? 0;
-    return Date.now() < exp - 10_000;
+    await this.refreshProfile().catch(() => {});
+    return this.session ?? session;
   }
 
   async ensureValidAccessToken(): Promise<string | null> {
-    if (this.accessTokenValid()) return this.session!.accessToken;
-
-    if (this.refreshPromise) return this.refreshPromise;
-
-    this.refreshPromise = this.doRefresh().finally(() => (this.refreshPromise = null));
-    return this.refreshPromise;
+    const sess = this.session;
+    if (!sess) return null;
+    if (this.accessTokenValid(sess)) return sess.accessToken;
+    console.warn('Token expiré — déconnexion automatique');
+    this.logout();
+    return null;
   }
 
-  private async doRefresh(): Promise<string | null> {
+  async refreshProfile(): Promise<SessionUser | null> {
     const sess = this.session;
-    if (!sess?.refreshToken) return null;
+    if (!sess) return null;
 
     try {
-      const resp = await firstValueFrom(this.http.post<any>('/api/auth/refresh', {
-        refreshToken: sess.refreshToken,
-      }));
+      const profile = await firstValueFrom(
+        this.http.get<UserResponse>(USERS_ME_ENDPOINT).pipe(
+          map((resp) => this.userFromResponse(resp)),
+          catchError((err) => {
+            console.warn('Impossible de récupérer le profil', err);
+            return of(null);
+          })
+        )
+      );
+
+      if (!profile) return null;
+
       const updated: Session = {
         ...sess,
-        accessToken: resp.accessToken,
-        refreshToken: resp.refreshToken ?? sess.refreshToken,
-        expiresAt: Date.now() + resp.expiresIn * 1000,
+        user: this.normalizeUser({
+          ...sess.user,
+          ...profile,
+        }),
       };
-      const remember = (localStorage.getItem(REMEMBER_KEY) ?? 'true') === 'true';
-      const target = remember ? localStorage : sessionStorage;
-      target.setItem(STORAGE_KEY, JSON.stringify(updated));
+
       this.session$.next(updated);
-      return updated.accessToken;
-    } catch {
-      this.logout();
+      this.persistSession(updated, this.shouldRemember());
+      return updated.user;
+    } catch (err) {
+      console.warn('Echec du rafraîchissement du profil', err);
       return null;
     }
   }
+
+  private accessTokenValid(session: Session): boolean {
+    const exp = session.expiresAt ?? 0;
+    return !!exp && Date.now() < exp - 10_000;
+  }
+
+  private persistSession(session: Session, remember: boolean) {
+    (remember ? localStorage : sessionStorage).setItem(STORAGE_KEY, JSON.stringify(session));
+  }
+
+  private shouldRemember(): boolean {
+    return (localStorage.getItem(REMEMBER_KEY) ?? 'true') === 'true';
+  }
+
+  private clearStorage() {
+    sessionStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(STORAGE_KEY);
+  }
+
+  private decodeToken(token: string): Record<string, unknown> | null {
+    try {
+      const payload = token.split('.')[1];
+      const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+      return JSON.parse(atob(padded));
+    } catch (e) {
+      console.error('Token invalide', e);
+      return null;
+    }
+  }
+
+  private normalizeSession(raw: any): Session {
+    const expiresAt = typeof raw?.expiresAt === 'number'
+      ? raw.expiresAt
+      : (typeof raw?.expiresIn === 'number' ? Date.now() + raw.expiresIn * 1000 : Date.now() + 15 * 60 * 1000);
+
+    const userRaw = raw?.user ?? {};
+    const normalizedUser = this.normalizeUser({
+      id: String(userRaw.id ?? ''),
+      email: String(userRaw.email ?? '').toLowerCase(),
+      roles: this.extractRoles(userRaw.roles ?? userRaw.role),
+      firstName: userRaw.firstName,
+      lastName: userRaw.lastName,
+      fullName: userRaw.fullName,
+      poste: userRaw.poste,
+      phone: userRaw.phone,
+    });
+
+    return {
+      accessToken: String(raw?.accessToken ?? ''),
+      refreshToken: raw?.refreshToken ?? null,
+      expiresAt,
+      user: normalizedUser,
+    };
+  }
+
+  private normalizeUser(user: Partial<SessionUser>): SessionUser {
+    const roles = this.extractRoles(user.roles ?? []);
+    const firstName = user.firstName?.toString().trim() || undefined;
+    const lastName = user.lastName?.toString().trim() || undefined;
+    const displayName = user.fullName?.toString().trim()
+      || [firstName, lastName].filter(Boolean).join(' ').trim()
+      || (user.email ?? '').split('@')[0];
+
+    return {
+      id: user.id ? String(user.id) : '',
+      email: user.email ? String(user.email).toLowerCase() : '',
+      roles,
+      firstName,
+      lastName,
+      fullName: displayName,
+      poste: user.poste,
+      phone: user.phone,
+    };
+  }
+
+  private extractRoles(input: unknown): Role[] {
+    const normalize = (value: string): Role | null => {
+      const upper = value.replace(/[\[\]"]/g, '').trim().toUpperCase();
+      if (upper.includes('ADMIN')) return 'ADMIN';
+      if (upper.includes('MANAGER')) return 'MANAGER';
+      if (upper.includes('EMPLOYEE')) return 'EMPLOYEE';
+      return null;
+    };
+
+    if (!input) return ['EMPLOYEE'];
+
+    if (Array.isArray(input)) {
+      const roles = input
+        .map((item) => typeof item === 'string' ? item : String(item))
+        .map(normalize)
+        .filter((r): r is Role => !!r);
+      return roles.length ? Array.from(new Set(roles)) : ['EMPLOYEE'];
+    }
+
+    if (typeof input === 'string') {
+      try {
+        const parsed = JSON.parse(input);
+        if (Array.isArray(parsed)) return this.extractRoles(parsed);
+      } catch {
+        // ignore, treat as raw string
+      }
+      const role = normalize(input);
+      return role ? [role] : ['EMPLOYEE'];
+    }
+
+    if (typeof input === 'object' && input !== null && 'roles' in (input as Record<string, unknown>)) {
+      return this.extractRoles((input as Record<string, unknown>)['roles']);
+    }
+
+    return ['EMPLOYEE'];
+  }
+
+  private userFromResponse(resp: UserResponse | null): Partial<SessionUser> | null {
+    if (!resp) return null;
+    return {
+      id: resp.id,
+      email: resp.email,
+      firstName: resp.firstName,
+      lastName: resp.lastName,
+      poste: resp.poste,
+      phone: resp.phone,
+      roles: this.extractRoles(resp.role),
+    };
+  }
 }
+
