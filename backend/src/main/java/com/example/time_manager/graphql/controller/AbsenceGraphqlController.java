@@ -22,6 +22,7 @@ import com.example.time_manager.security.JwtUtil;
 import com.example.time_manager.service.AbsenceService;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.annotation.Nullable;
 
 @Controller
 public class AbsenceGraphqlController {
@@ -81,6 +82,12 @@ private String currentEmail() {
   public List<AbsenceResponse> allAbsences() {
     return absenceService.listAll();
   }
+  @QueryMapping
+  @PreAuthorize("hasRole('MANAGER')")       
+  public List<AbsenceResponse> myTeamAbsences(@Argument @Nullable Long teamId) {
+    return absenceService.listTeamAbsences(currentEmail(), teamId);
+  }
+
 
   /* ======================= Mutations ===================== */
 

@@ -13,4 +13,6 @@ public interface AbsenceRepository extends JpaRepository<Absence, Long> {
   List<Absence> findByUserIdOrderByStartDateDesc(String userId);
 
   List<Absence> findAllByOrderByStartDateDesc();
+
+  List<Absence> findByUserIdInOrderByStartDateDesc(List<String> userIds);
 }
