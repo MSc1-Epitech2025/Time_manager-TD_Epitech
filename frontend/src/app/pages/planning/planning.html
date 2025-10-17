@@ -2,7 +2,7 @@
     <header class="planning-header">
         <h2>
             <mat-icon fontSet="material-icons-outlined" fontIcon="calendar_month"></mat-icon>
-            Planning de {{ userName }}
+            {{ userName || 'équipe' }}'s Planning
         </h2>
 
         <p *ngIf="isManager; else employeeMode" class="role-tag manager">Mode Manager</p>
@@ -10,6 +10,18 @@
             <p class="role-tag employee">Mode Employé</p>
         </ng-template>
     </header>
+
+    <!-- Filtre par personnes -->
+    <div class="filters">
+        <mat-form-field appearance="fill" class="people-select">
+            <mat-label>Personnes à afficher</mat-label>
+            <mat-select multiple [(value)]="selectedPeople" (selectionChange)="refreshEvents()">
+                <mat-option *ngFor="let m of team" [value]="m.name">
+                    {{ m.name | titlecase }}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+    </div>
 
     <full-calendar [options]="calendarOptions"></full-calendar>
 </div>

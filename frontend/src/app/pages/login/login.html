@@ -47,10 +47,6 @@
                     <mat-error *ngIf="password?.hasError('minlength')">Min. 6 caractères</mat-error>
                 </mat-form-field>
 
-                <div class="row">
-                    <mat-checkbox formControlName="remember">Remember</mat-checkbox>
-                    <a class="link" href="#">Forgot password?</a>
-                </div>
 
                 <button class="cta full" mat-flat-button color="primary" type="submit" [disabled]="loading()">
                     <ng-container *ngIf="!loading(); else loadingTpl">SUBMIT</ng-container>
@@ -61,8 +57,6 @@
                         <span>Connexion…</span>
                     </span>
                 </ng-template>
-
-                <p class="create">Create Account</p>
             </form>
         </mat-card>
     </section>
