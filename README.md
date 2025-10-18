@@ -55,16 +55,28 @@ npm run docker:down
 docker compose down -v
 ```
 
+### Backend Build (in folder `backend/`)
+
+```bash
+.\gradlew.bat build
+```
+
+### Start SonarQube (launch backend build before SonarQube)
+
+```bash
+npm run sonar:scan
+```
 ---
 
 ## 🌐 Service Access
 
-| Service                   | URL                  | Description            |
+| Service                   | URL                                            | Description                                      |
 |---------------------------|------------------------------------------------|--------------------------------------------------|
 | **Frontend (Angular)**    | [http://localhost:4200](http://localhost:4200) | Angular web app (dev mode with live reload)      |
-| **Backend (Spring Boot)** | [http://localhost:8080](http://localhost:8080) | REST API server        |
-| **Database (MariaDB)**    | `localhost:3307`     | SQL access (user: `root`, password: `root`)      |
+| **Backend (Spring Boot)** | [http://localhost:8080](http://localhost:8080) | REST API server                                  |
+| **Database (MariaDB)**    | `localhost:3307`                               | SQL access (user: `root`, password: `root`)      |
 | **Reverse proxy (Nginx)** | [http://localhost:3030](http://localhost:3030) | Reserve proxy for secure api call make by client |
+| **SonarQube**             | [http://localhost:9000](http://localhost:3030) | SonarQube for analyze all code in the project    |
 ---
 
 ## 🧱 Project Structure
@@ -85,6 +97,8 @@ Time_manager-TD_Epitech/
 ├── reverse-proxy/               # Reverse proxy (nginx)
 │   └── nginx.conf
 │
+│
+├── sonar-project.properties # SonarQube configuration
 ├── docker-compose.yml      # Docker orchestration
 ├── .env                    # Environment variables
 └── README.md               # Project documentation
@@ -120,6 +134,10 @@ DB_NAME=time_manager
 
 # 🔥 Angular hot reload
 CHOKIDAR_USEPOLLING=true
+
+# login SonarQube
+username: admin
+password: Rewrap9-Immunity3-Jinx6-Captivate7-Luncheon2-Estimate3
 ```
 
 ---
