@@ -40,6 +40,9 @@ testem.log
 /typings
 __screenshots__/
 
+sonar_data/
+sonar_logs/
+
 # System files
 .DS_Store
 Thumbs.db
