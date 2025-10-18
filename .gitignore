@@ -40,6 +40,9 @@ testem.log
 /typings
 __screenshots__/
 
+sonar_data/
+sonar_logs/
+
 # System files
 .DS_Store
 Thumbs.db
@@ -52,5 +55,6 @@ backend/.gradle/
 /out/
 /bin/
 
+.scannerwork
 .vscode
 /frontend/.angular
