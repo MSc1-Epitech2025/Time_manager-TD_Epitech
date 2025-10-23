@@ -1,4 +1,3 @@
-// src/app/core/services/auth.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, catchError, firstValueFrom, map, of } from 'rxjs';

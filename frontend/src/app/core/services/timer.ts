@@ -1,4 +1,3 @@
-// src/app/core/timer.service.ts
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, interval, map, startWith, Subscription } from 'rxjs';
 

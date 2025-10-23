@@ -1,4 +1,3 @@
-// auth-guard.ts
 import { inject } from '@angular/core';
 import { CanActivateFn, CanMatchFn, Router, UrlTree, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { AuthService, Role } from '../services/auth';

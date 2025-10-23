@@ -205,7 +205,6 @@ export class ManagerService {
           ? clampPct((stats.lateDays.size / totalWeekDays) * 100, 0, 100)
           : 0;
 
-        // adjust percentages to avoid exceeding 100
         const sumPct = presencePct + absencePct + latenessPct;
         const scale =
           sumPct > 100 && sumPct > 0 ? 100 / sumPct : 1;
@@ -305,7 +304,7 @@ export class ManagerService {
   }
 }
 
-// ------------- helpers -------------
+//  helpers
 
 const MY_MANAGED_TEAMS_QUERY = `
   query MyManagedTeams {
@@ -476,7 +475,7 @@ function computeAbsenceStats(
   const allowedStatuses = new Set(['APPROVED']);
   const windowStart = from.getTime();
   const windowEnd = to.getTime();
-  let absenceUnits = 0; // 1 = full day, 0.5 = half-day
+  let absenceUnits = 0;
   let absentToday = false;
   const todayKey = toDayKey(new Date());
 
