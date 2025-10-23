@@ -10,7 +10,7 @@ type User {
 }
 
 type AuthResponse {
-    token: String!
+  ok: Boolean!
 }
 
 input AuthRequestInput {
