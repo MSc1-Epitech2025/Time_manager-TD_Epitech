@@ -1,4 +1,3 @@
-<!-- src/app/shared/components/weather-badge/weather-badge.html -->
 <div class="tm-weather" [class.compact]="variant === 'compact'" *ngIf="snap() as s"
   [attr.title]="'Météo locale : ' + (s.tempC | number:'1.0-0') + '°C'">
   <span class="stack">

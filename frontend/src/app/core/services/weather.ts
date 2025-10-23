@@ -1,4 +1,3 @@
-// src/app/core/services/weather.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, timer } from 'rxjs';
@@ -7,7 +6,7 @@ import { switchMap, catchError } from 'rxjs/operators';
 type OpenMeteoCurrent = {
   temperature_2m: number;
   weather_code: number;
-  is_day: number; // 1 = jour, 0 = nuit
+  is_day: number;
 };
 
 type OpenMeteoResponse = {
@@ -21,12 +20,11 @@ export type WeatherSnapshot = {
   tempC: number;
   code: number;
   isDay: boolean;
-  asOf: number; // epoch ms
+  asOf: number;
 };
 
 @Injectable({ providedIn: 'root' })
 export class WeatherService {
-  // Paris par défaut (sécurisé / pas de géoloc sans consentement)
   private readonly defaultLat = 48.8566;
   private readonly defaultLon = 2.3522;
 
@@ -36,24 +34,14 @@ export class WeatherService {
 
   constructor(private http: HttpClient) { }
 
-  /**
-   * Expose un Observable avec la météo “courante” (rafraîchie en tâche réactive).
-   */
   public weather$(): Observable<WeatherSnapshot | null> {
     return this.state$.asObservable();
   }
-
-  /**
-   * Démarre un polling toutes les 5 minutes. Appelle-le une seule fois (ex: dans AppComponent).
-   * Si l'utilisateur refuse la géoloc, on reste sur Paris.
-   */
   startPolling(): void {
-    // Au tick 0, puis toutes les 5 min
     timer(0, 5 * 60 * 1000)
       .pipe(
         switchMap(() =>
           new Observable<{ lat: number; lon: number }>((sub) => {
-            // Essaie la géoloc navigateur (https, consentement requis)
             if ('geolocation' in navigator) {
               navigator.geolocation.getCurrentPosition(
                 (pos) => {
