@@ -4,7 +4,7 @@ import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { AuthService, Session } from '../../core/services/auth';
+import { AuthService, Role, Session } from '../../core/services/auth';
 import { WeatherBadgeComponent } from '../components/weather-badge/weather-badge';
 
 @Component({
