@@ -1,20 +1,11 @@
 package com.example.time_manager.dto.auth;
 
 public class AuthResponse {
-    private String token;
+    private boolean ok;
 
-    public AuthResponse() {
-    }
+    public AuthResponse() {}
+    public AuthResponse(boolean ok) { this.ok = ok; }
 
-    public AuthResponse(String token) {
-        this.token = token;
-    }
-
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
-    }
+    public boolean isOk() { return ok; }
+    public void setOk(boolean ok) { this.ok = ok; }
 }
