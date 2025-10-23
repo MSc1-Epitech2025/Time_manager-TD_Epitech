@@ -239,40 +239,59 @@ export class AuthService {
   }
 
   private extractRoles(input: unknown): Role[] {
-    const normalize = (value: string): Role | null => {
-      const upper = value.replace(/[\[\]"]/g, '').trim().toUpperCase();
-      if (upper.includes('ADMIN')) return 'ADMIN';
-      if (upper.includes('MANAGER')) return 'MANAGER';
-      if (upper.includes('EMPLOYEE')) return 'EMPLOYEE';
-      return null;
+    const collected = new Set<Role>();
+
+    const addToken = (value: string) => {
+      const upper = value.trim().toUpperCase();
+      if (!upper) return;
+      if (upper.includes('ADMIN')) collected.add('ADMIN');
+      if (upper.includes('MANAGER')) collected.add('MANAGER');
+      if (upper.includes('EMPLOYEE')) collected.add('EMPLOYEE');
     };
 
-    if (!input) return ['EMPLOYEE'];
+    const parse = (value: unknown) => {
+      if (!value) return;
 
-    if (Array.isArray(input)) {
-      const roles = input
-        .map((item) => typeof item === 'string' ? item : String(item))
-        .map(normalize)
-        .filter((r): r is Role => !!r);
-      return roles.length ? Array.from(new Set(roles)) : ['EMPLOYEE'];
-    }
-
-    if (typeof input === 'string') {
-      try {
-        const parsed = JSON.parse(input);
-        if (Array.isArray(parsed)) return this.extractRoles(parsed);
-      } catch {
-        // ignore, treat as raw string
+      if (Array.isArray(value)) {
+        value.forEach((item) => parse(item));
+        return;
       }
-      const role = normalize(input);
-      return role ? [role] : ['EMPLOYEE'];
-    }
 
-    if (typeof input === 'object' && input !== null && 'roles' in (input as Record<string, unknown>)) {
-      return this.extractRoles((input as Record<string, unknown>)['roles']);
-    }
+      if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (!trimmed) return;
 
-    return ['EMPLOYEE'];
+        try {
+          const parsedJson = JSON.parse(trimmed);
+          parse(parsedJson);
+          return;
+        } catch {
+          // not JSON, fall through
+        }
+
+        const normalized = trimmed.replace(/[\[\]"']/g, ' ');
+        normalized
+          .split(/[^A-Z0-9]+/i)
+          .map((token) => token.trim())
+          .filter(Boolean)
+          .forEach(addToken);
+        return;
+      }
+
+      if (typeof value === 'object') {
+        const maybeRoles = (value as Record<string, unknown>)['roles'];
+        if (maybeRoles) {
+          parse(maybeRoles);
+        }
+      }
+    };
+
+    parse(input);
+
+    if (!collected.size) {
+      console.warn('Aucun role trouve, attribution du role EMPLOYEE par defaut');
+      return ['EMPLOYEE'];}
+    return Array.from(collected);
   }
 
   private async loadUserByEmail(email: string): Promise<Partial<SessionUser> | null> {
