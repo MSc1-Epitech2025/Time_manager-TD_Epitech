@@ -40,7 +40,6 @@ public class SecurityConfig {
       .authorizeHttpRequests(auth -> auth
         .requestMatchers("/actuator/health").permitAll()
         .requestMatchers(HttpMethod.POST, "/graphql").permitAll() 
-        .requestMatchers(HttpMethod.POST, "/graphql/refresh").permitAll() 
         .anyRequest().authenticated()
       )
       .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

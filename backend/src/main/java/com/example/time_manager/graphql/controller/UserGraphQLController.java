@@ -72,48 +72,44 @@ public class UserGraphQLController {
         return new AuthResponse(true);
     }
 
-    @PreAuthorize("permitAll()")
-    @MutationMapping
-    public TokenPairResponse refresh(@Argument Optional<RefreshRequest> input) {
-        HttpServletRequest httpReq = currentRequest();
-        HttpServletResponse httpResp = currentResponse();
+@PreAuthorize("permitAll()")
+@MutationMapping
+public AuthResponse refresh(@Argument Optional<RefreshRequest> input) {
+    HttpServletRequest httpReq = currentRequest();
+    HttpServletResponse httpResp = currentResponse();
 
-        String refreshToken = input.map(UserGraphQLController::extractRefreshFromBody).orElse(null);
-        if (refreshToken == null || refreshToken.isBlank()) {
-            refreshToken = readCookie(httpReq, "refresh_token");
-        }
-        if (refreshToken == null || refreshToken.isBlank()) {
-            throw new RuntimeException("Missing refresh token");
-        }
-
-        String username;
-        try {
-            username = jwtUtil.parseRefreshSubject(refreshToken);
-        } catch (Exception e) {
-            throw new RuntimeException("Invalid refresh token");
-        }
-        if (!jwtUtil.isRefreshTokenValid(refreshToken, username)) {
-            throw new RuntimeException("Invalid or expired refresh token");
-        }
-
-        var user = userService.findByEmail(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        String newAccess = jwtUtil.generateAccessToken(
-                user.getEmail(),
-                user.getId(),
-                user.getFirstName(),
-                user.getRole()
-        );
-        String newRefresh = jwtUtil.generateRefreshToken(
-                user.getEmail(),
-                user.getId()
-        );
-
-        addAccessCookie(httpResp, newAccess);
-        addRefreshCookie(httpResp, newRefresh);
-        return new TokenPairResponse(newAccess, newRefresh);
+    String refreshToken = input.map(UserGraphQLController::extractRefreshFromBody).orElse(null);
+    if (refreshToken == null || refreshToken.isBlank()) {
+        refreshToken = readCookie(httpReq, "refresh_token");
     }
+    if (refreshToken == null || refreshToken.isBlank()) {
+        throw new RuntimeException("Missing refresh token");
+    }
+
+    String username;
+    try {
+        username = jwtUtil.parseRefreshSubject(refreshToken);
+    } catch (Exception e) {
+        throw new RuntimeException("Invalid refresh token");
+    }
+    if (!jwtUtil.isRefreshTokenValid(refreshToken, username)) {
+        throw new RuntimeException("Invalid or expired refresh token");
+    }
+
+    var user = userService.findByEmail(username)
+        .orElseThrow(() -> new RuntimeException("User not found"));
+
+    String newAccess = jwtUtil.generateAccessToken(
+        user.getEmail(),
+        user.getId(),  
+        user.getFirstName(),
+        user.getRole()
+    );
+
+    addAccessCookie(httpResp, newAccess); 
+
+    return new AuthResponse(true);       
+}
 
     @PreAuthorize("permitAll()")
     @MutationMapping
@@ -121,7 +117,7 @@ public class UserGraphQLController {
         HttpServletResponse httpResp = currentResponse();
         expireCookie(httpResp, "access_token", "/");          
         expireCookie(httpResp, "access_token", "/graphql");
-        expireCookie(httpResp, "refresh_token", "/graphql/refresh");
+        expireCookie(httpResp, "refresh_token", "/graphql");
         return true;
     }
 
@@ -150,7 +146,7 @@ public class UserGraphQLController {
     private static void addRefreshCookie(HttpServletResponse response, String token) {
         ResponseCookie cookie = ResponseCookie.from("refresh_token", token)
                 .httpOnly(true).secure(COOKIE_SECURE).sameSite(COOKIE_SAMESITE)
-                .path("/graphql/refresh")
+                .path("/graphql")
                 .maxAge(REFRESH_MAX_AGE).build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }

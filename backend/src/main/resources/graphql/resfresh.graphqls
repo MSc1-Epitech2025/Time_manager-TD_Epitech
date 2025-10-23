@@ -1,0 +1,8 @@
+input RefreshRequest {
+  refreshToken: String
+}
+
+extend type Mutation {
+  refresh(input: RefreshRequest): AuthResponse!
+  logout: Boolean!
+}
