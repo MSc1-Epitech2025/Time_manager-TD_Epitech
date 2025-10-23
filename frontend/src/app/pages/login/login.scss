@@ -24,10 +24,12 @@
         inset: -10% -20% auto -10%;
         height: 70%;
         background:
-            radial-gradient(1200px 600px at 20% 10%, rgba(255, 255, 255, .18), transparent 55%),
-            radial-gradient(800px 420px at 90% 40%, rgba(255, 255, 255, .12), transparent 60%);
-        clip-path: path('M0,300 C240,260 360,440 640,380 L640,0 L0,0 Z');
+            radial-gradient(1200px 600px at 20% 10%, var(--halo-strong), transparent 55%),
+            radial-gradient(800px 420px at 90% 40%, var(--halo-soft), transparent 60%);
         opacity: .9;
+        filter: blur(.2px) saturate(110%);
+        transform: translateZ(0);
+        will-change: transform, clip-path, opacity;
     }
 
     .bubble {

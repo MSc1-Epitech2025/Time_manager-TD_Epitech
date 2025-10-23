@@ -1,54 +1,58 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { CalendarOptions, EventInput, DateSelectArg } from '@fullcalendar/core';
+import { CalendarOptions, EventInput } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
-import interactionPlugin from '@fullcalendar/interaction';
 import { CommonModule } from '@angular/common';
 import { FullCalendarModule } from '@fullcalendar/angular';
 import { ActivatedRoute } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, firstValueFrom } from 'rxjs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatChipsModule } from '@angular/material/chips';
 import { ReactiveFormsModule } from '@angular/forms';
+import { PlanningService, PlanningEvent, PlanningPayload } from '../../core/services/planning';
+import { AuthService } from '../../core/services/auth';
 
-type Absence = {
+interface PersonOption {
   id: string;
-  person: string;
-  start: string;
-  end?: string;
-  reason?: string;
-};
+  name: string;
+}
 
 @Component({
   selector: 'app-planning',
   standalone: true,
   imports: [
-    CommonModule, FullCalendarModule, MatIconModule,
-    MatFormFieldModule, MatSelectModule, MatChipsModule, ReactiveFormsModule
+    CommonModule,
+    FullCalendarModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatSelectModule,
+    MatChipsModule,
+    ReactiveFormsModule,
   ],
   templateUrl: './planning.html',
   styleUrls: ['./planning.scss'],
 })
 export class PlanningComponent implements OnInit, OnDestroy {
   private sub?: Subscription;
+  private absences: PlanningEvent[] = [];
 
   isManager = false;
   userName = '';
-  team: Array<{ id: string; name: string }> = [];
+  team: PersonOption[] = [];
   selectedPeople: string[] = [];
-  private absences: Absence[] = [];
+  loading = false;
 
   events: EventInput[] = [];
 
   calendarOptions: CalendarOptions = {
-    plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
+    plugins: [dayGridPlugin, timeGridPlugin],
     initialView: 'timeGridWeek',
     headerToolbar: {
       left: 'prev,next today',
       center: 'title',
-      right: 'timeGridDay,timeGridWeek,dayGridMonth'
+      right: 'timeGridDay,timeGridWeek,dayGridMonth',
     },
     slotMinTime: '07:00:00',
     slotMaxTime: '20:00:00',
@@ -57,27 +61,25 @@ export class PlanningComponent implements OnInit, OnDestroy {
     nowIndicator: true,
     locale: 'fr',
     firstDay: 1,
-    selectable: true,
-    selectMirror: true,
-    select: (info) => this.onSelect(info),
+    selectable: false,
     eventOverlap: true,
     editable: false,
-    events: this.events,
+    events: [],
   };
 
-  constructor(private route: ActivatedRoute) { }
+  constructor(
+    private route: ActivatedRoute,
+    private planningService: PlanningService,
+    private auth: AuthService,
+  ) {}
 
   ngOnInit(): void {
     this.sub = this.route.queryParamMap.subscribe((qp) => {
       const manager = qp.get('manager');
       const employee = qp.get('employee');
       this.isManager = !!manager;
-      this.userName = manager || employee || '';
-
-      this.loadTeam();
-      this.seedAbsences();
-      this.selectedPeople = this.team.map(t => t.name);
-      this.refreshEvents();
+      this.userName = manager || employee || this.auth.session?.user.fullName || '';
+      this.loadPlanning();
     });
   }
 
@@ -85,93 +87,76 @@ export class PlanningComponent implements OnInit, OnDestroy {
     this.sub?.unsubscribe();
   }
 
-  private loadTeam() {
-    this.team = [
-      { id: 'u1', name: 'alice' },
-      { id: 'u2', name: 'paul' },
-      { id: 'u3', name: this.userName || 'moi' },
-    ];
-  }
-
-  private seedAbsences() {
-    const base = new Date();
-    const y = base.getFullYear();
-    const m = String(base.getMonth() + 1).padStart(2, '0');
-    const d = String(base.getDate()).padStart(2, '0');
-
-    this.absences = [
-      { id: 'a1', person: 'alice', start: `${y}-${m}-${d}T10:00:00`, end: `${y}-${m}-${d}T12:00:00`, reason: 'CP' },
-      { id: 'a2', person: 'paul', start: `${y}-${m}-${d}T14:00:00`, end: `${y}-${m}-${d}T17:00:00`, reason: 'Maladie' },
-    ];
-  }
-
-  private buildEvents(): EventInput[] {
-    const visible = new Set(this.selectedPeople);
-    return this.absences
-      .filter(a => visible.has(a.person))
-      .map((a): EventInput => ({
-        id: a.id,
-        title: this.isManager
-          ? `${capitalize(a.person)} — ${a.reason ?? 'Absent'}`
-          : `${capitalize(a.person)} — absent`,
-        start: a.start,
-        end: a.end,
-        display: 'auto',
-        classNames: ['absence-event'],
-      }));
-  }
-
-  refreshEvents() {
-    this.events = this.buildEvents();
-    this.calendarOptions = { ...this.calendarOptions, events: [...this.events] };
-  }
-
-  private onSelect(sel: DateSelectArg) {
-    const start = formatLocal(sel.start);
-    const end = formatLocal(sel.end);
-
-    if (this.isManager) {
-      const who = (prompt(
-        `Créer absence du ${start.replace('T', ' à ')} au ${end.replace('T', ' à ')}\n` +
-        `Saisis des noms séparés par des virgules (ex: alice,paul)`,
-        this.userName,
-      ) || '').trim();
-
-      const people = who.split(',').map(s => s.trim()).filter(Boolean);
-      const reason = prompt('Raison (CP, RTT, …)') || '';
-
-      if (people.length) {
-        this.createAbsence({ start, end, people, reason });
+  async loadPlanning() {
+    this.loading = true;
+    try {
+      if (this.isManager) {
+        const payload = await firstValueFrom(this.planningService.getManagerPlanning());
+        this.applyPayload(payload);
+      } else {
+        const payload = await firstValueFrom(this.planningService.getEmployeePlanning());
+        this.applyPayload(payload);
       }
-    } else {
-      this.createAbsence({ start, end, people: [this.userName] });
+    } catch (err) {
+      console.error('Echec chargement planning', err);
+      this.team = [];
+      this.absences = [];
+      this.selectedPeople = [];
+      this.refreshEvents();
+    } finally {
+      this.loading = false;
     }
   }
 
-  private createAbsence(payload: {
-    start: string; end?: string; people: string[]; reason?: string;
-  }) {
-    for (const p of payload.people) {
-      this.absences.push({
-        id: `a_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-        person: p,
-        start: payload.start,
-        end: payload.end,
-        reason: payload.reason,
-      });
-    }
+  onSelectedPeopleChange(values: string[]) {
+    this.selectedPeople = values;
     this.refreshEvents();
   }
+
+  private applyPayload(payload: PlanningPayload) {
+    this.team = payload.people.map((p) => ({ id: p.id, name: capitalize(p.name) }));
+    this.absences = payload.events;
+    this.selectedPeople = this.team.map((member) => member.name);
+    this.refreshEvents();
+  }
+
+  private refreshEvents() {
+    const visible = new Set(this.selectedPeople.length ? this.selectedPeople : this.team.map((p) => p.name));
+    this.events = this.absences
+      .filter((absence) => visible.has(capitalize(absence.userName)))
+      .map((absence) => toCalendarEvent(absence));
+
+    this.calendarOptions = { ...this.calendarOptions, events: [...this.events] };
+  }
 }
 
-function pad(n: number) { return String(n).padStart(2, '0'); }
-function formatLocal(d: Date) {
-  const y = d.getFullYear();
-  const m = pad(d.getMonth() + 1);
-  const day = pad(d.getDate());
-  const h = pad(d.getHours());
-  const mi = pad(d.getMinutes());
-  const s = pad(d.getSeconds());
-  return `${y}-${m}-${day}T${h}:${mi}:${s}`;
+function toCalendarEvent(absence: PlanningEvent): EventInput {
+  const title = `${capitalize(absence.userName)} - ${absence.reason || absence.type}`;
+  const { start, end } = toEventRange(absence.date, absence.period);
+  return {
+    id: absence.id,
+    title,
+    start,
+    end,
+    display: 'block',
+    classNames: ['absence-event'],
+  };
 }
-function capitalize(s: string) { return s ? s[0].toUpperCase() + s.slice(1) : s; }
+
+function toEventRange(date: string, period: PlanningEvent['period']): { start: string; end: string } {
+  const base = `${date}T`;
+  switch (period) {
+    case 'AM':
+      return { start: `${base}08:00:00`, end: `${base}12:00:00` };
+    case 'PM':
+      return { start: `${base}13:00:00`, end: `${base}17:00:00` };
+    default:
+      return { start: `${base}08:00:00`, end: `${base}17:30:00` };
+  }
+}
+
+function capitalize(value: string): string {
+  if (!value) return value;
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+

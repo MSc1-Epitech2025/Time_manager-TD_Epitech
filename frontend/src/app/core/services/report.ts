@@ -2,19 +2,36 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { Injectable } from '@angular/core';
 
+type ReportableEmployee = {
+  name: string;
+  team?: string;
+  presence: number;
+  late: number;
+  absence?: number;
+  absent?: number;
+};
+
 @Injectable({ providedIn: 'root' })
 export class ReportService {
-  exportEmployeeReport(employee: any) {
+  exportEmployeeReport(employee: ReportableEmployee) {
+    const absenceValue = employee.absence ?? employee.absent ?? 0;
     const data = [
-      ['Nom', 'Équipe', 'Présence (%)', 'Retards (%)', 'Absence (%)'],
-      [employee.name, employee.team, employee.presence, employee.late, employee.absent]
+      ['Nom', 'Equipe', 'Presence (%)', 'Retards (%)', 'Absence (%)'],
+      [
+        employee.name,
+        employee.team ?? 'Non renseignee',
+        employee.presence,
+        employee.late,
+        absenceValue,
+      ],
     ];
 
-    const ws = XLSX.utils.aoa_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Rapport');
-    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const worksheet = XLSX.utils.aoa_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Rapport');
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
     const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
     saveAs(blob, `rapport-${employee.name}.xlsx`);
   }
 }
+

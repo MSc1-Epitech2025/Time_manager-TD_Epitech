@@ -1,11 +1,15 @@
-// src/app/core/auth-interceptor.ts
 import { Injectable, inject } from '@angular/core';
 import {
   HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpErrorResponse
 } from '@angular/common/http';
-import { Observable, from, switchMap, throwError, catchError } from 'rxjs';
+import { Observable, throwError, catchError } from 'rxjs';
 import { Router } from '@angular/router';
 import { AuthService } from './auth';
+
+const BACKEND_HOSTS = new Set([
+  'http://localhost:8030',
+  'https://localhost:8030',
+]);
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
@@ -13,33 +17,30 @@ export class AuthInterceptor implements HttpInterceptor {
   private router = inject(Router);
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    return from(this.auth.ensureValidAccessToken()).pipe(
-      switchMap((token) => {
-        const authReq = token ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req;
+    const shouldAttachCredentials = req.withCredentials || this.isBackendRequest(req.url);
+    const authReq = shouldAttachCredentials && !req.withCredentials
+      ? req.clone({ withCredentials: true })
+      : req;
 
-        return next.handle(authReq).pipe(
-          catchError((err: HttpErrorResponse) => {
-            if (err.status !== 401) return throwError(() => err);
-
-            return from(this.auth.ensureValidAccessToken()).pipe(
-              switchMap((newToken) => {
-                if (!newToken) {
-                  this.auth.logout();
-                  this.router.navigate(['/login'], { queryParams: { reason: 'expired' } });
-                  return throwError(() => err);
-                }
-                const retried = req.clone({ setHeaders: { Authorization: `Bearer ${newToken}` } });
-                return next.handle(retried);
-              }),
-              catchError((e) => {
-                this.auth.logout();
-                this.router.navigate(['/login'], { queryParams: { reason: 'expired' } });
-                return throwError(() => e);
-              })
-            );
-          })
-        );
+    return next.handle(authReq).pipe(
+      catchError((err: HttpErrorResponse) => {
+        if (err.status === 401) {
+          this.auth.logout();
+          this.router.navigate(['/login'], { queryParams: { reason: 'expired' } });
+        }
+        return throwError(() => err);
       })
     );
+  }
+
+  private isBackendRequest(url: string): boolean {
+    try {
+      const parsed = new URL(url, window.location.origin);
+      const origin = `${parsed.protocol}//${parsed.host}`;
+      if (BACKEND_HOSTS.has(origin)) return true;
+      return parsed.origin === window.location.origin;
+    } catch {
+      return true;
+    }
   }
 }

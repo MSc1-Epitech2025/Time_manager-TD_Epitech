@@ -1,7 +1,6 @@
-// auth-guard.ts
 import { inject } from '@angular/core';
 import { CanActivateFn, CanMatchFn, Router, UrlTree, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
-import { AuthService } from '../services/auth';
+import { AuthService, Role } from '../services/auth';
 
 function checkAuth(): boolean | UrlTree {
   const auth = inject(AuthService);
@@ -23,8 +22,8 @@ export const roleCanActivate: CanActivateFn = (): boolean | UrlTree => {
     return router.createUrlTree(['/login'], { queryParams: { reason: 'unauth' } });
   }
 
-  const role = session.user.role?.toUpperCase?.() ?? '';
-  if (role.includes('MANAGER') || role.includes('ADMIN')) {
+  const roles = session.user.roles ?? [];
+  if (includesRole(roles, 'MANAGER') || includesRole(roles, 'ADMIN')) {
     return true;
   }
   return router.createUrlTree(['/employee']);
@@ -39,12 +38,10 @@ export const planningUrlGuard: CanActivateFn = (route: ActivatedRouteSnapshot, _
     return router.createUrlTree(['/login'], { queryParams: { reason: 'unauth' } });
   }
 
-  const roleRaw = String(session.user.role ?? '');
-  const role = roleRaw.toUpperCase();
-  const isManager = role.includes('MANAGER') || role.includes('ADMIN');
+  const roles = session.user.roles ?? [];
+  const isManager = includesRole(roles, 'MANAGER') || includesRole(roles, 'ADMIN');
 
-  const email = session.user.email ?? '';
-  const displayName = (email.split('@')[0] || session.user.id || 'user').trim();
+  const displayName = deriveDisplayName(session.user).trim();
 
   const qp = route.queryParams ?? {};
   const key = isManager ? 'manager' : 'employee';
@@ -62,3 +59,15 @@ export const planningUrlGuard: CanActivateFn = (route: ActivatedRouteSnapshot, _
 
   return true;
 };
+
+function includesRole(list: Role[], role: Role): boolean {
+  return list.includes(role);
+}
+
+function deriveDisplayName(user: { fullName?: string; email?: string; id?: string }): string {
+  const full = user.fullName?.split(' ')[0]?.trim();
+  if (full) return full;
+  const fromMail = user.email?.split('@')[0]?.trim();
+  if (fromMail) return fromMail;
+  return String(user.id ?? 'user');
+}
