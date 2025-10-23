@@ -1,8 +1,12 @@
 <aside class="sidebar">
-    <div class="logo">Logo</div>
+    <div class="brand-card">
+        <div class="brand-card__label">TimeManager</div>
+        <div class="brand-card__weather">
+            <app-weather-badge variant="compact"></app-weather-badge>
+        </div>
+    </div>
 
     <nav class="menu">
-
         <!-- admin -->
         <button class="menu-btn" *ngIf="isAdmin()" [routerLink]="['/admin']" routerLinkActive="active">
             <mat-icon>admin_panel_settings</mat-icon>
@@ -21,12 +25,11 @@
             Dashboard
         </button>
 
-        <!-- Dashboard / Planning commun -->
+        <!-- planning -->
         <button class="menu-btn" [routerLink]="['/planning']" routerLinkActive="active">
             <mat-icon>calendar_month</mat-icon>
             Calendar
         </button>
-
     </nav>
 
     <button class="logout-btn" (click)="logout()">

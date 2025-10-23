@@ -2,13 +2,15 @@ import { Component, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { MatToolbarModule } from '@angular/material/toolbar';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { AuthService, Session } from '../../core/services/auth';
+import { WeatherBadgeComponent } from '../components/weather-badge/weather-badge';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, MatIconModule],
+  imports: [CommonModule, RouterLink, RouterLinkActive, MatIconModule, MatToolbarModule, WeatherBadgeComponent],
   templateUrl: './navbar.html',
   styleUrls: ['./navbar.scss'],
 })
