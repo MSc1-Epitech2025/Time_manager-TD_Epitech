@@ -17,9 +17,9 @@ export interface SessionUser {
 }
 
 export type Session = {
-  accessToken: string;
+  accessToken: string | null;
   refreshToken: string | null;
-  expiresAt: number;
+  expiresAt: number | null;
   user: SessionUser;
 };
 
@@ -69,7 +69,7 @@ export class AuthService {
   }
 
   get isAuthenticated(): boolean {
-    return !!this.session?.accessToken;
+    return !!this.session;
   }
 
   get token(): string | null {
@@ -105,7 +105,7 @@ export class AuthService {
     const query = `
       mutation Login($input: AuthRequestInput!) {
         login(input: $input) {
-          token
+          ok
         }
       }
     `;
@@ -113,6 +113,7 @@ export class AuthService {
     const response = await fetch(GRAPHQL_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ query, variables: { input: { email, password } } }),
     });
 
@@ -121,42 +122,35 @@ export class AuthService {
     }
 
     const result = await response.json();
-    const token = result.data?.login?.token;
+    const ok = result.data?.login?.ok;
 
-    if (!token) throw new Error('Le serveur n’a pas renvoyé de token');
+    if (!ok) throw new Error("Le serveur n'a pas confirme la connexion");
 
-    const decoded = this.decodeToken(token) ?? {};
-    const roles = this.extractRoles(decoded['role']);
-    const id = String(decoded['uid'] ?? decoded['id'] ?? '');
-    const mail = String(decoded['sub'] ?? email ?? '').toLowerCase();
-    const firstName = decoded['given_name'] ? String(decoded['given_name']) : undefined;
-    const expSeconds = typeof decoded['exp'] === 'number' ? decoded['exp'] : undefined;
-    const expiresAt = expSeconds ? expSeconds * 1000 : Date.now() + 15 * 60 * 1000;
+    const profile = await this.loadUserByEmail(email).catch(() => null);
 
     const session: Session = {
-      accessToken: token,
+      accessToken: null,
       refreshToken: null,
-      expiresAt,
+      expiresAt: null,
       user: this.normalizeUser({
-        id,
-        email: mail,
-        roles,
-        firstName,
+        id: profile?.id ?? '',
+        email: profile?.email ?? email,
+        roles: profile?.roles ?? [],
+        firstName: profile?.firstName,
+        lastName: profile?.lastName,
+        fullName: profile?.fullName,
+        poste: profile?.poste,
+        phone: profile?.phone,
       }),
     };
 
     this.loginSuccess(session, remember);
-    await this.refreshProfile().catch(() => {});
-    return this.session ?? session;
-  }
 
-  async ensureValidAccessToken(): Promise<string | null> {
-    const sess = this.session;
-    if (!sess) return null;
-    if (this.accessTokenValid(sess)) return sess.accessToken;
-    console.warn('Token expiré — déconnexion automatique');
-    this.logout();
-    return null;
+    if (!profile) {
+      await this.refreshProfile().catch(() => {});
+    }
+
+    return this.session ?? session;
   }
 
   async refreshProfile(): Promise<SessionUser | null> {
@@ -164,27 +158,7 @@ export class AuthService {
     if (!sess) return null;
 
     try {
-      const email = sess.user.email;
-      if (!email) return null;
-
-      const profile = await firstValueFrom(
-        this.http.post<GraphqlResponse<{ userByEmail: UserResponse | null }>>(GRAPHQL_ENDPOINT, {
-          query: USER_BY_EMAIL_QUERY,
-          variables: { email },
-        }).pipe(
-          map((resp) => {
-            if (resp.errors?.length) {
-              throw new Error(resp.errors.map((e) => e.message).join(', '));
-            }
-            return this.userFromResponse(resp.data?.userByEmail ?? null);
-          }),
-          catchError((err) => {
-            console.warn('Impossible de récupérer le profil', err);
-            return of(null);
-          })
-        )
-      );
-
+      const profile = await this.loadUserByEmail(sess.user.email);
       if (!profile) return null;
 
       const updated: Session = {
@@ -199,14 +173,9 @@ export class AuthService {
       this.persistSession(updated, this.shouldRemember());
       return updated.user;
     } catch (err) {
-      console.warn('Echec du rafraîchissement du profil', err);
+      console.warn('Echec du rafraichissement du profil', err);
       return null;
     }
-  }
-
-  private accessTokenValid(session: Session): boolean {
-    const exp = session.expiresAt ?? 0;
-    return !!exp && Date.now() < exp - 10_000;
   }
 
   private persistSession(session: Session, remember: boolean) {
@@ -222,22 +191,10 @@ export class AuthService {
     localStorage.removeItem(STORAGE_KEY);
   }
 
-  private decodeToken(token: string): Record<string, unknown> | null {
-    try {
-      const payload = token.split('.')[1];
-      const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
-      const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
-      return JSON.parse(atob(padded));
-    } catch (e) {
-      console.error('Token invalide', e);
-      return null;
-    }
-  }
-
   private normalizeSession(raw: any): Session {
     const expiresAt = typeof raw?.expiresAt === 'number'
       ? raw.expiresAt
-      : (typeof raw?.expiresIn === 'number' ? Date.now() + raw.expiresIn * 1000 : Date.now() + 15 * 60 * 1000);
+      : (typeof raw?.expiresIn === 'number' ? Date.now() + raw.expiresIn * 1000 : null);
 
     const userRaw = raw?.user ?? {};
     const normalizedUser = this.normalizeUser({
@@ -251,8 +208,10 @@ export class AuthService {
       phone: userRaw.phone,
     });
 
+    const accessToken = typeof raw?.accessToken === 'string' ? raw.accessToken.trim() : '';
+
     return {
-      accessToken: String(raw?.accessToken ?? ''),
+      accessToken: accessToken ? accessToken : null,
       refreshToken: raw?.refreshToken ?? null,
       expiresAt,
       user: normalizedUser,
@@ -314,6 +273,33 @@ export class AuthService {
     }
 
     return ['EMPLOYEE'];
+  }
+
+  private async loadUserByEmail(email: string): Promise<Partial<SessionUser> | null> {
+    const normalizedEmail = (email ?? '').trim().toLowerCase();
+    if (!normalizedEmail) return null;
+
+    return firstValueFrom(
+      this.http.post<GraphqlResponse<{ userByEmail: UserResponse | null }>>(
+        GRAPHQL_ENDPOINT,
+        {
+          query: USER_BY_EMAIL_QUERY,
+          variables: { email: normalizedEmail },
+        },
+        { withCredentials: true }
+      ).pipe(
+        map((resp) => {
+          if (resp.errors?.length) {
+            throw new Error(resp.errors.map((e) => e.message).join(', '));
+          }
+          return this.userFromResponse(resp.data?.userByEmail ?? null);
+        }),
+        catchError((err) => {
+          console.warn('Impossible de recuperer le profil', err);
+          return of(null);
+        })
+      )
+    );
   }
 
   private userFromResponse(resp: UserResponse | null): Partial<SessionUser> | null {

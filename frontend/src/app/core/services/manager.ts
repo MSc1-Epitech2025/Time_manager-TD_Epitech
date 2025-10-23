@@ -162,7 +162,7 @@ export class ManagerService {
       switchMap((entry) => {
         if (entry) return of(entry);
         return this.http
-          .get<UserById>(`${USERS_ENDPOINT}/${userId}`)
+          .get<UserById>(`${USERS_ENDPOINT}/${userId}`, { withCredentials: true })
           .pipe(
             map((user) => ({
               member: {
@@ -288,7 +288,7 @@ export class ManagerService {
     variables?: Record<string, unknown>
   ): Observable<T> {
     return this.http
-      .post<GraphqlResponse<T>>(GRAPHQL_ENDPOINT, { query, variables })
+      .post<GraphqlResponse<T>>(GRAPHQL_ENDPOINT, { query, variables }, { withCredentials: true })
       .pipe(
         map((response) => {
           if (response.errors?.length) {

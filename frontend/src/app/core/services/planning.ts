@@ -136,7 +136,7 @@ export class PlanningService {
 
   private request<T>(query: string, variables?: Record<string, unknown>): Observable<T> {
     return this.http
-      .post<GraphqlPayload<T>>(GRAPHQL_ENDPOINT, { query, variables })
+      .post<GraphqlPayload<T>>(GRAPHQL_ENDPOINT, { query, variables }, { withCredentials: true })
       .pipe(
         map((response) => {
           if (response.errors?.length) {

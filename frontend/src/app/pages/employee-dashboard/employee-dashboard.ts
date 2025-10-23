@@ -278,13 +278,17 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
 
   private async fetchClocks(range: { from: Date; to: Date }): Promise<ClockRecord[]> {
     const response = await firstValueFrom(
-      this.http.post<GraphqlPayload<MyClocksResponse>>(GRAPHQL_ENDPOINT, {
-        query: MY_CLOCKS_QUERY,
-        variables: {
-          from: range.from.toISOString(),
-          to: range.to.toISOString(),
+      this.http.post<GraphqlPayload<MyClocksResponse>>(
+        GRAPHQL_ENDPOINT,
+        {
+          query: MY_CLOCKS_QUERY,
+          variables: {
+            from: range.from.toISOString(),
+            to: range.to.toISOString(),
+          },
         },
-      })
+        { withCredentials: true }
+      )
     );
 
     if (response.errors?.length) {
@@ -296,10 +300,14 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
 
   private async sendClockMutation(kind: ClockKind): Promise<ClockRecord> {
     const response = await firstValueFrom(
-      this.http.post<GraphqlPayload<ClockMutationResponse>>(GRAPHQL_ENDPOINT, {
-        query: CLOCK_MUTATION,
-        variables: { input: { kind } },
-      })
+      this.http.post<GraphqlPayload<ClockMutationResponse>>(
+        GRAPHQL_ENDPOINT,
+        {
+          query: CLOCK_MUTATION,
+          variables: { input: { kind } },
+        },
+        { withCredentials: true }
+      )
     );
 
     if (response.errors?.length) {
