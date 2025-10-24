@@ -21,23 +21,21 @@ import java.util.*;
 /**
  * Business logic for Teams & Members with role-based access:
  *
- * - ADMIN:
- *    - can list all teams (allTeams)
- *    - can create/update/delete teams
- *    - can add/remove team members everywhere
+ * - ADMIN: - can list all teams (allTeams) - can create/update/delete teams -
+ * can add/remove team members everywhere
  *
- * - MANAGER (global role) AND member of the target team:
- *    - can add/remove members in that team
+ * - MANAGER (global role) AND member of the target team: - can add/remove
+ * members in that team
  *
- * - EMPLOYEE (or any authenticated member of the target team):
- *    - can view team members of their own teams
+ * - EMPLOYEE (or any authenticated member of the target team): - can view team
+ * members of their own teams
  *
- * - "MyTeams": teams where current user is a member (any role)
- * - "MyManagedTeams": teams where current user is a member AND has global MANAGER role
+ * - "MyTeams": teams where current user is a member (any role) -
+ * "MyManagedTeams": teams where current user is a member AND has global MANAGER
+ * role
  *
- * Notes:
- * - User.role is stored as JSON String (e.g. ["employee","manager","admin"])
- * - User.id is a String UUID (CHAR(36))
+ * Notes: - User.role is stored as JSON String (e.g.
+ * ["employee","manager","admin"]) - User.id is a String UUID (CHAR(36))
  */
 @Service
 @Transactional
@@ -50,15 +48,14 @@ public class TeamService {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public TeamService(TeamRepository teamRepo,
-                       TeamMemberRepository teamMemberRepo,
-                       UserRepository userRepo) {
+            TeamMemberRepository teamMemberRepo,
+            UserRepository userRepo) {
         this.teamRepo = teamRepo;
         this.teamMemberRepo = teamMemberRepo;
         this.userRepo = userRepo;
     }
 
     /* ===================== Queries ===================== */
-
     /**
      * Public-ish list of teams (you can further restrict if needed).
      */
@@ -92,8 +89,8 @@ public class TeamService {
     }
 
     /**
-     * Teams where the current user is a member and has global MANAGER role.
-     * (We reuse "myTeams" and simply require the MANAGER role.)
+     * Teams where the current user is a member and has global MANAGER role. (We
+     * reuse "myTeams" and simply require the MANAGER role.)
      */
     public List<Team> findManagedByCurrentUser() {
         requireRole("MANAGER");
@@ -101,8 +98,8 @@ public class TeamService {
     }
 
     /**
-     * List members of a given team.
-     * Allowed for ADMIN or any user who is a member of that team.
+     * List members of a given team. Allowed for ADMIN or any user who is a
+     * member of that team.
      */
     public List<User> listMembers(Long teamId) {
         assertCanViewTeamMembers(teamId);
@@ -110,7 +107,8 @@ public class TeamService {
     }
 
     /**
-     * Among a team's members, return the ones whose global role contains "manager".
+     * Among a team's members, return the ones whose global role contains
+     * "manager".
      */
     public List<User> listTeamManagers(Long teamId) {
         assertCanViewTeamMembers(teamId);
@@ -119,7 +117,6 @@ public class TeamService {
     }
 
     /* ===================== Mutations ===================== */
-
     /**
      * Create a team. ADMIN-only by default.
      */
@@ -132,15 +129,19 @@ public class TeamService {
     }
 
     /**
-     * Update a team. ADMIN-only by default.
-     * If you want to allow MANAGER members to update name/description,
-     * relax this check accordingly (e.g., assertCanManageTeamMembers(id)).
+     * Update a team. ADMIN-only by default. If you want to allow MANAGER
+     * members to update name/description, relax this check accordingly (e.g.,
+     * assertCanManageTeamMembers(id)).
      */
     public Team update(Long id, @Valid TeamDto dto) {
         requireAdmin();
         Team t = findById(id);
-        if (dto.getName() != null) t.setName(dto.getName());
-        if (dto.getDescription() != null) t.setDescription(dto.getDescription());
+        if (dto.getName() != null) {
+            t.setName(dto.getName());
+        }
+        if (dto.getDescription() != null) {
+            t.setDescription(dto.getDescription());
+        }
         return teamRepo.save(t);
     }
 
@@ -149,18 +150,22 @@ public class TeamService {
      */
     public void delete(Long id) {
         requireAdmin();
-        if (!teamRepo.existsById(id)) throw new EntityNotFoundException("Team not found: " + id);
+        if (!teamRepo.existsById(id)) {
+            throw new EntityNotFoundException("Team not found: " + id);
+        }
         teamRepo.deleteById(id);
     }
 
     /**
-     * Add a member to a team.
-     * Allowed for ADMIN, or MANAGER who is also a member of the team.
+     * Add a member to a team. Allowed for ADMIN, or MANAGER who is also a
+     * member of the team.
      */
     public void addMember(Long teamId, String userId) {
         assertCanManageTeamMembers(teamId);
 
-        if (teamMemberRepo.existsByTeam_IdAndUser_Id(teamId, userId)) return;
+        if (teamMemberRepo.existsByTeam_IdAndUser_Id(teamId, userId)) {
+            return;
+        }
 
         Team team = teamRepo.findById(teamId)
                 .orElseThrow(() -> new EntityNotFoundException("Team not found: " + teamId));
@@ -173,59 +178,67 @@ public class TeamService {
         teamMemberRepo.save(tm);
     }
 
-
-
     /**
-     * Remove a member from a team.
-     * Allowed for ADMIN, or MANAGER who is also a member of the team.
+     * Remove a member from a team. Allowed for ADMIN, or MANAGER who is also a
+     * member of the team.
      */
     public void removeMember(Long teamId, String userId) {
         assertCanManageTeamMembers(teamId);
-        if (!teamMemberRepo.existsByTeam_IdAndUser_Id(teamId, userId)) return;
+        if (!teamMemberRepo.existsByTeam_IdAndUser_Id(teamId, userId)) {
+            return;
+        }
         teamMemberRepo.deleteByTeam_IdAndUser_Id(teamId, userId);
     }
 
     /* ===================== AuthZ Helpers ===================== */
+    private String currentUserId() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getName() == null) {
+            throw new SecurityException("Unauthenticated");
+        }
+        String subject = auth.getName();
+        if (subject.contains("@")) {
+            return userRepo.findByEmail(subject)
+                    .map(User::getId)
+                    .orElseThrow(() -> new IllegalStateException("No user for email subject: " + subject));
+        }
 
-private String currentUserId() {
-    var auth = SecurityContextHolder.getContext().getAuthentication();
-    if (auth == null || auth.getName() == null) throw new SecurityException("Unauthenticated");
-    String subject = auth.getName();
-    if (subject.contains("@")) {
-        return userRepo.findByEmail(subject)
-                .map(User::getId) 
-                .orElseThrow(() -> new IllegalStateException("No user for email subject: " + subject));
-    }
-
-    // Otherwise assume subject is already the UUID
-    return subject;
-}
-
-    /** True if current principal has ROLE_ADMIN. */
-    private boolean isAdmin() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        return auth != null && auth.getAuthorities() != null &&
-                auth.getAuthorities().stream()
-                        .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
-    }
-
-    /** True if current principal has ROLE_MANAGER. */
-    private boolean isManager() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        return auth != null && auth.getAuthorities() != null &&
-                auth.getAuthorities().stream()
-                        .anyMatch(a -> "ROLE_MANAGER".equals(a.getAuthority()));
-    }
-    
-
-    /** Enforce ADMIN role. */
-    private void requireAdmin() {
-        if (!isAdmin()) throw new SecurityException("Forbidden: requires ADMIN");
+        // Otherwise assume subject is already the UUID
+        return subject;
     }
 
     /**
-     * Enforce a given high-level role (expects upper-case like "MANAGER").
-     * It maps to Spring Security authorities prefixed with "ROLE_".
+     * True if current principal has ROLE_ADMIN.
+     */
+    private boolean isAdmin() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.getAuthorities() != null
+                && auth.getAuthorities().stream()
+                        .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+    }
+
+    /**
+     * True if current principal has ROLE_MANAGER.
+     */
+    private boolean isManager() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.getAuthorities() != null
+                && auth.getAuthorities().stream()
+                        .anyMatch(a -> "ROLE_MANAGER".equals(a.getAuthority()));
+    }
+
+    /**
+     * Enforce ADMIN role.
+     */
+    private void requireAdmin() {
+        if (!isAdmin()) {
+            throw new SecurityException("Forbidden: requires ADMIN");
+        }
+    }
+
+    /**
+     * Enforce a given high-level role (expects upper-case like "MANAGER"). It
+     * maps to Spring Security authorities prefixed with "ROLE_".
      */
     private void requireRole(String roleUpper) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -235,55 +248,67 @@ private String currentUserId() {
         String expected = "ROLE_" + roleUpper;
         boolean ok = auth.getAuthorities().stream()
                 .anyMatch(a -> expected.equals(a.getAuthority()));
-        if (!ok) throw new SecurityException("Forbidden: requires " + expected);
-    }
-
-    /**
-     * Check if a user entity has a given global role (roles stored as JSON string).
-     * Example JSON: ["employee","manager","admin"]
-     */
-    private boolean hasGlobalRole(User u, String roleLower) {
-        String roleJson = u.getRole(); // JSON stored in DB (users.role)
-        if (roleJson == null) return false;
-        try {
-            List<String> roles = objectMapper.readValue(
-                    roleJson, new TypeReference<List<String>>() {});
-            for (String r : roles) {
-                if (roleLower.equalsIgnoreCase(r)) return true;
-            }
-            return false;
-        } catch (Exception parseErr) {
-            // Fallback: tolerant substring check if JSON parsing fails
-            return roleJson.toLowerCase().contains(roleLower.toLowerCase());
+        if (!ok) {
+            throw new SecurityException("Forbidden: requires " + expected);
         }
     }
 
-    /** True if given user belongs to the given team. */
-    private boolean isMemberOf(Long teamId, String userId) {
-        return teamMemberRepo.existsByTeam_IdAndUser_Id(teamId, userId);
+    /**
+     * Check if a user entity has a given global role (roles stored as JSON
+     * string). Example JSON: ["employee","manager","admin"]
+     */
+
+    private boolean isMemberOf(Long teamId, String userId) { return teamMemberRepo.existsByTeam_IdAndUser_Id(teamId, userId); }
+
+    private boolean hasGlobalRole(User u, String roleLower) {
+        String roleRaw = u.getRole();
+        if (roleRaw == null) {
+            return false;
+        }
+
+        try {
+            // Si c'est du JSON (ex: ["employee manager"] ou ["employee","manager"])
+            java.util.List<String> roles = objectMapper.readValue(
+                    roleRaw, new com.fasterxml.jackson.core.type.TypeReference<java.util.List<String>>() {
+            });
+            return roles.stream()
+                    .filter(java.util.Objects::nonNull)
+                    .flatMap(r -> java.util.Arrays.stream(r.split("[\\s,;|]+")))
+                    .anyMatch(t -> roleLower.equalsIgnoreCase(t));
+        } catch (Exception ignore) {
+            // Pas JSON -> on split directement
+            return java.util.Arrays.stream(roleRaw.split("[\\s,;|]+"))
+                    .anyMatch(t -> roleLower.equalsIgnoreCase(t));
+        }
     }
 
     /**
-     * Allow viewing team members if:
-     * - current user is ADMIN, or
-     * - current user is a member of the team.
+     * Allow viewing team members if: - current user is ADMIN, or - current user
+     * is a member of the team.
      */
     private void assertCanViewTeamMembers(Long teamId) {
         String me = currentUserId();
-        if (isAdmin()) return;
-        if (isMemberOf(teamId, me)) return;
+        if (isAdmin()) {
+            return;
+        }
+        if (isMemberOf(teamId, me)) {
+            return;
+        }
         throw new SecurityException("Forbidden: not allowed to view members of this team");
     }
 
     /**
-     * Allow managing team members if:
-     * - current user is ADMIN, or
-     * - current user is MANAGER and a member of the team.
+     * Allow managing team members if: - current user is ADMIN, or - current
+     * user is MANAGER and a member of the team.
      */
     private void assertCanManageTeamMembers(Long teamId) {
         String me = currentUserId();
-        if (isAdmin()) return;
-        if (isManager() && isMemberOf(teamId, me)) return;
+        if (isAdmin()) {
+            return;
+        }
+        if (isManager() && isMemberOf(teamId, me)) {
+            return;
+        }
         throw new SecurityException("Forbidden: only ADMIN or MANAGER member of the team can modify members");
     }
 }
