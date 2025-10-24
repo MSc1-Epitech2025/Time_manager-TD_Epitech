@@ -35,8 +35,8 @@ export const routes: Routes = [
     // --- Enterprise dashboard ---
     {
         path: 'enterprise',
-        
-        
+        canMatch: [authCanMatch],
+        canActivate: [authCanActivate, roleCanActivate],
         loadComponent: () => import('./pages/enterprise-dashboard/enterprise-dashboard')
             .then(m => m.EnterpriseDashboard),
     },
