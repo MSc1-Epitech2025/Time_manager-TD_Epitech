@@ -28,12 +28,13 @@ public class User {
     private String password;
     @Column(name = "avatar_url", length = 500)
     private String avatarUrl;
+    private String azureOid;
     // === Constructors ===
 
     public User() {
     }
 
-    public User(String id, String firstName, String lastName, String email, String phone, String role, String poste, String password) {
+    public User(String id, String firstName, String lastName, String email, String phone, String role, String poste, String password, String azureOid) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -42,6 +43,7 @@ public class User {
         this.role = role;
         this.poste = poste;
         this.password = password;
+        this.azureOid = azureOid;
     }
 
     // === Getters & Setters ===
@@ -72,5 +74,9 @@ public class User {
 
     public String getAvatarUrl() { return avatarUrl; }
     public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+
+    public String getAzureOid() { return azureOid; }
+    public void setAzureOid(String azureOid) { this.azureOid = azureOid; }
+
 
 }
