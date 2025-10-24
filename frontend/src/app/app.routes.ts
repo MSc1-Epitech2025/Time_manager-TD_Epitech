@@ -86,4 +86,6 @@ export const routes: Routes = [
     // --- Default ---
     { path: '', pathMatch: 'full', redirectTo: 'planning' }, // optionnel mais recommandé
     { path: '**', redirectTo: 'planning' },
+        ]    
+}
 ];
