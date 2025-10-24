@@ -12,6 +12,7 @@ import { AuthService } from '../../core/services/auth';
 import { CreateTeamModal } from '../../modal/create-team-modal/create-team-modal';
 import { EditTeamModalComponent } from '../../modal/edit-team-modal/edit-team-modal';
 import { DeleteTeamModalComponent } from '../../modal/delete-team-modal/delete-team-modal';
+import { EnterpriseService } from '../../core/services/enterprise';
 
 @Component({
   selector: 'app-team-management',
@@ -49,11 +50,25 @@ export class TeamManagement {
 filteredTeams = this.teams;
 
 
-  constructor(private router: Router, private auth: AuthService, private modal: MatDialog) {}
+  constructor(private router: Router, private auth: AuthService, private modal: MatDialog,
+    private enterpriseService : EnterpriseService
+  ) {}
+
+  onInit() { 
+    this.refreshTeams();
+  } 
 
   refreshTeams() {
     console.log('Refreshing team list');
     this.filteredTeams = this.teams;
+    try {
+    this.enterpriseService.getEmployees().then(employees => {
+      console.log('Fetched employees:', employees);
+      // Update teams based on fetched employees if necessary
+    });
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+    }
     // Request to backend to get updated team list
   }
 

@@ -67,8 +67,13 @@
         </div>
 
         <div class="team-members">
-          <img *ngFor="let member of team.members.slice(0, 5)" [src]="member.photo || 'assets/default-user.jpg'"
-            [alt]="member.name" />
+          <div *ngIf="team.members.length === 0" class="no-members">
+            No members
+          </div>
+          <div *ngFor="let member of team.members.slice(0, 5)" [title]="member.name" class="member-card">
+            <img src="img/userProfil.png"  [alt]="member.name[0]" class= "member-avatar"/>
+            <p>{{member.name}}</p>
+          </div>
           <span *ngIf="team.members.length > 5" class="more-members">
             +{{ team.members.length - 5 }}
           </span>
@@ -88,7 +93,7 @@
       </div>
     </section>
   
-    <button class="add-team-btn" (click)="showAddModal()">
+    <button matButton="filled"  class="add-team-btn" (click)="showAddModal()">
       <mat-icon>add</mat-icon>
       Add a team
     </button>
