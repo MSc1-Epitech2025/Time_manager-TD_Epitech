@@ -3,27 +3,43 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
+import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { NgChartsModule } from 'ng2-charts';
 import { ChartConfiguration, ChartOptions } from 'chart.js';
-import { ManagerService } from '../../core/services/manager';
-import { ReportService } from '../../core/services/report';
+import { Chart } from 'chart.js/auto';
 import { Router } from '@angular/router';
+
+//Service
+import { ManagerService } from '../../core/services/manager';
 import { AuthService } from '../../core/services/auth';
+import { EnterpriseService } from '../../core/services/enterprise';
+import { ReportService } from '../../core/services/report';
+
+// Kpi Components 
+import { KpiAssiduiteComponent } from '../../kpi/kpi-assiduite/kpi-assiduite';
+import { KpiAbsenteismeComponent } from '../../kpi/kpi-absenteisme/kpi-absenteisme'
+import { KpiComparatifComponent } from '../../kpi/kpi-comparatif/kpi-comparatif'
+import { KpiCongesComponent } from '../../kpi/kpi-conges/kpi-conges';
+import { KpiProductiviteComponent } from '../../kpi/kpi-productivite/kpi-productivite';
+import { KpiAlertesComponent } from '../../kpi/kpi-alertes/kpi-alertes';
+import { KpiRapportsComponent } from '../../kpi/kpi-rapports/kpi-rapports'
 
 @Component({
   selector: 'app-enterprise-dashboard',
   templateUrl: './enterprise-dashboard.html',
-  imports: [ CommonModule,
+  imports: [CommonModule,
     FormsModule,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
-    MatFormFieldModule,
+    MatFormFieldModule, MatTabsModule,
     MatInputModule,
     NgChartsModule,
+    KpiAssiduiteComponent, KpiAbsenteismeComponent, KpiAlertesComponent, KpiComparatifComponent, KpiCongesComponent,
+    KpiProductiviteComponent,
   ],
   styleUrls: ['./enterprise-dashboard.scss']
 })
@@ -31,17 +47,18 @@ import { AuthService } from '../../core/services/auth';
 export class EnterpriseDashboard implements OnDestroy {
   isWorking: boolean = false;
   timer: number = 0;
-  time :{hours: number, minutes: number } = {hours:0, minutes:0};
+  time: { hours: number, minutes: number } = { hours: 0, minutes: 0 };
   //dataSource: Array<{ start: string; end?: string; durationSeconds: number }> = [];
-  user : any = null;
+  user: any = null;
   status: string = 'startWorking';
 
-    constructor(
-      private router: Router,
-      private auth: AuthService,
-      private managerService: ManagerService,
-    private reportService: ReportService
-    ) {}
+  constructor(
+    private router: Router,
+    private auth: AuthService,
+    private managerService: ManagerService,
+    private reportService: ReportService,
+    private enterpriseService: EnterpriseService
+  ) { }
 
   private intervalId: number | null = null;
   private sessionStartTimestamp?: number;
@@ -68,9 +85,42 @@ export class EnterpriseDashboard implements OnDestroy {
   };
 
 
-    ngOnInit() {
+  ngOnInit() {
     this.managerService.getTeamEmployees().subscribe((data) => {
       this.user = data[0];
+    });
+
+    const ctx = document.getElementById('globalChart') as HTMLCanvasElement;
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sept', 'Oct'],
+        datasets: [
+          {
+            label: 'Performance globale',
+            data: [72, 75, 78, 80, 84, 83, 86, 88, 90, 92],
+            borderColor: '#2563eb',
+            backgroundColor: 'rgba(37,99,235,0.2)',
+            tension: 0.4,
+            fill: true,
+            borderWidth: 2,
+            pointRadius: 4
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: {
+            min: 60,
+            max: 100,
+            ticks: { stepSize: 10 }
+          }
+        }
+      }
     });
 
     const data = { presence: 80, late: 10, absent: 10 };
@@ -79,6 +129,13 @@ export class EnterpriseDashboard implements OnDestroy {
       data.late,
       data.absent,
     ];
+
+    this.enterpriseService.getEmployees().then(user => {
+      this.user = user;
+      console.log('Informations des employés récupérées :', this.user);
+    }).catch(error => {
+      console.error('Erreur lors de la récupération des informations du manager :', error);
+    });
   }
 
   toggleWorkStatus() {
@@ -111,7 +168,7 @@ export class EnterpriseDashboard implements OnDestroy {
     const end = Date.now();
     const start = this.sessionStartTimestamp ?? end;
     const durationSeconds = Math.round((end - start) / 1000);
-    
+
     // reset session state
     this.sessionStartTimestamp = undefined;
     this.timer = 0;
@@ -125,6 +182,10 @@ export class EnterpriseDashboard implements OnDestroy {
     this.isWorking = false;
     this.timer = 0;
     this.sessionStartTimestamp = undefined;
+  }
+  exportData(){
+    console.log('exportData button pressed')
+    this.reportService.exportEmployeeReport("op")
   }
 
   // utility to format timer as HH:MM:SS for template
@@ -149,7 +210,7 @@ export class EnterpriseDashboard implements OnDestroy {
   // retourne le total de secondes travaillées pour une date donnée (inclut session en cours)
   getTotalSecondsForDate(date: Date): number {
     let total = 0;
-    
+
     // session en cours (si active)
     if (this.isWorking && this.sessionStartTimestamp) {
       const runningStart = new Date(this.sessionStartTimestamp);
@@ -182,7 +243,7 @@ export class EnterpriseDashboard implements OnDestroy {
   }
 
   // ---------- routes ----------
-  
+
   goToPlanning() {
     this.router.navigate(['/manager/planning']);
   }

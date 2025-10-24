@@ -1,83 +1,50 @@
-<div class="dashboard">
-  <!-- ===== Sidebar ===== -->
-  <aside class="sidebar">
-    <div class="logo">
-      <img src="assets/logo.png" alt="Logo" />
+<div class="dashboard-container">
+  <!-- HEADER -->
+  <header class="dashboard-header">
+    <div class="header-left">
+      <h1>Enterprise dashboard</h1>
     </div>
+  </header>
 
-    <nav class="menu">
-      <button class="menu-btn active">
-        <mat-icon>dashboard</mat-icon>
-        Dashboard
-      </button>
+  <!-- Section export -->
+  <section class="dashboard-export">
+    <button (click)="exportData()" class="export-btn">📊 Exporter le rapport</button>
+  </section>
 
-      <button class="menu-btn" (click)="goToPlanning()">
-        <mat-icon>calendar_month</mat-icon>
-        Calendar
-      </button>
+  <!-- GRAPH GLOBAL -->
+  <section class="kpi-global">
+    <h2>Évolution de la productivité globale</h2>
+  </section>
 
-      <button class="menu-btn">
-        <mat-icon>history</mat-icon>
-        Presence logs
-      </button>
+  <!-- KPIs SYNTHÉTIQUES -->
+  <section class="dashboard-summary">
+    <div class="summary-card">
+      <div class="icon positive">💼</div>
+      <h3>Taux d’assiduité</h3>
+      <p class="value">96%</p>
+      <small class="trend positive">+2.1% vs mois dernier</small>
+    </div>
+    <div class="summary-card">
+      <div class="icon negative">🚫</div>
+      <h3>Taux d’absentéisme</h3>
+      <p class="value">4%</p>
+      <small class="trend negative">-0.5%</small>
+    </div>
+    <div class="summary-card">
+      <div class="icon positive">⚙️</div>
+      <h3>Productivité horaire</h3>
+      <p class="value">7.8 h/jour</p>
+      <small class="trend positive">+0.3 h</small>
+    </div>
+  </section>
 
-      <button class="menu-btn" (click)="goToTeamManagement()">
-        <mat-icon>groups</mat-icon>
-        Teams
-      </button>
-    </nav>
-
-    <button class="logout-btn" (click)="logout()">
-      <mat-icon>logout</mat-icon>
-      Disconnect
-    </button>
-  </aside>
-
-  <!-- ===== Main Content ===== -->
-  <main class="main-content">
-    <!-- Header -->
-    <header class="header">
-      <h2>Enterprise Dashboard</h2>
-    </header>
-
-    <!-- Profile Card fake data -->
-    <section class="profile-section">
-      <div class="profile-card">
-        <img src="assets/profile-placeholder.png" alt="Profile" class="profile-img" />
-        <div class="profile-info">
-          <h3>{{ user?.name || 'Entreprise Name' }}</h3>
-          <p>{{ user?.position || 'Admin' }}</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Stats Cards -->
-    <section class="stats-section">
-      <div class="stats-card">
-        <h3>25</h3>
-        <p>Employees</p>
-      </div>
-      <div class="stats-card">
-        <h3>5</h3>
-        <p>Teams</p>
-      </div>
-    </section>
-
-    <!-- Charts Section -->
-    <section class="chart-section">
-      <div class="card large">
-        <h3>Employee Statistics</h3>
-        <mat-card class="chart-card">
-          <div class="chart-container">
-            <canvas
-              baseChart
-              [data]="pieChartData"
-              [options]="chartOptions"
-              chartType="pie">
-            </canvas>
-          </div>
-        </mat-card>
-      </div>
-    </section>
-  </main>
+  <!-- KPIs DÉTAILLÉS -->
+  <section class="dashboard-grid">
+    <app-kpi-assiduite class="dashboard-card"></app-kpi-assiduite>
+    <app-kpi-absenteisme class="dashboard-card"></app-kpi-absenteisme>
+    <app-kpi-productivite class="dashboard-card"></app-kpi-productivite>
+    <app-kpi-comparatif class="dashboard-card"></app-kpi-comparatif>
+    <app-kpi-conges class="dashboard-card"></app-kpi-conges>
+    <app-kpi-alertes class="dashboard-card"></app-kpi-alertes>
+  </section>
 </div>
