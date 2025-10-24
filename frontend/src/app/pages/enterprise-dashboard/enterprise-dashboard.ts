@@ -168,7 +168,6 @@ export class EnterpriseDashboard implements OnDestroy {
     const end = Date.now();
     const start = this.sessionStartTimestamp ?? end;
     const durationSeconds = Math.round((end - start) / 1000);
-
     // reset session state
     this.sessionStartTimestamp = undefined;
     this.timer = 0;
@@ -210,7 +209,6 @@ export class EnterpriseDashboard implements OnDestroy {
   // retourne le total de secondes travaillées pour une date donnée (inclut session en cours)
   getTotalSecondsForDate(date: Date): number {
     let total = 0;
-
     // session en cours (si active)
     if (this.isWorking && this.sessionStartTimestamp) {
       const runningStart = new Date(this.sessionStartTimestamp);
@@ -243,7 +241,6 @@ export class EnterpriseDashboard implements OnDestroy {
   }
 
   // ---------- routes ----------
-
   goToPlanning() {
     this.router.navigate(['/manager/planning']);
   }

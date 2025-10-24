@@ -41,6 +41,15 @@ export const routes: Routes = [
             .then(m => m.EnterpriseDashboard),
     },
 
+    // --- Manager detail ---
+    {
+        path: 'enterprise',
+        
+        
+        loadComponent: () => import('./pages/enterprise-dashboard/enterprise-dashboard')
+            .then(m => m.EnterpriseDashboard),
+    },
+
             // Manager detail
             {
                 path: 'manager/employee/:id',
@@ -77,8 +86,6 @@ export const routes: Routes = [
     // --- Default ---
     { path: '', pathMatch: 'full', redirectTo: 'planning' }, // optionnel mais recommandé
     { path: '**', redirectTo: 'planning' },
-
-]
+        ]    
 }
-
 ];
