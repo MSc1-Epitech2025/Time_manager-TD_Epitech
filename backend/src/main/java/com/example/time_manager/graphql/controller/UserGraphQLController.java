@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.Optional;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
@@ -17,9 +18,9 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import com.example.time_manager.dto.auth.AuthRequest;
 import com.example.time_manager.dto.auth.AuthResponse;
 import com.example.time_manager.dto.auth.RefreshRequest;
-import com.example.time_manager.dto.auth.TokenPairResponse;
 import com.example.time_manager.security.JwtUtil;
 import com.example.time_manager.service.UserService;
+import com.example.time_manager.model.User;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -246,16 +247,8 @@ public com.example.time_manager.model.User userByEmail(@Argument("email") String
 
         if (user.getAzureOid() == null || user.getAzureOid().isBlank()) {
             user.setAzureOid(azureOid);
-            user = userService.saveUser(user);
         }
 
-        String token = jwtUtil.generateAccessToken(
-                user.getEmail(),
-                user.getId().toString(),
-                user.getFirstName(),
-                user.getRole()
-        );
-
-        return new AuthResponse(token);
+        return new AuthResponse();
     }
 }
