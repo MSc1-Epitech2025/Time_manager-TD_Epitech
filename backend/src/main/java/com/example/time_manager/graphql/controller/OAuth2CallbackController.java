@@ -18,9 +18,9 @@ public class OAuth2CallbackController {
 
     @GetMapping("/oauth2/success")
     public Object onSuccess(Authentication auth) {
-        System.out.println("ICI");
+        System.out.println(">>>>>>>> IN OAUTH2 SUCCESS <<<<<<<<");
         var attributes = ((OAuth2User) auth.getPrincipal()).getAttributes();
-        System.out.println("attribute", attributes);
+        System.out.println("attributes = " + attributes);
 
         var dto = new AuthOauthMicrosoft(
                 (String) attributes.get("email"),
