@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
+import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -64,7 +65,7 @@ public class UserGraphQLController {
 
         String refreshToken = jwtUtil.generateRefreshToken(
                 user.getEmail(),
-                user.getId().toString()
+                user.getId()
         );
 
         addAccessCookie(httpResp, accessToken);
@@ -120,6 +121,20 @@ public AuthResponse refresh(@Argument Optional<RefreshRequest> input) {
         expireCookie(httpResp, "refresh_token", "/graphql");
         return true;
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @QueryMapping
+    public java.util.List<com.example.time_manager.model.User> users() {
+        var list = userService.findAllUsers(); 
+        return (list != null) ? list : java.util.Collections.emptyList();
+    }
+
+    @PreAuthorize("permitAll()")
+    @QueryMapping
+public com.example.time_manager.model.User userByEmail(@Argument("email") String email) {
+    return userService.findByEmail(email).orElse(null);
+}
+
 
     private static HttpServletRequest currentRequest() {
         var attrs = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();

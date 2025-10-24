@@ -40,3 +40,4 @@ type Mutation {
     updateUserAvatar(id: ID!, avatarUrl: String!): User!
     deleteUser(id: ID!): Boolean!
 }
+ 
