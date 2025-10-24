@@ -1,4 +1,3 @@
-// src/main/java/com/example_time_manager/security/SecurityConfig.java
 package com.example.time_manager.security;
 
 import java.util.List;
@@ -31,21 +30,27 @@ public class SecurityConfig {
     this.jwtAuthFilter = jwtAuthFilter;
   }
 
-  @Bean
-  SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    http
-      .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-      .csrf(csrf -> csrf.ignoringRequestMatchers("/graphql"))
-      .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-      .authorizeHttpRequests(auth -> auth
-        .requestMatchers("/actuator/health").permitAll()
-        .requestMatchers(HttpMethod.POST, "/graphql").permitAll() 
-        .anyRequest().authenticated()
-      )
-      .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/graphql"))
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/graphql").permitAll()
+                        // ⚠️ Très important : autoriser la route d'auth
+                        .requestMatchers("/oauth2/**").permitAll()
+                        .anyRequest().authenticated()
+                )
+                // ✅ active /oauth2/authorization/{client}
+                .oauth2Login(oauth -> oauth
+                        .defaultSuccessUrl("/login/success", true)
+                )
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
-    return http.build();
-  }
+        return http.build();
+    }
 
   @Bean
   CorsConfigurationSource corsConfigurationSource() {

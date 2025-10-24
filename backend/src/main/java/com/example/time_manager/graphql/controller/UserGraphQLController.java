@@ -102,21 +102,21 @@ public AuthResponse refresh(@Argument Optional<RefreshRequest> input) {
 
     String newAccess = jwtUtil.generateAccessToken(
         user.getEmail(),
-        user.getId(),  
+        user.getId(),
         user.getFirstName(),
         user.getRole()
     );
 
-    addAccessCookie(httpResp, newAccess); 
+    addAccessCookie(httpResp, newAccess);
 
-    return new AuthResponse(true);       
+    return new AuthResponse(true);
 }
 
     @PreAuthorize("permitAll()")
     @MutationMapping
     public Boolean logout() {
         HttpServletResponse httpResp = currentResponse();
-        expireCookie(httpResp, "access_token", "/");          
+        expireCookie(httpResp, "access_token", "/");
         expireCookie(httpResp, "access_token", "/graphql");
         expireCookie(httpResp, "refresh_token", "/graphql");
         return true;
@@ -125,7 +125,7 @@ public AuthResponse refresh(@Argument Optional<RefreshRequest> input) {
     @PreAuthorize("hasRole('ADMIN')")
     @QueryMapping
     public java.util.List<com.example.time_manager.model.User> users() {
-        var list = userService.findAllUsers(); 
+        var list = userService.findAllUsers();
         return (list != null) ? list : java.util.Collections.emptyList();
     }
 
@@ -214,5 +214,34 @@ public com.example.time_manager.model.User userByEmail(@Argument("email") String
         } catch (Exception ignored) {
             return null;
         }
+    }
+
+    @PreAuthorize("permitAll()")
+    @MutationMapping
+    public AuthResponse loginWithAzure(Authentication authentication) {
+        if (authentication == null) {
+            throw new RuntimeException("Not authenticated with Azure");
+        }
+
+        String email = authentication.getName();
+
+        User user = userService.findByEmail(email).orElseGet(() -> {
+            User u = new User();
+            u.setEmail(email);
+            u.setFirstName("Azure");
+            u.setLastName("User");
+            u.setRole("[\"employee\"]");
+            u.setPassword("oauth2");
+            return userService.saveUser(u);
+        });
+
+        String token = jwtUtil.generateAccessToken(
+                user.getEmail(),
+                user.getId().toString(),
+                user.getFirstName(),
+                user.getRole()
+        );
+
+        return new AuthResponse(token);
     }
 }
