@@ -173,6 +173,8 @@ public class TeamService {
         teamMemberRepo.save(tm);
     }
 
+
+
     /**
      * Remove a member from a team.
      * Allowed for ADMIN, or MANAGER who is also a member of the team.
@@ -214,6 +216,7 @@ private String currentUserId() {
                 auth.getAuthorities().stream()
                         .anyMatch(a -> "ROLE_MANAGER".equals(a.getAuthority()));
     }
+    
 
     /** Enforce ADMIN role. */
     private void requireAdmin() {

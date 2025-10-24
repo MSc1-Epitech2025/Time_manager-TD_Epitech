@@ -79,6 +79,26 @@ public class TeamController {
         return teamService.listTeamManagers(teamId);
     }
 
+    @PreAuthorize("isAuthenticated()")
+    @QueryMapping
+    public java.util.List<com.example.time_manager.model.User> myTeamMembers() {
+        var myTeams = teamService.findTeamsOfCurrentUser();
+        java.util.Map<String, com.example.time_manager.model.User> byId = new java.util.HashMap<>();
+        for (var t : myTeams) {
+            for (var u : teamService.listMembers(t.getId())) {
+                byId.putIfAbsent(u.getId(), u);
+            }
+        }
+
+    // (Optionnel) retirer moi-même de la liste :
+    // var me = SecurityContextHolder.getContext().getAuthentication().getName();
+    // byId.values().removeIf(u -> u.getEmail().equalsIgnoreCase(me));
+
+    return new java.util.ArrayList<>(byId.values());
+}
+
+
+
     /* =========================== FIELD RESOLVER ======================== */
 
     /** Resolve Team.members via service (enforces view permissions). */

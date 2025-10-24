@@ -41,14 +41,24 @@ public class AppUserDetailsService implements UserDetailsService {
             return List.of(new SimpleGrantedAuthority("ROLE_EMPLOYEE"));
         }
         try {
-            List<String> roles = mapper.readValue(raw, new TypeReference<List<String>>() {});
+            List<String> roles = mapper.readValue(raw, new TypeReference<List<String>>() {
+            });
             return roles.stream()
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
                     .map(r -> "ROLE_" + r.toUpperCase())
                     .distinct()
                     .map(SimpleGrantedAuthority::new)
                     .collect(Collectors.toList());
         } catch (Exception e) {
-            return List.of(new SimpleGrantedAuthority("ROLE_" + raw.trim().toUpperCase()));
+            String[] tokens = raw.split("[\\s,;|]+");
+            return java.util.Arrays.stream(tokens)
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .map(r -> "ROLE_" + r.toUpperCase())
+                    .distinct()
+                    .map(SimpleGrantedAuthority::new)
+                    .collect(Collectors.toList());
         }
     }
 }
