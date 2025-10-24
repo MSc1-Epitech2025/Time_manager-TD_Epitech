@@ -12,8 +12,12 @@
             <mat-icon>admin_panel_settings</mat-icon>
             Admin dashboard
         </button>
-        <button class="menu-btn" *ngIf="isAdmin()" [routerLink]="['/teams']" routerLinkActive="active">
+        <button class="menu-btn" *ngIf="isAdmin()" [routerLink]="['/enterprise']" routerLinkActive="active">
             <mat-icon>group</mat-icon>
+            Manager dashboard
+        </button>
+        <button class="menu-btn" *ngIf="isAdmin()" [routerLink]="['/teams']" routerLinkActive="active">
+            <mat-icon>groups</mat-icon>
             Team management
         </button>
         <button class="menu-btn" *ngIf="isAdmin()" [routerLink]="['/logs']" routerLinkActive="active">
