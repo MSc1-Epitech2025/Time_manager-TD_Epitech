@@ -183,8 +183,8 @@ export class EnterpriseDashboard implements OnDestroy {
     this.sessionStartTimestamp = undefined;
   }
   exportData(){
-    console.log('exportData button pressed')
-    this.reportService.exportEmployeeReport("op")
+    console.log('exportData button pressed') 
+    //this.reportService.exportEmployeeReport()
   }
 
   // utility to format timer as HH:MM:SS for template

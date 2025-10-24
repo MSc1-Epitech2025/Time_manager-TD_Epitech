@@ -1,24 +1,20 @@
 // src/app/core/manager.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { AuthService } from './auth';
 
 @Injectable({ providedIn: 'root' })
 export class EnterpriseService {
   private graphqlUrl = 'http://localhost:8030/graphql';
 
-  constructor(private http: HttpClient, private auth: AuthService) {}
+  constructor(private auth: AuthService) {}
 
   private async graphqlRequest(query: string) {
-    const token = await this.auth.ensureValidAccessToken();
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    };
-
+    // On ne fait plus appel à ensureValidAccessToken()
+    // car le système d'auth utilise maintenant les cookies (credentials: 'include')
     const response = await fetch(this.graphqlUrl, {
       method: 'POST',
-      headers,
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include', // 🔥 Très important
       body: JSON.stringify({ query }),
     });
 
