@@ -9,7 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 import { NgChartsModule } from 'ng2-charts';
 import { ChartConfiguration, ChartOptions } from 'chart.js';
 import { HttpClient } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs'
+import { firstValueFrom } from 'rxjs';
 import { ManagerService } from '../../core/services/manager';
 import { ReportService } from '../../core/services/report';
 import { Router } from '@angular/router';
