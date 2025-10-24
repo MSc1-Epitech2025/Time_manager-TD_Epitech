@@ -1,4 +1,4 @@
-package com.example.time_manager.controller;
+package com.example.time_manager.graphql.controller;
 
 import com.example.time_manager.dto.auth.AuthOauthMicrosoft;
 import com.example.time_manager.service.AuthMicrosoftService;
@@ -18,8 +18,9 @@ public class OAuth2CallbackController {
 
     @GetMapping("/oauth2/success")
     public Object onSuccess(Authentication auth) {
-
+        System.out.println("ICI");
         var attributes = ((OAuth2User) auth.getPrincipal()).getAttributes();
+        System.out.println("attribute", attributes);
 
         var dto = new AuthOauthMicrosoft(
                 (String) attributes.get("email"),

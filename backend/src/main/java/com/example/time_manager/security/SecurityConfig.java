@@ -39,13 +39,11 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers(HttpMethod.POST, "/graphql").permitAll()
-                        // ⚠️ Très important : autoriser la route d'auth
                         .requestMatchers("/oauth2/**").permitAll()
                         .anyRequest().authenticated()
                 )
-                // ✅ active /oauth2/authorization/{client}
                 .oauth2Login(oauth -> oauth
-                        .defaultSuccessUrl("/login/success", true)
+                        .defaultSuccessUrl("/oauth2/success", true)
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
