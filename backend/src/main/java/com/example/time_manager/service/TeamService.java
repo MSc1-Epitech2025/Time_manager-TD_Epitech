@@ -105,7 +105,7 @@ public class TeamService {
         assertCanViewTeamMembers(teamId);
         return teamMemberRepo.findUsersByTeamId(teamId);
     }
-
+    
     /**
      * Among a team's members, return the ones whose global role contains
      * "manager".

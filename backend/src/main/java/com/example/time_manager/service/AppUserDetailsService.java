@@ -41,24 +41,32 @@ public class AppUserDetailsService implements UserDetailsService {
             return List.of(new SimpleGrantedAuthority("ROLE_EMPLOYEE"));
         }
         try {
-            List<String> roles = mapper.readValue(raw, new TypeReference<List<String>>() {
-            });
-            return roles.stream()
-                    .map(String::trim)
-                    .filter(s -> !s.isEmpty())
-                    .map(r -> "ROLE_" + r.toUpperCase())
-                    .distinct()
-                    .map(SimpleGrantedAuthority::new)
-                    .collect(Collectors.toList());
+            // JSON: ex ["employee","manager"] ou ["employee manager"]
+            List<String> roles = mapper.readValue(raw, new TypeReference<List<String>>() {});
+            var auths = roles.stream()
+                .filter(s -> s != null)
+                .flatMap(s -> java.util.Arrays.stream(s.split("[\\s,;|]+"))) // <-- split ici aussi
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(String::toUpperCase)
+                .distinct()
+                .map(r -> new SimpleGrantedAuthority("ROLE_" + r))
+                .collect(Collectors.toList());
+            return auths.isEmpty()
+                ? List.of(new SimpleGrantedAuthority("ROLE_EMPLOYEE"))
+                : auths;
         } catch (Exception e) {
-            String[] tokens = raw.split("[\\s,;|]+");
-            return java.util.Arrays.stream(tokens)
-                    .map(String::trim)
-                    .filter(s -> !s.isEmpty())
-                    .map(r -> "ROLE_" + r.toUpperCase())
-                    .distinct()
-                    .map(SimpleGrantedAuthority::new)
-                    .collect(Collectors.toList());
+            // Non-JSON: ex "employee manager"
+            var auths = java.util.Arrays.stream(raw.split("[\\s,;|]+"))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(String::toUpperCase)
+                .distinct()
+                .map(r -> new SimpleGrantedAuthority("ROLE_" + r))
+                .collect(Collectors.toList());
+            return auths.isEmpty()
+                ? List.of(new SimpleGrantedAuthority("ROLE_EMPLOYEE"))
+                : auths;
         }
     }
 }
