@@ -9,6 +9,8 @@ import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 
 import com.example.time_manager.dto.absence.AbsenceCreateRequest;
@@ -18,10 +20,8 @@ import com.example.time_manager.dto.absence.AbsenceUpdateRequest;
 import com.example.time_manager.model.absence.AbsencePeriod;
 import com.example.time_manager.model.absence.AbsenceStatus;
 import com.example.time_manager.model.absence.AbsenceType;
-import com.example.time_manager.security.JwtUtil;
 import com.example.time_manager.service.AbsenceService;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.annotation.Nullable;
 
 @PreAuthorize("isAuthenticated()")
@@ -29,26 +29,23 @@ import jakarta.annotation.Nullable;
 public class AbsenceGraphqlController {
 
   private final AbsenceService absenceService;
-  private final JwtUtil jwtUtil;
-  private final HttpServletRequest http;
 
-  public AbsenceGraphqlController(AbsenceService absenceService, JwtUtil jwtUtil, HttpServletRequest http) {
+  public AbsenceGraphqlController(AbsenceService absenceService) {
     this.absenceService = absenceService;
-    this.jwtUtil = jwtUtil;
-    this.http = http;
   }
 
-  /* ======================= Helpers ======================= */
 
-private String currentEmail() {
-  String auth = http.getHeader("Authorization");
-  String token = (auth != null && auth.startsWith("Bearer ")) ? auth.substring(7) : null;
-  if (token == null || token.isBlank()) {
-    throw new RuntimeException("Missing Bearer token");
+  private String currentEmail() {
+    var auth = SecurityContextHolder.getContext().getAuthentication();
+    if (auth == null || !auth.isAuthenticated()) {
+      throw new SecurityException("Unauthenticated");
+    }
+    Object principal = auth.getPrincipal();
+    if (principal instanceof UserDetails u) {
+      return u.getUsername();
+    }
+    return auth.getName();
   }
-  // chez toi: subject = email
-  return jwtUtil.extractUsername(token);
-}
 
   private static Map<LocalDate, AbsencePeriod> toMap(List<PeriodByDateInput> periodList) {
     Map<LocalDate, AbsencePeriod> m = new HashMap<>();
@@ -73,22 +70,22 @@ private String currentEmail() {
   }
 
   @QueryMapping
-  @PreAuthorize("hasAuthority('MANAGER') or hasAuthority('ADMIN')")
+  @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN')")
   public List<AbsenceResponse> absencesByUser(@Argument String userId) {
     return absenceService.listForUser(userId);
   }
 
   @QueryMapping
-  @PreAuthorize("hasAuthority('ADMIN')")
+  @PreAuthorize("hasRole('ADMIN')")
   public List<AbsenceResponse> allAbsences() {
     return absenceService.listAll();
   }
+
   @QueryMapping
-  @PreAuthorize("hasRole('MANAGER')")       
+  @PreAuthorize("isAuthenticated()")
   public List<AbsenceResponse> myTeamAbsences(@Argument @Nullable Long teamId) {
     return absenceService.listTeamAbsences(currentEmail(), teamId);
   }
-
 
   /* ======================= Mutations ===================== */
 
@@ -108,7 +105,7 @@ private String currentEmail() {
   public AbsenceResponse updateAbsence(@Argument Long id, @Argument AbsenceUpdateInput input) {
     AbsenceUpdateRequest req = new AbsenceUpdateRequest();
     if (input.getStartDate() != null) req.setStartDate(LocalDate.parse(input.getStartDate()));
-    if (input.getEndDate() != null)   req.setEndDate(LocalDate.parse(input.getEndDate()));
+    if (input.getEndDate() != null) req.setEndDate(LocalDate.parse(input.getEndDate()));
     req.setType(input.getType());
     req.setReason(input.getReason());
     req.setSupportingDocumentUrl(input.getSupportingDocumentUrl());
@@ -117,7 +114,7 @@ private String currentEmail() {
   }
 
   @MutationMapping
-  @PreAuthorize("hasAuthority('MANAGER') or hasAuthority('ADMIN')")
+  @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN')")
   public AbsenceResponse setAbsenceStatus(@Argument Long id, @Argument AbsenceStatusUpdateInput input) {
     AbsenceStatusUpdateRequest req = new AbsenceStatusUpdateRequest();
     req.setStatus(input.getStatus());
@@ -130,11 +127,11 @@ private String currentEmail() {
     return true;
   }
 
-  /* ========== Input POJOs pour le binding GraphQL ========== */
+  /* ========== Input ========== */
 
   public static class AbsenceCreateInput {
-    private String startDate;
-    private String endDate;
+    private String startDate;                 // yyyy-MM-dd
+    private String endDate;                   // yyyy-MM-dd
     private AbsenceType type;
     private String reason;
     private String supportingDocumentUrl;
@@ -162,12 +159,12 @@ private String currentEmail() {
   }
 
   public static class AbsenceUpdateInput {
-    private String startDate;
-    private String endDate;
-    private AbsenceType type;
-    private String reason;
-    private String supportingDocumentUrl;
-    private List<PeriodByDateInput> periodByDate;
+    private String startDate;                 // nullable
+    private String endDate;                   // nullable
+    private AbsenceType type;                 // nullable
+    private String reason;                    // nullable
+    private String supportingDocumentUrl;     // nullable
+    private List<PeriodByDateInput> periodByDate; // nullable
 
     public AbsenceUpdateInput() {}
 
@@ -200,8 +197,8 @@ private String currentEmail() {
   }
 
   public static class PeriodByDateInput {
-    private String date;              // yyyy-MM-dd
-    private AbsencePeriod period;     // AM/PM/FULL_DAY
+    private String date;          // yyyy-MM-dd
+    private AbsencePeriod period; // AM/PM/FULL_DAY
 
     public PeriodByDateInput() {}
 

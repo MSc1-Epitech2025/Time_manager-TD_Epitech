@@ -338,15 +338,20 @@ public List<AbsenceResponse> listTeamAbsences(String managerEmail, Long teamId) 
     return dto;
   }
 
-  private boolean hasRole(User u, String roleUpper) {
-    String raw = u.getRole();
-    if (raw == null || raw.isBlank()) return false;
-    String normalized = raw.replaceAll("[\\[\\]\\s\\\"]", "").toUpperCase(); // EMPLOYEE,MANAGER,ADMIN
-    for (String r : normalized.split(",")) {
-      if (r.equals(roleUpper)) return true;
+private boolean hasRole(User u, String roleUpper) {
+  String raw = u.getRole();
+  if (raw == null || raw.isBlank()) return false;
+
+  String cleaned = raw.replaceAll("[\\[\\]\"]", "").toUpperCase();
+  for (String token : cleaned.split("[\\s,;|,]+")) { // espaces, virgule, point-virgule, pipe
+    String r = token.trim();
+    if (!r.isEmpty() && r.equals(roleUpper)) {
+      return true;
     }
-    return false;
   }
+  return false;
+}
+
 
   private String currentUserId() {
     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
