@@ -27,6 +27,7 @@ extend type Query {
   allTeams: [Team!]!
   myTeams: [Team!]!
   myManagedTeams: [Team!]!
+  myTeamMembers: [User!]!
   teamManagers(teamId: ID!): [User!]!
 }
 

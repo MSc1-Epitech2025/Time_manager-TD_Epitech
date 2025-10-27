@@ -1,0 +1,40 @@
+<h2 mat-dialog-title>Edit team</h2>
+
+<mat-dialog-content class="dialog-content">
+  <mat-form-field appearance="outline" class="w-full">
+    <mat-label>Team name</mat-label>
+    <input matInput [(ngModel)]="team.name" placeholder="Enter a team name" value="name"/>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="w-full">
+    <mat-label>Description</mat-label>
+    <textarea matInput [(ngModel)]="team.description" placeholder="Description of the team" value="description"></textarea>
+  </mat-form-field>
+</mat-dialog-content>
+
+ <!-- Membres -->
+  <div class="members-section">
+    <h3>Membres</h3>
+
+    <div class="member-item" *ngFor="let member of team.members; let i = index">
+      <mat-icon>person</mat-icon>
+      <span>{{ member.name }}</span>
+      <button mat-icon-button color="warn" (click)="removeMember(i)">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </div>
+
+    <!-- Ajouter un membre -->
+    <div class="add-member">
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Add a member</mat-label>
+        <input matInput [(ngModel)]="newMemberName" placeholder="Nom du membre" />
+      </mat-form-field>
+      <button mat-flat-button color="primary" (click)="addMember()">Add</button>
+    </div>
+  </div>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-flat-button color="primary" (click)="onSave()">Edit</button>
+</mat-dialog-actions>

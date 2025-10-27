@@ -41,14 +41,32 @@ public class AppUserDetailsService implements UserDetailsService {
             return List.of(new SimpleGrantedAuthority("ROLE_EMPLOYEE"));
         }
         try {
+            // JSON: ex ["employee","manager"] ou ["employee manager"]
             List<String> roles = mapper.readValue(raw, new TypeReference<List<String>>() {});
-            return roles.stream()
-                    .map(r -> "ROLE_" + r.toUpperCase())
-                    .distinct()
-                    .map(SimpleGrantedAuthority::new)
-                    .collect(Collectors.toList());
+            var auths = roles.stream()
+                .filter(s -> s != null)
+                .flatMap(s -> java.util.Arrays.stream(s.split("[\\s,;|]+"))) // <-- split ici aussi
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(String::toUpperCase)
+                .distinct()
+                .map(r -> new SimpleGrantedAuthority("ROLE_" + r))
+                .collect(Collectors.toList());
+            return auths.isEmpty()
+                ? List.of(new SimpleGrantedAuthority("ROLE_EMPLOYEE"))
+                : auths;
         } catch (Exception e) {
-            return List.of(new SimpleGrantedAuthority("ROLE_" + raw.trim().toUpperCase()));
+            // Non-JSON: ex "employee manager"
+            var auths = java.util.Arrays.stream(raw.split("[\\s,;|]+"))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(String::toUpperCase)
+                .distinct()
+                .map(r -> new SimpleGrantedAuthority("ROLE_" + r))
+                .collect(Collectors.toList());
+            return auths.isEmpty()
+                ? List.of(new SimpleGrantedAuthority("ROLE_EMPLOYEE"))
+                : auths;
         }
     }
 }

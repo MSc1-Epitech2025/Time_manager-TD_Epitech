@@ -12,8 +12,6 @@ import {
 import { AuthService } from './auth';
 
 const GRAPHQL_ENDPOINT = 'http://localhost:8030/graphql';
-const USERS_ENDPOINT = 'http://localhost:8030/api/users';
-
 type ClockKind = 'IN' | 'OUT';
 
 type GraphqlError = { message: string };
@@ -61,15 +59,8 @@ type GraphqlAbsence = {
 
 type ClockQueryPayload = { clocksForUser: GraphqlClock[] };
 type AbsenceQueryPayload = { absencesByUser: GraphqlAbsence[] };
-type ManagedTeamsPayload = { myManagedTeams: GraphqlTeam[] };
-type UsersQueryPayload = { users: GraphqlUser[] };
-type UserById = {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  poste?: string;
-};
+type MyTeamMembersPayload = { myTeamMembers: GraphqlUser[] };
+type MyTeamsPayload = { myTeams: GraphqlTeam[] };
 
 export interface EmployeeSummary {
   id: string;
@@ -159,23 +150,7 @@ export class ManagerService {
   private findMemberEntry(userId: string): Observable<TeamMemberEntry | null> {
     return this.loadManagedMembers().pipe(
       map((entries) => entries.find((entry) => entry.member.id === userId)),
-      switchMap((entry) => {
-        if (entry) return of(entry);
-        return this.http
-          .get<UserById>(`${USERS_ENDPOINT}/${userId}`, { withCredentials: true })
-          .pipe(
-            map((user) => ({
-              member: {
-                id: user.id,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                email: user.email,
-                poste: user.poste,
-              },
-            })),
-            catchError(() => of<TeamMemberEntry | null>(null))
-          );
-      })
+      switchMap((entry) => (entry ? of(entry) : of<TeamMemberEntry | null>(null)))
     );
   }
 
@@ -236,31 +211,46 @@ export class ManagerService {
   }
 
   private loadManagedMembers(): Observable<TeamMemberEntry[]> {
-    return this.requestGraphql<ManagedTeamsPayload>(MY_MANAGED_TEAMS_QUERY).pipe(
+    const mapToEntries = (members: GraphqlUser[], teamNames?: Map<string, string>) => {
+      const currentId = this.currentUserId();
+      return dedupeById(
+        members.map((member) => ({
+          member,
+          teamName: teamNames?.get(member.id),
+        })),
+        (entry) => entry.member.id
+      ).filter((entry) => !currentId || entry.member.id !== currentId);
+    };
+
+    const fallback$ = of<TeamMemberEntry[]>([]);
+
+    return this.requestGraphql<MyTeamMembersPayload>(MY_TEAM_MEMBERS_QUERY).pipe(
       switchMap((payload) => {
-        const teams = payload?.myManagedTeams ?? [];
-        const entries = teams.flatMap((team) =>
-          (team.members ?? []).map((member) => ({
-            member,
-            teamName: team.name,
-          }))
+        const members = payload?.myTeamMembers ?? [];
+        if (!members.length) {
+          return fallback$;
+        }
+
+        return this.requestGraphql<MyTeamsPayload>(MY_TEAMS_QUERY).pipe(
+          map((teamsPayload) => {
+            const teams = teamsPayload?.myTeams ?? [];
+            const teamNames = new Map<string, string>();
+
+            for (const team of teams) {
+              const teamMembers = team.members ?? [];
+              for (const member of teamMembers) {
+                if (!teamNames.has(member.id)) {
+                  teamNames.set(member.id, team.name);
+                }
+              }
+            }
+
+            return mapToEntries(members, teamNames);
+          }),
+          catchError(() => of(mapToEntries(members)))
         );
-
-        const unique = dedupeById(entries, (entry) => entry.member.id)
-          .filter((entry) => entry.member.id !== this.currentUserId());
-
-        if (unique.length) return of(unique);
-
-        return this.requestGraphql<UsersQueryPayload>(USERS_QUERY).pipe(
-          map((usersPayload) => {
-            const users = usersPayload?.users ?? [];
-            const fallback = users
-              .filter((u) => u.id !== this.currentUserId())
-              .map((member) => ({ member }));
-            return fallback;
-          })
-        );
-      })
+      }),
+      catchError(() => fallback$)
     );
   }
 
@@ -269,14 +259,20 @@ export class ManagerService {
       userId,
       from: from.toISOString(),
       to: to.toISOString(),
-    }).pipe(map((payload) => payload?.clocksForUser ?? []));
+    }).pipe(
+      map((payload) => payload?.clocksForUser ?? []),
+      catchError((err) => {
+        console.warn('Erreur lors de la recuperation des pointages', err);
+        return of<GraphqlClock[]>([]);
+      })
+    );
   }
 
   private loadAbsences(userId: string): Observable<GraphqlAbsence[]> {
     return this.requestGraphql<AbsenceQueryPayload>(ABSENCES_QUERY, { userId }).pipe(
       map((payload) => payload?.absencesByUser ?? []),
       catchError((err) => {
-        console.warn('Erreur lors de la récupération des absences', err);
+        console.warn('Erreur lors de la recuperation des absences', err);
         return of<GraphqlAbsence[]>([]);
       })
     );
@@ -306,30 +302,26 @@ export class ManagerService {
 
 //  helpers
 
-const MY_MANAGED_TEAMS_QUERY = `
-  query MyManagedTeams {
-    myManagedTeams {
-      id
-      name
-      members {
-        id
-        firstName
-        lastName
-        email
-        poste
-      }
-    }
-  }
-`;
-
-const USERS_QUERY = `
-  query Users {
-    users {
+const MY_TEAM_MEMBERS_QUERY = `
+  query MyTeamMembers {
+    myTeamMembers {
       id
       firstName
       lastName
       email
       poste
+    }
+  }
+`;
+
+const MY_TEAMS_QUERY = `
+  query MyTeams {
+    myTeams {
+      id
+      name
+      members {
+        id
+      }
     }
   }
 `;
@@ -362,7 +354,7 @@ const ABSENCES_QUERY = `
   }
 `;
 
-function buildDisplayName(user: GraphqlUser | UserById): string {
+function buildDisplayName(user: GraphqlUser ): string {
   const first = user.firstName?.trim() ?? '';
   const last = user.lastName?.trim() ?? '';
   const full = `${first} ${last}`.trim();
