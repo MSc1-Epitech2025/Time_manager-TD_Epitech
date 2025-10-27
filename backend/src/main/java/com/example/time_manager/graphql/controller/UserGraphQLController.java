@@ -101,6 +101,12 @@ public class UserGraphQLController {
         return new AuthResponse(true);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @MutationMapping
+    public User updateUser(@Argument("input") com.example.time_manager.dto.auth.UpdateUserInput input) {
+        return userService.updateUser(input.id(), input);
+    }
+
     @PreAuthorize("permitAll()")
     @MutationMapping
     public AuthResponse refresh(@Argument Optional<RefreshRequest> input) {

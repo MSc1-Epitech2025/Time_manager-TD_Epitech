@@ -7,6 +7,8 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.example.time_manager.dto.auth.UpdateUserInput;
+
 
 import com.example.time_manager.model.User;
 import com.example.time_manager.repository.UserRepository;
@@ -52,11 +54,6 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public User updateUser(String id, /* UserUpdateRequest */ Object updateReq) {
-        User user = findByIdOrThrow(id);
-        return userRepository.save(user);
-    }
-
     public User updateRole(String id, String newRole) {
         User user = findByIdOrThrow(id);
         user.setRole(newRole);
@@ -96,8 +93,25 @@ public class UserService {
         userRepository.delete(user);
         return user;
     }
+    /* ================== MODIFY ================== */
 
-    /* ================== PASSWORD ================== */
+public User updateUser(String id, UpdateUserInput in) {
+    User u = findByIdOrThrow(id);
+
+    if (in.firstName() != null) u.setFirstName(in.firstName());
+    if (in.lastName()  != null) u.setLastName(in.lastName());
+    if (in.email()     != null) u.setEmail(in.email());
+    if (in.phone()     != null) u.setPhone(in.phone());
+    if (in.role()      != null) u.setRole(in.role());
+    if (in.poste()     != null) u.setPoste(in.poste());
+    if (in.avatarUrl() != null) u.setAvatarUrl(in.avatarUrl());
+    if (in.password()  != null && !in.password().isBlank()) {
+        u.setPassword(passwordEncoder.encode(in.password()));
+    }
+
+    return userRepository.save(u);
+}
+
 
     public void changePassword(String email, String currentPwd, String newPwd) {
         var user = userRepository.findByEmail(email).orElseThrow(

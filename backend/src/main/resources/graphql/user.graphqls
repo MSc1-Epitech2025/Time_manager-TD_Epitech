@@ -29,6 +29,19 @@ input CreateUserInput {
     avatarUrl: String
 }
 
+input UpdateUserInput {
+  id: ID!
+  firstName: String
+  lastName: String
+  email: String
+  phone: String
+  role: String       # can be modify by ADMIN
+  poste: String
+  avatarUrl: String
+  password: String
+}
+
+
 type Query {
     users: [User!]!
     userByEmail(email: String!): User
@@ -38,6 +51,7 @@ type Mutation {
     login(input: AuthRequestInput!): AuthResponse
     register(input: CreateUserInput!): User!
     updateUserAvatar(id: ID!, avatarUrl: String!): User!
+    updateUser(input: UpdateUserInput!): User!
     deleteUser(id: ID!): Boolean!
 }
  
