@@ -4,6 +4,7 @@ import com.example.time_manager.model.User;
 import com.example.time_manager.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
@@ -36,5 +37,24 @@ class UserServiceTestTest {
         assertThatThrownBy(() -> userService.findByIdOrThrow("999"))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("User not found");
+    }
+
+    @Test
+    void createUser_shouldBuildEncodeAndSave() {
+        UserRepository userRepository = mock(UserRepository.class);
+        PasswordEncoder encoder = mock(PasswordEncoder.class);
+        UserService userService = new UserService(userRepository, encoder);
+
+        when(encoder.encode("pwd")).thenReturn("ENCODED");
+
+        User saved = new User();
+        saved.setId("123");
+        when(userRepository.save(any(User.class))).thenReturn(saved);
+
+        User result = userService.createUser("mail@test.com","pwd","Bob","Smith");
+
+        assertThat(result.getId()).isEqualTo("123");
+        verify(encoder).encode("pwd");
+        verify(userRepository).save(any(User.class));
     }
 }
