@@ -216,39 +216,4 @@ public com.example.time_manager.model.User userByEmail(@Argument("email") String
             return null;
         }
     }
-
-    @PreAuthorize("permitAll()")
-    @MutationMapping
-    public AuthResponse loginWithAzure(Authentication authentication) {
-        System.out.println("------------ loginWithAzure ----------- ");
-        if (authentication == null) {
-            throw new RuntimeException("Not authenticated with Azure");
-        }
-
-        String email = authentication.getName();
-        System.out.println("------------ email ----------- " + email);
-        String azureOid = ((org.springframework.security.oauth2.core.oidc.user.OidcUser) authentication.getPrincipal())
-                .getClaim("oid");
-        System.out.println("------------ azureOID ----------- " + azureOid);
-
-
-        User user = userService.findByEmail(email).orElseGet(() -> {
-            User u = new User();
-            u.setEmail(email);
-            u.setFirstName("Azure");
-            u.setLastName("User");
-            u.setRole("[\"employee\"]");
-            u.setPassword("oauth2");
-            u.setAzureOid(azureOid);
-            return userService.saveUser(u);
-        });
-
-        System.out.println("------------ user ----------- " + user);
-
-        if (user.getAzureOid() == null || user.getAzureOid().isBlank()) {
-            user.setAzureOid(azureOid);
-        }
-
-        return new AuthResponse();
-    }
 }
