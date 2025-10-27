@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatDialog } from '@angular/material/dialog';
 import { MatInputModule } from '@angular/material/input';
+import { Observable, forkJoin, map } from 'rxjs';
 import { CreateTeamModal } from '../../modal/create-team-modal/create-team-modal';
 import { EditTeamModalComponent } from '../../modal/edit-team-modal/edit-team-modal';
 import { DeleteTeamModalComponent } from '../../modal/delete-team-modal/delete-team-modal';
@@ -108,46 +109,58 @@ export class TeamManagement implements OnInit {
   }
 
   openEditTeamModal(team: Team): void {
-    const dialogRef = this.modal.open(EditTeamModalComponent, {
-      width: '500px',
-      data: { team },
-    });
+    const teamId = String(team.id);
+    this.loadTeamContext(teamId).subscribe({
+      next: (teamContext) => {
+        const dialogRef = this.modal.open(EditTeamModalComponent, {
+          width: '500px',
+          data: { team: teamContext },
+        });
 
-    dialogRef.afterClosed().subscribe(
-      (
-        updatedTeam:
-          | { id: string | number; name: string; description?: string | null }
-          | undefined
-      ) => {
-        if (updatedTeam) {
-          this.updateTeam(String(updatedTeam.id), {
-            name: updatedTeam.name,
-            description: updatedTeam.description ?? null,
-          });
-        }
-      }
-    );
+        dialogRef.afterClosed().subscribe(
+          (
+            updatedTeam:
+              | { id: string | number; name: string; description?: string | null }
+              | undefined
+          ) => {
+            if (updatedTeam) {
+              this.updateTeam(String(updatedTeam.id), {
+                name: updatedTeam.name,
+                description: updatedTeam.description ?? null,
+              });
+            }
+          }
+        );
+      },
+      error: (error) => console.error('Error loading team details:', error),
+    });
   }
 
   openDeleteTeamModal(team: Team): void {
-    const dialogRef = this.modal.open(DeleteTeamModalComponent, {
-      width: '500px',
-      data: { team },
-    });
+    const teamId = String(team.id);
+    this.loadTeamContext(teamId).subscribe({
+      next: (teamContext) => {
+        const dialogRef = this.modal.open(DeleteTeamModalComponent, {
+          width: '500px',
+          data: { team: teamContext },
+        });
 
-    dialogRef
-      .afterClosed()
-      .subscribe(
-        (
-          updatedTeam:
-            | { id: string | number; isDestroyed?: boolean }
-            | undefined
-        ) => {
-          if (updatedTeam?.isDestroyed) {
-            this.removeTeam(String(updatedTeam.id));
-          }
-        }
-      );
+        dialogRef
+          .afterClosed()
+          .subscribe(
+            (
+              updatedTeam:
+                | { id: string | number; isDestroyed?: boolean }
+                | undefined
+            ) => {
+              if (updatedTeam?.isDestroyed) {
+                this.removeTeam(String(updatedTeam.id));
+              }
+            }
+          );
+      },
+      error: (error) => console.error('Error loading team details:', error),
+    });
   }
 
   showAddModal(): void {
@@ -168,5 +181,17 @@ export class TeamManagement implements OnInit {
     this.teamSelected = teamId;
     this.showAddTeamForm = true;
     console.log('Editing team with ID:', this.teamSelected);
+  }
+
+  private loadTeamContext(teamId: string): Observable<Team> {
+    return forkJoin({
+      team: this.teamService.getTeam(teamId),
+      members: this.teamService.getTeamMembers(teamId),
+    }).pipe(
+      map(({ team, members }) => ({
+        ...team,
+        members,
+      }))
+    );
   }
 }

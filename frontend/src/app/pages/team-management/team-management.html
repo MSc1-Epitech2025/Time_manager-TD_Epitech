@@ -39,6 +39,9 @@
           </div>
           <div class="team-info">
             <h4>{{ team.name }}</h4>
+            <p class="team-description">
+              {{ team.description || 'Pas de description' }}
+            </p>
             <span>{{ team.members.length }} membres</span>
           </div>
         </div>

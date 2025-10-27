@@ -25,10 +25,14 @@ type GraphqlTeam = {
   members?: GraphqlUser[] | null;
 };
 
-type TeamsQueryPayload = { teams: GraphqlTeam[] };
+type AllTeamsQueryPayload = { allTeams: GraphqlTeam[] };
+type GetTeamPayload = { team: GraphqlTeam | null };
+type TeamMembersPayload = { teamMembers: GraphqlUser[] };
 type CreateTeamPayload = { createTeam: GraphqlTeam };
 type UpdateTeamPayload = { updateTeam: GraphqlTeam };
 type DeleteTeamPayload = { deleteTeam: boolean };
+type AddMemberPayload = { addTeamMember: boolean };
+type RemoveMemberPayload = { removeTeamMember: boolean };
 
 export interface TeamMember {
   id: string;
@@ -58,10 +62,35 @@ export class TeamService {
   constructor(private http: HttpClient) {}
 
   listTeams(): Observable<Team[]> {
-    return this.requestGraphql<TeamsQueryPayload>(LIST_TEAMS_QUERY).pipe(
+    return this.requestGraphql<AllTeamsQueryPayload>(ALL_TEAMS_QUERY).pipe(
       map((payload) => {
-        const teams = payload?.teams ?? [];
+        const teams = payload?.allTeams ?? [];
         return teams.map((team) => this.mapTeam(team));
+      })
+    );
+  }
+
+  getTeam(id: string): Observable<Team> {
+    return this.requestGraphql<GetTeamPayload>(TEAM_QUERY, { id }).pipe(
+      map((payload) => {
+        const team = payload?.team;
+        if (!team) {
+          throw new Error('Equipe introuvable');
+        }
+        return this.mapTeam(team);
+      })
+    );
+  }
+
+  getTeamMembers(teamId: string): Observable<TeamMember[]> {
+    return this.requestGraphql<TeamMembersPayload>(TEAM_MEMBERS_QUERY, { teamId }).pipe(
+      map((payload) => {
+        const members = payload?.teamMembers ?? [];
+        return members.map((member) => ({
+          id: String(member.id),
+          name: this.buildMemberName(member),
+          email: member.email ?? undefined,
+        }));
       })
     );
   }
@@ -89,6 +118,20 @@ export class TeamService {
     return this.requestGraphql<DeleteTeamPayload>(DELETE_TEAM_MUTATION, { id }).pipe(
       map((payload) => payload?.deleteTeam ?? false)
     );
+  }
+
+  addTeamMember(teamId: string, userId: string): Observable<boolean> {
+    return this.requestGraphql<AddMemberPayload>(ADD_TEAM_MEMBER_MUTATION, {
+      teamId,
+      input: { userId },
+    }).pipe(map((payload) => payload?.addTeamMember ?? false));
+  }
+
+  removeTeamMember(teamId: string, userId: string): Observable<boolean> {
+    return this.requestGraphql<RemoveMemberPayload>(REMOVE_TEAM_MEMBER_MUTATION, {
+      teamId,
+      input: { userId },
+    }).pipe(map((payload) => payload?.removeTeamMember ?? false));
   }
 
   private requestGraphql<T>(query: string, variables?: Record<string, unknown>): Observable<T> {
@@ -137,9 +180,9 @@ export class TeamService {
   }
 }
 
-const LIST_TEAMS_QUERY = `
-  query Teams {
-    teams {
+const ALL_TEAMS_QUERY = `
+  query AllTeams {
+    allTeams {
       id
       name
       description
@@ -149,6 +192,33 @@ const LIST_TEAMS_QUERY = `
         lastName
         email
       }
+    }
+  }
+`;
+
+const TEAM_QUERY = `
+  query Team($id: ID!) {
+    team(id: $id) {
+      id
+      name
+      description
+      members {
+        id
+        firstName
+        lastName
+        email
+      }
+    }
+  }
+`;
+
+const TEAM_MEMBERS_QUERY = `
+  query TeamMembers($teamId: ID!) {
+    teamMembers(teamId: $teamId) {
+      id
+      firstName
+      lastName
+      email
     }
   }
 `;
@@ -188,5 +258,17 @@ const UPDATE_TEAM_MUTATION = `
 const DELETE_TEAM_MUTATION = `
   mutation DeleteTeam($id: ID!) {
     deleteTeam(id: $id)
+  }
+`;
+
+const ADD_TEAM_MEMBER_MUTATION = `
+  mutation AddTeamMember($teamId: ID!, $input: MemberChangeInput!) {
+    addTeamMember(teamId: $teamId, input: $input)
+  }
+`;
+
+const REMOVE_TEAM_MEMBER_MUTATION = `
+  mutation RemoveTeamMember($teamId: ID!, $input: MemberChangeInput!) {
+    removeTeamMember(teamId: $teamId, input: $input)
   }
 `;
