@@ -14,9 +14,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import com.example.time_manager.model.User;
 
 import com.example.time_manager.dto.auth.AuthRequest;
 import com.example.time_manager.dto.auth.AuthResponse;
+import com.example.time_manager.dto.auth.CreateUserInput;
 import com.example.time_manager.dto.auth.RefreshRequest;
 import com.example.time_manager.security.JwtUtil;
 import com.example.time_manager.service.UserService;
@@ -42,9 +44,34 @@ public class UserGraphQLController {
         this.jwtUtil = jwtUtil;
     }
 
-    // =========================
+    @PreAuthorize("hasRole('ADMIN')")
+    @MutationMapping
+    public User register(@Argument CreateUserInput input) {
+        if (userService.findByEmail(input.email()).isPresent()) {
+            throw new RuntimeException("Email already exists: " + input.email());
+        }
+
+        User u = new User();
+        u.setFirstName(input.firstName());
+        u.setLastName(input.lastName());
+        u.setEmail(input.email());
+        u.setPhone(input.phone());
+        u.setRole(input.role());
+        u.setPoste(input.poste());
+        u.setAvatarUrl(input.avatarUrl());
+        u.setPassword(input.password()); 
+
+        return userService.saveUser(u);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @MutationMapping
+    public Boolean deleteUser(@Argument("id") String id) {
+        userService.deleteById(id);
+        return true;
+    }
+
     //          LOGIN
-    // =========================
     @PreAuthorize("permitAll()")
     @MutationMapping
     public AuthResponse login(@Argument AuthRequest input) {
@@ -74,45 +101,45 @@ public class UserGraphQLController {
         return new AuthResponse(true);
     }
 
-@PreAuthorize("permitAll()")
-@MutationMapping
-public AuthResponse refresh(@Argument Optional<RefreshRequest> input) {
-    HttpServletRequest httpReq = currentRequest();
-    HttpServletResponse httpResp = currentResponse();
+    @PreAuthorize("permitAll()")
+    @MutationMapping
+    public AuthResponse refresh(@Argument Optional<RefreshRequest> input) {
+        HttpServletRequest httpReq = currentRequest();
+        HttpServletResponse httpResp = currentResponse();
 
-    String refreshToken = input.map(UserGraphQLController::extractRefreshFromBody).orElse(null);
-    if (refreshToken == null || refreshToken.isBlank()) {
-        refreshToken = readCookie(httpReq, "refresh_token");
+        String refreshToken = input.map(UserGraphQLController::extractRefreshFromBody).orElse(null);
+        if (refreshToken == null || refreshToken.isBlank()) {
+            refreshToken = readCookie(httpReq, "refresh_token");
+        }
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new RuntimeException("Missing refresh token");
+        }
+
+        String username;
+        try {
+            username = jwtUtil.parseRefreshSubject(refreshToken);
+        } catch (Exception e) {
+            throw new RuntimeException("Invalid refresh token");
+        }
+        if (!jwtUtil.isRefreshTokenValid(refreshToken, username)) {
+            throw new RuntimeException("Invalid or expired refresh token");
+        }
+
+        var user = userService.findByEmail(username)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String newAccess = jwtUtil.generateAccessToken(
+            user.getEmail(),
+            user.getId(),  
+            user.getFirstName(),
+            user.getRole()
+        );
+
+        addAccessCookie(httpResp, newAccess); 
+
+        return new AuthResponse(true);       
     }
-    if (refreshToken == null || refreshToken.isBlank()) {
-        throw new RuntimeException("Missing refresh token");
-    }
-
-    String username;
-    try {
-        username = jwtUtil.parseRefreshSubject(refreshToken);
-    } catch (Exception e) {
-        throw new RuntimeException("Invalid refresh token");
-    }
-    if (!jwtUtil.isRefreshTokenValid(refreshToken, username)) {
-        throw new RuntimeException("Invalid or expired refresh token");
-    }
-
-    var user = userService.findByEmail(username)
-        .orElseThrow(() -> new RuntimeException("User not found"));
-
-    String newAccess = jwtUtil.generateAccessToken(
-        user.getEmail(),
-        user.getId(),
-        user.getFirstName(),
-        user.getRole()
-    );
-
-    addAccessCookie(httpResp, newAccess);
-
-    return new AuthResponse(true);
-}
-
+    
     @PreAuthorize("permitAll()")
     @MutationMapping
     public Boolean logout() {

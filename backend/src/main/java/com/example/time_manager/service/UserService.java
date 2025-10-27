@@ -57,6 +57,46 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    public User updateRole(String id, String newRole) {
+        User user = findByIdOrThrow(id);
+        user.setRole(newRole);
+        return userRepository.save(user);
+    }
+
+    public User updateEmail(String id, String newEmail) {
+        User user = findByIdOrThrow(id);
+        user.setEmail(newEmail);
+        return userRepository.save(user);
+    }
+
+    public User updateName(String id, String newFirstName, String newLastName) {
+        User user = findByIdOrThrow(id);
+        user.setFirstName(newFirstName);
+        user.setLastName(newLastName);
+        return userRepository.save(user);
+    }
+
+    public User updatePhone(String id, String newPhone) {
+        User user = findByIdOrThrow(id);
+        user.setPhone(newPhone);
+        return userRepository.save(user);
+    }
+
+    public User createUser(String email, String password, String firstName, String lastName) {
+        User user = new User();
+        user.setEmail(email);
+        user.setPassword(passwordEncoder.encode(password));
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
+        return userRepository.save(user);
+    }
+    
+    public User deleteUser(String id) {
+        User user = findByIdOrThrow(id);
+        userRepository.delete(user);
+        return user;
+    }
+
     /* ================== PASSWORD ================== */
 
     public void changePassword(String email, String currentPwd, String newPwd) {

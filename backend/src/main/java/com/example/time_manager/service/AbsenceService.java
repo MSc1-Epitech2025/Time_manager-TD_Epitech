@@ -343,7 +343,7 @@ private boolean hasRole(User u, String roleUpper) {
   if (raw == null || raw.isBlank()) return false;
 
   String cleaned = raw.replaceAll("[\\[\\]\"]", "").toUpperCase();
-  for (String token : cleaned.split("[\\s,;|,]+")) { // espaces, virgule, point-virgule, pipe
+  for (String token : cleaned.split("[\\s,;|,]+")) {
     String r = token.trim();
     if (!r.isEmpty() && r.equals(roleUpper)) {
       return true;
