@@ -23,32 +23,23 @@ export const routes: Routes = [
                     .then(m => m.EmployeeDashboard),
             },
 
-    // --- Manager dashboard ---
-    {
-        path: 'manager',
-        canMatch: [authCanMatch],
-        canActivate: [authCanActivate, roleCanActivate],
-        loadComponent: () => import('./pages/manager-dashboard/manager-dashboard')
-            .then(m => m.ManagerDashboard),
-    },
+            // --- Manager dashboard ---
+            {
+                path: 'manager',
+                canMatch: [authCanMatch],
+                canActivate: [authCanActivate, roleCanActivate],
+                loadComponent: () => import('./pages/manager-dashboard/manager-dashboard')
+                    .then(m => m.ManagerDashboard),
+            },
 
-    // --- Enterprise dashboard ---
-    {
-        path: 'enterprise',
-        
-        
-        loadComponent: () => import('./pages/enterprise-dashboard/enterprise-dashboard')
-            .then(m => m.EnterpriseDashboard),
-    },
+            // --- Admin dashboard ---
+            {
+                path: 'enterprise',
 
-    // --- Manager detail ---
-    {
-        path: 'enterprise',
-        
-        
-        loadComponent: () => import('./pages/enterprise-dashboard/enterprise-dashboard')
-            .then(m => m.EnterpriseDashboard),
-    },
+
+                loadComponent: () => import('./pages/enterprise-dashboard/enterprise-dashboard')
+                    .then(m => m.EnterpriseDashboard),
+            },
 
             // Manager detail
             {
@@ -57,35 +48,35 @@ export const routes: Routes = [
                     .then(m => m.EmployeeDetailComponent),
             },
 
-    // --- Planning (page principale) ---
-    {
-        path: 'planning',
-        canMatch: [authCanMatch],
-        canActivate: [authCanActivate, planningUrlGuard], // <- pas de roleCanActivate ici
-        loadComponent: () => import('./pages/planning/planning')
-            .then(m => m.PlanningComponent),
-    },
+            // --- Planning ---
+            {
+                path: 'planning',
+                canMatch: [authCanMatch],
+                canActivate: [authCanActivate, planningUrlGuard],
+                loadComponent: () => import('./pages/planning/planning')
+                    .then(m => m.PlanningComponent),
+            },
 
-    // --- Teams (Manager only) ---
-    {
-        path: 'teams',
-        
-        loadComponent: () => import('./pages/team-management/team-management')
-            .then(m => m.TeamManagement),
-    },
+            // --- Teams (Manager only) ---
+            {
+                path: 'teams',
 
-    // --- Logs history ---
-    {
-        path: 'logs',
-       
-        loadComponent: () => import('./pages/log-history/log-history')
-            .then(m => m.LogHistory),
-    },  
-   
+                loadComponent: () => import('./pages/team-management/team-management')
+                    .then(m => m.TeamManagement),
+            },
 
-    // --- Default ---
-    { path: '', pathMatch: 'full', redirectTo: 'planning' }, // optionnel mais recommandé
-    { path: '**', redirectTo: 'planning' },
-        ]    
-}
+            // --- Logs history ---
+            {
+                path: 'logs',
+
+                loadComponent: () => import('./pages/log-history/log-history')
+                    .then(m => m.LogHistory),
+            },
+
+
+            // --- Default ---
+            { path: '', pathMatch: 'full', redirectTo: 'employee' },
+            { path: '**', redirectTo: 'employee' },
+        ]
+    }
 ];
