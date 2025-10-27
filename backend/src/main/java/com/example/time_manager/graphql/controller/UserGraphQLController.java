@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.Optional;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
@@ -17,9 +18,9 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import com.example.time_manager.dto.auth.AuthRequest;
 import com.example.time_manager.dto.auth.AuthResponse;
 import com.example.time_manager.dto.auth.RefreshRequest;
-import com.example.time_manager.dto.auth.TokenPairResponse;
 import com.example.time_manager.security.JwtUtil;
 import com.example.time_manager.service.UserService;
+import com.example.time_manager.model.User;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -102,21 +103,21 @@ public AuthResponse refresh(@Argument Optional<RefreshRequest> input) {
 
     String newAccess = jwtUtil.generateAccessToken(
         user.getEmail(),
-        user.getId(),  
+        user.getId(),
         user.getFirstName(),
         user.getRole()
     );
 
-    addAccessCookie(httpResp, newAccess); 
+    addAccessCookie(httpResp, newAccess);
 
-    return new AuthResponse(true);       
+    return new AuthResponse(true);
 }
 
     @PreAuthorize("permitAll()")
     @MutationMapping
     public Boolean logout() {
         HttpServletResponse httpResp = currentResponse();
-        expireCookie(httpResp, "access_token", "/");          
+        expireCookie(httpResp, "access_token", "/");
         expireCookie(httpResp, "access_token", "/graphql");
         expireCookie(httpResp, "refresh_token", "/graphql");
         return true;
@@ -125,7 +126,7 @@ public AuthResponse refresh(@Argument Optional<RefreshRequest> input) {
     @PreAuthorize("hasRole('ADMIN')")
     @QueryMapping
     public java.util.List<com.example.time_manager.model.User> users() {
-        var list = userService.findAllUsers(); 
+        var list = userService.findAllUsers();
         return (list != null) ? list : java.util.Collections.emptyList();
     }
 
