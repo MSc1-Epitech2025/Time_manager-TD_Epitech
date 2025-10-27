@@ -18,7 +18,7 @@ import { AuthService } from '../../core/services/auth';
 import { EnterpriseService } from '../../core/services/enterprise';
 import { ReportService } from '../../core/services/report';
 
-// Kpi Components 
+// Kpi Components
 import { KpiAssiduiteComponent } from '../../kpi/kpi-assiduite/kpi-assiduite';
 import { KpiAbsenteismeComponent } from '../../kpi/kpi-absenteisme/kpi-absenteisme'
 import { KpiComparatifComponent } from '../../kpi/kpi-comparatif/kpi-comparatif'

@@ -16,7 +16,7 @@ import { EnterpriseService } from '../../core/services/enterprise';
 
 @Component({
   selector: 'app-team-management',
-  imports: [MatIconModule, MatButtonModule , CommonModule, FormsModule, MatCardModule, 
+  imports: [MatIconModule, MatButtonModule , CommonModule, FormsModule, MatCardModule,
     MatFormFieldModule, MatInputModule, ],
   templateUrl: './team-management.html',
   styleUrl: './team-management.scss'
@@ -54,9 +54,9 @@ filteredTeams = this.teams;
     private enterpriseService : EnterpriseService
   ) {}
 
-  onInit() { 
+  onInit() {
     this.refreshTeams();
-  } 
+  }
 
   refreshTeams() {
     console.log('Refreshing team list');
@@ -73,7 +73,7 @@ filteredTeams = this.teams;
   }
 
   searchTeams() {
-    this.filteredTeams = this.teams.filter(team => 
+    this.filteredTeams = this.teams.filter(team =>
       team.name.toLowerCase().includes(this.searchTerm.toLowerCase())
     );
     console.log('Searching for teams with term:', this.searchTerm);
@@ -103,23 +103,22 @@ filteredTeams = this.teams;
     this.refreshTeams();
   }
 
-  
   editTeam(teamId: number , teamData?: any) {
     console.log('Editing team with ID:', teamId);
     console.log('New team data:', teamData);
     this.teams[teamId] = teamData;
     // requete backend pour modifier l'equipe
   }
-  
+
   deleteTeam(teamId: number) {
     this.teams.splice(teamId, 1);
     console.log('Deleting team :', this.teams);
     this.refreshTeams();
     // Request to backend to delete team
   }
-  
+
   // ---- Modal ----
-  
+
   openEditTeamModal(team: any) {
   const dialogRef = this.modal.open(EditTeamModalComponent, {
     width: '500px',
@@ -158,36 +157,14 @@ openDeleteTeamModal(team: any) {
       this.addTeam(result.name, []);
     }
   });
-  
+
   }
   showEditModal(teamId: number) {
     this.teamSelected = teamId;
     this.showAddTeamForm = true;
     console.log('Editing team with ID:', this.teamSelected);
-    
-
-  }
 
 
-// ---------- routes ----------
-  
-  goToPlanning() {
-    this.router.navigate(['/manager/planning']);
-  }
-  goToPresenceLogs() {
-    this.router.navigate(['/manager/presence-logs']);
-  }
-  goToDashboard() {
-    this.router.navigate(['/manager']);
-  }
-
-  goToLogHistory() {
-    this.router.navigate(['/logs']);
-  } 
-
-  logout() {
-    this.auth.logout();
-    this.router.navigate(['/login']);
   }
 
 }

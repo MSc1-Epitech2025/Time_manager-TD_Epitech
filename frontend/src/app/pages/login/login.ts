@@ -195,40 +195,42 @@ export class LoginComponent implements OnInit, OnDestroy {
   private notify = inject(NotificationService);
   private router = inject(Router);
 
-submit() {
-  if (this.form.invalid) {
-    this.form.markAllAsTouched();
-    return;
-  }
-  this.loading.set(true);
-
-  (async () => {
-    try {
-      const email = this.form.value.email!;
-      const password = this.form.value.password!;
-      const remember = !!this.form.value.remember;
-
-      const session = await this.auth.login(email, password, remember);
-      const roles = session.user.roles ?? [];
-      const has = (role: Role) => roles.includes(role);
-
-      if (has('MANAGER') || has('ADMIN')) {
-        this.router.navigate(['/manager']);
-      } else if (has('EMPLOYEE')) {
-        this.router.navigate(['/employee']);
-      } else {
-        this.router.navigate(['/']);
-        console.error('Unknown user roles:', roles);
-      }
-
-    } catch (e) {
-      this.notify.error('Identifiants invalides ou service indisponible.');
-      console.error(e);
-    } finally {
-      this.loading.set(false);
+  submit() {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
     }
-  })();
-}
+    this.loading.set(true);
+
+    (async () => {
+      try {
+        const email = this.form.value.email!;
+        const password = this.form.value.password!;
+        const remember = !!this.form.value.remember;
+
+        const session = await this.auth.login(email, password, remember);
+        const roles = session.user.roles ?? [];
+        const has = (role: Role) => roles.includes(role);
+
+        if (has('ADMIN')) {
+          this.router.navigate(['/enterprise']);
+        } else if (has('MANAGER')) {
+          this.router.navigate(['/employee']);
+        } else if (has('EMPLOYEE')) {
+          this.router.navigate(['/employee']);
+        } else {
+          this.router.navigate(['/']);
+          console.error('Unknown user roles:', roles);
+        }
+
+      } catch (e) {
+        this.notify.error('Identifiants invalides ou service indisponible.');
+        console.error(e);
+      } finally {
+        this.loading.set(false);
+      }
+    })();
+  }
 
 
   get email() { return this.form.get('email'); }

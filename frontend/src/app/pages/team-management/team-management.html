@@ -1,38 +1,4 @@
 <div class="dashboard">
-  <!-- ===== Sidebar ===== -->
-  <aside class="sidebar">
-    <div class="logo">
-      <img src="assets/logo.png" alt="Logo" />
-    </div>
-
-    <nav class="menu">
-      <button class="menu-btn" (click)="goToDashboard()">
-        <mat-icon>dashboard</mat-icon>
-        Dashboard
-      </button>
-
-      <button class="menu-btn" (click)="goToPlanning()">
-        <mat-icon>calendar_month</mat-icon>
-        Calendar
-      </button>
-
-      <button class="menu-btn" (click)="goToLogHistory()">
-        <mat-icon>history</mat-icon>
-        Presence logs
-      </button>
-
-      <button class="menu-btn active">
-        <mat-icon>groups</mat-icon>
-        Teams
-      </button>
-    </nav>
-
-    <button class="logout-btn" (click)="logout()">
-      <mat-icon>logout</mat-icon>
-      Disconnect
-    </button>
-  </aside>
-
   <!-- ===== Main Content ===== -->
   <main class="main-content">
     <!-- Header -->
@@ -71,7 +37,7 @@
             No members
           </div>
           <div *ngFor="let member of team.members.slice(0, 5)" [title]="member.name" class="member-card">
-            <img src="img/userProfil.png"  [alt]="member.name[0]" class= "member-avatar"/>
+            <img src="img/userProfil.png" [alt]="member.name[0]" class="member-avatar" />
             <p>{{member.name}}</p>
           </div>
           <span *ngIf="team.members.length > 5" class="more-members">
@@ -79,7 +45,7 @@
           </span>
         </div>
 
-        <div class="team-actions">  
+        <div class="team-actions">
           <button (click)="openEditTeamModal(team)">
             <mat-icon>edit</mat-icon>
             Edit
@@ -91,8 +57,8 @@
         </div>
       </div>
     </section>
-  
-    <button matButton="filled"  class="add-team-btn" (click)="showAddModal()">
+
+    <button matButton="filled" class="add-team-btn" (click)="showAddModal()">
       <mat-icon>add</mat-icon>
       Add a team
     </button>

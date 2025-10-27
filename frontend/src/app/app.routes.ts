@@ -32,16 +32,7 @@ export const routes: Routes = [
                     .then(m => m.ManagerDashboard),
             },
 
-            // --- Enterprise dashboard ---
-            {
-                path: 'enterprise',
-
-
-                loadComponent: () => import('./pages/enterprise-dashboard/enterprise-dashboard')
-                    .then(m => m.EnterpriseDashboard),
-            },
-
-            // --- Manager detail ---
+            // --- Admin dashboard ---
             {
                 path: 'enterprise',
 
@@ -57,11 +48,11 @@ export const routes: Routes = [
                     .then(m => m.EmployeeDetailComponent),
             },
 
-            // --- Planning (page principale) ---
+            // --- Planning ---
             {
                 path: 'planning',
                 canMatch: [authCanMatch],
-                canActivate: [authCanActivate, planningUrlGuard], // <- pas de roleCanActivate ici
+                canActivate: [authCanActivate, planningUrlGuard],
                 loadComponent: () => import('./pages/planning/planning')
                     .then(m => m.PlanningComponent),
             },
