@@ -44,7 +44,7 @@ public class UserGraphQLController {
         this.jwtUtil = jwtUtil;
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @MutationMapping
     public User register(@Argument CreateUserInput input) {
         if (userService.findByEmail(input.email()).isPresent()) {
@@ -64,7 +64,7 @@ public class UserGraphQLController {
         return userService.saveUser(u);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @MutationMapping
     public Boolean deleteUser(@Argument("id") String id) {
         userService.deleteById(id);
@@ -101,7 +101,7 @@ public class UserGraphQLController {
         return new AuthResponse(true);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @MutationMapping
     public User updateUser(@Argument("input") com.example.time_manager.dto.auth.UpdateUserInput input) {
         return userService.updateUser(input.id(), input);
@@ -156,18 +156,18 @@ public class UserGraphQLController {
         return true;
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @QueryMapping
     public java.util.List<com.example.time_manager.model.User> users() {
         var list = userService.findAllUsers();
         return (list != null) ? list : java.util.Collections.emptyList();
     }
 
-    @PreAuthorize("permitAll()")
+    @PreAuthorize("isAuthenticated()")
     @QueryMapping
-public com.example.time_manager.model.User userByEmail(@Argument("email") String email) {
-    return userService.findByEmail(email).orElse(null);
-}
+    public com.example.time_manager.model.User userByEmail(@Argument("email") String email) {
+        return userService.findByEmail(email).orElse(null);
+    }
 
 
     private static HttpServletRequest currentRequest() {

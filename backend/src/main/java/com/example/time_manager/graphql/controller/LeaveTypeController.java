@@ -25,19 +25,19 @@ public class LeaveTypeController {
   @QueryMapping
   public LeaveType leaveType(@Argument String code) { return service.getByCode(code); }
 
-  @PreAuthorize("hasAnyRole('ADMIN')")
+  @PreAuthorize("hasAuthority('ADMIN')")
   @MutationMapping
   public LeaveType createLeaveType(@Argument LeaveTypeCreateInput input) {
     return service.create(input.getCode(), input.getLabel());
   }
 
-  @PreAuthorize("hasAnyRole('ADMIN')")
+  @PreAuthorize("hasAuthority('ADMIN')")
   @MutationMapping
   public LeaveType updateLeaveType(@Argument LeaveTypeUpdateInput input) {
     return service.update(input.getCode(), input.getLabel());
   }
 
-  @PreAuthorize("hasAnyRole('ADMIN')")
+  @PreAuthorize("hasAuthority('ADMIN')")
   @MutationMapping
   public Boolean deleteLeaveType(@Argument String code) {
     return service.delete(code);

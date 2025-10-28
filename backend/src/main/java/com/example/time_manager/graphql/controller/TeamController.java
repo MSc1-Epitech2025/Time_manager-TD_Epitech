@@ -6,10 +6,12 @@ import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.graphql.data.method.annotation.SchemaMapping;
+import org.springframework.security.access.method.P;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 
 import com.example.time_manager.dto.team.TeamDto;
+import com.example.time_manager.dto.team.TeamMembersGroup;
 import com.example.time_manager.model.Team;
 import com.example.time_manager.model.User;
 import com.example.time_manager.service.TeamService;
@@ -56,6 +58,7 @@ public class TeamController {
     }
 
     /** ADMIN-only: list all teams */
+    @PreAuthorize("hasAuthority('ADMIN')")
     @QueryMapping
     public List<Team> allTeams() {
         return teamService.findAllForAdmin();
@@ -74,29 +77,23 @@ public class TeamController {
     }
 
     /** Managers (global role = manager) among the members of a given team */
+    
     @QueryMapping
     public List<User> teamManagers(@Argument Long teamId) {
         return teamService.listTeamManagers(teamId);
     }
 
-    @PreAuthorize("isAuthenticated()")
-    @QueryMapping
-    public java.util.List<com.example.time_manager.model.User> myTeamMembers() {
-        var myTeams = teamService.findTeamsOfCurrentUser();
-        java.util.Map<String, com.example.time_manager.model.User> byId = new java.util.HashMap<>();
-        for (var t : myTeams) {
-            for (var u : teamService.listMembers(t.getId())) {
-                byId.putIfAbsent(u.getId(), u);
-            }
-        }
-
-    // (Optionnel) retirer moi-même de la liste :
-    // var me = SecurityContextHolder.getContext().getAuthentication().getName();
-    // byId.values().removeIf(u -> u.getEmail().equalsIgnoreCase(me));
-
-    return new java.util.ArrayList<>(byId.values());
+@PreAuthorize("isAuthenticated()")
+@QueryMapping
+public java.util.List<TeamMembersGroup> myTeamMembers() {
+    var myTeams = teamService.findTeamsOfCurrentUser();
+    var result = new java.util.ArrayList<TeamMembersGroup>(myTeams.size());
+    for (var t : myTeams) {
+        var members = teamService.listMembers(t.getId());
+        result.add(new TeamMembersGroup(t.getId(), t.getName(), members));
+    }
+    return result;
 }
-
 
 
     /* =========================== FIELD RESOLVER ======================== */
@@ -110,6 +107,7 @@ public class TeamController {
     /* ============================= MUTATIONS =========================== */
 
     /** Create a team (ADMIN by default). */
+    @PreAuthorize("hasAuthority('ADMIN')")
     @MutationMapping
     public Team createTeam(@Argument @Valid TeamInput input) {
         TeamDto dto = new TeamDto();
@@ -119,6 +117,7 @@ public class TeamController {
     }
 
     /** Update a team (ADMIN by default). */
+    @PreAuthorize("hasAuthority('ADMIN')")
     @MutationMapping
     public Team updateTeam(@Argument @Valid TeamUpdateInput input) {
         TeamDto dto = new TeamDto();
@@ -129,6 +128,7 @@ public class TeamController {
     }
 
     /** Delete a team (ADMIN). */
+    @PreAuthorize("hasAuthority('ADMIN')")
     @MutationMapping
     public Boolean deleteTeam(@Argument Long id) {
         teamService.delete(id);
@@ -136,6 +136,7 @@ public class TeamController {
     }
 
     /** Add a user to a team (ADMIN or MANAGER who is member of that team). */
+    @PreAuthorize("hasAuthority('ADMIN') or (hasAuthority('MANAGER') and @teamService.isCurrentUserMemberOfTeam(#teamId))")
     @MutationMapping
     public Boolean addTeamMember(@Argument Long teamId, @Argument @Valid MemberChangeInput input) {
         teamService.addMember(teamId, input.userId());
@@ -143,6 +144,7 @@ public class TeamController {
     }
 
     /** Remove a user from a team (ADMIN or MANAGER who is member of that team). */
+    @PreAuthorize("hasAuthority('ADMIN') or (hasAuthority('MANAGER') and @teamService.isCurrentUserMemberOfTeam(#teamId))")
     @MutationMapping
     public Boolean removeTeamMember(@Argument Long teamId, @Argument @Valid MemberChangeInput input) {
         teamService.removeMember(teamId, input.userId());
