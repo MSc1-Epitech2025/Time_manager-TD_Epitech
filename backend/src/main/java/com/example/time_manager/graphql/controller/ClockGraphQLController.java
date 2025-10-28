@@ -35,7 +35,7 @@ public class ClockGraphQLController {
         return clockService.listForEmail(auth.getName(), fromInstant, toInstant);
     }
 
-    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
+    @PreAuthorize("hasAnyAuthority('MANAGER','ADMIN')")
     @QueryMapping
     public List<ClockResponse> clocksForUser(
             @Argument String userId,
@@ -56,7 +56,7 @@ public class ClockGraphQLController {
         return clockService.createForMe(auth.getName(), input);
     }
 
-    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
+    @PreAuthorize("hasAnyAuthority('MANAGER','ADMIN')")
     @MutationMapping
     public ClockResponse createClockForUser(
             @Argument String userId,
