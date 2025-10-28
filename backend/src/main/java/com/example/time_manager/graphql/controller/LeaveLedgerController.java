@@ -30,7 +30,7 @@ public class LeaveLedgerController {
     }
     return service.listByAccount(accountId);
   }
-  @PreAuthorize("hasAnyRole('ADMIN')")
+  @PreAuthorize("hasAuthority('ADMIN')")
   @MutationMapping
   public LeaveLedger addLeaveLedgerEntry(@Argument LeaveLedgerCreateInput input) {
     LocalDate date = input.getEntryDate() != null ? LocalDate.parse(input.getEntryDate()) : null;
@@ -38,14 +38,14 @@ public class LeaveLedgerController {
     BigDecimal amount = input.getAmount() != null ? BigDecimal.valueOf(input.getAmount()) : null;
     return service.addEntry(input.getAccountId(), date, kind, amount, input.getReferenceAbsenceId(), input.getNote());
   }
-  @PreAuthorize("hasAnyRole('ADMIN')")
+  @PreAuthorize("hasAuthority('ADMIN')")
   @MutationMapping
   public LeaveLedger updateLeaveLedgerEntry(@Argument LeaveLedgerUpdateInput input) {
     LocalDate date = input.getEntryDate() != null ? LocalDate.parse(input.getEntryDate()) : null;
     BigDecimal amount = input.getAmount() != null ? BigDecimal.valueOf(input.getAmount()) : null;
     return service.update(input.getId(), date, amount, input.getNote());
   }
-  @PreAuthorize("hasAnyRole('ADMIN')")
+  @PreAuthorize("hasAuthority('ADMIN')")
   @MutationMapping
   public Boolean deleteLeaveLedgerEntry(@Argument Long id) {
     return service.delete(id);

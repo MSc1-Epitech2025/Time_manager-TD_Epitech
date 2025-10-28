@@ -16,6 +16,12 @@ input TeamUpdateInput {
   description: String
 }
 
+type TeamMembersGroup {
+  teamId: ID!
+  teamName: String!
+  members: [User!]!
+}
+
 input MemberChangeInput {
   userId: ID!
 }
@@ -27,7 +33,7 @@ extend type Query {
   allTeams: [Team!]!
   myTeams: [Team!]!
   myManagedTeams: [Team!]!
-  myTeamMembers: [User!]!
+  myTeamMembers: [TeamMembersGroup!]!
   teamManagers(teamId: ID!): [User!]!
 }
 

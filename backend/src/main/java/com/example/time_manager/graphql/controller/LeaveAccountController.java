@@ -33,7 +33,7 @@ public class LeaveAccountController {
     return v.doubleValue();
   }
 
-  @PreAuthorize("hasAnyRole('ADMIN')")
+  @PreAuthorize("hasAuthority('ADMIN')")
   @MutationMapping
   public LeaveAccount createLeaveAccount(@Argument LeaveAccountCreateInput input) {
     BigDecimal opening = input.getOpeningBalance() != null ? BigDecimal.valueOf(input.getOpeningBalance()) : null;
@@ -43,7 +43,7 @@ public class LeaveAccountController {
     return service.create(input.getUserId(), input.getLeaveTypeCode(), opening, accrual, maxCarry, expireOn);
   }
 
-  @PreAuthorize("hasAnyRole('ADMIN')")
+  @PreAuthorize("hasAuthority('ADMIN')")
   @MutationMapping
   public LeaveAccount updateLeaveAccount(@Argument LeaveAccountUpdateInput input) {
     BigDecimal opening = input.getOpeningBalance() != null ? BigDecimal.valueOf(input.getOpeningBalance()) : null;
@@ -52,7 +52,7 @@ public class LeaveAccountController {
     LocalDate expireOn = input.getCarryoverExpireOn() != null ? LocalDate.parse(input.getCarryoverExpireOn()) : null;
     return service.update(input.getId(), opening, accrual, maxCarry, expireOn);
   }
-  @PreAuthorize("hasAnyRole('ADMIN')")
+  @PreAuthorize("hasAuthority('ADMIN')")
   @MutationMapping
   public Boolean deleteLeaveAccount(@Argument Long id) { return service.delete(id); }
 }

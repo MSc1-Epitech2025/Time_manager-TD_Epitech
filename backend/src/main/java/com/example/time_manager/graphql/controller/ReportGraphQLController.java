@@ -29,7 +29,7 @@ public class ReportGraphQLController {
     /* ======================== QUERIES ======================== */
 
     @QueryMapping
-    @PreAuthorize("hasAuthority('ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public List<ReportResponse> reports() {
         return reportService.listAll();
     }

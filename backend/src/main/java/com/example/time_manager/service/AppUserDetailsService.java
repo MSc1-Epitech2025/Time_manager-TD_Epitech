@@ -35,38 +35,41 @@ public class AppUserDetailsService implements UserDetailsService {
                 u.getEmail(), u.getPassword(), authorities);
     }
 
-    private Collection<? extends GrantedAuthority> mapAuthorities(User u) {
-        String raw = u.getRole();
-        if (raw == null || raw.isBlank()) {
-            return List.of(new SimpleGrantedAuthority("ROLE_EMPLOYEE"));
-        }
-        try {
-            // JSON: ex ["employee","manager"] ou ["employee manager"]
-            List<String> roles = mapper.readValue(raw, new TypeReference<List<String>>() {});
-            var auths = roles.stream()
-                .filter(s -> s != null)
-                .flatMap(s -> java.util.Arrays.stream(s.split("[\\s,;|]+"))) // <-- split ici aussi
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .map(String::toUpperCase)
-                .distinct()
-                .map(r -> new SimpleGrantedAuthority("ROLE_" + r))
-                .collect(Collectors.toList());
-            return auths.isEmpty()
-                ? List.of(new SimpleGrantedAuthority("ROLE_EMPLOYEE"))
-                : auths;
-        } catch (Exception e) {
-            // Non-JSON: ex "employee manager"
-            var auths = java.util.Arrays.stream(raw.split("[\\s,;|]+"))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .map(String::toUpperCase)
-                .distinct()
-                .map(r -> new SimpleGrantedAuthority("ROLE_" + r))
-                .collect(Collectors.toList());
-            return auths.isEmpty()
-                ? List.of(new SimpleGrantedAuthority("ROLE_EMPLOYEE"))
-                : auths;
-        }
+    /**
+     * Gestion simple des rôles :
+     * - Accepte JSON array (ex: ["admin","manager"]) OU string (ex: "admin manager")
+     * - Découpe sur espaces/virgules/; |, met en minuscule
+     * - PAS de préfixe ROLE_
+     * - Fallback: "employee" si vide
+     */
+private Collection<? extends GrantedAuthority> mapAuthorities(User u) {
+    String raw = u.getRole();
+    if (raw == null || raw.isBlank()) {
+        return List.of(new SimpleGrantedAuthority("EMPLOYEE"));
     }
+    try {
+        List<String> roles;
+        if (raw.startsWith("[")) {
+            // Parse JSON array
+            roles = mapper.readValue(raw, new TypeReference<List<String>>() {});
+        } else {
+            roles = List.of(raw);
+        }
+        
+        var authorities = roles.stream()
+            .filter(s -> s != null)
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .map(String::toUpperCase) // Convertit en majuscules
+            .distinct()
+            .map(SimpleGrantedAuthority::new)
+            .collect(Collectors.toList());
+        
+        return authorities.isEmpty() 
+            ? List.of(new SimpleGrantedAuthority("EMPLOYEE"))
+            : authorities;
+    } catch (Exception e) {
+        return List.of(new SimpleGrantedAuthority(raw.toUpperCase()));
+    }
+}
 }

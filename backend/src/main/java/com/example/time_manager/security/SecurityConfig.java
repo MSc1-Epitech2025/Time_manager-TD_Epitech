@@ -15,13 +15,14 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.context.NullSecurityContextRepository;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true) // <-- active @PreAuthorize
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
   private final JwtAuthFilter jwtAuthFilter;
@@ -30,26 +31,27 @@ public class SecurityConfig {
     this.jwtAuthFilter = jwtAuthFilter;
   }
 
-    @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/graphql"))
-                .sessionManagement(sm -> sm
-                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                )
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/actuator/health").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/graphql").permitAll()
-                        .requestMatchers("/oauth2/**").permitAll()
-                        .anyRequest().authenticated()
-                )
-                .oauth2Login(oauth -> oauth.defaultSuccessUrl("/oauth2/success", true)
-                )
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+  @Bean
+  SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+      http
+          .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+          .csrf(csrf -> csrf.ignoringRequestMatchers("/graphql"))
+          .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+          .securityContext(sc -> sc
+              .requireExplicitSave(false)
+              .securityContextRepository(new NullSecurityContextRepository())
+          )
+          .authorizeHttpRequests(auth -> auth
+              .requestMatchers("/actuator/health").permitAll()
+              .requestMatchers(HttpMethod.POST, "/graphql").permitAll()
+              .requestMatchers("/oauth2/**").permitAll()
+              .anyRequest().authenticated()
+          )
+          .oauth2Login(oauth -> oauth.defaultSuccessUrl("/oauth2/success", true))
+          .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
-    }
+      return http.build();
+  }
 
   @Bean
   CorsConfigurationSource corsConfigurationSource() {

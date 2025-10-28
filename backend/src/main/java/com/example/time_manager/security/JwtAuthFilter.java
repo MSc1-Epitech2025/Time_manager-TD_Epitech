@@ -28,7 +28,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     }
 
     private String extractToken(HttpServletRequest request) {
-        // 1) priorité au cookie
+        // 1) priorité au cookie "access_token"
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie c : cookies) {
@@ -52,17 +52,23 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if (token != null) {
             try {
                 username = jwtUtil.extractUsername(token);
-            } catch (Exception ignore) { /* token invalide */ }
+            } catch (Exception ignore) {
+            }
         }
 
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+        if (token != null && username != null && jwtUtil.isAccessTokenValid(token, username)) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            if (jwtUtil.isAccessTokenValid(token, userDetails.getUsername())) {
-                var authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-            }
+
+            var authToken = new UsernamePasswordAuthenticationToken(
+                    userDetails, null, userDetails.getAuthorities());
+            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+            SecurityContextHolder.getContext().setAuthentication(authToken);
+
+            System.out.println("User: " + username);
+            System.out.println("Authorities: " + userDetails.getAuthorities());
+        } else {
+            SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);
