@@ -16,6 +16,7 @@ import { MatIconModule } from '@angular/material/icon';
 })
 export class EditTeamModalComponent {
   team: any;
+  newMemberId: string = '';
   newMemberName: string = '';
   name: string = '';
   description: string = '';
@@ -30,10 +31,17 @@ export class EditTeamModalComponent {
   }
 
   addMember() {
-    if (this.newMemberName.trim()) {
-      this.team.members.push({ name: this.newMemberName });
-      this.newMemberName = '';
+    const memberId = this.newMemberId.trim();
+    if (!memberId) return;
+
+    if (this.team.members.some((member: any) => String(member.id) === memberId)) {
+      return;
     }
+
+    const displayName = this.newMemberName.trim() || memberId;
+    this.team.members.push({ id: memberId, name: displayName });
+    this.newMemberId = '';
+    this.newMemberName = '';
   }
 
   removeMember(index: number) {

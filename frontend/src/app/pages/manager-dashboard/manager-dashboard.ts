@@ -8,7 +8,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { NgChartsModule } from 'ng2-charts';
 import { ChartConfiguration, ChartOptions } from 'chart.js';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ManagerService, EmployeeSummary } from '../../core/services/manager';
 import { ReportService } from '../../core/services/report';
 import { AuthService } from '../../core/services/auth';
@@ -35,6 +35,7 @@ export class ManagerDashboard {
   searchTerm = '';
   selectedEmployee: EmployeeSummary | null = null;
   loadingEmployees = false;
+  private selectedTeamName: string | null = null;
 
   pieChartData: ChartConfiguration<'pie'>['data'] = {
     labels: ['Presence', 'Retards', 'Absences'],
@@ -58,38 +59,24 @@ export class ManagerDashboard {
 
   constructor(
     private router: Router,
+    private route: ActivatedRoute,
     private managerService: ManagerService,
     private reportService: ReportService,
     private auth: AuthService,
   ) { }
 
   ngOnInit() {
-    this.loadingEmployees = true;
-    this.managerService.getTeamEmployees().subscribe({
-      next: (data) => {
-        this.employees = data;
-        this.filteredEmployees = data;
-        this.loadingEmployees = false;
-        if (data.length) {
-          this.selectEmployee(data[0]);
-        }
-      },
-      error: (err) => {
-        console.error('Echec du chargement des employes', err);
-        this.loadingEmployees = false;
-        this.employees = [];
-        this.filteredEmployees = [];
-        this.selectedEmployee = null;
-      },
+    this.route.queryParamMap.subscribe((params) => {
+      const teamName = params.get('teamName');
+      this.selectedTeamName = teamName ? teamName.trim().toLowerCase() : null;
+      this.applyFilters();
     });
+
+    this.loadEmployees();
   }
 
   filterEmployees() {
-    const term = this.searchTerm.trim().toLowerCase();
-    this.filteredEmployees = this.employees.filter((emp) => {
-      const haystack = `${emp.name} ${emp.team ?? ''}`.toLowerCase();
-      return haystack.includes(term);
-    });
+    this.applyFilters();
   }
 
   selectEmployee(emp: EmployeeSummary) {
@@ -122,6 +109,60 @@ export class ManagerDashboard {
   logout() {
     this.auth.logout();
     this.router.navigate(['/login']);
+  }
+
+  private loadEmployees() {
+    this.loadingEmployees = true;
+    this.managerService.getTeamEmployees().subscribe({
+      next: (data) => {
+        this.employees = data;
+        this.loadingEmployees = false;
+        this.applyFilters();
+      },
+      error: (err) => {
+        console.error('Echec du chargement des employes', err);
+        this.loadingEmployees = false;
+        this.employees = [];
+        this.filteredEmployees = [];
+        this.selectedEmployee = null;
+      },
+    });
+  }
+
+  private applyFilters() {
+    let results = [...this.employees];
+
+    if (this.selectedTeamName) {
+      results = results.filter(
+        (emp) => (emp.team ?? '').trim().toLowerCase() === this.selectedTeamName
+      );
+    }
+
+    const term = this.searchTerm.trim().toLowerCase();
+    if (term) {
+      results = results.filter((emp) => {
+        const haystack = `${emp.name} ${emp.team ?? ''}`.toLowerCase();
+        return haystack.includes(term);
+      });
+    }
+
+    this.filteredEmployees = results;
+
+    if (!results.length) {
+      this.selectedEmployee = null;
+      return;
+    }
+
+    const currentId = this.selectedEmployee?.id ?? null;
+    const stillSelected = currentId
+      ? results.find((emp) => emp.id === currentId)
+      : null;
+
+    if (stillSelected) {
+      this.selectEmployee(stillSelected);
+    } else {
+      this.selectEmployee(results[0]);
+    }
   }
 }
 

@@ -18,7 +18,10 @@
 
     <div class="member-item" *ngFor="let member of team.members; let i = index">
       <mat-icon>person</mat-icon>
-      <span>{{ member.name }}</span>
+      <div class="member-info">
+        <span>{{ member.name }}</span>
+        <small>ID: {{ member.id }}</small>
+      </div>
       <button mat-icon-button color="warn" (click)="removeMember(i)">
         <mat-icon>delete</mat-icon>
       </button>
@@ -27,8 +30,12 @@
     <!-- Ajouter un membre -->
     <div class="add-member">
       <mat-form-field appearance="outline" class="w-full">
-        <mat-label>Add a member</mat-label>
-        <input matInput [(ngModel)]="newMemberName" placeholder="Nom du membre" />
+        <mat-label>Member ID</mat-label>
+        <input matInput [(ngModel)]="newMemberId" placeholder="Identifiant utilisateur" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Display name</mat-label>
+        <input matInput [(ngModel)]="newMemberName" placeholder="Nom d'affichage (optionnel)" />
       </mat-form-field>
       <button mat-flat-button color="primary" (click)="addMember()">Add</button>
     </div>
