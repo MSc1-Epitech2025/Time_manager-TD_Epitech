@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable, map, tap, catchError, throwError, forkJoin, of } from 'rxjs';
 
 const GRAPHQL_ENDPOINT = 'http://localhost:8030/graphql';
 
@@ -65,7 +65,11 @@ export class TeamService {
   constructor(private http: HttpClient) {}
 
   listAllTeams(): Observable<Team[]> {
-    return this.requestGraphql<AllTeamsQueryPayload>(ALL_TEAMS_QUERY).pipe(
+    return this.requestGraphql<AllTeamsQueryPayload>(ALL_TEAMS_QUERY, undefined, 'AllTeams').pipe(
+      tap((payload) => {
+        // DEBUG allTeams: inspection du payload brut
+        console.debug('[TeamService] allTeams payload', payload);
+      }),
       map((payload) => {
         const teams = payload?.allTeams ?? [];
         return teams.map((team) => this.mapTeam(team));
@@ -74,7 +78,11 @@ export class TeamService {
   }
 
   listTeams(): Observable<Team[]> {
-    return this.requestGraphql<TeamsQueryPayload>(TEAMS_QUERY).pipe(
+    return this.requestGraphql<TeamsQueryPayload>(TEAMS_QUERY, undefined, 'Teams').pipe(
+      tap((payload) => {
+        // DEBUG teams: inspection du payload brut
+        console.debug('[TeamService] teams payload', payload);
+      }),
       map((payload) => {
         const teams = payload?.teams ?? [];
         return teams.map((team) => this.mapTeam(team));
@@ -82,8 +90,31 @@ export class TeamService {
     );
   }
 
+  populateTeamsWithMembers(teams: Team[]): Observable<Team[]> {
+    if (!teams.length) return of([]);
+
+    const requests = teams.map((team) =>
+      this.getTeamMembers(team.id).pipe(
+        catchError((error) => {
+          console.warn('[TeamService] Failed to load members for team', team.id, error);
+          return of<TeamMember[]>([]);
+        }),
+        map((members) => ({
+          ...team,
+          members,
+        }))
+      )
+    );
+
+    return forkJoin(requests);
+  }
+
   listManagedTeams(): Observable<Team[]> {
-    return this.requestGraphql<MyManagedTeamsPayload>(MY_MANAGED_TEAMS_QUERY).pipe(
+    return this.requestGraphql<MyManagedTeamsPayload>(MY_MANAGED_TEAMS_QUERY, undefined, 'MyManagedTeams').pipe(
+      tap((payload) => {
+        // DEBUG myManagedTeams: inspection du payload brut
+        console.debug('[TeamService] myManagedTeams payload', payload);
+      }),
       map((payload) => {
         const teams = payload?.myManagedTeams ?? [];
         return teams.map((team) => this.mapTeam(team));
@@ -92,7 +123,11 @@ export class TeamService {
   }
 
   listMyTeams(): Observable<Team[]> {
-    return this.requestGraphql<MyTeamsPayload>(MY_TEAMS_QUERY).pipe(
+    return this.requestGraphql<MyTeamsPayload>(MY_TEAMS_QUERY, undefined, 'MyTeams').pipe(
+      tap((payload) => {
+        // DEBUG myTeams: inspection du payload brut
+        console.debug('[TeamService] myTeams payload', payload);
+      }),
       map((payload) => {
         const teams = payload?.myTeams ?? [];
         return teams.map((team) => this.mapTeam(team));
@@ -101,7 +136,11 @@ export class TeamService {
   }
 
   getTeam(id: string): Observable<Team> {
-    return this.requestGraphql<GetTeamPayload>(TEAM_QUERY, { id }).pipe(
+    return this.requestGraphql<GetTeamPayload>(TEAM_QUERY, { id }, 'Team').pipe(
+      tap((payload) => {
+        // DEBUG team: inspection du payload brut
+        console.debug('[TeamService] team payload', payload);
+      }),
       map((payload) => {
         const team = payload?.team;
         if (!team) {
@@ -113,7 +152,11 @@ export class TeamService {
   }
 
   getTeamMembers(teamId: string): Observable<TeamMember[]> {
-    return this.requestGraphql<TeamMembersPayload>(TEAM_MEMBERS_QUERY, { teamId }).pipe(
+    return this.requestGraphql<TeamMembersPayload>(TEAM_MEMBERS_QUERY, { teamId }, 'TeamMembers').pipe(
+      tap((payload) => {
+        // DEBUG teamMembers: inspection du payload brut
+        console.debug('[TeamService] teamMembers payload', payload);
+      }),
       map((payload) => {
         const members = payload?.teamMembers ?? [];
         return members.map((member) => ({
@@ -126,56 +169,128 @@ export class TeamService {
   }
 
   createTeam(input: CreateTeamInput): Observable<Team> {
-    return this.requestGraphql<CreateTeamPayload>(CREATE_TEAM_MUTATION, {
-      input: {
-        name: input.name,
-        description: input.description ?? null,
+    return this.requestGraphql<CreateTeamPayload>(
+      CREATE_TEAM_MUTATION,
+      {
+        input: {
+          name: input.name,
+          description: input.description ?? null,
+        },
       },
-    }).pipe(map((payload) => this.mapTeam(payload.createTeam)));
+      'CreateTeam'
+    ).pipe(
+      tap((payload) => {
+        // DEBUG createTeam: inspection du payload brut
+        console.debug('[TeamService] createTeam payload', payload);
+      }),
+      map((payload) => this.mapTeam(payload.createTeam))
+    );
   }
 
   updateTeam(id: string, input: UpdateTeamInput): Observable<Team> {
-    return this.requestGraphql<UpdateTeamPayload>(UPDATE_TEAM_MUTATION, {
-      input: {
-        id,
-        name: input.name,
-        description: input.description ?? null,
+    return this.requestGraphql<UpdateTeamPayload>(
+      UPDATE_TEAM_MUTATION,
+      {
+        input: {
+          id,
+          name: input.name,
+          description: input.description ?? null,
+        },
       },
-    }).pipe(map((payload) => this.mapTeam(payload.updateTeam)));
+      'UpdateTeam'
+    ).pipe(
+      tap((payload) => {
+        // DEBUG updateTeam: inspection du payload brut
+        console.debug('[TeamService] updateTeam payload', payload);
+      }),
+      map((payload) => this.mapTeam(payload.updateTeam))
+    );
   }
 
   deleteTeam(id: string): Observable<boolean> {
-    return this.requestGraphql<DeleteTeamPayload>(DELETE_TEAM_MUTATION, { id }).pipe(
+    return this.requestGraphql<DeleteTeamPayload>(DELETE_TEAM_MUTATION, { id }, 'DeleteTeam').pipe(
+      tap((payload) => {
+        // DEBUG deleteTeam: inspection du payload brut
+        console.debug('[TeamService] deleteTeam payload', payload);
+      }),
       map((payload) => payload?.deleteTeam ?? false)
     );
   }
 
   addTeamMember(teamId: string, userId: string): Observable<boolean> {
-    return this.requestGraphql<AddMemberPayload>(ADD_TEAM_MEMBER_MUTATION, {
-      teamId,
-      input: { userId },
-    }).pipe(map((payload) => payload?.addTeamMember ?? false));
+    return this.requestGraphql<AddMemberPayload>(
+      ADD_TEAM_MEMBER_MUTATION,
+      {
+        teamId,
+        input: { userId },
+      },
+      'AddTeamMember'
+    ).pipe(
+      tap((payload) => {
+        // DEBUG addTeamMember: inspection du payload brut
+        console.debug('[TeamService] addTeamMember payload', payload);
+      }),
+      map((payload) => payload?.addTeamMember ?? false)
+    );
   }
 
   removeTeamMember(teamId: string, userId: string): Observable<boolean> {
-    return this.requestGraphql<RemoveMemberPayload>(REMOVE_TEAM_MEMBER_MUTATION, {
-      teamId,
-      input: { userId },
-    }).pipe(map((payload) => payload?.removeTeamMember ?? false));
+    return this.requestGraphql<RemoveMemberPayload>(
+      REMOVE_TEAM_MEMBER_MUTATION,
+      {
+        teamId,
+        input: { userId },
+      },
+      'RemoveTeamMember'
+    ).pipe(
+      tap((payload) => {
+        // DEBUG removeTeamMember: inspection du payload brut
+        console.debug('[TeamService] removeTeamMember payload', payload);
+      }),
+      map((payload) => payload?.removeTeamMember ?? false)
+    );
   }
 
-  private requestGraphql<T>(query: string, variables?: Record<string, unknown>): Observable<T> {
+  private requestGraphql<T>(
+    query: string,
+    variables?: Record<string, unknown>,
+    operationName?: string
+  ): Observable<T> {
     return this.http
       .post<GraphqlResponse<T>>(
         GRAPHQL_ENDPOINT,
-        { query, variables },
+        { query, variables, operationName },
         { withCredentials: true }
       )
       .pipe(
+        catchError((httpError) => {
+          console.error(
+            '[TeamService] GraphQL HTTP error',
+            { operationName, variables, httpError, query }
+          );
+          return throwError(() => httpError);
+        }),
         map((response) => {
           if (response.errors?.length) {
+            console.error(
+              '[TeamService] GraphQL errors',
+              { operationName, variables, errors: response.errors, query }
+            );
+            if (response.data) {
+              console.warn(
+                '[TeamService] GraphQL returned partial data',
+                { operationName, variables, data: response.data }
+              );
+              return response.data;
+            }
             const message = response.errors.map((error) => error.message).join(', ');
-            throw new Error(message);
+            throw new Error(`[GraphQL:${operationName ?? 'unknown'}] ${message}`);
+          }
+          if (!response.data) {
+            console.warn(
+              '[TeamService] GraphQL response without data',
+              { operationName, variables, response }
+            );
           }
           return response.data;
         })
@@ -216,12 +331,6 @@ const ALL_TEAMS_QUERY = `
       id
       name
       description
-      members {
-        id
-        firstName
-        lastName
-        email
-      }
     }
   }
 `;
@@ -232,12 +341,6 @@ const TEAMS_QUERY = `
       id
       name
       description
-      members {
-        id
-        firstName
-        lastName
-        email
-      }
     }
   }
 `;
