@@ -1,4 +1,3 @@
-// src/app/pages/kpi-dashboard/components/kpi-assiduite/kpi-assiduite.component.ts
 import { Component, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { Chart, registerables } from 'chart.js';
 import { KpiService, KpiAssiduite } from '../../core/services/kpi';
@@ -18,7 +17,6 @@ export class KpiAssiduiteComponent implements AfterViewInit {
   constructor(private kpiService: KpiService) {}
 
   ngAfterViewInit() {
-    // On récupère les données APRÈS que le canvas soit chargé
     this.kpiService.getAssiduite().subscribe(data => {
       this.kpi = data;
       this.renderChart();
@@ -33,7 +31,6 @@ export class KpiAssiduiteComponent implements AfterViewInit {
 
     const taux = this.kpi.tauxAssiduite;
 
-    // Détruit le graphique existant avant de recréer
     if (this.chart) this.chart.destroy();
 
     this.chart = new Chart(ctx, {

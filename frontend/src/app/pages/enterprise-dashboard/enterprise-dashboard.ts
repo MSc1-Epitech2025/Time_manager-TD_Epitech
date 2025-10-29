@@ -168,7 +168,6 @@ export class EnterpriseDashboard implements OnDestroy {
     const end = Date.now();
     const start = this.sessionStartTimestamp ?? end;
     const durationSeconds = Math.round((end - start) / 1000);
-    // reset session state
     this.sessionStartTimestamp = undefined;
     this.timer = 0;
   }
@@ -183,11 +182,9 @@ export class EnterpriseDashboard implements OnDestroy {
     this.sessionStartTimestamp = undefined;
   }
   exportData(){
-    console.log('exportData button pressed') 
-    //this.reportService.exportEmployeeReport()
+    console.log('exportData button pressed')
   }
 
-  // utility to format timer as HH:MM:SS for template
   get formattedTimer(): string {
     const min = Math.floor(this.timer / 60) % 60;
     const hr = Math.floor(this.timer / 3600);
@@ -195,30 +192,25 @@ export class EnterpriseDashboard implements OnDestroy {
     return `${pad(hr)}:${pad(min)}`;
   }
 
-  // ---------- Nouveaux utilitaires pour total journalier ----------
-  // calcule l'intervalle (en secondes) d'un segment [s,e] qui tombe sur la date donnée (local time)
   private secondsOverlapWithDate(sessionStart: Date, sessionEnd: Date, date: Date): number {
     const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
-    const dayEnd = new Date(dayStart.getTime() + 24 * 3600 * 1000); // exclusive end
+    const dayEnd = new Date(dayStart.getTime() + 24 * 3600 * 1000);
     const start = sessionStart > dayStart ? sessionStart : dayStart;
     const end = sessionEnd < dayEnd ? sessionEnd : dayEnd;
     const ms = end.getTime() - start.getTime();
     return ms > 0 ? Math.floor(ms / 1000) : 0;
   }
 
-  // retourne le total de secondes travaillées pour une date donnée (inclut session en cours)
   getTotalSecondsForDate(date: Date): number {
     let total = 0;
-    // session en cours (si active)
     if (this.isWorking && this.sessionStartTimestamp) {
       const runningStart = new Date(this.sessionStartTimestamp);
-      const runningEnd = new Date(); // now
+      const runningEnd = new Date();
       total += this.secondsOverlapWithDate(runningStart, runningEnd, date);
     }
     return total;
   }
 
-  // getters pratiques pour aujourd'hui
   get todayTotalSeconds(): number {
     return this.getTotalSecondsForDate(new Date());
   }
@@ -230,7 +222,6 @@ export class EnterpriseDashboard implements OnDestroy {
     return { hours, minutes };
   }
 
-  // formatte les secondes en "Hh Mm"
   formatDuration(seconds: number, short = true): string {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
@@ -240,7 +231,6 @@ export class EnterpriseDashboard implements OnDestroy {
     return `${pad(h)}:${pad(m)}:${pad(s)}`;
   }
 
-  // ---------- routes ----------
   goToPlanning() {
     this.router.navigate(['/manager/planning']);
   }
@@ -253,8 +243,6 @@ export class EnterpriseDashboard implements OnDestroy {
     this.router.navigate(['/manager/teams']);
   }
 
-
-  // ---------- fin utilitaires ----------
 
   ngOnDestroy(): void {
     if (this.intervalId !== null) {

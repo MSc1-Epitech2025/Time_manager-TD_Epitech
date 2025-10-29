@@ -1,4 +1,3 @@
-// kpi-alertes.component.ts
 import { Component, OnInit } from '@angular/core';
 import { KpiService, KpiAlerte } from '../../core/services/kpi';
 import { CommonModule } from '@angular/common';

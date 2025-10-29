@@ -1,10 +1,9 @@
-// app.routes.ts
 import { Routes } from '@angular/router';
 import { authCanMatch, authCanActivate, roleCanActivate, planningUrlGuard } from './core/guards/auth-guard';
 import { ShellComponent } from './layout/shell/shell';
 
 export const routes: Routes = [
-    // --- Login ---
+    // Login
     {
         path: 'login',
         loadComponent: () => import('./pages/login/login').then(m => m.LoginComponent),
@@ -23,7 +22,7 @@ export const routes: Routes = [
                     .then(m => m.EmployeeDashboard),
             },
 
-            // --- Manager dashboard ---
+            // Manager dashboard
             {
                 path: 'manager',
                 canMatch: [authCanMatch],
@@ -32,7 +31,7 @@ export const routes: Routes = [
                     .then(m => m.ManagerDashboard),
             },
 
-            // --- Admin dashboard ---
+            // Admin dashboard
             {
                 path: 'enterprise',
 
@@ -48,7 +47,7 @@ export const routes: Routes = [
                     .then(m => m.EmployeeDetailComponent),
             },
 
-            // --- Planning ---
+            // Planning
             {
                 path: 'planning',
                 canMatch: [authCanMatch],
@@ -57,7 +56,7 @@ export const routes: Routes = [
                     .then(m => m.PlanningComponent),
             },
 
-            // --- Teams (Manager only) ---
+            // Teams (Manager only)
             {
                 path: 'teams',
 
@@ -65,7 +64,7 @@ export const routes: Routes = [
                     .then(m => m.TeamManagement),
             },
 
-            // --- Logs history ---
+            // Logs history
             {
                 path: 'logs',
 
@@ -74,7 +73,7 @@ export const routes: Routes = [
             },
 
 
-            // --- Default ---
+            // Default
             { path: '', pathMatch: 'full', redirectTo: 'employee' },
             { path: '**', redirectTo: 'employee' },
         ]
