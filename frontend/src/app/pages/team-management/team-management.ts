@@ -13,7 +13,7 @@ import { catchError } from 'rxjs/operators';
 import { CreateTeamModal } from '../../modal/create-team-modal/create-team-modal';
 import { EditTeamModalComponent } from '../../modal/edit-team-modal/edit-team-modal';
 import { DeleteTeamModalComponent } from '../../modal/delete-team-modal/delete-team-modal';
-import { TeamService, Team, TeamMember } from '../../core/services/team';
+import { TeamService, Team, TeamMember, isGraphqlAuthorizationError } from '../../core/services/team';
 import { AuthService, Role } from '../../core/services/auth';
 
 type DialogTeamMemberLike = {
@@ -270,6 +270,10 @@ export class TeamManagement implements OnInit {
         ),
         admin: this.teamService.listAllTeams().pipe(
           catchError((error) => {
+            if (isGraphqlAuthorizationError(error)) {
+              console.info('[TeamManagement] allTeams not permitted, keeping scoped team list');
+              return of<Team[]>([]);
+            }
             console.warn('[TeamManagement] allTeams query failed, keeping fallback result', error);
             return of<Team[]>([]);
           })

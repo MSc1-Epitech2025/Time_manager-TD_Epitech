@@ -4,12 +4,77 @@ import { Observable, map, tap, catchError, throwError, forkJoin, of } from 'rxjs
 
 const GRAPHQL_ENDPOINT = 'http://localhost:8030/graphql';
 
-type GraphqlError = { message: string };
+type GraphqlError = {
+  message: string;
+  extensions?: {
+    code?: string;
+    classification?: string;
+    errorType?: string;
+    [key: string]: unknown;
+  };
+};
 
 type GraphqlResponse<T> = {
   data: T;
   errors?: GraphqlError[];
 };
+
+const AUTH_ERROR_PATTERNS = [
+  /forbidden/i,
+  /unauthori[sz]ed/i,
+  /access denied/i,
+  /not allowed/i,
+  /requires .*admin/i,
+  /requires .*manager/i,
+];
+
+const AUTH_ERROR_CODES = new Set(['FORBIDDEN', 'UNAUTHORIZED', 'ACCESS_DENIED', 'UNAUTHENTICATED', 'ACCESSDENIED']);
+
+const isNonEmptyString = (value: unknown): value is string =>
+  typeof value === 'string' && value.trim().length > 0;
+
+const looksLikeAuthorizationError = (error: GraphqlError): boolean => {
+  if (!error) return false;
+  if (AUTH_ERROR_PATTERNS.some((pattern) => pattern.test(error.message ?? ''))) {
+    return true;
+  }
+
+  const extensions = error.extensions;
+  if (!extensions || typeof extensions !== 'object') return false;
+
+  const extensionRecord = extensions as Record<string, unknown>;
+  const extensionValues = ['code', 'classification', 'errorType', 'error_code']
+    .map((key) => extensionRecord[key])
+    .filter(isNonEmptyString);
+
+  return extensionValues.some((value) => AUTH_ERROR_CODES.has(value.toUpperCase()));
+};
+
+const isAuthorizationGraphqlResponse = (errors: GraphqlError[]): boolean =>
+  errors.length > 0 && errors.every(looksLikeAuthorizationError);
+
+export class GraphqlRequestError extends Error {
+  constructor(
+    public readonly operationName: string | undefined,
+    public readonly errors: GraphqlError[],
+    public readonly isAuthorizationError: boolean
+  ) {
+    super(GraphqlRequestError.composeMessage(operationName, errors));
+    this.name = 'GraphqlRequestError';
+  }
+
+  private static composeMessage(operationName: string | undefined, errors: GraphqlError[]): string {
+    const prefix = `[GraphQL:${operationName ?? 'unknown'}]`;
+    const message = errors
+      .map((error) => error.message)
+      .filter(isNonEmptyString)
+      .join(', ');
+    return `${prefix} ${message || 'Unexpected error'}`;
+  }
+}
+
+export const isGraphqlAuthorizationError = (error: unknown): boolean =>
+  error instanceof GraphqlRequestError && error.isAuthorizationError;
 
 type GraphqlUser = {
   id: string | number;
@@ -96,6 +161,12 @@ export class TeamService {
     const requests = teams.map((team) =>
       this.getTeamMembers(team.id).pipe(
         catchError((error) => {
+          if (isGraphqlAuthorizationError(error)) {
+            console.info('[TeamService] Team members not accessible with current permissions', {
+              teamId: team.id,
+            });
+            return of<TeamMember[]>([]);
+          }
           console.warn('[TeamService] Failed to load members for team', team.id, error);
           return of<TeamMember[]>([]);
         }),
@@ -271,11 +342,15 @@ export class TeamService {
           return throwError(() => httpError);
         }),
         map((response) => {
-          if (response.errors?.length) {
-            console.error(
-              '[TeamService] GraphQL errors',
-              { operationName, variables, errors: response.errors, query }
-            );
+          const errors = response.errors ?? [];
+          if (errors.length) {
+            const authorizationIssue = isAuthorizationGraphqlResponse(errors);
+            const logPayload = { operationName, variables, errors, query };
+            if (authorizationIssue) {
+              console.warn('[TeamService] GraphQL authorization error', logPayload);
+            } else {
+              console.error('[TeamService] GraphQL errors', logPayload);
+            }
             if (response.data) {
               console.warn(
                 '[TeamService] GraphQL returned partial data',
@@ -283,8 +358,7 @@ export class TeamService {
               );
               return response.data;
             }
-            const message = response.errors.map((error) => error.message).join(', ');
-            throw new Error(`[GraphQL:${operationName ?? 'unknown'}] ${message}`);
+            throw new GraphqlRequestError(operationName, errors, authorizationIssue);
           }
           if (!response.data) {
             console.warn(

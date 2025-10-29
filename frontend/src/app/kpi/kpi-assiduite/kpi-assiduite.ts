@@ -1,5 +1,5 @@
 import { Component, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
-import { Chart, registerables } from 'chart.js';
+import { Chart, registerables, ChartConfiguration } from 'chart.js';
 import { KpiService, KpiAssiduite } from '../../core/services/kpi';
 
 Chart.register(...registerables);
@@ -12,7 +12,8 @@ Chart.register(...registerables);
 export class KpiAssiduiteComponent implements AfterViewInit {
   @ViewChild('assiduiteChart', { static: false }) chartRef!: ElementRef<HTMLCanvasElement>;
   kpi?: KpiAssiduite;
-  chart?: Chart;
+
+  private chart?: Chart<'doughnut', number[], string>;
 
   constructor(private kpiService: KpiService) {}
 
@@ -33,7 +34,7 @@ export class KpiAssiduiteComponent implements AfterViewInit {
 
     if (this.chart) this.chart.destroy();
 
-    this.chart = new Chart(ctx, {
+    const config: ChartConfiguration<'doughnut', number[], string> = {
       type: 'doughnut',
       data: {
         labels: ['Présence', 'Absence'],
@@ -60,6 +61,8 @@ export class KpiAssiduiteComponent implements AfterViewInit {
           }
         }
       }
-    });
+    };
+
+    this.chart = new Chart(ctx, config);
   }
 }
