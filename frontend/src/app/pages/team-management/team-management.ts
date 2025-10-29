@@ -8,7 +8,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatDialog } from '@angular/material/dialog';
 import { MatInputModule } from '@angular/material/input';
 import { Router } from '@angular/router';
-import { Observable, forkJoin, map, of } from 'rxjs';
+import { Observable, forkJoin, map, of, tap, switchMap } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { CreateTeamModal } from '../../modal/create-team-modal/create-team-modal';
 import { EditTeamModalComponent } from '../../modal/edit-team-modal/edit-team-modal';
@@ -67,20 +67,37 @@ export class TeamManagement implements OnInit {
   refreshTeams(): void {
     this.isLoading = true;
     this.lastError = null;
-    this.loadTeamsForCurrentUser().subscribe({
-      next: (teams) => {
-        this.teams = teams;
-        this.applyFilter();
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error fetching teams:', error);
-        this.teams = [];
-        this.filteredTeams = [];
-        this.isLoading = false;
-        this.lastError = 'Impossible de recuperer les equipes pour le moment.';
-      },
-    });
+    console.debug('[TeamManagement] refreshTeams start', {
+      roles: this.auth.session?.user?.roles,
+      isAdmin: this.isAdminUser,
+      isManager: this.isManagerUser,
+    }); // DEBUG refreshTeams: état initial
+    this.loadTeamsForCurrentUser()
+      .pipe(
+        switchMap((teams) =>
+          this.teamService.populateTeamsWithMembers(teams).pipe(
+            catchError((error) => {
+              console.warn('[TeamManagement] populateTeamsWithMembers failed, keeping bare teams', error); // DEBUG population failure
+              return of(teams);
+            })
+          )
+        )
+      )
+      .subscribe({
+        next: (teams) => {
+          console.debug('[TeamManagement] refreshTeams success', { teams }); // DEBUG refreshTeams: succès
+          this.teams = teams;
+          this.applyFilter();
+          this.isLoading = false;
+        },
+        error: (error) => {
+          console.error('[TeamManagement] Error fetching teams:', error); // DEBUG refreshTeams: erreur
+          this.teams = [];
+          this.filteredTeams = [];
+          this.isLoading = false;
+          this.lastError = error?.message ?? 'Impossible de recuperer les equipes pour le moment.';
+        },
+      });
   }
 
   searchTeams(): void {
@@ -163,11 +180,13 @@ export class TeamManagement implements OnInit {
                 ...this.buildMemberChangeOperations(teamId, teamContext.members, sanitizedMembers)
               );
 
-              if (!operations.length) {
+              const filteredOps = operations.filter(Boolean);
+
+              if (!filteredOps.length) {
                 return;
               }
 
-              forkJoin(operations)
+              forkJoin(filteredOps)
                 .pipe(
                   catchError((error) => {
                     console.error('Error updating team details:', error);
@@ -242,17 +261,41 @@ export class TeamManagement implements OnInit {
 
   private loadTeamsForCurrentUser(): Observable<Team[]> {
     if (this.isAdminUser) {
-      return this.teamService.listAllTeams().pipe(
-        catchError((error) => {
-          console.warn('allTeams query failed, falling back to teams()', error);
-          return this.teamService.listTeams();
+      return forkJoin({
+        fallback: this.teamService.listTeams().pipe(
+          catchError((error) => {
+            console.warn('[TeamManagement] teams() query failed, returning empty array', error);
+            return of<Team[]>([]);
+          })
+        ),
+        admin: this.teamService.listAllTeams().pipe(
+          catchError((error) => {
+            console.warn('[TeamManagement] allTeams query failed, keeping fallback result', error);
+            return of<Team[]>([]);
+          })
+        ),
+      }).pipe(
+        map(({ fallback, admin }) => {
+          console.debug('[TeamManagement] merged results', { fallback, admin }); // DEBUG merged results
+          if (!admin.length) return fallback;
+          if (!fallback.length) return admin;
+          const merged = new Map<string, Team>();
+          for (const team of fallback) merged.set(team.id, team);
+          for (const team of admin) merged.set(team.id, team);
+          return Array.from(merged.values());
         })
       );
     }
     if (this.isManagerUser) {
-      return this.teamService.listManagedTeams();
+      console.debug('[TeamManagement] Manager detected, loading managed teams'); // DEBUG manager branch
+      return this.teamService.listManagedTeams().pipe(
+        tap((result) => console.debug('[TeamManagement] manager result', { count: result.length, result })) // DEBUG manager result
+      );
     }
-    return this.teamService.listMyTeams();
+    console.debug('[TeamManagement] Default branch (myTeams)'); // DEBUG default branch
+    return this.teamService.listMyTeams().pipe(
+      tap((result) => console.debug('[TeamManagement] myTeams result', { count: result.length, result })) // DEBUG default result
+    );
   }
 
   private sanitizeMembers(input: Array<DialogTeamMemberLike | null | undefined>): TeamMember[] {
