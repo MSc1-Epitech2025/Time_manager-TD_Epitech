@@ -26,6 +26,7 @@ type GraphqlTeam = {
 };
 
 type AllTeamsQueryPayload = { allTeams: GraphqlTeam[] };
+type TeamsQueryPayload = { teams: GraphqlTeam[] };
 type GetTeamPayload = { team: GraphqlTeam | null };
 type TeamMembersPayload = { teamMembers: GraphqlUser[] };
 type CreateTeamPayload = { createTeam: GraphqlTeam };
@@ -33,6 +34,8 @@ type UpdateTeamPayload = { updateTeam: GraphqlTeam };
 type DeleteTeamPayload = { deleteTeam: boolean };
 type AddMemberPayload = { addTeamMember: boolean };
 type RemoveMemberPayload = { removeTeamMember: boolean };
+type MyManagedTeamsPayload = { myManagedTeams: GraphqlTeam[] };
+type MyTeamsPayload = { myTeams: GraphqlTeam[] };
 
 export interface TeamMember {
   id: string;
@@ -61,10 +64,37 @@ export interface UpdateTeamInput {
 export class TeamService {
   constructor(private http: HttpClient) {}
 
-  listTeams(): Observable<Team[]> {
+  listAllTeams(): Observable<Team[]> {
     return this.requestGraphql<AllTeamsQueryPayload>(ALL_TEAMS_QUERY).pipe(
       map((payload) => {
         const teams = payload?.allTeams ?? [];
+        return teams.map((team) => this.mapTeam(team));
+      })
+    );
+  }
+
+  listTeams(): Observable<Team[]> {
+    return this.requestGraphql<TeamsQueryPayload>(TEAMS_QUERY).pipe(
+      map((payload) => {
+        const teams = payload?.teams ?? [];
+        return teams.map((team) => this.mapTeam(team));
+      })
+    );
+  }
+
+  listManagedTeams(): Observable<Team[]> {
+    return this.requestGraphql<MyManagedTeamsPayload>(MY_MANAGED_TEAMS_QUERY).pipe(
+      map((payload) => {
+        const teams = payload?.myManagedTeams ?? [];
+        return teams.map((team) => this.mapTeam(team));
+      })
+    );
+  }
+
+  listMyTeams(): Observable<Team[]> {
+    return this.requestGraphql<MyTeamsPayload>(MY_TEAMS_QUERY).pipe(
+      map((payload) => {
+        const teams = payload?.myTeams ?? [];
         return teams.map((team) => this.mapTeam(team));
       })
     );
@@ -196,6 +226,22 @@ const ALL_TEAMS_QUERY = `
   }
 `;
 
+const TEAMS_QUERY = `
+  query Teams {
+    teams {
+      id
+      name
+      description
+      members {
+        id
+        firstName
+        lastName
+        email
+      }
+    }
+  }
+`;
+
 const TEAM_QUERY = `
   query Team($id: ID!) {
     team(id: $id) {
@@ -219,6 +265,38 @@ const TEAM_MEMBERS_QUERY = `
       firstName
       lastName
       email
+    }
+  }
+`;
+
+const MY_MANAGED_TEAMS_QUERY = `
+  query MyManagedTeams {
+    myManagedTeams {
+      id
+      name
+      description
+      members {
+        id
+        firstName
+        lastName
+        email
+      }
+    }
+  }
+`;
+
+const MY_TEAMS_QUERY = `
+  query MyTeams {
+    myTeams {
+      id
+      name
+      description
+      members {
+        id
+        firstName
+        lastName
+        email
+      }
     }
   }
 `;

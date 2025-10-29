@@ -38,7 +38,9 @@
             {{ team.name.charAt(0).toUpperCase() }}
           </div>
           <div class="team-info">
-            <h4>{{ team.name }}</h4>
+            <h4 class="team-name" (click)="viewTeamDetails(team)" role="button">
+              {{ team.name }}
+            </h4>
             <p class="team-description">
               {{ team.description || 'Pas de description' }}
             </p>
@@ -60,11 +62,11 @@
         </div>
 
         <div class="team-actions">
-          <button (click)="openEditTeamModal(team)">
+          <button *ngIf="isAdminUser" (click)="openEditTeamModal(team)">
             <mat-icon>edit</mat-icon>
             Edit
           </button>
-          <button (click)="openDeleteTeamModal(team)">
+          <button *ngIf="isAdminUser" (click)="openDeleteTeamModal(team)">
             <mat-icon>delete</mat-icon>
             Delete
           </button>
@@ -72,31 +74,23 @@
       </div>
     </section>
 
+    <section *ngIf="!isAdminUser" class="hint-section">
+      <p>Seuls les administrateurs peuvent creer, modifier ou supprimer des equipes.</p>
+    </section>
+
     <section *ngIf="!isLoading && !lastError && !filteredTeams.length" class="status-section">
       Aucune equipe a afficher.
     </section>
 
-    <button matButton="filled" class="add-team-btn" (click)="showAddModal()">
+    <button
+      matButton="filled"
+      class="add-team-btn"
+      *ngIf="isAdminUser"
+      (click)="showAddModal()"
+    >
       <mat-icon>add</mat-icon>
       Add a team
     </button>
 
-    <div class="add-team-form" *ngIf="showAddTeamForm">
-      <form action="">
-        <label for="teamName">Name of the team</label>
-        <input
-          type="text"
-          class="input-form"
-          id="teamName"
-          placeholder="Name of team"
-          required
-          [value]="teams[teamSelected]?.name"
-        />
-        <button type="submit" class="btn-submit">Edit</button>
-      </form>
-      <button class="close-btn" (click)="closeModal()">
-        <mat-icon>close</mat-icon>
-      </button>
-    </div>
   </main>
 </div>

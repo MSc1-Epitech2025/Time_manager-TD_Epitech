@@ -7,11 +7,30 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatDialog } from '@angular/material/dialog';
 import { MatInputModule } from '@angular/material/input';
-import { Observable, forkJoin, map } from 'rxjs';
+import { Router } from '@angular/router';
+import { Observable, forkJoin, map, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { CreateTeamModal } from '../../modal/create-team-modal/create-team-modal';
 import { EditTeamModalComponent } from '../../modal/edit-team-modal/edit-team-modal';
 import { DeleteTeamModalComponent } from '../../modal/delete-team-modal/delete-team-modal';
-import { TeamService, Team } from '../../core/services/team';
+import { TeamService, Team, TeamMember } from '../../core/services/team';
+import { AuthService, Role } from '../../core/services/auth';
+
+type DialogTeamMemberLike = {
+  id?: string | number;
+  userId?: string | number;
+  name?: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+};
+
+type DialogTeamResult = {
+  id: string | number;
+  name: string;
+  description?: string | null;
+  members?: Array<DialogTeamMemberLike | null | undefined>;
+};
 
 @Component({
   selector: 'app-team-management',
@@ -29,14 +48,17 @@ import { TeamService, Team } from '../../core/services/team';
 })
 export class TeamManagement implements OnInit {
   searchTerm = '';
-  teamSelected = -1;
-  showAddTeamForm = false;
   teams: Team[] = [];
   filteredTeams: Team[] = [];
   isLoading = false;
   lastError: string | null = null;
 
-  constructor(private modal: MatDialog, private teamService: TeamService) {}
+  constructor(
+    private modal: MatDialog,
+    private teamService: TeamService,
+    private auth: AuthService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.refreshTeams();
@@ -45,7 +67,7 @@ export class TeamManagement implements OnInit {
   refreshTeams(): void {
     this.isLoading = true;
     this.lastError = null;
-    this.teamService.listTeams().subscribe({
+    this.loadTeamsForCurrentUser().subscribe({
       next: (teams) => {
         this.teams = teams;
         this.applyFilter();
@@ -65,12 +87,13 @@ export class TeamManagement implements OnInit {
     this.applyFilter();
   }
 
-  viewTeamDetails(teamId: string): void {
-    console.log('Viewing team with ID:', teamId);
-  }
-
-  closeModal(): void {
-    this.showAddTeamForm = false;
+  viewTeamDetails(team: Team): void {
+    this.router.navigate(['/manager'], {
+      queryParams: {
+        teamId: team.id,
+        teamName: team.name,
+      },
+    });
   }
 
   private applyFilter(): void {
@@ -81,6 +104,8 @@ export class TeamManagement implements OnInit {
   }
 
   private createTeam(teamName: string, description?: string | null): void {
+    if (!this.isAdminUser) return;
+
     this.teamService
       .createTeam({ name: teamName, description: description ?? null })
       .subscribe({
@@ -89,19 +114,9 @@ export class TeamManagement implements OnInit {
       });
   }
 
-  private updateTeam(teamId: string, teamData: { name: string; description?: string | null }): void {
-    this.teamService
-      .updateTeam(teamId, {
-        name: teamData.name,
-        description: teamData.description ?? null,
-      })
-      .subscribe({
-        next: () => this.refreshTeams(),
-        error: (error) => console.error('Error updating team:', error),
-      });
-  }
-
   private removeTeam(teamId: string): void {
+    if (!this.isAdminUser) return;
+
     this.teamService.deleteTeam(teamId).subscribe({
       next: () => this.refreshTeams(),
       error: (error) => console.error('Error deleting team:', error),
@@ -109,6 +124,8 @@ export class TeamManagement implements OnInit {
   }
 
   openEditTeamModal(team: Team): void {
+    if (!this.isAdminUser) return;
+
     const teamId = String(team.id);
     this.loadTeamContext(teamId).subscribe({
       next: (teamContext) => {
@@ -118,16 +135,46 @@ export class TeamManagement implements OnInit {
         });
 
         dialogRef.afterClosed().subscribe(
-          (
-            updatedTeam:
-              | { id: string | number; name: string; description?: string | null }
-              | undefined
-          ) => {
+          (updatedTeam: DialogTeamResult | undefined) => {
             if (updatedTeam) {
-              this.updateTeam(String(updatedTeam.id), {
-                name: updatedTeam.name,
-                description: updatedTeam.description ?? null,
-              });
+              const sanitizedMembers = this.sanitizeMembers(updatedTeam.members ?? []);
+              const nextName = updatedTeam.name.trim();
+              const rawDescription =
+                typeof updatedTeam.description === 'string'
+                  ? updatedTeam.description.trim()
+                  : '';
+              const nextDescription = rawDescription ? rawDescription : null;
+              const operations: Observable<unknown>[] = [];
+
+              const nameChanged =
+                teamContext.name.trim() !== nextName ||
+                (teamContext.description ?? '') !== (nextDescription ?? '');
+
+              if (nameChanged) {
+                operations.push(
+                  this.teamService.updateTeam(teamId, {
+                    name: nextName,
+                    description: nextDescription,
+                  })
+                );
+              }
+
+              operations.push(
+                ...this.buildMemberChangeOperations(teamId, teamContext.members, sanitizedMembers)
+              );
+
+              if (!operations.length) {
+                return;
+              }
+
+              forkJoin(operations)
+                .pipe(
+                  catchError((error) => {
+                    console.error('Error updating team details:', error);
+                    return of(null);
+                  })
+                )
+                .subscribe(() => this.refreshTeams());
             }
           }
         );
@@ -137,6 +184,8 @@ export class TeamManagement implements OnInit {
   }
 
   openDeleteTeamModal(team: Team): void {
+    if (!this.isAdminUser) return;
+
     const teamId = String(team.id);
     this.loadTeamContext(teamId).subscribe({
       next: (teamContext) => {
@@ -164,6 +213,8 @@ export class TeamManagement implements OnInit {
   }
 
   showAddModal(): void {
+    if (!this.isAdminUser) return;
+
     const dialogRef = this.modal.open(CreateTeamModal, {
       width: '400px',
     });
@@ -177,12 +228,6 @@ export class TeamManagement implements OnInit {
       });
   }
 
-  showEditModal(teamId: number): void {
-    this.teamSelected = teamId;
-    this.showAddTeamForm = true;
-    console.log('Editing team with ID:', this.teamSelected);
-  }
-
   private loadTeamContext(teamId: string): Observable<Team> {
     return forkJoin({
       team: this.teamService.getTeam(teamId),
@@ -193,5 +238,127 @@ export class TeamManagement implements OnInit {
         members,
       }))
     );
+  }
+
+  private loadTeamsForCurrentUser(): Observable<Team[]> {
+    if (this.isAdminUser) {
+      return this.teamService.listAllTeams().pipe(
+        catchError((error) => {
+          console.warn('allTeams query failed, falling back to teams()', error);
+          return this.teamService.listTeams();
+        })
+      );
+    }
+    if (this.isManagerUser) {
+      return this.teamService.listManagedTeams();
+    }
+    return this.teamService.listMyTeams();
+  }
+
+  private sanitizeMembers(input: Array<DialogTeamMemberLike | null | undefined>): TeamMember[] {
+    if (!input.length) return [];
+
+    const normalized: TeamMember[] = [];
+
+    for (const entry of input) {
+      if (!entry || typeof entry !== 'object') continue;
+      const member = entry as DialogTeamMemberLike;
+
+      const id = this.extractMemberId(member);
+      if (!id) continue;
+
+      const name = this.extractMemberName(member, id);
+      const email = this.extractMemberEmail(member);
+
+      const normalizedMember: TeamMember = { id, name };
+      if (email) {
+        normalizedMember.email = email;
+      }
+
+      normalized.push(normalizedMember);
+    }
+
+    return normalized;
+  }
+
+  private buildMemberChangeOperations(
+    teamId: string,
+    previous: TeamMember[],
+    next: TeamMember[]
+  ): Observable<unknown>[] {
+    const operations: Observable<unknown>[] = [];
+    const previousIds = new Set(previous.map((member) => member.id));
+    const nextIds = new Set(next.map((member) => member.id));
+
+    for (const member of next) {
+      if (!previousIds.has(member.id)) {
+        operations.push(this.teamService.addTeamMember(teamId, member.id));
+      }
+    }
+
+    for (const member of previous) {
+      if (!nextIds.has(member.id)) {
+        operations.push(this.teamService.removeTeamMember(teamId, member.id));
+      }
+    }
+
+    return operations;
+  }
+
+  get isAdminUser(): boolean {
+    return this.hasRole('ADMIN');
+  }
+
+  get isManagerUser(): boolean {
+    return this.hasRole('MANAGER');
+  }
+
+  private hasRole(role: Role): boolean {
+    const roles = this.auth.session?.user?.roles ?? [];
+    return roles.includes(role);
+  }
+
+  private extractMemberId(member: DialogTeamMemberLike): string | null {
+    const candidates: Array<string | number | undefined> = [
+      member.id,
+      member.userId,
+    ];
+
+    for (const value of candidates) {
+      if (typeof value === 'string' && value.trim()) {
+        return value.trim();
+      }
+      if (typeof value === 'number' && Number.isFinite(value)) {
+        return String(value);
+      }
+    }
+
+    return null;
+  }
+
+  private extractMemberName(member: DialogTeamMemberLike, fallbackId: string): string {
+    if (typeof member.name === 'string' && member.name.trim()) {
+      return member.name.trim();
+    }
+
+    const first =
+      typeof member.firstName === 'string' && member.firstName.trim()
+        ? member.firstName.trim()
+        : '';
+    const last =
+      typeof member.lastName === 'string' && member.lastName.trim()
+        ? member.lastName.trim()
+        : '';
+
+    const combined = `${first} ${last}`.trim();
+    return combined || fallbackId;
+  }
+
+  private extractMemberEmail(member: DialogTeamMemberLike): string | undefined {
+    if (typeof member.email === 'string') {
+      const trimmed = member.email.trim();
+      if (trimmed) return trimmed;
+    }
+    return undefined;
   }
 }
