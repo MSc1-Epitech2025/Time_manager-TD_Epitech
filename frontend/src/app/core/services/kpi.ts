@@ -1,4 +1,3 @@
-// src/app/pages/kpi-dashboard/services/kpi.service.ts
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 

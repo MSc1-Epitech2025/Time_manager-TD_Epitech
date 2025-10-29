@@ -19,28 +19,24 @@ export class LogHistory {
   logs = [
     { employeeName: 'Richard', date: '2024-10-01', checkIn: '09:00', checkOut: '17:00', totalHours: '8h', type: 'On time' },
     { employeeName: 'Joe', date: '2024-10-02', checkIn: '09:15', checkOut: '17:00', totalHours: '7h 45m', type: 'Late' },
-  ]; // data from backend
+  ];
   filteredLog = [
     { employeeName: 'Richard', date: '2024-10-01', checkIn: '09:00', checkOut: '17:00', totalHours: '8h', type: 'On time' },
-  ]; // data after filtering
+  ];
   searchValue: string = '';
 
   constructor(private router: Router, private auth: AuthService) {}
 
   ngOnInit() {
-    // Fetch logs from backend
     this.filteredLog = this.logs;
   }
 
   filterSearch() {
-    this.filteredLog = this.logs.filter(log => 
+    this.filteredLog = this.logs.filter(log =>
       log.employeeName.toLowerCase().includes(this.searchValue.toLowerCase())
-    );  
+    );
     console.log('Filtering logs', this.searchValue);
-    // Request to backend to filter logs
   }
-
-  // ---------- routes ----------
 
   goToDashboard() {
     this.router.navigate(['/enterprise']);
@@ -54,7 +50,7 @@ export class LogHistory {
 
   goToPlanning() {
     this.router.navigate(['/planning']);
-  } 
+  }
 
   logout() {
     this.auth.logout();

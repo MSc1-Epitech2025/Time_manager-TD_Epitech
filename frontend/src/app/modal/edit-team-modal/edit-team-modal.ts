@@ -26,7 +26,6 @@ export class EditTeamModalComponent {
     private dialogRef: MatDialogRef<EditTeamModalComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
-    // On clone les données pour éviter les modifications directes
     this.team = { ...data.team, members: [...data.team.members] };
   }
 

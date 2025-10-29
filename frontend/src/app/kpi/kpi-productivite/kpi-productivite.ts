@@ -1,4 +1,3 @@
-// kpi-productivite.component.ts
 import { Component, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { Chart, registerables } from 'chart.js';
 import { KpiService } from '../../core/services/kpi';
