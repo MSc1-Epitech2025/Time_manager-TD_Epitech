@@ -1,0 +1,67 @@
+# src/main/resources/graphql/kpi.graphqls
+
+# Scalars utilisés par les DTOs (LocalDate/long/BigDecimal).
+# Si tu as déjà des scalars globaux, tu peux les regrouper.
+scalar Date
+scalar Long
+scalar BigDecimal
+
+type DateRange {
+  from: Date!
+  to: Date!
+}
+
+type AttendanceKpi {
+  absenceRequests: Long!
+  approvedAbsences: Long!
+  approvedDays: BigDecimal!
+}
+
+type TimeKpi {
+  totalWorkedMinutes: Long!
+  avgWorkedMinutesPerUser: Long!
+  totalOvertimeMinutes: Long!
+}
+
+type PunctualityKpi {
+  lateArrivalsCount: Long!
+  earlyLeavesCount: Long!
+}
+
+type LeaveBalanceItem {
+  leaveTypeCode: String!
+  balance: BigDecimal!
+}
+
+type KpiGlobal {
+  range: DateRange!
+  totalUsers: Int!
+  totalTeams: Int!
+  attendance: AttendanceKpi!
+  time: TimeKpi!
+  punctuality: PunctualityKpi!
+}
+
+type KpiUser {
+  userId: ID!
+  range: DateRange!
+  attendance: AttendanceKpi!
+  time: TimeKpi!
+  punctuality: PunctualityKpi!
+  leaveBalances: [LeaveBalanceItem!]!
+}
+
+type KpiTeam {
+  teamId: ID!
+  range: DateRange!
+  memberCount: Int!
+  attendance: AttendanceKpi!
+  time: TimeKpi!
+  punctuality: PunctualityKpi!
+}
+
+extend type Query {
+  kpiGlobal(from: Date, to: Date): KpiGlobal!
+  kpiByUser(userId: ID!, from: Date, to: Date): KpiUser!
+  kpiByTeam(teamId: ID!, from: Date, to: Date): KpiTeam!
+}
