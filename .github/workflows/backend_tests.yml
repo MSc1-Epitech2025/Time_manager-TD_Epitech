@@ -5,8 +5,7 @@ on:
 #   todo: delete units-tests branch when all units test is finish
     branches: [ "dev", "main", "units-tests" ]
   pull_request:
-    branches:
-      - *
+    branches: ["**"]
 
 jobs:
   test-backend:
