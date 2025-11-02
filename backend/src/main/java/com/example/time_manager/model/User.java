@@ -14,6 +14,7 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", columnDefinition = "char(36)")
     private String id;
 
     private String firstName;

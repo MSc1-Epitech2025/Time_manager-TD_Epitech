@@ -1,6 +1,5 @@
 package com.example.time_manager.model;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.*;
 import java.time.LocalTime;
 
@@ -17,8 +16,8 @@ public class WorkSchedule {
 private Long id;
 
 
-@Column(name = "user_id", nullable = false, length = 36)
-private String userId; // UUID (String)
+@Column(name = "user_id", nullable = false, columnDefinition = "char(36)")
+private String userId;
 
 
 @Enumerated(EnumType.STRING)
