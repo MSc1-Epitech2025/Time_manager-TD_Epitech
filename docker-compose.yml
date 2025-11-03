@@ -88,44 +88,25 @@ services:
       - ./sonar_data:/opt/sonarqube/data
       - ./sonar_logs:/opt/sonarqube/logs
 
+  sonar-scanner:
+    image: sonarsource/sonar-scanner-cli:latest
+    container_name: sonar-scanner
+    depends_on:
+      - sonarqube
+      - backend
+    environment:
+      SONAR_HOST_URL: "http://sonarqube:9000"
+      SONAR_TOKEN: "sqp_13b4b344d5bcb20204f9936ced5050da4e6e6e99"
+    volumes:
+      - ./backend:/usr/src
+    working_dir: /usr/src
+    command: >
+      sonar-scanner
+        -Dsonar.projectKey=TimeManager
+        -Dsonar.sources=src
+        -Dsonar.java.binaries=build/classes/java/main
+        -Dsonar.coverage.jacoco.xmlReportPaths=build/reports/jacoco/test/jacocoTestReport.xml
+
 volumes:
   mariadb_data:
   gradle_cache:
-
-# docker-compose for production build with MariaDB
-#version: "3.9"
-#
-#services:
-#  backend:
-#    build:
-#      context: ./backend
-#      dockerfile: Dockerfile
-#    container_name: backend
-#    ports:
-#      - "8080:8080"
-#    environment:
-#      SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/time_manager
-#      SPRING_DATASOURCE_USERNAME: root
-#      SPRING_DATASOURCE_PASSWORD: root
-#      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-#      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.MariaDBDialect
-#    depends_on:
-#      - mariadb
-#    restart: always
-#
-#  mariadb:
-#    image: mariadb:11
-#    container_name: mariadb
-#    restart: always
-#    environment:
-#      MARIADB_ROOT_PASSWORD: root
-#      MARIADB_DATABASE: time_manager
-#      MARIADB_USER: app_user
-#      MARIADB_PASSWORD: app_pass
-#    ports:
-#      - "3307:3306"
-#    volumes:
-#      - mariadb_data:/var/lib/mysql
-#
-#volumes:
-#  mariadb_data:
