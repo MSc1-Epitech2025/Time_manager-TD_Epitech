@@ -21,8 +21,8 @@ services:
 
   backend:
     build:
-      context: ${BACKEND_CONTEXT}
-      dockerfile: ${BACKEND_DOCKERFILE}
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: ${BACKEND_CONTAINER_NAME}
     ports:
       - "${BACKEND_PORT}:8080"
