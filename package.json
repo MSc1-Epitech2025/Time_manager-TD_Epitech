@@ -2,6 +2,7 @@
   "scripts": {
     "docker:build": "docker compose up --build",
     "docker:down": "docker compose down -v",
+    "docker:purge": "docker system prune -a --volumes",
     "sonar:scan": "docker compose run --rm --no-deps sonar-scanner"
   },
   "devDependencies": {
