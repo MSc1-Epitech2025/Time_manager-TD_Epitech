@@ -50,7 +50,6 @@ public class AbsenceService {
     this.leaveAccountingBridge = leaveAccountingBridge; 
   }
 
-  /* =================== CREATE =================== */
 
   public AbsenceResponse createForEmail(String email, AbsenceCreateRequest req) {
     var user = userRepo.findByEmail(email)
@@ -74,7 +73,6 @@ public class AbsenceService {
     return toDto(a, days);
   }
 
-  /* =================== READ =================== */
 
   @Transactional(readOnly = true)
   public List<AbsenceResponse> listMine(String email) {
@@ -162,10 +160,6 @@ public List<AbsenceResponse> listTeamAbsences(String managerEmail, Long teamId) 
 }
 
 
-  
-
-  /* =================== UPDATE =================== */
-
   public AbsenceResponse updateVisibleTo(String email, Long id, AbsenceUpdateRequest req) {
     var requester = userRepo.findByEmail(email)
         .orElseThrow(() -> new EntityNotFoundException("User not found: " + email));
@@ -206,8 +200,6 @@ public List<AbsenceResponse> listTeamAbsences(String managerEmail, Long teamId) 
     return toDto(a, days);
   }
 
-  /* =================== STATUS (APPROVE/REJECT) =================== */
-
   public AbsenceResponse setStatus(String approverEmail, Long id, AbsenceStatusUpdateRequest req) {
     var approver = userRepo.findByEmail(approverEmail)
         .orElseThrow(() -> new EntityNotFoundException("User not found: " + approverEmail));
@@ -239,8 +231,6 @@ public List<AbsenceResponse> listTeamAbsences(String managerEmail, Long teamId) 
     return toDto(a, days);
   }
 
-  /* =================== DELETE =================== */
-
   public void deleteVisibleTo(String email, Long id) {
     var requester = userRepo.findByEmail(email)
         .orElseThrow(() -> new EntityNotFoundException("User not found: " + email));
@@ -261,8 +251,6 @@ public List<AbsenceResponse> listTeamAbsences(String managerEmail, Long teamId) 
     dayRepo.deleteByAbsenceId(id);
     absenceRepo.deleteById(id);
   }
-
-  /* =================== Helpers =================== */
 
   private void validateDates(LocalDate start, LocalDate end) {
     if (start == null || end == null) {
