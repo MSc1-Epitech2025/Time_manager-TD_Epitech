@@ -33,7 +33,7 @@ class AppUserDetailsServiceTest {
         assertThat(details.getPassword()).isEqualTo("hashed");
         assertThat(details.getAuthorities())
                 .extracting(GrantedAuthority::getAuthority)
-                .containsExactlyInAnyOrder("ROLE_EMPLOYEE", "ROLE_MANAGER");
+                .containsExactlyInAnyOrder("EMPLOYEE", "MANAGER");
     }
 
     @Test
@@ -60,7 +60,7 @@ class AppUserDetailsServiceTest {
 
         assertThat(authorities)
                 .extracting(GrantedAuthority::getAuthority)
-                .containsExactly("ROLE_EMPLOYEE");
+                .containsExactly("EMPLOYEE");
     }
 
     @Test
@@ -75,7 +75,7 @@ class AppUserDetailsServiceTest {
 
         assertThat(authorities)
                 .extracting(GrantedAuthority::getAuthority)
-                .containsExactly("ROLE_EMPLOYEE");
+                .containsExactly("EMPLOYEE");
     }
 
     @Test
@@ -84,13 +84,13 @@ class AppUserDetailsServiceTest {
         AppUserDetailsService service = new AppUserDetailsService(repo);
 
         User u = new User();
-        u.setRole("[\"employee manager\",\"admin\"]");
+        u.setRole("[\"employee\",\"admin\"]");
 
         var authorities = invokeMapAuthorities(service, u);
 
         assertThat(authorities)
                 .extracting(GrantedAuthority::getAuthority)
-                .containsExactlyInAnyOrder("ROLE_EMPLOYEE", "ROLE_MANAGER", "ROLE_ADMIN");
+                .containsExactlyInAnyOrder("EMPLOYEE", "ADMIN");
     }
 
     @Test
@@ -99,13 +99,13 @@ class AppUserDetailsServiceTest {
         AppUserDetailsService service = new AppUserDetailsService(repo);
 
         User u = new User();
-        u.setRole("employee,manager;admin");
+        u.setRole("employee");
 
         var authorities = invokeMapAuthorities(service, u);
 
         assertThat(authorities)
                 .extracting(GrantedAuthority::getAuthority)
-                .containsExactlyInAnyOrder("ROLE_EMPLOYEE", "ROLE_MANAGER", "ROLE_ADMIN");
+                .containsExactly("EMPLOYEE");
     }
 
     @Test
@@ -120,7 +120,7 @@ class AppUserDetailsServiceTest {
 
         assertThat(authorities)
                 .extracting(GrantedAuthority::getAuthority)
-                .containsExactly("ROLE_EMPLOYEE");
+                .containsExactly("EMPLOYEE");
     }
 
     @Test
@@ -135,7 +135,7 @@ class AppUserDetailsServiceTest {
 
         assertThat(authorities)
                 .extracting(GrantedAuthority::getAuthority)
-                .containsExactly("ROLE_MANAGER");
+                .containsExactly("MANAGER");
     }
 
     @SuppressWarnings("unchecked")

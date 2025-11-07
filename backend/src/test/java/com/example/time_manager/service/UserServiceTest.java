@@ -1,5 +1,6 @@
 package com.example.time_manager.service;
 
+import com.example.time_manager.dto.auth.UpdateUserInput;
 import com.example.time_manager.model.User;
 import com.example.time_manager.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -215,9 +216,7 @@ class UserServiceTestTest {
         when(userRepository.findById("id")).thenReturn(Optional.of(u));
         when(userRepository.save(u)).thenReturn(u);
 
-        // ici updateReq est un Object, donc on vérifie juste l’enchaînement find + save
-        Object dummyUpdateReq = new Object();
-        User result = userService.updateUser("id", dummyUpdateReq);
+        User result = userService.updateUser("id", mock(UpdateUserInput.class));
 
         assertThat(result).isEqualTo(u);
         verify(userRepository).save(u);
