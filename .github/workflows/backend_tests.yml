@@ -2,7 +2,7 @@ name: Run backend tests
 
 on:
   push:
-    branches: [ "dev", "main", "units-tests" ]
+    branches: [ "dev", "main", "automatic-test" ]
   pull_request:
     branches: ["**"]
 
