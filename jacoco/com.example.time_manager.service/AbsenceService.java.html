@@ -1,0 +1,373 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AbsenceService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">time-manager</a> &gt; <a href="index.source.html" class="el_package">com.example.time_manager.service</a> &gt; <span class="el_source">AbsenceService.java</span></div><h1>AbsenceService.java</h1><pre class="source lang-java linenums">package com.example.time_manager.service;
+
+import com.example.time_manager.dto.absence.AbsenceCreateRequest;
+import com.example.time_manager.dto.absence.AbsenceDayResponse;
+import com.example.time_manager.dto.absence.AbsenceResponse;
+import com.example.time_manager.dto.absence.AbsenceStatusUpdateRequest;
+import com.example.time_manager.dto.absence.AbsenceUpdateRequest;
+import com.example.time_manager.model.User;
+import com.example.time_manager.model.absence.Absence;
+import com.example.time_manager.model.absence.AbsenceDay;
+import com.example.time_manager.model.absence.AbsencePeriod;
+import com.example.time_manager.model.absence.AbsenceStatus;
+import com.example.time_manager.repository.AbsenceDayRepository;
+import com.example.time_manager.repository.AbsenceRepository;
+import com.example.time_manager.repository.TeamMemberRepository;
+import com.example.time_manager.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import com.example.time_manager.service.leave.LeaveAccountingBridge;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+@Service
+@Transactional
+public class AbsenceService {
+
+  private final AbsenceRepository absenceRepo;
+  private final AbsenceDayRepository dayRepo;
+  private final UserRepository userRepo;
+  private final TeamMemberRepository teamMemberRepo;
+  private final LeaveAccountingBridge leaveAccountingBridge; 
+  
+  public AbsenceService(AbsenceRepository absenceRepo,
+                        AbsenceDayRepository dayRepo,
+                        UserRepository userRepo,
+                        TeamMemberRepository teamMemberRepo,
+<span class="fc" id="L45">                        LeaveAccountingBridge leaveAccountingBridge) { </span>
+<span class="fc" id="L46">    this.absenceRepo = absenceRepo;</span>
+<span class="fc" id="L47">    this.dayRepo = dayRepo;</span>
+<span class="fc" id="L48">    this.userRepo = userRepo;</span>
+<span class="fc" id="L49">    this.teamMemberRepo = teamMemberRepo;</span>
+<span class="fc" id="L50">    this.leaveAccountingBridge = leaveAccountingBridge; </span>
+<span class="fc" id="L51">  }</span>
+
+
+  public AbsenceResponse createForEmail(String email, AbsenceCreateRequest req) {
+<span class="fc" id="L55">    var user = userRepo.findByEmail(email)</span>
+<span class="fc" id="L56">        .orElseThrow(() -&gt; new EntityNotFoundException(&quot;User not found: &quot; + email));</span>
+
+<span class="fc" id="L58">    validateDates(req.getStartDate(), req.getEndDate());</span>
+
+<span class="fc" id="L60">    var a = new Absence();</span>
+<span class="fc" id="L61">    a.setUserId(user.getId());</span>
+<span class="fc" id="L62">    a.setStartDate(req.getStartDate());</span>
+<span class="fc" id="L63">    a.setEndDate(req.getEndDate());</span>
+<span class="fc" id="L64">    a.setType(req.getType());</span>
+<span class="fc" id="L65">    a.setReason(req.getReason());</span>
+<span class="fc" id="L66">    a.setSupportingDocumentUrl(req.getSupportingDocumentUrl());</span>
+<span class="fc" id="L67">    a.setStatus(AbsenceStatus.PENDING);</span>
+
+<span class="fc" id="L69">    a = absenceRepo.save(a);</span>
+
+<span class="fc" id="L71">    generateDays(a, req.getPeriodByDate());</span>
+<span class="fc" id="L72">    var days = dayRepo.findByAbsenceIdOrderByAbsenceDateAsc(a.getId());</span>
+<span class="fc" id="L73">    return toDto(a, days);</span>
+  }
+
+
+  @Transactional(readOnly = true)
+  public List&lt;AbsenceResponse&gt; listMine(String email) {
+<span class="fc" id="L79">    var me = userRepo.findByEmail(email)</span>
+<span class="fc" id="L80">        .orElseThrow(() -&gt; new EntityNotFoundException(&quot;User not found: &quot; + email));</span>
+<span class="fc" id="L81">    var rows = absenceRepo.findByUserIdOrderByStartDateDesc(me.getId());</span>
+<span class="fc" id="L82">    return mapWithDays(rows);</span>
+  }
+
+  @Transactional(readOnly = true)
+  public List&lt;AbsenceResponse&gt; listForUser(String targetUserId) {
+<span class="fc" id="L87">    String requesterId = currentUserId();</span>
+<span class="fc" id="L88">    var requester = userRepo.findById(requesterId)</span>
+<span class="pc" id="L89">        .orElseThrow(() -&gt; new EntityNotFoundException(&quot;Requester not found: &quot; + requesterId));</span>
+
+<span class="fc" id="L91">    boolean isAdmin = hasRole(requester, &quot;ADMIN&quot;);</span>
+<span class="fc" id="L92">    boolean isManager = hasRole(requester, &quot;MANAGER&quot;);</span>
+<span class="fc" id="L93">    boolean isOwner = requesterId.equals(targetUserId);</span>
+
+<span class="pc bpc" id="L95" title="3 of 8 branches missed.">    if (!(isAdmin || isOwner || (isManager &amp;&amp; canManagerActOn(requester, targetUserId)))) {</span>
+<span class="fc" id="L96">      throw new org.springframework.security.access.AccessDeniedException(&quot;Forbidden&quot;);</span>
+    }
+
+<span class="fc" id="L99">    var rows = absenceRepo.findByUserIdOrderByStartDateDesc(targetUserId);</span>
+<span class="fc" id="L100">    return mapWithDays(rows);</span>
+  }
+
+    @Transactional(readOnly = true)
+    public List&lt;AbsenceResponse&gt; listAll() {
+<span class="fc bfc" id="L105" title="All 2 branches covered.">    if (!isAdmin()) {</span>
+<span class="fc" id="L106">        throw new org.springframework.security.access.AccessDeniedException(&quot;Forbidden: admin only&quot;);</span>
+    }
+<span class="fc" id="L108">    var rows = absenceRepo.findAllByOrderByStartDateDesc();</span>
+<span class="fc" id="L109">    return mapWithDays(rows);</span>
+    }
+
+  @Transactional(readOnly = true)
+  public AbsenceResponse getVisibleTo(String email, Long id) {
+<span class="fc" id="L114">    var requester = userRepo.findByEmail(email)</span>
+<span class="pc" id="L115">        .orElseThrow(() -&gt; new EntityNotFoundException(&quot;User not found: &quot; + email));</span>
+<span class="fc" id="L116">    var a = absenceRepo.findById(id)</span>
+<span class="pc" id="L117">        .orElseThrow(() -&gt; new EntityNotFoundException(&quot;Absence not found: &quot; + id));</span>
+
+<span class="fc" id="L119">    boolean isAdmin   = hasRole(requester, &quot;ADMIN&quot;);</span>
+<span class="fc" id="L120">    boolean isManager = hasRole(requester, &quot;MANAGER&quot;);</span>
+<span class="fc" id="L121">    boolean isOwner   = a.getUserId().equals(requester.getId());</span>
+
+<span class="pc bpc" id="L123" title="4 of 8 branches missed.">    if (isAdmin || isOwner || (isManager &amp;&amp; canManagerActOn(requester, a.getUserId()))) {</span>
+<span class="fc" id="L124">      var days = dayRepo.findByAbsenceIdOrderByAbsenceDateAsc(a.getId());</span>
+<span class="fc" id="L125">      return toDto(a, days);</span>
+    }
+<span class="fc" id="L127">    throw new org.springframework.security.access.AccessDeniedException(&quot;Forbidden&quot;);</span>
+  }
+
+  @Transactional(readOnly = true)
+public List&lt;AbsenceResponse&gt; listTeamAbsences(String managerEmail, Long teamId) {
+<span class="fc" id="L132">  var manager = userRepo.findByEmail(managerEmail)</span>
+<span class="pc" id="L133">      .orElseThrow(() -&gt; new EntityNotFoundException(&quot;User not found: &quot; + managerEmail));</span>
+
+<span class="fc bfc" id="L135" title="All 2 branches covered.">  if (!hasRole(manager, &quot;MANAGER&quot;)) {</span>
+<span class="fc" id="L136">    throw new org.springframework.security.access.AccessDeniedException(&quot;Forbidden: manager only&quot;);</span>
+  }
+
+<span class="fc" id="L139">  List&lt;String&gt; teamUserIds = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L141" title="All 2 branches covered.">  if (teamId != null) {</span>
+<span class="fc" id="L142">    var managerTeams = teamMemberRepo.findTeamIdsByUserId(manager.getId());</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">    if (managerTeams.stream().noneMatch(id -&gt; id.equals(teamId))) {</span>
+<span class="fc" id="L144">      throw new org.springframework.security.access.AccessDeniedException(&quot;Forbidden: not your team&quot;);</span>
+    }
+<span class="fc" id="L146">    var users = teamMemberRepo.findUsersByTeamId(teamId);</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">    for (var u : users) teamUserIds.add(u.getId());</span>
+<span class="fc" id="L148">  } else {</span>
+<span class="fc" id="L149">    var managerTeams = teamMemberRepo.findTeamIdsByUserId(manager.getId());</span>
+<span class="pc bpc" id="L150" title="1 of 2 branches missed.">    for (Long tid : managerTeams) {</span>
+<span class="nc" id="L151">      var users = teamMemberRepo.findUsersByTeamId(tid);</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">      for (var u : users) teamUserIds.add(u.getId());</span>
+<span class="nc" id="L153">    }</span>
+  }
+
+<span class="fc bfc" id="L156" title="All 2 branches covered.">  if (teamUserIds.isEmpty()) return List.of();</span>
+
+<span class="fc" id="L158">  var rows = absenceRepo.findByUserIdInOrderByStartDateDesc(teamUserIds);</span>
+<span class="fc" id="L159">  return mapWithDays((List&lt;Absence&gt;) rows);</span>
+}
+
+
+  public AbsenceResponse updateVisibleTo(String email, Long id, AbsenceUpdateRequest req) {
+<span class="fc" id="L164">    var requester = userRepo.findByEmail(email)</span>
+<span class="fc" id="L165">        .orElseThrow(() -&gt; new EntityNotFoundException(&quot;User not found: &quot; + email));</span>
+<span class="fc" id="L166">    var a = absenceRepo.findById(id)</span>
+<span class="fc" id="L167">        .orElseThrow(() -&gt; new EntityNotFoundException(&quot;Absence not found: &quot; + id));</span>
+
+<span class="fc" id="L169">    boolean isAdmin = hasRole(requester, &quot;ADMIN&quot;);</span>
+<span class="fc" id="L170">    boolean isOwner = a.getUserId().equals(requester.getId());</span>
+<span class="fc" id="L171">    boolean isManager = hasRole(requester, &quot;MANAGER&quot;);</span>
+
+<span class="pc bpc" id="L173" title="5 of 8 branches missed.">    if (!(isAdmin || isOwner || (isManager &amp;&amp; canManagerActOn(requester, a.getUserId())))) {</span>
+<span class="nc" id="L174">      throw new org.springframework.security.access.AccessDeniedException(&quot;Forbidden&quot;);</span>
+    }
+<span class="pc bpc" id="L176" title="2 of 8 branches missed.">    if (!isAdmin &amp;&amp; !isManager &amp;&amp; !(isOwner &amp;&amp; a.getStatus() == AbsenceStatus.PENDING)) {</span>
+<span class="fc" id="L177">      throw new org.springframework.security.access.AccessDeniedException(&quot;Forbidden: owner can edit only while PENDING&quot;);</span>
+    }
+
+<span class="pc bpc" id="L180" title="1 of 2 branches missed.">    if (req.getStartDate() != null) a.setStartDate(req.getStartDate());</span>
+<span class="pc bpc" id="L181" title="1 of 2 branches missed.">    if (req.getEndDate()   != null) a.setEndDate(req.getEndDate());</span>
+<span class="pc bpc" id="L182" title="1 of 2 branches missed.">    if (req.getType()      != null) a.setType(req.getType());</span>
+<span class="fc bfc" id="L183" title="All 2 branches covered.">    if (req.getReason()    != null) a.setReason(req.getReason());</span>
+<span class="pc bpc" id="L184" title="1 of 2 branches missed.">    if (req.getSupportingDocumentUrl() != null) a.setSupportingDocumentUrl(req.getSupportingDocumentUrl());</span>
+
+<span class="fc" id="L186">    validateDates(a.getStartDate(), a.getEndDate());</span>
+<span class="fc" id="L187">    a = absenceRepo.save(a);</span>
+
+<span class="fc bfc" id="L189" title="All 2 branches covered.">    if (a.getStatus() == AbsenceStatus.APPROVED) {</span>
+<span class="fc" id="L190">      leaveAccountingBridge.ensureDebitForApprovedAbsence(a);</span>
+    }
+
+
+<span class="fc bfc" id="L194" title="All 2 branches covered.">    if (req.getPeriodByDate() != null) {</span>
+<span class="fc" id="L195">      dayRepo.deleteByAbsenceId(a.getId());</span>
+<span class="fc" id="L196">      generateDays(a, req.getPeriodByDate());</span>
+    }
+
+<span class="fc" id="L199">    var days = dayRepo.findByAbsenceIdOrderByAbsenceDateAsc(a.getId());</span>
+<span class="fc" id="L200">    return toDto(a, days);</span>
+  }
+
+  public AbsenceResponse setStatus(String approverEmail, Long id, AbsenceStatusUpdateRequest req) {
+<span class="fc" id="L204">    var approver = userRepo.findByEmail(approverEmail)</span>
+<span class="pc" id="L205">        .orElseThrow(() -&gt; new EntityNotFoundException(&quot;User not found: &quot; + approverEmail));</span>
+<span class="fc" id="L206">    var a = absenceRepo.findById(id)</span>
+<span class="pc" id="L207">        .orElseThrow(() -&gt; new EntityNotFoundException(&quot;Absence not found: &quot; + id));</span>
+
+<span class="fc" id="L209">    boolean isAdmin   = hasRole(approver, &quot;ADMIN&quot;);</span>
+<span class="fc" id="L210">    boolean isManager = hasRole(approver, &quot;MANAGER&quot;);</span>
+
+<span class="pc bpc" id="L212" title="5 of 6 branches missed.">    if (!(isAdmin || (isManager &amp;&amp; canManagerActOn(approver, a.getUserId())))) {</span>
+<span class="nc" id="L213">      throw new org.springframework.security.access.AccessDeniedException(&quot;Forbidden&quot;);</span>
+    }
+
+<span class="fc bfc" id="L216" title="All 2 branches covered.">    if (req.getStatus() == AbsenceStatus.PENDING) {</span>
+<span class="fc" id="L217">      throw new IllegalArgumentException(&quot;Status must be APPROVED or REJECTED&quot;);</span>
+    }
+
+<span class="fc" id="L220">    a.setStatus(req.getStatus());</span>
+<span class="fc" id="L221">    a.setApprovedBy(approver.getId());</span>
+<span class="fc" id="L222">    a.setApprovedAt(LocalDateTime.now());</span>
+<span class="fc" id="L223">    a = absenceRepo.save(a);</span>
+<span class="pc bpc" id="L224" title="1 of 3 branches missed.">    switch (a.getStatus()) {</span>
+<span class="fc" id="L225">      case APPROVED -&gt; leaveAccountingBridge.ensureDebitForApprovedAbsence(a);</span>
+<span class="fc" id="L226">      case REJECTED -&gt; leaveAccountingBridge.removeDebitForAbsence(a.getId());</span>
+      default -&gt; { /* rien */ }
+    }
+
+<span class="fc" id="L230">    var days = dayRepo.findByAbsenceIdOrderByAbsenceDateAsc(a.getId());</span>
+<span class="fc" id="L231">    return toDto(a, days);</span>
+  }
+
+  public void deleteVisibleTo(String email, Long id) {
+<span class="fc" id="L235">    var requester = userRepo.findByEmail(email)</span>
+<span class="fc" id="L236">        .orElseThrow(() -&gt; new EntityNotFoundException(&quot;User not found: &quot; + email));</span>
+<span class="fc" id="L237">    var a = absenceRepo.findById(id)</span>
+<span class="pc" id="L238">        .orElseThrow(() -&gt; new EntityNotFoundException(&quot;Absence not found: &quot; + id));</span>
+
+<span class="fc" id="L240">    boolean isAdmin = hasRole(requester, &quot;ADMIN&quot;);</span>
+<span class="fc" id="L241">    boolean isOwner = a.getUserId().equals(requester.getId());</span>
+<span class="fc" id="L242">    boolean isManager = hasRole(requester, &quot;MANAGER&quot;);</span>
+
+<span class="pc bpc" id="L244" title="4 of 8 branches missed.">    if (!(isAdmin || isOwner || (isManager &amp;&amp; canManagerActOn(requester, a.getUserId())))) {</span>
+<span class="fc" id="L245">      throw new org.springframework.security.access.AccessDeniedException(&quot;Forbidden&quot;);</span>
+    }
+<span class="pc bpc" id="L247" title="7 of 8 branches missed.">    if (!isAdmin &amp;&amp; !isManager &amp;&amp; !(isOwner &amp;&amp; a.getStatus() == AbsenceStatus.PENDING)) {</span>
+<span class="nc" id="L248">      throw new org.springframework.security.access.AccessDeniedException(&quot;Forbidden: owner can delete only while PENDING&quot;);</span>
+    }
+<span class="fc" id="L250">    leaveAccountingBridge.removeDebitForAbsence(id);</span>
+<span class="fc" id="L251">    dayRepo.deleteByAbsenceId(id);</span>
+<span class="fc" id="L252">    absenceRepo.deleteById(id);</span>
+<span class="fc" id="L253">  }</span>
+
+  private void validateDates(LocalDate start, LocalDate end) {
+<span class="pc bpc" id="L256" title="1 of 4 branches missed.">    if (start == null || end == null) {</span>
+<span class="fc" id="L257">      throw new IllegalArgumentException(&quot;startDate and endDate are required&quot;);</span>
+    }
+<span class="fc bfc" id="L259" title="All 2 branches covered.">    if (start.isAfter(end)) {</span>
+<span class="fc" id="L260">      throw new IllegalArgumentException(&quot;startDate must be on/before endDate&quot;);</span>
+    }
+<span class="fc" id="L262">  }</span>
+
+  private void generateDays(Absence a, Map&lt;LocalDate, AbsencePeriod&gt; periodByDate) {
+<span class="fc" id="L265">    var days = new ArrayList&lt;AbsenceDay&gt;();</span>
+<span class="fc bfc" id="L266" title="All 2 branches covered.">    for (LocalDate d = a.getStartDate(); !d.isAfter(a.getEndDate()); d = d.plusDays(1)) {</span>
+<span class="fc" id="L267">      var day = new AbsenceDay();</span>
+<span class="fc" id="L268">      day.setAbsence(a);</span>
+<span class="fc" id="L269">      day.setAbsenceDate(d);</span>
+
+<span class="fc" id="L271">      AbsencePeriod p = AbsencePeriod.FULL_DAY;</span>
+<span class="fc bfc" id="L272" title="All 2 branches covered.">      if (periodByDate != null) {</span>
+<span class="fc" id="L273">        AbsencePeriod override = periodByDate.get(d);</span>
+<span class="fc bfc" id="L274" title="All 2 branches covered.">        if (override != null) p = override;</span>
+      }
+<span class="fc" id="L276">      day.setPeriod(p);</span>
+
+<span class="fc bfc" id="L278" title="All 2 branches covered.">      if (p == AbsencePeriod.AM) {</span>
+<span class="fc" id="L279">        day.setStartTime(LocalTime.of(8, 0));</span>
+<span class="fc" id="L280">        day.setEndTime(LocalTime.of(12, 0));</span>
+<span class="fc bfc" id="L281" title="All 2 branches covered.">      } else if (p == AbsencePeriod.PM) {</span>
+<span class="fc" id="L282">        day.setStartTime(LocalTime.of(13, 0));</span>
+<span class="fc" id="L283">        day.setEndTime(LocalTime.of(17, 0));</span>
+      }
+
+<span class="fc" id="L286">      days.add(day);</span>
+    }
+<span class="fc" id="L288">    dayRepo.saveAll(days);</span>
+<span class="fc" id="L289">  }</span>
+
+  private List&lt;AbsenceResponse&gt; mapWithDays(List&lt;Absence&gt; rows) {
+<span class="fc" id="L292">    List&lt;AbsenceResponse&gt; out = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L293" title="All 2 branches covered.">    for (Absence a : rows) {</span>
+<span class="fc" id="L294">      var days = dayRepo.findByAbsenceIdOrderByAbsenceDateAsc(a.getId());</span>
+<span class="fc" id="L295">      out.add(toDto(a, days));</span>
+<span class="fc" id="L296">    }</span>
+<span class="fc" id="L297">    return out;</span>
+  }
+
+  private AbsenceResponse toDto(Absence a, List&lt;AbsenceDay&gt; days) {
+<span class="fc" id="L301">    var dto = new AbsenceResponse();</span>
+<span class="fc" id="L302">    dto.setId(a.getId());</span>
+<span class="fc" id="L303">    dto.setUserId(a.getUserId());</span>
+<span class="fc" id="L304">    dto.setStartDate(a.getStartDate());</span>
+<span class="fc" id="L305">    dto.setEndDate(a.getEndDate());</span>
+<span class="fc" id="L306">    dto.setType(a.getType());</span>
+<span class="fc" id="L307">    dto.setReason(a.getReason());</span>
+<span class="fc" id="L308">    dto.setSupportingDocumentUrl(a.getSupportingDocumentUrl());</span>
+<span class="fc" id="L309">    dto.setStatus(a.getStatus());</span>
+<span class="fc" id="L310">    dto.setApprovedBy(a.getApprovedBy());</span>
+<span class="fc" id="L311">    dto.setApprovedAt(a.getApprovedAt());</span>
+<span class="pc bpc" id="L312" title="1 of 2 branches missed.">    dto.setCreatedAt(a.getCreatedAt() != null ? a.getCreatedAt().toLocalDateTime() : null);</span>
+<span class="pc bpc" id="L313" title="1 of 2 branches missed.">    dto.setUpdatedAt(a.getUpdatedAt() != null ? a.getUpdatedAt().toLocalDateTime() : null);</span>
+
+<span class="fc" id="L315">    List&lt;AbsenceDayResponse&gt; dayDtos = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L316" title="All 2 branches covered.">    for (AbsenceDay d : days) {</span>
+<span class="fc" id="L317">      var rd = new AbsenceDayResponse();</span>
+<span class="fc" id="L318">      rd.setId(d.getId());</span>
+<span class="fc" id="L319">      rd.setAbsenceDate(d.getAbsenceDate());</span>
+<span class="fc" id="L320">      rd.setPeriod(d.getPeriod());</span>
+<span class="fc" id="L321">      rd.setStartTime(d.getStartTime());</span>
+<span class="fc" id="L322">      rd.setEndTime(d.getEndTime());</span>
+<span class="fc" id="L323">      dayDtos.add(rd);</span>
+<span class="fc" id="L324">    }</span>
+<span class="fc" id="L325">    dto.setDays(dayDtos);</span>
+<span class="fc" id="L326">    return dto;</span>
+  }
+
+private boolean hasRole(User u, String roleUpper) {
+<span class="fc" id="L330">  String raw = u.getRole();</span>
+<span class="pc bpc" id="L331" title="1 of 4 branches missed.">  if (raw == null || raw.isBlank()) return false;</span>
+
+<span class="fc" id="L333">  String cleaned = raw.replaceAll(&quot;[\\[\\]\&quot;]&quot;, &quot;&quot;).toUpperCase();</span>
+<span class="fc bfc" id="L334" title="All 2 branches covered.">  for (String token : cleaned.split(&quot;[\\s,;|,]+&quot;)) {</span>
+<span class="fc" id="L335">    String r = token.trim();</span>
+<span class="pc bpc" id="L336" title="1 of 4 branches missed.">    if (!r.isEmpty() &amp;&amp; r.equals(roleUpper)) {</span>
+<span class="fc" id="L337">      return true;</span>
+    }
+  }
+<span class="fc" id="L340">  return false;</span>
+}
+
+
+  private String currentUserId() {
+<span class="fc" id="L345">    Authentication auth = SecurityContextHolder.getContext().getAuthentication();</span>
+<span class="pc bpc" id="L346" title="1 of 4 branches missed.">    if (auth == null || auth.getName() == null) throw new SecurityException(&quot;Unauthenticated&quot;);</span>
+<span class="fc" id="L347">    String subject = auth.getName();</span>
+<span class="fc bfc" id="L348" title="All 2 branches covered.">    if (subject.contains(&quot;@&quot;)) {</span>
+<span class="fc" id="L349">      return userRepo.findByEmail(subject)</span>
+<span class="fc" id="L350">          .map(User::getId)</span>
+<span class="pc" id="L351">          .orElseThrow(() -&gt; new IllegalStateException(&quot;No user for email subject: &quot; + subject));</span>
+    }
+<span class="fc" id="L353">    return subject;</span>
+  }
+
+  private boolean canManagerActOn(User manager, String targetUserId) {
+<span class="fc bfc" id="L357" title="All 2 branches covered.">    if (manager.getId().equals(targetUserId)) return true;</span>
+<span class="fc" id="L358">    List&lt;Long&gt; managerTeams = teamMemberRepo.findTeamIdsByUserId(manager.getId());</span>
+<span class="fc bfc" id="L359" title="All 2 branches covered.">    if (managerTeams.isEmpty()) return false;</span>
+<span class="pc bpc" id="L360" title="1 of 2 branches missed.">    for (Long teamId : managerTeams) {</span>
+<span class="pc bpc" id="L361" title="1 of 2 branches missed.">      if (teamMemberRepo.existsByTeam_IdAndUser_Id(teamId, targetUserId)) return true;</span>
+<span class="nc" id="L362">    }</span>
+<span class="nc" id="L363">    return false;</span>
+  }
+
+  private boolean isAdmin() {
+<span class="fc" id="L367">  Authentication auth = SecurityContextHolder.getContext().getAuthentication();</span>
+<span class="pc bpc" id="L368" title="1 of 4 branches missed.">  if (auth == null || auth.getAuthorities() == null) return false;</span>
+<span class="fc" id="L369">  return auth.getAuthorities().stream().anyMatch(a -&gt; &quot;ROLE_ADMIN&quot;.equals(a.getAuthority()));</span>
+}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

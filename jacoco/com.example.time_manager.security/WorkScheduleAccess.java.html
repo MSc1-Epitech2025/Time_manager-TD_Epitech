@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WorkScheduleAccess.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">time-manager</a> &gt; <a href="index.source.html" class="el_package">com.example.time_manager.security</a> &gt; <span class="el_source">WorkScheduleAccess.java</span></div><h1>WorkScheduleAccess.java</h1><pre class="source lang-java linenums">package com.example.time_manager.security;
+
+import com.example.time_manager.model.User;
+import com.example.time_manager.repository.TeamMemberRepository;
+import com.example.time_manager.repository.UserRepository;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+
+@Component
+public class WorkScheduleAccess {
+
+  private final UserRepository userRepo;
+  private final TeamMemberRepository teamMemberRepo;
+
+<span class="nc" id="L17">  public WorkScheduleAccess(UserRepository userRepo, TeamMemberRepository teamMemberRepo) {</span>
+<span class="nc" id="L18">    this.userRepo = userRepo;</span>
+<span class="nc" id="L19">    this.teamMemberRepo = teamMemberRepo;</span>
+<span class="nc" id="L20">  }</span>
+
+  public void assertCanSelfManage(String userId) {
+<span class="nc bnc" id="L23" title="All 4 branches missed.">    if (!(isAdmin(userId) || isManager(userId))) {</span>
+<span class="nc" id="L24">      throw new AccessDeniedException(&quot;Only MANAGER or ADMIN can update their own schedule.&quot;);</span>
+    }
+<span class="nc" id="L26">  }</span>
+
+  public void assertCanManage(String actorUserId, String targetUserId) {
+<span class="nc bnc" id="L29" title="All 4 branches missed.">    if (actorUserId == null || targetUserId == null) {</span>
+<span class="nc" id="L30">      throw new AccessDeniedException(&quot;Invalid users&quot;);</span>
+    }
+<span class="nc bnc" id="L32" title="All 2 branches missed.">    if (actorUserId.equals(targetUserId)) {</span>
+<span class="nc" id="L33">      assertCanSelfManage(actorUserId);</span>
+<span class="nc" id="L34">      return;</span>
+    }
+<span class="nc bnc" id="L36" title="All 2 branches missed.">    if (isAdmin(actorUserId)) return;</span>
+
+<span class="nc bnc" id="L38" title="All 4 branches missed.">    if (isManager(actorUserId) &amp;&amp; shareTeamSafe(actorUserId, targetUserId)) return;</span>
+
+<span class="nc" id="L40">    throw new AccessDeniedException(&quot;You are not allowed to modify this user's schedule.&quot;);</span>
+  }
+
+  private boolean shareTeamSafe(String userA, String userB) {
+<span class="nc" id="L44">    List&lt;Long&gt; managerTeamIds = teamMemberRepo.findTeamIdsByUserId(userA);</span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">    if (managerTeamIds.isEmpty()) return false;</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">    for (Long teamId : managerTeamIds) {</span>
+<span class="nc bnc" id="L47" title="All 2 branches missed.">      if (teamMemberRepo.existsByTeam_IdAndUser_Id(teamId, userB)) {</span>
+<span class="nc" id="L48">        return true;</span>
+      }
+<span class="nc" id="L50">    }</span>
+<span class="nc" id="L51">    return false;</span>
+  }
+
+  private boolean isAdmin(String userId) {
+<span class="nc" id="L55">    return userRepo.findById(userId)</span>
+<span class="nc" id="L56">        .map(User::getRole)</span>
+<span class="nc" id="L57">        .map(String::toLowerCase)</span>
+<span class="nc" id="L58">        .map(s -&gt; s.contains(&quot;admin&quot;))</span>
+<span class="nc" id="L59">        .orElse(false);</span>
+  }
+
+  private boolean isManager(String userId) {
+<span class="nc" id="L63">    return userRepo.findById(userId)</span>
+<span class="nc" id="L64">        .map(User::getRole)</span>
+<span class="nc" id="L65">        .map(String::toLowerCase)</span>
+<span class="nc" id="L66">        .map(s -&gt; s.contains(&quot;manager&quot;))</span>
+<span class="nc" id="L67">        .orElse(false);</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

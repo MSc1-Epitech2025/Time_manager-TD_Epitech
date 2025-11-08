@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReportGraphQLController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">time-manager</a> &gt; <a href="index.source.html" class="el_package">com.example.time_manager.graphql.controller</a> &gt; <span class="el_source">ReportGraphQLController.java</span></div><h1>ReportGraphQLController.java</h1><pre class="source lang-java linenums">package com.example.time_manager.graphql.controller;
+
+import java.util.List;
+
+import org.springframework.graphql.data.method.annotation.Argument;
+import org.springframework.graphql.data.method.annotation.MutationMapping;
+import org.springframework.graphql.data.method.annotation.QueryMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
+
+import com.example.time_manager.dto.report.ReportCreateRequest;
+import com.example.time_manager.dto.report.ReportResponse;
+import com.example.time_manager.dto.report.ReportUpdateRequest;
+import com.example.time_manager.service.ReportService;
+
+import jakarta.validation.Valid;
+
+@PreAuthorize(&quot;isAuthenticated()&quot;)
+@Controller
+public class ReportGraphQLController {
+
+    private final ReportService reportService;
+
+<span class="nc" id="L25">    public ReportGraphQLController(ReportService reportService) {</span>
+<span class="nc" id="L26">        this.reportService = reportService;</span>
+<span class="nc" id="L27">    }</span>
+
+    /* ======================== QUERIES ======================== */
+
+    @QueryMapping
+    @PreAuthorize(&quot;hasAuthority('ADMIN')&quot;)
+    public List&lt;ReportResponse&gt; reports() {
+<span class="nc" id="L34">        return reportService.listAll();</span>
+    }
+
+    @QueryMapping
+    public List&lt;ReportResponse&gt; myReports(Authentication auth) {
+<span class="nc" id="L39">        String email = auth.getName();</span>
+<span class="nc" id="L40">        return reportService.listMineByEmail(email);</span>
+    }
+
+    @QueryMapping
+    public List&lt;ReportResponse&gt; reportsForMe(Authentication auth) {
+<span class="nc" id="L45">        String email = auth.getName();</span>
+<span class="nc" id="L46">        return reportService.listReceivedByEmail(email);</span>
+    }
+
+    @QueryMapping
+    public ReportResponse report(@Argument Long id, Authentication auth) {
+<span class="nc" id="L51">        String email = auth.getName();</span>
+<span class="nc" id="L52">        return reportService.loadVisibleByEmail(email, id);</span>
+    }
+
+    /* ======================== MUTATIONS ======================== */
+
+    @MutationMapping
+    public ReportResponse createReport(
+        @Argument(&quot;input&quot;) @Valid ReportCreateRequest input,
+        Authentication auth
+    ) {
+<span class="nc" id="L62">        String email = auth.getName();</span>
+<span class="nc" id="L63">        return reportService.create(email, input);</span>
+    }
+
+    @MutationMapping
+    public ReportResponse updateReport(
+        @Argument(&quot;id&quot;) Long id,                            
+        @Argument(&quot;input&quot;) @Valid ReportUpdateRequest input,
+        Authentication auth
+    ) {
+<span class="nc" id="L72">        String email = auth.getName();</span>
+<span class="nc" id="L73">        return reportService.update(email, id, input);</span>
+    }
+    @MutationMapping
+    public Boolean deleteReport(@Argument Long id, Authentication auth) {
+<span class="nc" id="L77">        String email = auth.getName();</span>
+<span class="nc" id="L78">        reportService.delete(email, id);</span>
+<span class="nc" id="L79">        return true;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GraphQlExceptionResolver.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">time-manager</a> &gt; <a href="index.source.html" class="el_package">com.example.time_manager.graphql</a> &gt; <span class="el_source">GraphQlExceptionResolver.java</span></div><h1>GraphQlExceptionResolver.java</h1><pre class="source lang-java linenums">package com.example.time_manager.graphql;
+
+import graphql.GraphQLError;
+import graphql.GraphqlErrorBuilder;
+import graphql.schema.DataFetchingEnvironment;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.graphql.execution.DataFetcherExceptionResolverAdapter;
+import org.springframework.graphql.execution.ErrorType;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Component;
+
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.ConstraintViolationException;
+
+@Component
+<span class="nc" id="L16">public class GraphQlExceptionResolver extends DataFetcherExceptionResolverAdapter {</span>
+
+  @Override
+  protected GraphQLError resolveToSingleError(Throwable ex, DataFetchingEnvironment env) {
+
+<span class="nc bnc" id="L21" title="All 2 branches missed.">    if (ex instanceof AccessDeniedException) {</span>
+<span class="nc" id="L22">      return GraphqlErrorBuilder.newError(env)</span>
+<span class="nc" id="L23">          .errorType(ErrorType.FORBIDDEN)</span>
+<span class="nc" id="L24">          .message(&quot;FORBIDDEN&quot;)</span>
+<span class="nc" id="L25">          .build();</span>
+    }
+
+<span class="nc bnc" id="L28" title="All 2 branches missed.">    if (ex instanceof EntityNotFoundException) {</span>
+<span class="nc" id="L29">      return GraphqlErrorBuilder.newError(env)</span>
+<span class="nc" id="L30">          .errorType(ErrorType.NOT_FOUND)</span>
+<span class="nc" id="L31">          .message(ex.getMessage())</span>
+<span class="nc" id="L32">          .build();</span>
+    }
+
+<span class="nc bnc" id="L35" title="All 4 branches missed.">    if (ex instanceof IllegalArgumentException || ex instanceof ConstraintViolationException) {</span>
+<span class="nc" id="L36">      return GraphqlErrorBuilder.newError(env)</span>
+<span class="nc" id="L37">          .errorType(ErrorType.BAD_REQUEST)</span>
+<span class="nc bnc" id="L38" title="All 2 branches missed.">          .message(ex.getMessage() != null ? ex.getMessage() : &quot;Invalid input&quot;)</span>
+<span class="nc" id="L39">          .build();</span>
+    }
+
+<span class="nc bnc" id="L42" title="All 2 branches missed.">    if (ex instanceof DataIntegrityViolationException) {</span>
+<span class="nc" id="L43">      return GraphqlErrorBuilder.newError(env)</span>
+<span class="nc" id="L44">          .errorType(ErrorType.BAD_REQUEST)</span>
+<span class="nc" id="L45">          .message(&quot;Data integrity violation&quot;)</span>
+<span class="nc" id="L46">          .build();</span>
+    }
+
+    // Fallback: laisse Spring logger, mais renvoie un message générique
+<span class="nc" id="L50">    return GraphqlErrorBuilder.newError(env)</span>
+<span class="nc" id="L51">        .errorType(ErrorType.INTERNAL_ERROR)</span>
+<span class="nc" id="L52">        .message(&quot;Unexpected error&quot;)</span>
+<span class="nc" id="L53">        .build();</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

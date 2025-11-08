@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ClockService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">time-manager</a> &gt; <a href="index.source.html" class="el_package">com.example.time_manager.service</a> &gt; <span class="el_source">ClockService.java</span></div><h1>ClockService.java</h1><pre class="source lang-java linenums">package com.example.time_manager.service;
+
+import com.example.time_manager.dto.clock.ClockCreateRequest;
+import com.example.time_manager.dto.clock.ClockResponse;
+import com.example.time_manager.model.Clock;
+import com.example.time_manager.model.ClockKind;
+import com.example.time_manager.model.User;
+import com.example.time_manager.repository.ClockRepository;
+import com.example.time_manager.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.util.List;
+
+@Service
+@Transactional
+public class ClockService {
+
+    private final ClockRepository clockRepo;
+    private final UserRepository userRepo;
+
+<span class="fc" id="L24">    public ClockService(ClockRepository clockRepo, UserRepository userRepo) {</span>
+<span class="fc" id="L25">        this.clockRepo = clockRepo;</span>
+<span class="fc" id="L26">        this.userRepo = userRepo;</span>
+<span class="fc" id="L27">    }</span>
+
+    /* ======================= CREATE ======================= */
+
+    public ClockResponse createForMe(String email, ClockCreateRequest req) {
+<span class="fc" id="L32">        return punch(email, req.kind(), null, req.at());</span>
+    }
+
+    public ClockResponse createForUser(String userId, ClockCreateRequest req) {
+<span class="fc" id="L36">        return punch(null, req.kind(), userId, req.at());</span>
+    }
+
+    private ClockResponse punch(String email, ClockKind kind, String explicitUserId, Instant at) {
+<span class="fc bfc" id="L40" title="All 2 branches covered.">        final User user = (explicitUserId != null)</span>
+<span class="fc" id="L41">                ? userRepo.findById(explicitUserId)</span>
+<span class="fc" id="L42">                .orElseThrow(() -&gt; new EntityNotFoundException(&quot;User not found: &quot; + explicitUserId))</span>
+<span class="fc" id="L43">                : userRepo.findByEmail(email)</span>
+<span class="fc" id="L44">                .orElseThrow(() -&gt; new EntityNotFoundException(&quot;User not found: &quot; + email));</span>
+
+<span class="fc" id="L46">        var last = clockRepo.findTopByUserIdOrderByAtDesc(user.getId());</span>
+<span class="pc bpc" id="L47" title="1 of 4 branches missed.">        if (last.isPresent() &amp;&amp; last.get().getKind() == kind) {</span>
+<span class="fc" id="L48">            throw new IllegalStateException(&quot;Cannot punch &quot; + kind + &quot; twice in a row&quot;);</span>
+        }
+
+<span class="fc" id="L51">        Clock c = new Clock();</span>
+<span class="fc" id="L52">        c.setUser(user);</span>
+<span class="fc" id="L53">        c.setKind(kind);</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">        c.setAt(at != null ? at : Instant.now());</span>
+
+<span class="fc" id="L56">        c = clockRepo.save(c);</span>
+<span class="fc" id="L57">        return toDto(c);</span>
+    }
+
+    /* ======================= READ ======================= */
+
+    @Transactional(readOnly = true)
+    public List&lt;ClockResponse&gt; listForEmail(String email, Instant from, Instant to) {
+<span class="fc" id="L64">        String userId = userRepo.findByEmail(email)</span>
+<span class="fc" id="L65">                .orElseThrow(() -&gt; new EntityNotFoundException(&quot;User not found: &quot; + email))</span>
+<span class="fc" id="L66">                .getId();</span>
+<span class="fc" id="L67">        return listForUser(userId, from, to);</span>
+    }
+
+    @Transactional(readOnly = true)
+    public List&lt;ClockResponse&gt; listForUser(String userId, Instant from, Instant to) {
+        List&lt;Clock&gt; rows;
+<span class="pc bpc" id="L73" title="1 of 4 branches missed.">        if (from != null &amp;&amp; to != null) {</span>
+<span class="fc" id="L74">            rows = clockRepo.findByUserIdAndAtBetweenOrderByAtAsc(userId, from, to);</span>
+        } else {
+<span class="fc" id="L76">            rows = clockRepo.findByUserIdOrderByAtDesc(userId);</span>
+        }
+<span class="fc" id="L78">        return rows.stream().map(this::toDto).toList();</span>
+    }
+
+    /* ======================= MAPPER ======================= */
+
+    private ClockResponse toDto(Clock c) {
+<span class="fc" id="L84">        ClockResponse r = new ClockResponse();</span>
+<span class="fc" id="L85">        r.id = c.getId();</span>
+<span class="fc" id="L86">        r.userId = c.getUser().getId();</span>
+<span class="fc" id="L87">        r.kind = c.getKind();</span>
+<span class="fc" id="L88">        r.at = c.getAt();</span>
+<span class="fc" id="L89">        return r;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

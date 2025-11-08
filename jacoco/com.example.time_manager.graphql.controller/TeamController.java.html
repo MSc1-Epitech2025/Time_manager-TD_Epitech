@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TeamController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">time-manager</a> &gt; <a href="index.source.html" class="el_package">com.example.time_manager.graphql.controller</a> &gt; <span class="el_source">TeamController.java</span></div><h1>TeamController.java</h1><pre class="source lang-java linenums">package com.example.time_manager.graphql.controller;
+
+import java.util.List;
+
+import org.springframework.graphql.data.method.annotation.Argument;
+import org.springframework.graphql.data.method.annotation.MutationMapping;
+import org.springframework.graphql.data.method.annotation.QueryMapping;
+import org.springframework.graphql.data.method.annotation.SchemaMapping;
+import org.springframework.security.access.method.P;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+
+import com.example.time_manager.dto.team.TeamDto;
+import com.example.time_manager.dto.team.TeamMembersGroup;
+import com.example.time_manager.model.Team;
+import com.example.time_manager.model.User;
+import com.example.time_manager.service.TeamService;
+
+import jakarta.validation.Valid;
+
+/**
+ * GraphQL controller for Team &amp; TeamMember operations.
+ * - Exposes Queries: teams, team, teamMembers, allTeams, myTeams, myManagedTeams, teamManagers
+ * - Exposes Mutations: createTeam, updateTeam, deleteTeam, addTeamMember, removeTeamMember
+ * - Field resolver: Team.members
+ *
+ * Security/authorization is enforced inside TeamService.
+ */
+@PreAuthorize(&quot;isAuthenticated()&quot;)
+@Controller
+public class TeamController {
+
+    private final TeamService teamService;
+
+<span class="nc" id="L35">    public TeamController(TeamService teamService) {</span>
+<span class="nc" id="L36">        this.teamService = teamService;</span>
+<span class="nc" id="L37">    }</span>
+
+    /* ============================= QUERIES ============================= */
+
+    /** List all teams (generic listing; service may not restrict) */
+    @QueryMapping
+    public List&lt;Team&gt; teams() {
+<span class="nc" id="L44">        return teamService.findAll();</span>
+    }
+
+    /** Fetch a single team by id */
+    @QueryMapping
+    public Team team(@Argument Long id) {
+<span class="nc" id="L50">        return teamService.findById(id);</span>
+    }
+
+    /** Members of a given team.
+     *  Allowed to ADMIN or any member of that team (handled by service). */
+    @QueryMapping
+    public List&lt;User&gt; teamMembers(@Argument Long teamId) {
+<span class="nc" id="L57">        return teamService.listMembers(teamId);</span>
+    }
+
+    /** ADMIN-only: list all teams */
+    @PreAuthorize(&quot;hasAuthority('ADMIN')&quot;)
+    @QueryMapping
+    public List&lt;Team&gt; allTeams() {
+<span class="nc" id="L64">        return teamService.findAllForAdmin();</span>
+    }
+
+    /** Teams where the current user is a member */
+    @QueryMapping
+    public List&lt;Team&gt; myTeams() {
+<span class="nc" id="L70">        return teamService.findTeamsOfCurrentUser();</span>
+    }
+
+    /** Teams where the current user is a member and has global MANAGER role */
+    @QueryMapping
+    public List&lt;Team&gt; myManagedTeams() {
+<span class="nc" id="L76">        return teamService.findManagedByCurrentUser();</span>
+    }
+
+    /** Managers (global role = manager) among the members of a given team */
+    
+    @QueryMapping
+    public List&lt;User&gt; teamManagers(@Argument Long teamId) {
+<span class="nc" id="L83">        return teamService.listTeamManagers(teamId);</span>
+    }
+
+@PreAuthorize(&quot;isAuthenticated()&quot;)
+@QueryMapping
+public java.util.List&lt;TeamMembersGroup&gt; myTeamMembers() {
+<span class="nc" id="L89">    var myTeams = teamService.findTeamsOfCurrentUser();</span>
+<span class="nc" id="L90">    var result = new java.util.ArrayList&lt;TeamMembersGroup&gt;(myTeams.size());</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">    for (var t : myTeams) {</span>
+<span class="nc" id="L92">        var members = teamService.listMembers(t.getId());</span>
+<span class="nc" id="L93">        result.add(new TeamMembersGroup(t.getId(), t.getName(), members));</span>
+<span class="nc" id="L94">    }</span>
+<span class="nc" id="L95">    return result;</span>
+}
+
+
+    /* =========================== FIELD RESOLVER ======================== */
+
+    /** Resolve Team.members via service (enforces view permissions). */
+    @SchemaMapping(typeName = &quot;Team&quot;, field = &quot;members&quot;)
+    public List&lt;User&gt; members(Team team) {
+<span class="nc" id="L104">        return teamService.listMembers(team.getId());</span>
+    }
+
+    /* ============================= MUTATIONS =========================== */
+
+    /** Create a team (ADMIN by default). */
+    @PreAuthorize(&quot;hasAuthority('ADMIN')&quot;)
+    @MutationMapping
+    public Team createTeam(@Argument @Valid TeamInput input) {
+<span class="nc" id="L113">        TeamDto dto = new TeamDto();</span>
+<span class="nc" id="L114">        dto.setName(input.name());</span>
+<span class="nc" id="L115">        dto.setDescription(input.description());</span>
+<span class="nc" id="L116">        return teamService.create(dto);</span>
+    }
+
+    /** Update a team (ADMIN by default). */
+    @PreAuthorize(&quot;hasAuthority('ADMIN')&quot;)
+    @MutationMapping
+    public Team updateTeam(@Argument @Valid TeamUpdateInput input) {
+<span class="nc" id="L123">        TeamDto dto = new TeamDto();</span>
+<span class="nc" id="L124">        dto.setId(input.id());</span>
+<span class="nc" id="L125">        dto.setName(input.name());</span>
+<span class="nc" id="L126">        dto.setDescription(input.description());</span>
+<span class="nc" id="L127">        return teamService.update(input.id(), dto); // service expects (id, dto)</span>
+    }
+
+    /** Delete a team (ADMIN). */
+    @PreAuthorize(&quot;hasAuthority('ADMIN')&quot;)
+    @MutationMapping
+    public Boolean deleteTeam(@Argument Long id) {
+<span class="nc" id="L134">        teamService.delete(id);</span>
+<span class="nc" id="L135">        return true;</span>
+    }
+
+    /** Add a user to a team (ADMIN or MANAGER who is member of that team). */
+    @PreAuthorize(&quot;hasAuthority('ADMIN') or (hasAuthority('MANAGER') and @teamService.isCurrentUserMemberOfTeam(#teamId))&quot;)
+    @MutationMapping
+    public Boolean addTeamMember(@Argument Long teamId, @Argument @Valid MemberChangeInput input) {
+<span class="nc" id="L142">        teamService.addMember(teamId, input.userId());</span>
+<span class="nc" id="L143">        return true;</span>
+    }
+
+    /** Remove a user from a team (ADMIN or MANAGER who is member of that team). */
+    @PreAuthorize(&quot;hasAuthority('ADMIN') or (hasAuthority('MANAGER') and @teamService.isCurrentUserMemberOfTeam(#teamId))&quot;)
+    @MutationMapping
+    public Boolean removeTeamMember(@Argument Long teamId, @Argument @Valid MemberChangeInput input) {
+<span class="nc" id="L150">        teamService.removeMember(teamId, input.userId());</span>
+<span class="nc" id="L151">        return true;</span>
+    }
+
+    /* ============================ INPUT RECORDS ======================== */
+    // Records used to bind GraphQL inputs to Java
+
+<span class="nc" id="L157">    public record TeamInput(String name, String description) {}</span>
+<span class="nc" id="L158">    public record TeamUpdateInput(Long id, String name, String description) {}</span>
+<span class="nc" id="L159">    public record MemberChangeInput(String userId) {}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

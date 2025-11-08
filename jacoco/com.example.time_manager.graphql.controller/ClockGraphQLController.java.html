@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ClockGraphQLController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">time-manager</a> &gt; <a href="index.source.html" class="el_package">com.example.time_manager.graphql.controller</a> &gt; <span class="el_source">ClockGraphQLController.java</span></div><h1>ClockGraphQLController.java</h1><pre class="source lang-java linenums">package com.example.time_manager.graphql.controller;
+
+import com.example.time_manager.dto.clock.ClockCreateRequest;
+import com.example.time_manager.dto.clock.ClockResponse;
+import com.example.time_manager.service.ClockService;
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.graphql.data.method.annotation.Argument;
+import org.springframework.graphql.data.method.annotation.MutationMapping;
+import org.springframework.graphql.data.method.annotation.QueryMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
+
+import java.time.Instant;
+import java.util.List;
+
+@Controller
+public class ClockGraphQLController {
+
+    private final ClockService clockService;
+
+<span class="nc" id="L22">    public ClockGraphQLController(ClockService clockService) {</span>
+<span class="nc" id="L23">        this.clockService = clockService;</span>
+<span class="nc" id="L24">    }</span>
+
+    // === QUERIES ===
+    @QueryMapping
+    public List&lt;ClockResponse&gt; myClocks(
+            @Argument String from,
+            @Argument String to,
+            Authentication auth
+    ) {
+<span class="nc bnc" id="L33" title="All 2 branches missed.">        Instant fromInstant = from != null ? Instant.parse(from) : null;</span>
+<span class="nc bnc" id="L34" title="All 2 branches missed.">        Instant toInstant = to != null ? Instant.parse(to) : null;</span>
+<span class="nc" id="L35">        return clockService.listForEmail(auth.getName(), fromInstant, toInstant);</span>
+    }
+
+    @PreAuthorize(&quot;hasAnyAuthority('MANAGER','ADMIN')&quot;)
+    @QueryMapping
+    public List&lt;ClockResponse&gt; clocksForUser(
+            @Argument String userId,
+            @Argument String from,
+            @Argument String to
+    ) {
+<span class="nc bnc" id="L45" title="All 2 branches missed.">        Instant fromInstant = from != null ? Instant.parse(from) : null;</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">        Instant toInstant = to != null ? Instant.parse(to) : null;</span>
+<span class="nc" id="L47">        return clockService.listForUser(userId, fromInstant, toInstant);</span>
+    }
+
+    // === MUTATIONS ===
+    @MutationMapping
+    public ClockResponse createClockForMe(
+            @Argument ClockCreateRequest input,
+            Authentication auth
+    ) {
+<span class="nc" id="L56">        return clockService.createForMe(auth.getName(), input);</span>
+    }
+
+    @PreAuthorize(&quot;hasAnyAuthority('MANAGER','ADMIN')&quot;)
+    @MutationMapping
+    public ClockResponse createClockForUser(
+            @Argument String userId,
+            @Argument ClockCreateRequest input
+    ) {
+<span class="nc" id="L65">        return clockService.createForUser(userId, input);</span>
+    }
+
+    // === EXCEPTIONS ===
+    @org.springframework.web.bind.annotation.ExceptionHandler(IllegalStateException.class)
+    public String handleIllegalState(IllegalStateException ex) {
+<span class="nc" id="L71">        return &quot;Erreur: &quot; + ex.getMessage();</span>
+    }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler(EntityNotFoundException.class)
+    public String handleNotFound(EntityNotFoundException ex) {
+<span class="nc" id="L76">        return &quot;Not found&quot;;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

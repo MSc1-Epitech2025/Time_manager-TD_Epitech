@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LeaveAccountingBridge.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">time-manager</a> &gt; <a href="index.source.html" class="el_package">com.example.time_manager.service.leave</a> &gt; <span class="el_source">LeaveAccountingBridge.java</span></div><h1>LeaveAccountingBridge.java</h1><pre class="source lang-java linenums">package com.example.time_manager.service.leave;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.example.time_manager.model.absence.Absence;
+import com.example.time_manager.model.absence.AbsenceDay;
+import com.example.time_manager.model.absence.AbsencePeriod;
+import com.example.time_manager.model.absence.AbsenceStatus;
+import com.example.time_manager.model.absence.AbsenceType;
+import com.example.time_manager.model.leave.LeaveAccount;
+import com.example.time_manager.model.leave.LeaveLedger;
+import com.example.time_manager.model.leave.LeaveLedgerKind;
+import com.example.time_manager.repository.AbsenceDayRepository;
+import com.example.time_manager.repository.leave.LeaveAccountRepository;
+import com.example.time_manager.repository.leave.LeaveLedgerRepository;
+
+@Service
+@Transactional
+public class LeaveAccountingBridge {
+
+  private final LeaveAccountRepository accountRepo;
+  private final LeaveLedgerRepository ledgerRepo;
+  private final AbsenceDayRepository dayRepo;
+
+<span class="fc" id="L33">  private static final Map&lt;AbsenceType, String&gt; TYPE_TO_LEAVE = new EnumMap&lt;&gt;(AbsenceType.class);</span>
+  static {
+<span class="fc" id="L35">    TYPE_TO_LEAVE.put(AbsenceType.RTT, &quot;RTT&quot;);</span>
+<span class="fc" id="L36">    TYPE_TO_LEAVE.put(AbsenceType.VACATION, &quot;VAC&quot;);</span>
+<span class="fc" id="L37">  }</span>
+
+  public LeaveAccountingBridge(LeaveAccountRepository accountRepo,
+                               LeaveLedgerRepository ledgerRepo,
+<span class="nc" id="L41">                               AbsenceDayRepository dayRepo) {</span>
+<span class="nc" id="L42">    this.accountRepo = accountRepo;</span>
+<span class="nc" id="L43">    this.ledgerRepo = ledgerRepo;</span>
+<span class="nc" id="L44">    this.dayRepo = dayRepo;</span>
+<span class="nc" id="L45">  }</span>
+
+  public void ensureDebitForApprovedAbsence(Absence absence) {
+<span class="nc bnc" id="L48" title="All 2 branches missed.">    if (absence.getStatus() != AbsenceStatus.APPROVED) return;</span>
+
+<span class="nc" id="L50">    Optional&lt;String&gt; leaveCodeOpt = mapAbsenceToLeaveTypeCode(absence.getType());</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">    if (leaveCodeOpt.isEmpty()) return; </span>
+
+<span class="nc" id="L53">    String leaveCode = leaveCodeOpt.get();</span>
+<span class="nc" id="L54">    String userId = absence.getUserId();</span>
+
+<span class="nc" id="L56">    LeaveAccount account = accountRepo.findByUser_IdAndLeaveType_Code(userId, leaveCode)</span>
+<span class="nc" id="L57">        .orElseThrow(() -&gt; new IllegalStateException(</span>
+            &quot;No LeaveAccount for user=&quot; + userId + &quot; / leaveType=&quot; + leaveCode));
+
+<span class="nc" id="L60">    BigDecimal units = computeUnits(absence.getId()); </span>
+<span class="nc" id="L61">    LocalDate entryDate = absence.getStartDate();</span>
+<span class="nc" id="L62">    LeaveLedger ledger = ledgerRepo.findFirstByReferenceAbsence_Id(absence.getId())</span>
+<span class="nc" id="L63">        .orElseGet(LeaveLedger::new);</span>
+
+<span class="nc" id="L65">    ledger.setAccount(account);</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">    ledger.setEntryDate(entryDate != null ? entryDate : LocalDate.now());</span>
+<span class="nc" id="L67">    ledger.setKind(LeaveLedgerKind.DEBIT);</span>
+<span class="nc" id="L68">    ledger.setAmount(units);</span>
+<span class="nc" id="L69">    ledger.setReferenceAbsence(absence);</span>
+<span class="nc" id="L70">    ledger.setNote(&quot;Auto debit for absence #&quot; + absence.getId() + &quot; (&quot; + absence.getType() + &quot;)&quot;);</span>
+
+<span class="nc" id="L72">    ledgerRepo.save(ledger);</span>
+<span class="nc" id="L73">  }</span>
+
+  public void removeDebitForAbsence(Long absenceId) {
+<span class="nc" id="L76">    ledgerRepo.deleteByReferenceAbsence_Id(absenceId);</span>
+<span class="nc" id="L77">  }</span>
+
+  private BigDecimal computeUnits(Long absenceId) {
+<span class="nc" id="L80">    List&lt;AbsenceDay&gt; days = dayRepo.findByAbsenceIdOrderByAbsenceDateAsc(absenceId);</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">    if (days.isEmpty()) return BigDecimal.ZERO;</span>
+
+<span class="nc" id="L83">    double total = 0.0;</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">    for (AbsenceDay d : days) {</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">      AbsencePeriod p = d.getPeriod() != null ? d.getPeriod() : AbsencePeriod.FULL_DAY;</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">      switch (p) {</span>
+        case AM:
+        case PM:
+<span class="nc" id="L89">          total += 0.5;</span>
+<span class="nc" id="L90">          break;</span>
+        case FULL_DAY:
+        default:
+<span class="nc" id="L93">          total += 1.0;</span>
+      }
+<span class="nc" id="L95">    }</span>
+<span class="nc" id="L96">    return BigDecimal.valueOf(total);</span>
+  }
+
+  private Optional&lt;String&gt; mapAbsenceToLeaveTypeCode(AbsenceType type) {
+<span class="nc bnc" id="L100" title="All 2 branches missed.">    if (type == null) return Optional.empty();</span>
+<span class="nc" id="L101">    return Optional.ofNullable(TYPE_TO_LEAVE.get(type));</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

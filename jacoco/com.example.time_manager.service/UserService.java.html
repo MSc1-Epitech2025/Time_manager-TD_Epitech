@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">time-manager</a> &gt; <a href="index.source.html" class="el_package">com.example.time_manager.service</a> &gt; <span class="el_source">UserService.java</span></div><h1>UserService.java</h1><pre class="source lang-java linenums">package com.example.time_manager.service;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import com.example.time_manager.dto.auth.UpdateUserInput;
+
+
+import com.example.time_manager.model.User;
+import com.example.time_manager.repository.UserRepository;
+
+import jakarta.persistence.EntityNotFoundException;
+
+@Service
+@Transactional
+public class UserService {
+
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
+<span class="fc" id="L25">    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {</span>
+<span class="fc" id="L26">        this.userRepository = userRepository;</span>
+<span class="fc" id="L27">        this.passwordEncoder = passwordEncoder;</span>
+<span class="fc" id="L28">    }</span>
+
+    /* ================== READ ================== */
+
+    public List&lt;User&gt; findAllUsers() {
+<span class="fc" id="L33">        return userRepository.findAll();</span>
+    }
+
+    public Optional&lt;User&gt; findByEmail(String email) {
+<span class="fc" id="L37">        return userRepository.findByEmail(email);</span>
+    }
+    public User findByIdOrThrow(String id) {
+<span class="fc" id="L40">        return userRepository.findById(id)</span>
+<span class="fc" id="L41">                .orElseThrow(() -&gt; new EntityNotFoundException(&quot;User not found: &quot; + id));</span>
+    }
+
+    /* ================== CREATE ================== */
+
+    public User saveUser(User user) {
+<span class="fc" id="L47">        user.setPassword(passwordEncoder.encode(user.getPassword()));</span>
+<span class="fc" id="L48">        return userRepository.save(user);</span>
+    }
+
+    public User updateAvatar(String id, String avatarUrl) {
+<span class="fc" id="L52">        User user = findByIdOrThrow(id);</span>
+<span class="fc" id="L53">        user.setAvatarUrl(avatarUrl);</span>
+<span class="fc" id="L54">        return userRepository.save(user);</span>
+    }
+
+    public User updateRole(String id, String newRole) {
+<span class="fc" id="L58">        User user = findByIdOrThrow(id);</span>
+<span class="fc" id="L59">        user.setRole(newRole);</span>
+<span class="fc" id="L60">        return userRepository.save(user);</span>
+    }
+
+    public User updateEmail(String id, String newEmail) {
+<span class="fc" id="L64">        User user = findByIdOrThrow(id);</span>
+<span class="fc" id="L65">        user.setEmail(newEmail);</span>
+<span class="fc" id="L66">        return userRepository.save(user);</span>
+    }
+
+    public User updateName(String id, String newFirstName, String newLastName) {
+<span class="fc" id="L70">        User user = findByIdOrThrow(id);</span>
+<span class="fc" id="L71">        user.setFirstName(newFirstName);</span>
+<span class="fc" id="L72">        user.setLastName(newLastName);</span>
+<span class="fc" id="L73">        return userRepository.save(user);</span>
+    }
+
+    public User updatePhone(String id, String newPhone) {
+<span class="fc" id="L77">        User user = findByIdOrThrow(id);</span>
+<span class="fc" id="L78">        user.setPhone(newPhone);</span>
+<span class="fc" id="L79">        return userRepository.save(user);</span>
+    }
+
+    public User createUser(String email, String password, String firstName, String lastName) {
+<span class="fc" id="L83">        User user = new User();</span>
+<span class="fc" id="L84">        user.setEmail(email);</span>
+<span class="fc" id="L85">        user.setPassword(passwordEncoder.encode(password));</span>
+<span class="fc" id="L86">        user.setFirstName(firstName);</span>
+<span class="fc" id="L87">        user.setLastName(lastName);</span>
+<span class="fc" id="L88">        return userRepository.save(user);</span>
+    }
+    
+    public User deleteUser(String id) {
+<span class="fc" id="L92">        User user = findByIdOrThrow(id);</span>
+<span class="fc" id="L93">        userRepository.delete(user);</span>
+<span class="fc" id="L94">        return user;</span>
+    }
+    /* ================== MODIFY ================== */
+
+public User updateUser(String id, UpdateUserInput in) {
+<span class="fc" id="L99">    User u = findByIdOrThrow(id);</span>
+
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">    if (in.firstName() != null) u.setFirstName(in.firstName());</span>
+<span class="pc bpc" id="L102" title="1 of 2 branches missed.">    if (in.lastName()  != null) u.setLastName(in.lastName());</span>
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">    if (in.email()     != null) u.setEmail(in.email());</span>
+<span class="pc bpc" id="L104" title="1 of 2 branches missed.">    if (in.phone()     != null) u.setPhone(in.phone());</span>
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">    if (in.role()      != null) u.setRole(in.role());</span>
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">    if (in.poste()     != null) u.setPoste(in.poste());</span>
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">    if (in.avatarUrl() != null) u.setAvatarUrl(in.avatarUrl());</span>
+<span class="pc bpc" id="L108" title="3 of 4 branches missed.">    if (in.password()  != null &amp;&amp; !in.password().isBlank()) {</span>
+<span class="nc" id="L109">        u.setPassword(passwordEncoder.encode(in.password()));</span>
+    }
+
+<span class="fc" id="L112">    return userRepository.save(u);</span>
+}
+
+
+    public void changePassword(String email, String currentPwd, String newPwd) {
+<span class="fc" id="L117">        var user = userRepository.findByEmail(email).orElseThrow(</span>
+<span class="fc" id="L118">            () -&gt; new EntityNotFoundException(&quot;User not found by email: &quot; + email)</span>
+        );
+<span class="fc bfc" id="L120" title="All 2 branches covered.">        if (!passwordEncoder.matches(currentPwd, user.getPassword())) {</span>
+<span class="fc" id="L121">            throw new BadCredentialsException(&quot;Invalid current password&quot;);</span>
+        }
+<span class="fc" id="L123">        user.setPassword(passwordEncoder.encode(newPwd));</span>
+<span class="fc" id="L124">        userRepository.save(user);</span>
+<span class="fc" id="L125">    }</span>
+
+    public boolean validateUser(String email, String password) {
+<span class="fc" id="L128">        return userRepository.findByEmail(email)</span>
+<span class="fc" id="L129">                .map(user -&gt; passwordEncoder.matches(password, user.getPassword()))</span>
+<span class="fc" id="L130">                .orElse(false);</span>
+    }
+
+    /* ================== DELETE ================== */
+
+    public void deleteById(String id) {
+<span class="fc bfc" id="L136" title="All 2 branches covered.">        if (!userRepository.existsById(id)) {</span>
+<span class="fc" id="L137">            throw new EntityNotFoundException(&quot;User not found: &quot; + id);</span>
+        }
+<span class="fc" id="L139">        userRepository.deleteById(id);</span>
+<span class="fc" id="L140">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WorkScheduleService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">time-manager</a> &gt; <a href="index.source.html" class="el_package">com.example.time_manager.service</a> &gt; <span class="el_source">WorkScheduleService.java</span></div><h1>WorkScheduleService.java</h1><pre class="source lang-java linenums">package com.example.time_manager.service;
+
+import com.example.time_manager.dto.work_schedule.WorkScheduleBatchRequest;
+import com.example.time_manager.dto.work_schedule.WorkScheduleRequest;
+import com.example.time_manager.dto.work_schedule.WorkScheduleResponse;
+import com.example.time_manager.model.WorkDay;
+import com.example.time_manager.model.WorkPeriod;
+import com.example.time_manager.model.WorkSchedule;
+import com.example.time_manager.repository.WorkScheduleRepository;
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+@Transactional
+public class WorkScheduleService {
+
+    private final WorkScheduleRepository repo;
+
+<span class="fc" id="L25">    public WorkScheduleService(WorkScheduleRepository repo) {</span>
+<span class="fc" id="L26">        this.repo = repo;</span>
+<span class="fc" id="L27">    }</span>
+
+    @Transactional(readOnly = true)
+    public List&lt;WorkScheduleResponse&gt; listForUser(String userId) {
+<span class="fc" id="L31">        List&lt;WorkSchedule&gt; list = repo.findByUserId(userId);</span>
+<span class="fc" id="L32">        return list.stream().map(this::toResponse).toList();</span>
+    }
+
+
+    /* ======================== MUTATIONS ======================== */
+    public WorkScheduleResponse upsertForUser(String userId, WorkScheduleRequest input) {
+<span class="fc" id="L38">        validateTimes(input.startTime(), input.endTime());</span>
+
+<span class="fc" id="L40">        Optional&lt;WorkSchedule&gt; existing</span>
+<span class="fc" id="L41">                = repo.findByUserIdAndDayOfWeekAndPeriod(userId, input.dayOfWeek(), input.period());</span>
+
+<span class="fc" id="L43">        WorkSchedule entity = existing.orElseGet(() -&gt; {</span>
+<span class="fc" id="L44">            WorkSchedule ws = new WorkSchedule();</span>
+<span class="fc" id="L45">            ws.setUserId(userId);</span>
+<span class="fc" id="L46">            ws.setDayOfWeek(input.dayOfWeek());</span>
+<span class="fc" id="L47">            ws.setPeriod(input.period());</span>
+<span class="fc" id="L48">            return ws;</span>
+        });
+
+<span class="fc" id="L51">        entity.setStartTime(parseTime(input.startTime()));</span>
+<span class="fc" id="L52">        entity.setEndTime(parseTime(input.endTime()));</span>
+
+<span class="fc" id="L54">        WorkSchedule saved = repo.save(entity);</span>
+<span class="fc" id="L55">        return toResponse(saved);</span>
+    }
+
+    public List&lt;WorkScheduleResponse&gt; batchUpsertForUser(String userId, WorkScheduleBatchRequest batch) {
+<span class="pc bpc" id="L59" title="2 of 6 branches missed.">        if (batch == null || batch.entries() == null || batch.entries().isEmpty()) {</span>
+<span class="fc" id="L60">            throw new IllegalArgumentException(&quot;Batch entries cannot be empty&quot;);</span>
+        }
+
+<span class="fc" id="L63">        batch.entries().forEach(e -&gt; validateTimes(e.startTime(), e.endTime()));</span>
+
+<span class="fc" id="L65">        List&lt;WorkScheduleResponse&gt; result = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L67" title="All 2 branches covered.">        if (Boolean.TRUE.equals(batch.replaceAll())) {</span>
+<span class="fc" id="L68">            repo.deleteByUserId(userId);</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">            for (WorkScheduleRequest e : batch.entries()) {</span>
+<span class="fc" id="L70">                WorkSchedule ws = new WorkSchedule();</span>
+<span class="fc" id="L71">                ws.setUserId(userId);</span>
+<span class="fc" id="L72">                ws.setDayOfWeek(e.dayOfWeek());</span>
+<span class="fc" id="L73">                ws.setPeriod(e.period());</span>
+<span class="fc" id="L74">                ws.setStartTime(parseTime(e.startTime()));</span>
+<span class="fc" id="L75">                ws.setEndTime(parseTime(e.endTime()));</span>
+<span class="fc" id="L76">                result.add(toResponse(repo.save(ws)));</span>
+<span class="fc" id="L77">            }</span>
+        } else {
+<span class="fc bfc" id="L79" title="All 2 branches covered.">            for (WorkScheduleRequest e : batch.entries()) {</span>
+<span class="fc" id="L80">                result.add(upsertForUser(userId, e));</span>
+<span class="fc" id="L81">            }</span>
+        }
+
+<span class="fc" id="L84">        return result;</span>
+    }
+
+    public void deleteSlot(String userId, WorkDay day, WorkPeriod period) {
+<span class="fc" id="L88">        Optional&lt;WorkSchedule&gt; existing = repo.findByUserIdAndDayOfWeekAndPeriod(userId, day, period);</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">        if (existing.isEmpty()) {</span>
+<span class="fc" id="L90">            throw new EntityNotFoundException(&quot;WorkSchedule slot not found for user=&quot; + userId</span>
+                    + &quot;, day=&quot; + day + &quot;, period=&quot; + period);
+        }
+<span class="fc" id="L93">        repo.delete(existing.get());</span>
+<span class="fc" id="L94">    }</span>
+
+
+    /* ======================== Helpers ======================== */
+    private void validateTimes(String start, String end) {
+<span class="fc" id="L99">        LocalTime s = parseTime(start);</span>
+<span class="fc" id="L100">        LocalTime e = parseTime(end);</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">        if (!e.isAfter(s)) {</span>
+<span class="fc" id="L102">            throw new IllegalArgumentException(&quot;endTime must be strictly after startTime (got %s -&gt; %s)&quot;.formatted(start, end));</span>
+        }
+<span class="fc" id="L104">    }</span>
+
+    private LocalTime parseTime(String time) {
+<span class="fc bfc" id="L107" title="All 2 branches covered.">        if (time == null) {</span>
+<span class="fc" id="L108">            throw new IllegalArgumentException(&quot;time cannot be null&quot;);</span>
+        }
+<span class="pc bpc" id="L110" title="1 of 2 branches missed.">        if (time.length() == 5) {</span>
+<span class="fc" id="L111">            return LocalTime.parse(time + &quot;:00&quot;);</span>
+        }
+<span class="nc" id="L113">        return LocalTime.parse(time);</span>
+    }
+
+    private WorkScheduleResponse toResponse(WorkSchedule ws) {
+<span class="pc bpc" id="L117" title="1 of 2 branches missed.">        String start = ws.getStartTime() != null ? ws.getStartTime().withSecond(0).toString() : null;</span>
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">        String end = ws.getEndTime() != null ? ws.getEndTime().withSecond(0).toString() : null;</span>
+
+<span class="fc" id="L120">        return new WorkScheduleResponse(</span>
+<span class="fc" id="L121">                String.valueOf(ws.getId()),</span>
+<span class="fc" id="L122">                ws.getUserId(),</span>
+<span class="fc" id="L123">                ws.getDayOfWeek(),</span>
+<span class="fc" id="L124">                ws.getPeriod(),</span>
+                start,
+                end
+        );
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

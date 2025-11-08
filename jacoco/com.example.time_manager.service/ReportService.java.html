@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReportService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">time-manager</a> &gt; <a href="index.source.html" class="el_package">com.example.time_manager.service</a> &gt; <span class="el_source">ReportService.java</span></div><h1>ReportService.java</h1><pre class="source lang-java linenums">package com.example.time_manager.service;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.example.time_manager.dto.report.ReportCreateRequest;
+import com.example.time_manager.dto.report.ReportResponse;
+import com.example.time_manager.dto.report.ReportUpdateRequest;
+import com.example.time_manager.model.Report;
+import com.example.time_manager.model.User;
+import com.example.time_manager.repository.ReportRepository;
+import com.example.time_manager.repository.UserRepository;
+
+import jakarta.persistence.EntityNotFoundException;
+
+/**
+ * Business logic for Reports:
+ * - Any authenticated user can create a report to ANY target user (no direction restriction)
+ * - Author can update/delete their own reports; ADMIN can manage all
+ * - Visibility: a report is visible to its author, its target, or an ADMIN
+ */
+@Service
+@Transactional
+public class ReportService {
+
+  private final ReportRepository reportRepo;
+  private final UserRepository userRepo;
+
+<span class="fc" id="L31">  public ReportService(ReportRepository reportRepo, UserRepository userRepo) {</span>
+<span class="fc" id="L32">    this.reportRepo = reportRepo;</span>
+<span class="fc" id="L33">    this.userRepo = userRepo;</span>
+<span class="fc" id="L34">  }</span>
+
+  /* ======================== CREATE ======================== */
+
+  /**
+   * Create a report authored by the user identified by email (from JWT).
+   * No role-based direction restriction: author -&gt; target is always allowed.
+   */
+  public ReportResponse createForAuthorEmail(String authorEmail, ReportCreateRequest req) {
+<span class="fc" id="L43">    User author = userRepo.findByEmail(authorEmail)</span>
+<span class="fc" id="L44">        .orElseThrow(() -&gt; new EntityNotFoundException(&quot;Author not found: &quot; + authorEmail));</span>
+
+<span class="fc" id="L46">    User target = userRepo.findById(req.getTargetUserId())</span>
+<span class="fc" id="L47">        .orElseThrow(() -&gt; new EntityNotFoundException(&quot;Target user not found: &quot; + req.getTargetUserId()));</span>
+
+<span class="fc" id="L49">    Report r = new Report();</span>
+<span class="fc" id="L50">    r.setAuthor(author);</span>
+<span class="fc" id="L51">    r.setTarget(target);</span>
+<span class="fc" id="L52">    r.setTitle(req.getTitle());</span>
+<span class="fc" id="L53">    r.setBody(req.getBody());</span>
+
+<span class="fc" id="L55">    r = reportRepo.save(r);</span>
+<span class="fc" id="L56">    return toDto(r);</span>
+  }
+
+  /* ======================== READ ======================== */
+
+  /** ADMIN: list all reports. */
+  @Transactional(readOnly = true)
+  public List&lt;ReportResponse&gt; listAllForAdmin() {
+<span class="fc" id="L64">    return reportRepo.findAllByOrderByCreatedAtDesc()</span>
+<span class="fc" id="L65">        .stream().map(this::toDto).toList();</span>
+  }
+
+  /** &quot;My authored reports&quot; = reports created by me. */
+  @Transactional(readOnly = true)
+  public List&lt;ReportResponse&gt; listAuthoredByEmail(String email) {
+<span class="fc" id="L71">    User me = userByEmail(email);</span>
+<span class="fc" id="L72">    return reportRepo.findByAuthor_IdOrderByCreatedAtDesc(me.getId())</span>
+<span class="fc" id="L73">        .stream().map(this::toDto).toList();</span>
+  }
+
+  /** &quot;Reports for me&quot; = I am the target. */
+  @Transactional(readOnly = true)
+  public List&lt;ReportResponse&gt; listReceivedByEmail(String email) {
+<span class="fc" id="L79">    User me = userByEmail(email);</span>
+<span class="fc" id="L80">    return reportRepo.findByTarget_IdOrderByCreatedAtDesc(me.getId())</span>
+<span class="fc" id="L81">        .stream().map(this::toDto).toList();</span>
+  }
+
+  /**
+   * Load a report if visible to the given email:
+   * visible when user is ADMIN, author, or target.
+   */
+  @Transactional(readOnly = true)
+  public ReportResponse getVisibleTo(String email, Long id) {
+<span class="fc" id="L90">    Report r = reportRepo.findById(id)</span>
+<span class="pc" id="L91">        .orElseThrow(() -&gt; new EntityNotFoundException(&quot;Report not found: &quot; + id));</span>
+<span class="fc" id="L92">    User me = userByEmail(email);</span>
+
+<span class="fc" id="L94">    boolean isAdmin = hasRole(me, &quot;ADMIN&quot;);</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">    if (isAdmin) return toDto(r);</span>
+
+<span class="fc" id="L97">    boolean isAuthor = r.getAuthor().getId().equals(me.getId());</span>
+<span class="fc" id="L98">    boolean isTarget = r.getTarget().getId().equals(me.getId());</span>
+<span class="fc bfc" id="L99" title="All 4 branches covered.">    if (isAuthor || isTarget) return toDto(r);</span>
+
+<span class="fc" id="L101">    throw new org.springframework.security.access.AccessDeniedException(&quot;Forbidden&quot;);</span>
+  }
+
+  /* ======================== UPDATE / DELETE ======================== */
+
+  /**
+   * Update allowed for ADMIN or the author.
+   * Can also reassign the target (if provided).
+   */
+  public ReportResponse updateVisibleTo(String email, Long id, ReportUpdateRequest req) {
+<span class="fc" id="L111">    Report r = reportRepo.findById(id)</span>
+<span class="pc" id="L112">        .orElseThrow(() -&gt; new EntityNotFoundException(&quot;Report not found: &quot; + id));</span>
+<span class="fc" id="L113">    User me = userByEmail(email);</span>
+
+<span class="fc" id="L115">    boolean isAdmin = hasRole(me, &quot;ADMIN&quot;);</span>
+<span class="fc" id="L116">    boolean isAuthor = r.getAuthor().getId().equals(me.getId());</span>
+<span class="fc bfc" id="L117" title="All 4 branches covered.">    if (!(isAdmin || isAuthor)) {</span>
+<span class="fc" id="L118">      throw new org.springframework.security.access.AccessDeniedException(&quot;Forbidden&quot;);</span>
+    }
+
+<span class="fc bfc" id="L121" title="All 2 branches covered.">    if (req.getTitle() != null) r.setTitle(req.getTitle());</span>
+<span class="fc bfc" id="L122" title="All 2 branches covered.">    if (req.getBody() != null)  r.setBody(req.getBody());</span>
+
+<span class="fc bfc" id="L124" title="All 2 branches covered.">    if (req.getTargetUserId() != null) {</span>
+<span class="fc" id="L125">      User target = userRepo.findById(req.getTargetUserId())</span>
+<span class="fc" id="L126">          .orElseThrow(() -&gt; new EntityNotFoundException(&quot;Target user not found: &quot; + req.getTargetUserId()));</span>
+<span class="fc" id="L127">      r.setTarget(target);</span>
+    }
+
+<span class="fc" id="L130">    r = reportRepo.save(r);</span>
+<span class="fc" id="L131">    return toDto(r);</span>
+  }
+
+  /**
+   * Delete allowed for ADMIN or the author.
+   */
+  public void deleteVisibleTo(String email, Long id) {
+<span class="fc" id="L138">    Report r = reportRepo.findById(id)</span>
+<span class="fc" id="L139">        .orElseThrow(() -&gt; new EntityNotFoundException(&quot;Report not found: &quot; + id));</span>
+<span class="fc" id="L140">    User me = userByEmail(email);</span>
+
+<span class="fc" id="L142">    boolean isAdmin = hasRole(me, &quot;ADMIN&quot;);</span>
+<span class="fc" id="L143">    boolean isAuthor = r.getAuthor().getId().equals(me.getId());</span>
+<span class="fc bfc" id="L144" title="All 4 branches covered.">    if (!(isAdmin || isAuthor)) {</span>
+<span class="fc" id="L145">      throw new org.springframework.security.access.AccessDeniedException(&quot;Forbidden&quot;);</span>
+    }
+<span class="fc" id="L147">    reportRepo.deleteById(id);</span>
+<span class="fc" id="L148">  }</span>
+
+  /* ======================== Helpers ======================== */
+
+  private ReportResponse toDto(Report r) {
+<span class="fc" id="L153">    var dto = new ReportResponse();</span>
+<span class="fc" id="L154">    dto.id = r.getId();</span>
+<span class="fc" id="L155">    dto.title = r.getTitle();</span>
+<span class="fc" id="L156">    dto.body = r.getBody();</span>
+<span class="fc" id="L157">    dto.createdAt = r.getCreatedAt();</span>
+<span class="fc" id="L158">    dto.authorId = r.getAuthor().getId();</span>
+<span class="fc" id="L159">    dto.authorEmail = r.getAuthor().getEmail();</span>
+<span class="fc" id="L160">    dto.targetUserId = r.getTarget().getId();</span>
+<span class="fc" id="L161">    dto.targetEmail = r.getTarget().getEmail();</span>
+<span class="fc" id="L162">    return dto;</span>
+  }
+
+  private User userByEmail(String email) {
+<span class="fc" id="L166">    return userRepo.findByEmail(email)</span>
+<span class="pc" id="L167">        .orElseThrow(() -&gt; new EntityNotFoundException(&quot;User not found: &quot; + email));</span>
+  }
+
+  /**
+   * Naive role check from JSON string stored in User.role (e.g. [&quot;employee&quot;,&quot;manager&quot;]).
+   * Still used for ADMIN checks on read/update/delete.
+   */
+  private boolean hasRole(User u, String roleUpper) {
+<span class="fc" id="L175">    String raw = u.getRole();</span>
+<span class="pc bpc" id="L176" title="2 of 4 branches missed.">    if (raw == null || raw.isBlank()) return false;</span>
+<span class="fc" id="L177">    String up = roleUpper.toUpperCase();</span>
+<span class="fc" id="L178">    String normalized = raw.replaceAll(&quot;[\\[\\]\\s\\\&quot;]&quot;, &quot;&quot;).toUpperCase(); // EMPLOYEE,MANAGER,ADMIN</span>
+<span class="fc bfc" id="L179" title="All 2 branches covered.">    for (String r : normalized.split(&quot;,&quot;)) {</span>
+<span class="fc bfc" id="L180" title="All 2 branches covered.">      if (r.equals(up)) return true;</span>
+    }
+<span class="fc" id="L182">    return false;</span>
+  }
+
+  /* ======================== ALIAS pour le contrôleur GraphQL ======================== */
+
+  @Transactional(readOnly = true)
+  public List&lt;ReportResponse&gt; listAll() {
+<span class="nc" id="L189">    return listAllForAdmin();</span>
+  }
+
+  @Transactional(readOnly = true)
+  public List&lt;ReportResponse&gt; listMineByEmail(String email) {
+<span class="nc" id="L194">    return listAuthoredByEmail(email);</span>
+  }
+
+  @Transactional(readOnly = true)
+  public ReportResponse loadVisibleByEmail(String email, Long id) {
+<span class="nc" id="L199">    return getVisibleTo(email, id);</span>
+  }
+
+  public ReportResponse create(String authorEmail, ReportCreateRequest req) {
+<span class="nc" id="L203">    return createForAuthorEmail(authorEmail, req);</span>
+  }
+
+  public ReportResponse update(String email, Long id, ReportUpdateRequest req) {
+<span class="nc" id="L207">    return updateVisibleTo(email, id, req);</span>
+  }
+
+  public void delete(String email, Long id) {
+<span class="nc" id="L211">    deleteVisibleTo(email, id);</span>
+<span class="nc" id="L212">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

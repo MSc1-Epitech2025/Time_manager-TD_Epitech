@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AbsenceGraphqlController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">time-manager</a> &gt; <a href="index.source.html" class="el_package">com.example.time_manager.graphql.controller</a> &gt; <span class="el_source">AbsenceGraphqlController.java</span></div><h1>AbsenceGraphqlController.java</h1><pre class="source lang-java linenums">package com.example.time_manager.graphql.controller;
+
+import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.graphql.data.method.annotation.Argument;
+import org.springframework.graphql.data.method.annotation.MutationMapping;
+import org.springframework.graphql.data.method.annotation.QueryMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Controller;
+
+import com.example.time_manager.dto.absence.AbsenceCreateRequest;
+import com.example.time_manager.dto.absence.AbsenceResponse;
+import com.example.time_manager.dto.absence.AbsenceStatusUpdateRequest;
+import com.example.time_manager.dto.absence.AbsenceUpdateRequest;
+import com.example.time_manager.model.absence.AbsencePeriod;
+import com.example.time_manager.model.absence.AbsenceStatus;
+import com.example.time_manager.model.absence.AbsenceType;
+import com.example.time_manager.service.AbsenceService;
+
+import jakarta.annotation.Nullable;
+
+@PreAuthorize(&quot;isAuthenticated()&quot;)
+@Controller
+public class AbsenceGraphqlController {
+
+  private final AbsenceService absenceService;
+
+<span class="nc" id="L33">  public AbsenceGraphqlController(AbsenceService absenceService) {</span>
+<span class="nc" id="L34">    this.absenceService = absenceService;</span>
+<span class="nc" id="L35">  }</span>
+
+
+  private String currentEmail() {
+<span class="nc" id="L39">    var auth = SecurityContextHolder.getContext().getAuthentication();</span>
+<span class="nc bnc" id="L40" title="All 4 branches missed.">    if (auth == null || !auth.isAuthenticated()) {</span>
+<span class="nc" id="L41">      throw new SecurityException(&quot;Unauthenticated&quot;);</span>
+    }
+<span class="nc" id="L43">    Object principal = auth.getPrincipal();</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">    if (principal instanceof UserDetails u) {</span>
+<span class="nc" id="L45">      return u.getUsername();</span>
+    }
+<span class="nc" id="L47">    return auth.getName();</span>
+  }
+
+  private static Map&lt;LocalDate, AbsencePeriod&gt; toMap(List&lt;PeriodByDateInput&gt; periodList) {
+<span class="nc" id="L51">    Map&lt;LocalDate, AbsencePeriod&gt; m = new HashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">    if (periodList != null) {</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">      for (PeriodByDateInput p : periodList) {</span>
+<span class="nc" id="L54">        m.put(LocalDate.parse(p.getDate()), p.getPeriod());</span>
+<span class="nc" id="L55">      }</span>
+    }
+<span class="nc" id="L57">    return m;</span>
+  }
+
+  /* ======================== Queries ====================== */
+
+  @QueryMapping
+  public List&lt;AbsenceResponse&gt; myAbsences() {
+<span class="nc" id="L64">    return absenceService.listMine(currentEmail());</span>
+  }
+
+  @QueryMapping
+  public AbsenceResponse absence(@Argument Long id) {
+<span class="nc" id="L69">    return absenceService.getVisibleTo(currentEmail(), id);</span>
+  }
+
+  @QueryMapping
+  @PreAuthorize(&quot;hasAuthority('MANAGER') or hasAuthority('ADMIN')&quot;)
+  public List&lt;AbsenceResponse&gt; absencesByUser(@Argument String userId) {
+<span class="nc" id="L75">    return absenceService.listForUser(userId);</span>
+  }
+
+  @QueryMapping
+  @PreAuthorize(&quot;hasAuthority('ADMIN')&quot;)
+  public List&lt;AbsenceResponse&gt; allAbsences() {
+<span class="nc" id="L81">    return absenceService.listAll();</span>
+  }
+
+  @QueryMapping
+  @PreAuthorize(&quot;isAuthenticated()&quot;)
+  public List&lt;AbsenceResponse&gt; myTeamAbsences(@Argument @Nullable Long teamId) {
+<span class="nc" id="L87">    return absenceService.listTeamAbsences(currentEmail(), teamId);</span>
+  }
+
+  /* ======================= Mutations ===================== */
+
+  @MutationMapping
+  public AbsenceResponse createAbsence(@Argument AbsenceCreateInput input) {
+<span class="nc" id="L94">    AbsenceCreateRequest req = new AbsenceCreateRequest();</span>
+<span class="nc" id="L95">    req.setStartDate(LocalDate.parse(input.getStartDate()));</span>
+<span class="nc" id="L96">    req.setEndDate(LocalDate.parse(input.getEndDate()));</span>
+<span class="nc" id="L97">    req.setType(input.getType());</span>
+<span class="nc" id="L98">    req.setReason(input.getReason());</span>
+<span class="nc" id="L99">    req.setSupportingDocumentUrl(input.getSupportingDocumentUrl());</span>
+<span class="nc" id="L100">    req.setPeriodByDate(toMap(input.getPeriodByDate()));</span>
+<span class="nc" id="L101">    return absenceService.createForEmail(currentEmail(), req);</span>
+  }
+
+  @MutationMapping
+  public AbsenceResponse updateAbsence(@Argument Long id, @Argument AbsenceUpdateInput input) {
+<span class="nc" id="L106">    AbsenceUpdateRequest req = new AbsenceUpdateRequest();</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">    if (input.getStartDate() != null) req.setStartDate(LocalDate.parse(input.getStartDate()));</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">    if (input.getEndDate() != null) req.setEndDate(LocalDate.parse(input.getEndDate()));</span>
+<span class="nc" id="L109">    req.setType(input.getType());</span>
+<span class="nc" id="L110">    req.setReason(input.getReason());</span>
+<span class="nc" id="L111">    req.setSupportingDocumentUrl(input.getSupportingDocumentUrl());</span>
+<span class="nc" id="L112">    req.setPeriodByDate(toMap(input.getPeriodByDate()));</span>
+<span class="nc" id="L113">    return absenceService.updateVisibleTo(currentEmail(), id, req);</span>
+  }
+
+  @MutationMapping
+  @PreAuthorize(&quot;hasAuthority('MANAGER') or hasAuthority('ADMIN')&quot;)
+  public AbsenceResponse setAbsenceStatus(@Argument Long id, @Argument AbsenceStatusUpdateInput input) {
+<span class="nc" id="L119">    AbsenceStatusUpdateRequest req = new AbsenceStatusUpdateRequest();</span>
+<span class="nc" id="L120">    req.setStatus(input.getStatus());</span>
+<span class="nc" id="L121">    return absenceService.setStatus(currentEmail(), id, req);</span>
+  }
+
+  @MutationMapping
+  public Boolean deleteAbsence(@Argument Long id) {
+<span class="nc" id="L126">    absenceService.deleteVisibleTo(currentEmail(), id);</span>
+<span class="nc" id="L127">    return true;</span>
+  }
+
+  /* ========== Input ========== */
+
+  public static class AbsenceCreateInput {
+    private String startDate;                 // yyyy-MM-dd
+    private String endDate;                   // yyyy-MM-dd
+    private AbsenceType type;
+    private String reason;
+    private String supportingDocumentUrl;
+    private List&lt;PeriodByDateInput&gt; periodByDate;
+
+<span class="nc" id="L140">    public AbsenceCreateInput() {}</span>
+
+<span class="nc" id="L142">    public String getStartDate() { return startDate; }</span>
+<span class="nc" id="L143">    public void setStartDate(String startDate) { this.startDate = startDate; }</span>
+
+<span class="nc" id="L145">    public String getEndDate() { return endDate; }</span>
+<span class="nc" id="L146">    public void setEndDate(String endDate) { this.endDate = endDate; }</span>
+
+<span class="nc" id="L148">    public AbsenceType getType() { return type; }</span>
+<span class="nc" id="L149">    public void setType(AbsenceType type) { this.type = type; }</span>
+
+<span class="nc" id="L151">    public String getReason() { return reason; }</span>
+<span class="nc" id="L152">    public void setReason(String reason) { this.reason = reason; }</span>
+
+<span class="nc" id="L154">    public String getSupportingDocumentUrl() { return supportingDocumentUrl; }</span>
+<span class="nc" id="L155">    public void setSupportingDocumentUrl(String supportingDocumentUrl) { this.supportingDocumentUrl = supportingDocumentUrl; }</span>
+
+<span class="nc" id="L157">    public List&lt;PeriodByDateInput&gt; getPeriodByDate() { return periodByDate; }</span>
+<span class="nc" id="L158">    public void setPeriodByDate(List&lt;PeriodByDateInput&gt; periodByDate) { this.periodByDate = periodByDate; }</span>
+  }
+
+  public static class AbsenceUpdateInput {
+    private String startDate;                 // nullable
+    private String endDate;                   // nullable
+    private AbsenceType type;                 // nullable
+    private String reason;                    // nullable
+    private String supportingDocumentUrl;     // nullable
+    private List&lt;PeriodByDateInput&gt; periodByDate; // nullable
+
+<span class="nc" id="L169">    public AbsenceUpdateInput() {}</span>
+
+<span class="nc" id="L171">    public String getStartDate() { return startDate; }</span>
+<span class="nc" id="L172">    public void setStartDate(String startDate) { this.startDate = startDate; }</span>
+
+<span class="nc" id="L174">    public String getEndDate() { return endDate; }</span>
+<span class="nc" id="L175">    public void setEndDate(String endDate) { this.endDate = endDate; }</span>
+
+<span class="nc" id="L177">    public AbsenceType getType() { return type; }</span>
+<span class="nc" id="L178">    public void setType(AbsenceType type) { this.type = type; }</span>
+
+<span class="nc" id="L180">    public String getReason() { return reason; }</span>
+<span class="nc" id="L181">    public void setReason(String reason) { this.reason = reason; }</span>
+
+<span class="nc" id="L183">    public String getSupportingDocumentUrl() { return supportingDocumentUrl; }</span>
+<span class="nc" id="L184">    public void setSupportingDocumentUrl(String supportingDocumentUrl) { this.supportingDocumentUrl = supportingDocumentUrl; }</span>
+
+<span class="nc" id="L186">    public List&lt;PeriodByDateInput&gt; getPeriodByDate() { return periodByDate; }</span>
+<span class="nc" id="L187">    public void setPeriodByDate(List&lt;PeriodByDateInput&gt; periodByDate) { this.periodByDate = periodByDate; }</span>
+  }
+
+  public static class AbsenceStatusUpdateInput {
+    private AbsenceStatus status;
+
+<span class="nc" id="L193">    public AbsenceStatusUpdateInput() {}</span>
+
+<span class="nc" id="L195">    public AbsenceStatus getStatus() { return status; }</span>
+<span class="nc" id="L196">    public void setStatus(AbsenceStatus status) { this.status = status; }</span>
+  }
+
+  public static class PeriodByDateInput {
+    private String date;          // yyyy-MM-dd
+    private AbsencePeriod period; // AM/PM/FULL_DAY
+
+<span class="nc" id="L203">    public PeriodByDateInput() {}</span>
+
+<span class="nc" id="L205">    public String getDate() { return date; }</span>
+<span class="nc" id="L206">    public void setDate(String date) { this.date = date; }</span>
+
+<span class="nc" id="L208">    public AbsencePeriod getPeriod() { return period; }</span>
+<span class="nc" id="L209">    public void setPeriod(AbsencePeriod period) { this.period = period; }</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>
