@@ -31,6 +31,15 @@ jobs:
         working-directory: backend
         run: ./gradlew clean test jacocoTestReport
 
+      - name: Publish coverage summary
+        run: |
+          COVERED=$(grep '<counter type="INSTRUCTION"' backend/build/reports/jacoco/test/jacocoTestReport.xml | awk -F'"' '{covered+=$6; missed+=$4} END {printf "%.2f", 100*covered/(covered+missed)}')
+          if (( $(echo "$COVERED < 50" | bc -l) )); then COLOR="🔴"
+          elif (( $(echo "$COVERED < 80" | bc -l) )); then COLOR="🟠"
+          else COLOR="🟢"; fi
+          echo "## 🧪 Résumé de la couverture JaCoCo" >> $GITHUB_STEP_SUMMARY
+          echo "**Couverture globale :** ${COLOR} ${COVERED}%" >> $GITHUB_STEP_SUMMARY
+
       - name: Upload JaCoCo HTML report
         uses: actions/upload-artifact@v4
         with:
