@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -25,6 +27,18 @@ jobs:
         with:
           gradle-version: wrapper
 
-      - name: Run backend tests
+      - name: Run tests with coverage
         working-directory: backend
-        run: ./gradlew test
+        run: ./gradlew clean test jacocoTestReport
+
+      - name: Upload JaCoCo HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-html-report
+          path: backend/build/reports/jacoco/test/html
+
+      - name: SonarCloud Scan
+        working-directory: backend
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: ./gradlew sonar
