@@ -70,7 +70,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: jacoco-html-report
-          path: backend/reports/jacoco/test/html
+          path: backend/build/reports/jacoco/test/html
 
   publish-coverage:
     needs: test-backend
