@@ -1,4 +1,4 @@
-name: Run backend tests
+name: Run backend tests & publish JaCoCo report
 
 on:
   push:
@@ -42,30 +42,18 @@ jobs:
             exit 0
           fi
 
-          # On agrège toutes les balises <counter ... /> présentes dans le XML
           INSTR=$(grep -o '<counter type="INSTRUCTION"[^>]*/>' "$REPORT" || true)
           LINE=$(grep -o '<counter type="LINE"[^>]*/>' "$REPORT" || true)
           BRANCH=$(grep -o '<counter type="BRANCH"[^>]*/>' "$REPORT" || true)
 
           calc_cov() {
-            # additionne toutes les balises correspondantes
-            echo "$1" | awk -F'"' '
-              /counter/ {
-                missed += $4;
-                covered += $6;
-              }
-              END {
-                total = missed + covered;
-                if (total == 0) {print 0}
-                else {printf "%.2f", 100 * covered / total}
-              }'
+            echo "$1" | awk -F'"' '/counter/{missed+=$4;covered+=$6}END{t=missed+covered;if(t==0){print 0}else{printf "%.2f",100*covered/t}}'
           }
 
           COV_INSTR=$(calc_cov "$INSTR")
           COV_LINE=$(calc_cov "$LINE")
           COV_BRANCH=$(calc_cov "$BRANCH")
 
-          # Choix de la couleur selon le score global
           if (( $(echo "$COV_INSTR < 50" | bc -l) )); then COLOR="🔴"
           elif (( $(echo "$COV_INSTR < 80" | bc -l) )); then COLOR="🟠"
           else COLOR="🟢"; fi
@@ -78,8 +66,39 @@ jobs:
           echo "| Lignes | ${COV_LINE}% |" >> $GITHUB_STEP_SUMMARY
           echo "| Branches | ${COV_BRANCH}% |" >> $GITHUB_STEP_SUMMARY
 
-      - name: Upload JaCoCo HTML report
+      - name: Upload JaCoCo HTML report as artifact
         uses: actions/upload-artifact@v4
         with:
           name: jacoco-html-report
           path: backend/build/reports/jacoco/test/html
+
+  publish-coverage:
+    needs: test-backend
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download coverage artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: jacoco-html-report
+          path: jacoco-html-report
+
+      - name: Deploy JaCoCo report to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: jacoco-html-report
+          destination_dir: jacoco
+          keep_files: true
+
+      - name: Add link to report in summary
+        run: |
+          echo "## 📊 Rapport JaCoCo publié" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 [Ouvrir le rapport complet JaCoCo (HTML)](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/jacoco/index.html)" >> $GITHUB_STEP_SUMMARY
