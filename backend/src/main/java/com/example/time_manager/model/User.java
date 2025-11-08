@@ -33,17 +33,7 @@ public class User {
     public User() {
     }
 
-    public User(String id, String firstName, String lastName, String email, String phone, String role, String poste, String password, String azureOid) {
-        this.id = id;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.email = email;
-        this.phone = phone;
-        this.role = role;
-        this.poste = poste;
-        this.password = password;
-        this.azureOid = azureOid;
-    }
+    // === Getters & Setters ===
 
     public String getId() {return id;}
     public void setId(String id) {this.id = id;}
