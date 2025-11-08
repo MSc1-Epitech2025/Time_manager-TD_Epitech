@@ -42,21 +42,30 @@ jobs:
             exit 0
           fi
 
-          # Extraction des compteurs de JaCoCo
-          INSTR=$(grep '<counter type="INSTRUCTION"' "$REPORT" || true)
-          LINE=$(grep '<counter type="LINE"' "$REPORT" || true)
-          BRANCH=$(grep '<counter type="BRANCH"' "$REPORT" || true)
+          # On agrège toutes les balises <counter ... /> présentes dans le XML
+          INSTR=$(grep -o '<counter type="INSTRUCTION"[^>]*/>' "$REPORT" || true)
+          LINE=$(grep -o '<counter type="LINE"[^>]*/>' "$REPORT" || true)
+          BRANCH=$(grep -o '<counter type="BRANCH"[^>]*/>' "$REPORT" || true)
 
-          # Fonction pour calculer un pourcentage propre
           calc_cov() {
-            echo "$1" | awk -F'"' '{covered+=$6; missed+=$4} END { if ((covered+missed)==0) {print 0} else {printf "%.2f", 100*covered/(covered+missed)} }'
+            # additionne toutes les balises correspondantes
+            echo "$1" | awk -F'"' '
+              /counter/ {
+                missed += $4;
+                covered += $6;
+              }
+              END {
+                total = missed + covered;
+                if (total == 0) {print 0}
+                else {printf "%.2f", 100 * covered / total}
+              }'
           }
 
           COV_INSTR=$(calc_cov "$INSTR")
           COV_LINE=$(calc_cov "$LINE")
           COV_BRANCH=$(calc_cov "$BRANCH")
 
-          # Couleur selon le score global
+          # Choix de la couleur selon le score global
           if (( $(echo "$COV_INSTR < 50" | bc -l) )); then COLOR="🔴"
           elif (( $(echo "$COV_INSTR < 80" | bc -l) )); then COLOR="🟠"
           else COLOR="🟢"; fi
