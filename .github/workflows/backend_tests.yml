@@ -31,6 +31,11 @@ jobs:
         working-directory: backend
         run: ./gradlew clean test jacocoTestReport
 
+      - name: Debug JaCoCo report path
+        run: |
+          echo "=== Vérification du contenu du dossier JaCoCo ==="
+          ls -R backend/build/reports/jacoco/test || true
+
       - name: Publish coverage summary
         run: |
           REPORT="backend/build/reports/jacoco/test/jacocoTestReport.xml"
@@ -94,6 +99,7 @@ jobs:
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
           publish_dir: jacoco-html-report
           destination_dir: jacoco
           keep_files: true
