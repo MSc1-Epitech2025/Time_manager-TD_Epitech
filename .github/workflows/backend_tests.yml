@@ -14,7 +14,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  
+          fetch-depth: 0
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -36,9 +36,3 @@ jobs:
         with:
           name: jacoco-html-report
           path: backend/build/reports/jacoco/test/html
-
-      - name: SonarCloud Scan
-        working-directory: backend
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./gradlew sonar
