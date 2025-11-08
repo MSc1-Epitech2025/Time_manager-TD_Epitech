@@ -1,6 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WorkScheduleController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">time-manager</a> &gt; <a href="index.source.html" class="el_package">com.example.time_manager.graphql.controller</a> &gt; <span class="el_source">WorkScheduleController.java</span></div><h1>WorkScheduleController.java</h1><pre class="source lang-java linenums">// src/main/java/com/example/time_manager/graphql/controller/WorkScheduleController.java
-
-package com.example.time_manager.graphql.controller;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WorkScheduleController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">time-manager</a> &gt; <a href="index.source.html" class="el_package">com.example.time_manager.graphql.controller</a> &gt; <span class="el_source">WorkScheduleController.java</span></div><h1>WorkScheduleController.java</h1><pre class="source lang-java linenums">package com.example.time_manager.graphql.controller;
 
 import com.example.time_manager.dto.work_schedule.WorkScheduleBatchRequest;
 import com.example.time_manager.dto.work_schedule.WorkScheduleRequest;
@@ -15,7 +13,6 @@ import jakarta.validation.Valid;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
@@ -33,70 +30,70 @@ public class WorkScheduleController {
 
   public WorkScheduleController(WorkScheduleService workScheduleService,
                                 UserRepository userRepository,
-<span class="nc" id="L36">                                WorkScheduleAccess access) {</span>
-<span class="nc" id="L37">    this.workScheduleService = workScheduleService;</span>
-<span class="nc" id="L38">    this.userRepository = userRepository;</span>
-<span class="nc" id="L39">    this.access = access;</span>
-<span class="nc" id="L40">  }</span>
+<span class="fc" id="L33">                                WorkScheduleAccess access) {</span>
+<span class="fc" id="L34">    this.workScheduleService = workScheduleService;</span>
+<span class="fc" id="L35">    this.userRepository = userRepository;</span>
+<span class="fc" id="L36">    this.access = access;</span>
+<span class="fc" id="L37">  }</span>
 
   /* ========================= QUERIES ========================= */
 
   @QueryMapping
   public List&lt;WorkScheduleResponse&gt; workSchedulesByUser(@Argument String userId) {
-<span class="nc" id="L46">    return workScheduleService.listForUser(userId);</span>
+<span class="fc" id="L43">    return workScheduleService.listForUser(userId);</span>
   }
 
   @QueryMapping
   public List&lt;WorkScheduleResponse&gt; myWorkSchedules() {
-<span class="nc" id="L51">    return workScheduleService.listForUser(currentUserId());</span>
+<span class="fc" id="L48">    return workScheduleService.listForUser(currentUserId());</span>
   }
 
   /* ======================== MUTATIONS ======================== */
 
   @MutationMapping
   public WorkScheduleResponse upsertMyWorkSchedule(@Argument(&quot;input&quot;) @Valid WorkScheduleRequest input) {
-<span class="nc" id="L58">    String me = currentUserId();</span>
-<span class="nc" id="L59">    access.assertCanSelfManage(me);                    // &lt;-- bloque EMPLOYEE</span>
-<span class="nc" id="L60">    return workScheduleService.upsertForUser(me, input);</span>
+<span class="fc" id="L55">    String me = currentUserId();</span>
+<span class="fc" id="L56">    access.assertCanSelfManage(me);                    // &lt;-- bloque EMPLOYEE</span>
+<span class="fc" id="L57">    return workScheduleService.upsertForUser(me, input);</span>
   }
 
   @MutationMapping
   public Boolean deleteMyWorkScheduleSlot(@Argument WorkDay day, @Argument WorkPeriod period) {
-<span class="nc" id="L65">    String me = currentUserId();</span>
-<span class="nc" id="L66">    access.assertCanSelfManage(me);                    // &lt;-- bloque EMPLOYEE</span>
-<span class="nc" id="L67">    workScheduleService.deleteSlot(me, day, period);</span>
-<span class="nc" id="L68">    return true;</span>
+<span class="fc" id="L62">    String me = currentUserId();</span>
+<span class="fc" id="L63">    access.assertCanSelfManage(me);                    // &lt;-- bloque EMPLOYEE</span>
+<span class="fc" id="L64">    workScheduleService.deleteSlot(me, day, period);</span>
+<span class="fc" id="L65">    return true;</span>
   }
 
   // Les mutations ciblant un autre user restent protégées par assertCanManage(...)
   @MutationMapping
   public WorkScheduleResponse upsertWorkSchedule(@Argument String userId, @Argument(&quot;input&quot;) @Valid WorkScheduleRequest input) {
-<span class="nc" id="L74">    access.assertCanManage(currentUserId(), userId);</span>
-<span class="nc" id="L75">    return workScheduleService.upsertForUser(userId, input);</span>
+<span class="fc" id="L71">    access.assertCanManage(currentUserId(), userId);</span>
+<span class="fc" id="L72">    return workScheduleService.upsertForUser(userId, input);</span>
   }
 
   @MutationMapping
   public List&lt;WorkScheduleResponse&gt; upsertWorkScheduleBatch(@Argument String userId, @Argument(&quot;batch&quot;) @Valid WorkScheduleBatchRequest batch) {
-<span class="nc" id="L80">    access.assertCanManage(currentUserId(), userId);</span>
-<span class="nc" id="L81">    return workScheduleService.batchUpsertForUser(userId, batch);</span>
+<span class="fc" id="L77">    access.assertCanManage(currentUserId(), userId);</span>
+<span class="fc" id="L78">    return workScheduleService.batchUpsertForUser(userId, batch);</span>
   }
 
   @MutationMapping
   public Boolean deleteWorkScheduleSlot(@Argument String userId, @Argument WorkDay day, @Argument WorkPeriod period) {
-<span class="nc" id="L86">    access.assertCanManage(currentUserId(), userId);</span>
-<span class="nc" id="L87">    workScheduleService.deleteSlot(userId, day, period);</span>
-<span class="nc" id="L88">    return true;</span>
+<span class="fc" id="L83">    access.assertCanManage(currentUserId(), userId);</span>
+<span class="fc" id="L84">    workScheduleService.deleteSlot(userId, day, period);</span>
+<span class="fc" id="L85">    return true;</span>
   }
   /* ======================= Helpers ======================= */
 
   private String currentUserId() {
-<span class="nc" id="L93">    var auth = SecurityContextHolder.getContext().getAuthentication();</span>
-<span class="nc bnc" id="L94" title="All 4 branches missed.">    if (auth == null || auth.getName() == null) {</span>
-<span class="nc" id="L95">      throw new EntityNotFoundException(&quot;No authenticated user found&quot;);</span>
+<span class="fc" id="L90">    var auth = SecurityContextHolder.getContext().getAuthentication();</span>
+<span class="pc bpc" id="L91" title="1 of 4 branches missed.">    if (auth == null || auth.getName() == null) {</span>
+<span class="fc" id="L92">      throw new EntityNotFoundException(&quot;No authenticated user found&quot;);</span>
     }
-<span class="nc" id="L97">    return userRepository.findByEmail(auth.getName())</span>
-<span class="nc" id="L98">        .map(u -&gt; u.getId())</span>
-<span class="nc" id="L99">        .orElseThrow(() -&gt; new EntityNotFoundException(&quot;User not found by email: &quot; + auth.getName()));</span>
+<span class="fc" id="L94">    return userRepository.findByEmail(auth.getName())</span>
+<span class="fc" id="L95">        .map(u -&gt; u.getId())</span>
+<span class="fc" id="L96">        .orElseThrow(() -&gt; new EntityNotFoundException(&quot;User not found by email: &quot; + auth.getName()));</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>
