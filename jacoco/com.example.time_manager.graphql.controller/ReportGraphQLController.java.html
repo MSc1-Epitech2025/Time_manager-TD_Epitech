@@ -22,34 +22,34 @@ public class ReportGraphQLController {
 
     private final ReportService reportService;
 
-<span class="nc" id="L25">    public ReportGraphQLController(ReportService reportService) {</span>
-<span class="nc" id="L26">        this.reportService = reportService;</span>
-<span class="nc" id="L27">    }</span>
+<span class="fc" id="L25">    public ReportGraphQLController(ReportService reportService) {</span>
+<span class="fc" id="L26">        this.reportService = reportService;</span>
+<span class="fc" id="L27">    }</span>
 
     /* ======================== QUERIES ======================== */
 
     @QueryMapping
     @PreAuthorize(&quot;hasAuthority('ADMIN')&quot;)
     public List&lt;ReportResponse&gt; reports() {
-<span class="nc" id="L34">        return reportService.listAll();</span>
+<span class="fc" id="L34">        return reportService.listAll();</span>
     }
 
     @QueryMapping
     public List&lt;ReportResponse&gt; myReports(Authentication auth) {
-<span class="nc" id="L39">        String email = auth.getName();</span>
-<span class="nc" id="L40">        return reportService.listMineByEmail(email);</span>
+<span class="fc" id="L39">        String email = auth.getName();</span>
+<span class="fc" id="L40">        return reportService.listMineByEmail(email);</span>
     }
 
     @QueryMapping
     public List&lt;ReportResponse&gt; reportsForMe(Authentication auth) {
-<span class="nc" id="L45">        String email = auth.getName();</span>
-<span class="nc" id="L46">        return reportService.listReceivedByEmail(email);</span>
+<span class="fc" id="L45">        String email = auth.getName();</span>
+<span class="fc" id="L46">        return reportService.listReceivedByEmail(email);</span>
     }
 
     @QueryMapping
     public ReportResponse report(@Argument Long id, Authentication auth) {
-<span class="nc" id="L51">        String email = auth.getName();</span>
-<span class="nc" id="L52">        return reportService.loadVisibleByEmail(email, id);</span>
+<span class="fc" id="L51">        String email = auth.getName();</span>
+<span class="fc" id="L52">        return reportService.loadVisibleByEmail(email, id);</span>
     }
 
     /* ======================== MUTATIONS ======================== */
@@ -59,8 +59,8 @@ public class ReportGraphQLController {
         @Argument(&quot;input&quot;) @Valid ReportCreateRequest input,
         Authentication auth
     ) {
-<span class="nc" id="L62">        String email = auth.getName();</span>
-<span class="nc" id="L63">        return reportService.create(email, input);</span>
+<span class="fc" id="L62">        String email = auth.getName();</span>
+<span class="fc" id="L63">        return reportService.create(email, input);</span>
     }
 
     @MutationMapping
@@ -69,14 +69,14 @@ public class ReportGraphQLController {
         @Argument(&quot;input&quot;) @Valid ReportUpdateRequest input,
         Authentication auth
     ) {
-<span class="nc" id="L72">        String email = auth.getName();</span>
-<span class="nc" id="L73">        return reportService.update(email, id, input);</span>
+<span class="fc" id="L72">        String email = auth.getName();</span>
+<span class="fc" id="L73">        return reportService.update(email, id, input);</span>
     }
     @MutationMapping
     public Boolean deleteReport(@Argument Long id, Authentication auth) {
-<span class="nc" id="L77">        String email = auth.getName();</span>
-<span class="nc" id="L78">        reportService.delete(email, id);</span>
-<span class="nc" id="L79">        return true;</span>
+<span class="fc" id="L77">        String email = auth.getName();</span>
+<span class="fc" id="L78">        reportService.delete(email, id);</span>
+<span class="fc" id="L79">        return true;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

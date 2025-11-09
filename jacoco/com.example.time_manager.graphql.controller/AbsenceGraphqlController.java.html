@@ -30,101 +30,101 @@ public class AbsenceGraphqlController {
 
   private final AbsenceService absenceService;
 
-<span class="nc" id="L33">  public AbsenceGraphqlController(AbsenceService absenceService) {</span>
-<span class="nc" id="L34">    this.absenceService = absenceService;</span>
-<span class="nc" id="L35">  }</span>
+<span class="fc" id="L33">  public AbsenceGraphqlController(AbsenceService absenceService) {</span>
+<span class="fc" id="L34">    this.absenceService = absenceService;</span>
+<span class="fc" id="L35">  }</span>
 
 
   private String currentEmail() {
-<span class="nc" id="L39">    var auth = SecurityContextHolder.getContext().getAuthentication();</span>
-<span class="nc bnc" id="L40" title="All 4 branches missed.">    if (auth == null || !auth.isAuthenticated()) {</span>
+<span class="fc" id="L39">    var auth = SecurityContextHolder.getContext().getAuthentication();</span>
+<span class="pc bpc" id="L40" title="2 of 4 branches missed.">    if (auth == null || !auth.isAuthenticated()) {</span>
 <span class="nc" id="L41">      throw new SecurityException(&quot;Unauthenticated&quot;);</span>
     }
-<span class="nc" id="L43">    Object principal = auth.getPrincipal();</span>
-<span class="nc bnc" id="L44" title="All 2 branches missed.">    if (principal instanceof UserDetails u) {</span>
+<span class="fc" id="L43">    Object principal = auth.getPrincipal();</span>
+<span class="pc bpc" id="L44" title="1 of 2 branches missed.">    if (principal instanceof UserDetails u) {</span>
 <span class="nc" id="L45">      return u.getUsername();</span>
     }
-<span class="nc" id="L47">    return auth.getName();</span>
+<span class="fc" id="L47">    return auth.getName();</span>
   }
 
   private static Map&lt;LocalDate, AbsencePeriod&gt; toMap(List&lt;PeriodByDateInput&gt; periodList) {
-<span class="nc" id="L51">    Map&lt;LocalDate, AbsencePeriod&gt; m = new HashMap&lt;&gt;();</span>
-<span class="nc bnc" id="L52" title="All 2 branches missed.">    if (periodList != null) {</span>
-<span class="nc bnc" id="L53" title="All 2 branches missed.">      for (PeriodByDateInput p : periodList) {</span>
-<span class="nc" id="L54">        m.put(LocalDate.parse(p.getDate()), p.getPeriod());</span>
-<span class="nc" id="L55">      }</span>
+<span class="fc" id="L51">    Map&lt;LocalDate, AbsencePeriod&gt; m = new HashMap&lt;&gt;();</span>
+<span class="pc bpc" id="L52" title="1 of 2 branches missed.">    if (periodList != null) {</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">      for (PeriodByDateInput p : periodList) {</span>
+<span class="fc" id="L54">        m.put(LocalDate.parse(p.getDate()), p.getPeriod());</span>
+<span class="fc" id="L55">      }</span>
     }
-<span class="nc" id="L57">    return m;</span>
+<span class="fc" id="L57">    return m;</span>
   }
 
   /* ======================== Queries ====================== */
 
   @QueryMapping
   public List&lt;AbsenceResponse&gt; myAbsences() {
-<span class="nc" id="L64">    return absenceService.listMine(currentEmail());</span>
+<span class="fc" id="L64">    return absenceService.listMine(currentEmail());</span>
   }
 
   @QueryMapping
   public AbsenceResponse absence(@Argument Long id) {
-<span class="nc" id="L69">    return absenceService.getVisibleTo(currentEmail(), id);</span>
+<span class="fc" id="L69">    return absenceService.getVisibleTo(currentEmail(), id);</span>
   }
 
   @QueryMapping
   @PreAuthorize(&quot;hasAuthority('MANAGER') or hasAuthority('ADMIN')&quot;)
   public List&lt;AbsenceResponse&gt; absencesByUser(@Argument String userId) {
-<span class="nc" id="L75">    return absenceService.listForUser(userId);</span>
+<span class="fc" id="L75">    return absenceService.listForUser(userId);</span>
   }
 
   @QueryMapping
   @PreAuthorize(&quot;hasAuthority('ADMIN')&quot;)
   public List&lt;AbsenceResponse&gt; allAbsences() {
-<span class="nc" id="L81">    return absenceService.listAll();</span>
+<span class="fc" id="L81">    return absenceService.listAll();</span>
   }
 
   @QueryMapping
   @PreAuthorize(&quot;isAuthenticated()&quot;)
   public List&lt;AbsenceResponse&gt; myTeamAbsences(@Argument @Nullable Long teamId) {
-<span class="nc" id="L87">    return absenceService.listTeamAbsences(currentEmail(), teamId);</span>
+<span class="fc" id="L87">    return absenceService.listTeamAbsences(currentEmail(), teamId);</span>
   }
 
   /* ======================= Mutations ===================== */
 
   @MutationMapping
   public AbsenceResponse createAbsence(@Argument AbsenceCreateInput input) {
-<span class="nc" id="L94">    AbsenceCreateRequest req = new AbsenceCreateRequest();</span>
-<span class="nc" id="L95">    req.setStartDate(LocalDate.parse(input.getStartDate()));</span>
-<span class="nc" id="L96">    req.setEndDate(LocalDate.parse(input.getEndDate()));</span>
-<span class="nc" id="L97">    req.setType(input.getType());</span>
-<span class="nc" id="L98">    req.setReason(input.getReason());</span>
-<span class="nc" id="L99">    req.setSupportingDocumentUrl(input.getSupportingDocumentUrl());</span>
-<span class="nc" id="L100">    req.setPeriodByDate(toMap(input.getPeriodByDate()));</span>
-<span class="nc" id="L101">    return absenceService.createForEmail(currentEmail(), req);</span>
+<span class="fc" id="L94">    AbsenceCreateRequest req = new AbsenceCreateRequest();</span>
+<span class="fc" id="L95">    req.setStartDate(LocalDate.parse(input.getStartDate()));</span>
+<span class="fc" id="L96">    req.setEndDate(LocalDate.parse(input.getEndDate()));</span>
+<span class="fc" id="L97">    req.setType(input.getType());</span>
+<span class="fc" id="L98">    req.setReason(input.getReason());</span>
+<span class="fc" id="L99">    req.setSupportingDocumentUrl(input.getSupportingDocumentUrl());</span>
+<span class="fc" id="L100">    req.setPeriodByDate(toMap(input.getPeriodByDate()));</span>
+<span class="fc" id="L101">    return absenceService.createForEmail(currentEmail(), req);</span>
   }
 
   @MutationMapping
   public AbsenceResponse updateAbsence(@Argument Long id, @Argument AbsenceUpdateInput input) {
-<span class="nc" id="L106">    AbsenceUpdateRequest req = new AbsenceUpdateRequest();</span>
-<span class="nc bnc" id="L107" title="All 2 branches missed.">    if (input.getStartDate() != null) req.setStartDate(LocalDate.parse(input.getStartDate()));</span>
-<span class="nc bnc" id="L108" title="All 2 branches missed.">    if (input.getEndDate() != null) req.setEndDate(LocalDate.parse(input.getEndDate()));</span>
-<span class="nc" id="L109">    req.setType(input.getType());</span>
-<span class="nc" id="L110">    req.setReason(input.getReason());</span>
-<span class="nc" id="L111">    req.setSupportingDocumentUrl(input.getSupportingDocumentUrl());</span>
-<span class="nc" id="L112">    req.setPeriodByDate(toMap(input.getPeriodByDate()));</span>
-<span class="nc" id="L113">    return absenceService.updateVisibleTo(currentEmail(), id, req);</span>
+<span class="fc" id="L106">    AbsenceUpdateRequest req = new AbsenceUpdateRequest();</span>
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">    if (input.getStartDate() != null) req.setStartDate(LocalDate.parse(input.getStartDate()));</span>
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">    if (input.getEndDate() != null) req.setEndDate(LocalDate.parse(input.getEndDate()));</span>
+<span class="fc" id="L109">    req.setType(input.getType());</span>
+<span class="fc" id="L110">    req.setReason(input.getReason());</span>
+<span class="fc" id="L111">    req.setSupportingDocumentUrl(input.getSupportingDocumentUrl());</span>
+<span class="fc" id="L112">    req.setPeriodByDate(toMap(input.getPeriodByDate()));</span>
+<span class="fc" id="L113">    return absenceService.updateVisibleTo(currentEmail(), id, req);</span>
   }
 
   @MutationMapping
   @PreAuthorize(&quot;hasAuthority('MANAGER') or hasAuthority('ADMIN')&quot;)
   public AbsenceResponse setAbsenceStatus(@Argument Long id, @Argument AbsenceStatusUpdateInput input) {
-<span class="nc" id="L119">    AbsenceStatusUpdateRequest req = new AbsenceStatusUpdateRequest();</span>
-<span class="nc" id="L120">    req.setStatus(input.getStatus());</span>
-<span class="nc" id="L121">    return absenceService.setStatus(currentEmail(), id, req);</span>
+<span class="fc" id="L119">    AbsenceStatusUpdateRequest req = new AbsenceStatusUpdateRequest();</span>
+<span class="fc" id="L120">    req.setStatus(input.getStatus());</span>
+<span class="fc" id="L121">    return absenceService.setStatus(currentEmail(), id, req);</span>
   }
 
   @MutationMapping
   public Boolean deleteAbsence(@Argument Long id) {
-<span class="nc" id="L126">    absenceService.deleteVisibleTo(currentEmail(), id);</span>
-<span class="nc" id="L127">    return true;</span>
+<span class="fc" id="L126">    absenceService.deleteVisibleTo(currentEmail(), id);</span>
+<span class="fc" id="L127">    return true;</span>
   }
 
   /* ========== Input ========== */
@@ -137,25 +137,25 @@ public class AbsenceGraphqlController {
     private String supportingDocumentUrl;
     private List&lt;PeriodByDateInput&gt; periodByDate;
 
-<span class="nc" id="L140">    public AbsenceCreateInput() {}</span>
+<span class="fc" id="L140">    public AbsenceCreateInput() {}</span>
 
-<span class="nc" id="L142">    public String getStartDate() { return startDate; }</span>
-<span class="nc" id="L143">    public void setStartDate(String startDate) { this.startDate = startDate; }</span>
+<span class="fc" id="L142">    public String getStartDate() { return startDate; }</span>
+<span class="fc" id="L143">    public void setStartDate(String startDate) { this.startDate = startDate; }</span>
 
-<span class="nc" id="L145">    public String getEndDate() { return endDate; }</span>
-<span class="nc" id="L146">    public void setEndDate(String endDate) { this.endDate = endDate; }</span>
+<span class="fc" id="L145">    public String getEndDate() { return endDate; }</span>
+<span class="fc" id="L146">    public void setEndDate(String endDate) { this.endDate = endDate; }</span>
 
-<span class="nc" id="L148">    public AbsenceType getType() { return type; }</span>
-<span class="nc" id="L149">    public void setType(AbsenceType type) { this.type = type; }</span>
+<span class="fc" id="L148">    public AbsenceType getType() { return type; }</span>
+<span class="fc" id="L149">    public void setType(AbsenceType type) { this.type = type; }</span>
 
-<span class="nc" id="L151">    public String getReason() { return reason; }</span>
-<span class="nc" id="L152">    public void setReason(String reason) { this.reason = reason; }</span>
+<span class="fc" id="L151">    public String getReason() { return reason; }</span>
+<span class="fc" id="L152">    public void setReason(String reason) { this.reason = reason; }</span>
 
-<span class="nc" id="L154">    public String getSupportingDocumentUrl() { return supportingDocumentUrl; }</span>
-<span class="nc" id="L155">    public void setSupportingDocumentUrl(String supportingDocumentUrl) { this.supportingDocumentUrl = supportingDocumentUrl; }</span>
+<span class="fc" id="L154">    public String getSupportingDocumentUrl() { return supportingDocumentUrl; }</span>
+<span class="fc" id="L155">    public void setSupportingDocumentUrl(String supportingDocumentUrl) { this.supportingDocumentUrl = supportingDocumentUrl; }</span>
 
-<span class="nc" id="L157">    public List&lt;PeriodByDateInput&gt; getPeriodByDate() { return periodByDate; }</span>
-<span class="nc" id="L158">    public void setPeriodByDate(List&lt;PeriodByDateInput&gt; periodByDate) { this.periodByDate = periodByDate; }</span>
+<span class="fc" id="L157">    public List&lt;PeriodByDateInput&gt; getPeriodByDate() { return periodByDate; }</span>
+<span class="fc" id="L158">    public void setPeriodByDate(List&lt;PeriodByDateInput&gt; periodByDate) { this.periodByDate = periodByDate; }</span>
   }
 
   public static class AbsenceUpdateInput {
@@ -166,47 +166,47 @@ public class AbsenceGraphqlController {
     private String supportingDocumentUrl;     // nullable
     private List&lt;PeriodByDateInput&gt; periodByDate; // nullable
 
-<span class="nc" id="L169">    public AbsenceUpdateInput() {}</span>
+<span class="fc" id="L169">    public AbsenceUpdateInput() {}</span>
 
-<span class="nc" id="L171">    public String getStartDate() { return startDate; }</span>
-<span class="nc" id="L172">    public void setStartDate(String startDate) { this.startDate = startDate; }</span>
+<span class="fc" id="L171">    public String getStartDate() { return startDate; }</span>
+<span class="fc" id="L172">    public void setStartDate(String startDate) { this.startDate = startDate; }</span>
 
-<span class="nc" id="L174">    public String getEndDate() { return endDate; }</span>
-<span class="nc" id="L175">    public void setEndDate(String endDate) { this.endDate = endDate; }</span>
+<span class="fc" id="L174">    public String getEndDate() { return endDate; }</span>
+<span class="fc" id="L175">    public void setEndDate(String endDate) { this.endDate = endDate; }</span>
 
-<span class="nc" id="L177">    public AbsenceType getType() { return type; }</span>
-<span class="nc" id="L178">    public void setType(AbsenceType type) { this.type = type; }</span>
+<span class="fc" id="L177">    public AbsenceType getType() { return type; }</span>
+<span class="fc" id="L178">    public void setType(AbsenceType type) { this.type = type; }</span>
 
-<span class="nc" id="L180">    public String getReason() { return reason; }</span>
-<span class="nc" id="L181">    public void setReason(String reason) { this.reason = reason; }</span>
+<span class="fc" id="L180">    public String getReason() { return reason; }</span>
+<span class="fc" id="L181">    public void setReason(String reason) { this.reason = reason; }</span>
 
-<span class="nc" id="L183">    public String getSupportingDocumentUrl() { return supportingDocumentUrl; }</span>
-<span class="nc" id="L184">    public void setSupportingDocumentUrl(String supportingDocumentUrl) { this.supportingDocumentUrl = supportingDocumentUrl; }</span>
+<span class="fc" id="L183">    public String getSupportingDocumentUrl() { return supportingDocumentUrl; }</span>
+<span class="fc" id="L184">    public void setSupportingDocumentUrl(String supportingDocumentUrl) { this.supportingDocumentUrl = supportingDocumentUrl; }</span>
 
-<span class="nc" id="L186">    public List&lt;PeriodByDateInput&gt; getPeriodByDate() { return periodByDate; }</span>
-<span class="nc" id="L187">    public void setPeriodByDate(List&lt;PeriodByDateInput&gt; periodByDate) { this.periodByDate = periodByDate; }</span>
+<span class="fc" id="L186">    public List&lt;PeriodByDateInput&gt; getPeriodByDate() { return periodByDate; }</span>
+<span class="fc" id="L187">    public void setPeriodByDate(List&lt;PeriodByDateInput&gt; periodByDate) { this.periodByDate = periodByDate; }</span>
   }
 
   public static class AbsenceStatusUpdateInput {
     private AbsenceStatus status;
 
-<span class="nc" id="L193">    public AbsenceStatusUpdateInput() {}</span>
+<span class="fc" id="L193">    public AbsenceStatusUpdateInput() {}</span>
 
-<span class="nc" id="L195">    public AbsenceStatus getStatus() { return status; }</span>
-<span class="nc" id="L196">    public void setStatus(AbsenceStatus status) { this.status = status; }</span>
+<span class="fc" id="L195">    public AbsenceStatus getStatus() { return status; }</span>
+<span class="fc" id="L196">    public void setStatus(AbsenceStatus status) { this.status = status; }</span>
   }
 
   public static class PeriodByDateInput {
     private String date;          // yyyy-MM-dd
     private AbsencePeriod period; // AM/PM/FULL_DAY
 
-<span class="nc" id="L203">    public PeriodByDateInput() {}</span>
+<span class="fc" id="L203">    public PeriodByDateInput() {}</span>
 
-<span class="nc" id="L205">    public String getDate() { return date; }</span>
-<span class="nc" id="L206">    public void setDate(String date) { this.date = date; }</span>
+<span class="fc" id="L205">    public String getDate() { return date; }</span>
+<span class="fc" id="L206">    public void setDate(String date) { this.date = date; }</span>
 
-<span class="nc" id="L208">    public AbsencePeriod getPeriod() { return period; }</span>
-<span class="nc" id="L209">    public void setPeriod(AbsencePeriod period) { this.period = period; }</span>
+<span class="fc" id="L208">    public AbsencePeriod getPeriod() { return period; }</span>
+<span class="fc" id="L209">    public void setPeriod(AbsencePeriod period) { this.period = period; }</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

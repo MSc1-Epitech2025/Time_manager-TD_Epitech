@@ -19,9 +19,9 @@ public class ClockGraphQLController {
 
     private final ClockService clockService;
 
-<span class="nc" id="L22">    public ClockGraphQLController(ClockService clockService) {</span>
-<span class="nc" id="L23">        this.clockService = clockService;</span>
-<span class="nc" id="L24">    }</span>
+<span class="fc" id="L22">    public ClockGraphQLController(ClockService clockService) {</span>
+<span class="fc" id="L23">        this.clockService = clockService;</span>
+<span class="fc" id="L24">    }</span>
 
     // === QUERIES ===
     @QueryMapping
@@ -30,9 +30,9 @@ public class ClockGraphQLController {
             @Argument String to,
             Authentication auth
     ) {
-<span class="nc bnc" id="L33" title="All 2 branches missed.">        Instant fromInstant = from != null ? Instant.parse(from) : null;</span>
-<span class="nc bnc" id="L34" title="All 2 branches missed.">        Instant toInstant = to != null ? Instant.parse(to) : null;</span>
-<span class="nc" id="L35">        return clockService.listForEmail(auth.getName(), fromInstant, toInstant);</span>
+<span class="fc bfc" id="L33" title="All 2 branches covered.">        Instant fromInstant = from != null ? Instant.parse(from) : null;</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">        Instant toInstant = to != null ? Instant.parse(to) : null;</span>
+<span class="fc" id="L35">        return clockService.listForEmail(auth.getName(), fromInstant, toInstant);</span>
     }
 
     @PreAuthorize(&quot;hasAnyAuthority('MANAGER','ADMIN')&quot;)
@@ -42,9 +42,9 @@ public class ClockGraphQLController {
             @Argument String from,
             @Argument String to
     ) {
-<span class="nc bnc" id="L45" title="All 2 branches missed.">        Instant fromInstant = from != null ? Instant.parse(from) : null;</span>
-<span class="nc bnc" id="L46" title="All 2 branches missed.">        Instant toInstant = to != null ? Instant.parse(to) : null;</span>
-<span class="nc" id="L47">        return clockService.listForUser(userId, fromInstant, toInstant);</span>
+<span class="fc bfc" id="L45" title="All 2 branches covered.">        Instant fromInstant = from != null ? Instant.parse(from) : null;</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">        Instant toInstant = to != null ? Instant.parse(to) : null;</span>
+<span class="fc" id="L47">        return clockService.listForUser(userId, fromInstant, toInstant);</span>
     }
 
     // === MUTATIONS ===
@@ -53,7 +53,7 @@ public class ClockGraphQLController {
             @Argument ClockCreateRequest input,
             Authentication auth
     ) {
-<span class="nc" id="L56">        return clockService.createForMe(auth.getName(), input);</span>
+<span class="fc" id="L56">        return clockService.createForMe(auth.getName(), input);</span>
     }
 
     @PreAuthorize(&quot;hasAnyAuthority('MANAGER','ADMIN')&quot;)
@@ -62,18 +62,18 @@ public class ClockGraphQLController {
             @Argument String userId,
             @Argument ClockCreateRequest input
     ) {
-<span class="nc" id="L65">        return clockService.createForUser(userId, input);</span>
+<span class="fc" id="L65">        return clockService.createForUser(userId, input);</span>
     }
 
     // === EXCEPTIONS ===
     @org.springframework.web.bind.annotation.ExceptionHandler(IllegalStateException.class)
     public String handleIllegalState(IllegalStateException ex) {
-<span class="nc" id="L71">        return &quot;Erreur: &quot; + ex.getMessage();</span>
+<span class="fc" id="L71">        return &quot;Erreur: &quot; + ex.getMessage();</span>
     }
 
     @org.springframework.web.bind.annotation.ExceptionHandler(EntityNotFoundException.class)
     public String handleNotFound(EntityNotFoundException ex) {
-<span class="nc" id="L76">        return &quot;Not found&quot;;</span>
+<span class="fc" id="L76">        return &quot;Not found&quot;;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>
