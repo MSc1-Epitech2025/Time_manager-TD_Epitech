@@ -2,7 +2,7 @@
   "scripts": {
     "docker:build": "docker compose up --build",
     "docker:down": "docker compose down -v",
-    "sonar:scan": "npx sonar-scanner"
+    "sonar:scan": "docker compose run --rm sonar-scan"
   },
   "devDependencies": {
     "@angular/cli": "^20.3.5"
