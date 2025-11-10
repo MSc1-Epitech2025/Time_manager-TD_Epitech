@@ -83,8 +83,24 @@ services:
     environment:
       - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
     volumes:
-      - ./sonar_data:/opt/sonarqube/data
-      - ./sonar_logs:/opt/sonarqube/logs
+      - ./sonarqube/sonar_data:/opt/sonarqube/data
+      - ./sonarqube/sonar_logs:/opt/sonarqube/logs
+
+  sonar-scan:
+    build:
+      context: .
+      dockerfile: sonarqube/Dockerfile.sonar
+    environment:
+      - SONAR_HOST_URL=${SONAR_HOST_URL}
+      - SONAR_TOKEN=${SONAR_TOKEN}
+    depends_on:
+      - sonarqube
+    volumes:
+      - ./sonarqube/sonar-project.properties:/usr/src/sonar-project.properties
+    command: >
+      sonar-scanner
+      -Dsonar.host.url=${SONAR_HOST_URL}
+      -Dsonar.token=${SONAR_TOKEN}
 
 volumes:
   mariadb_data:
