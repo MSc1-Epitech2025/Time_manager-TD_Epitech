@@ -61,22 +61,33 @@ docker compose down -v
 .\gradlew.bat build
 ```
 
-### Start SonarQube (launch backend build before SonarQube)
+### 📡 Sonarqube
+### Start SonarQube backend analysis
 
 ```bash
-npm run sonar:scan
+npm run sonar:backend
+```
+### Start SonarQube frontend analysis
+
+```bash
+npm run sonar:frontend
+```
+### Start SonarQube all analysis
+
+```bash
+npm run sonar:all
 ```
 ---
 
 ## 🌐 Service Access
 
-| Service                   | URL                                            | Description                                      |
-|---------------------------|------------------------------------------------|--------------------------------------------------|
-| **Frontend (Angular)**    | [http://localhost:4200](http://localhost:4200) | Angular web app (dev mode with live reload)      |
-| **Backend (Spring Boot)** | [http://localhost:8080](http://localhost:8080) | REST API server                                  |
-| **Database (MariaDB)**    | `localhost:3307`                               | SQL access (user: `root`, password: `root`)      |
-| **Reverse proxy (Nginx)** | [http://localhost:3030](http://localhost:3030) | Reserve proxy for secure api call make by client |
-| **SonarQube**             | [http://localhost:9000](http://localhost:3030) | SonarQube for analyze all code in the project    |
+| Service                   | URL                                            | Description                                                                                                              |
+|---------------------------|------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
+| **Frontend (Angular)**    | [http://localhost:4200](http://localhost:4200) | Angular web app (dev mode with live reload)                                                                              |
+| **Backend (Spring Boot)** | [http://localhost:8080](http://localhost:8080) | REST or GRAPHQL API server                                                                                               |
+| **Database (MariaDB)**    | `localhost:3307`                               | SQL access (user: `root`, password: `root`)                                                                              |
+| **Reverse proxy (Nginx)** | [http://localhost:3030](http://localhost:3030) | Reserve proxy for secure api call make by client                                                                         |
+| **SonarQube**             | [http://localhost:9000](http://localhost:3030) | SonarQube for analyze all code in the project.<br/>More détails here [➡️ Documentation SonarQube](./sonarqube/README.md) |
 ---
 
 ## 🧱 Project Structure
@@ -97,6 +108,14 @@ Time_manager-TD_Epitech/
 ├── reverse-proxy/               # Reverse proxy (nginx)
 │   └── nginx.conf
 │
+├── sonarqube/
+│   ├── backend/
+│   │   ├── Dockerfile.sonar
+│   │   └── sonar-project.properties
+│   ├── frontend/
+│   │   ├── Dockerfile.sonar
+│   │   └── sonar-project.properties
+│   ├── README.md
 │
 ├── sonar-project.properties # SonarQube configuration
 ├── docker-compose.yml      # Docker orchestration
@@ -112,32 +131,44 @@ All configuration is centralized in the `.env` file:
 
 ```bash
 # 🌐 Frontend
-FRONTEND_PORT=4200
-FRONTEND_CONTAINER_NAME=frontend
-FRONTEND_CONTEXT=./frontend
-FRONTEND_DOCKERFILE=Dockerfile
+FRONTEND_PORT=xxxxxxxxxxxxxxxxxxxx
+FRONTEND_CONTAINER_NAME=xxxxxxxxxxxxxxxxxxxx
+FRONTEND_CONTEXT=./xxxxxxxxxxxxxxxxxxxx
+FRONTEND_DOCKERFILE=xxxxxxxxxxxxxxxxxxxx
 
 # ⚙️ Backend
-BACKEND_PORT=8080
-BACKEND_CONTAINER_NAME=backend
-BACKEND_CONTEXT=./backend
-BACKEND_DOCKERFILE=Dockerfile
-SPRING_PROFILES_ACTIVE=dev
+BACKEND_PORT=8085
+BACKEND_CONTAINER_NAME=xxxxxxxxxxxxxxxxxxxx
+BACKEND_CONTEXT=./xxxxxxxxxxxxxxxxxxxx
+BACKEND_DOCKERFILE=xxxxxxxxxxxxxxxxxxxx
+SPRING_PROFILES_ACTIVE=xxxxxxxxxxxxxxxxxxxx
+
+# JWT
+SECURITY_JWT_SECRET=xxxxxxxxxxxxxxxxxxxx
+SECURITY_JWT_ISSUER=xxxxxxxxxxxxxxxxxxxx
+SECURITY_JWT_EXPMINUTES=xxxxxxxxxxxxxxxxxxxx
+SECURITY_JWT_REFRESH_SECRET=xxxxxxxxxxxxxxxxxxxx
+SECURITY_JWT_REFRESH_DAYS=xxxxxxxxxxxxxxxxxxxx
 
 # 🐬 MariaDB
-DB_CONTAINER_NAME=mariadb
-DB_IMAGE=mariadb:11
-DB_PORT_HOST=3307
-DB_PORT_CONTAINER=3306
-DB_ROOT_PASSWORD=root
-DB_NAME=time_manager
+DB_IMAGE=mariadb:xxxxxxxxxxxxxxxxxxxx
+DB_PORT_HOST=xxxxxxxxxxxxxxxxxxxx
+DB_PORT_CONTAINER=xxxxxxxxxxxxxxxxxxxx
+DB_ROOT_PASSWORD=xxxxxxxxxxxxxxxxxxxx
+DB_NAME=xxxxxxxxxxxxxxxxxxxx
+DB_CONTAINER_NAME=xxxxxxxxxxxxxxxxxxxx
 
-# 🔥 Angular hot reload
-CHOKIDAR_USEPOLLING=true
+# 🔥 Hot reload Angular
+CHOKIDAR_USEPOLLING=xxxxxxxxxxxxxxxxxxxx
 
-# login SonarQube
-username: admin
-password: Rewrap9-Immunity3-Jinx6-Captivate7-Luncheon2-Estimate3
+# SonarQube
+SONAR_HOST_URL=http://sonarqube:9000
+SONAR_TOKEN=xxxxxxxxxxxxxxxxxxxx
+
+#Azure
+AZURE_CLIENT_SECRET=Yzxxxxxxxxxxxxxxxxxxxx
+AZURE_TENANT_ID=90xxxxxxxxxxxxxxxxxxxx
+AZURE_CLIENT_ID=axxxxxxxxxxxxxxxxxxxx
 ```
 
 ---
