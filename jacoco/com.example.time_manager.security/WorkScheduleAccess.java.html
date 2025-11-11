@@ -14,57 +14,57 @@ public class WorkScheduleAccess {
   private final UserRepository userRepo;
   private final TeamMemberRepository teamMemberRepo;
 
-<span class="nc" id="L17">  public WorkScheduleAccess(UserRepository userRepo, TeamMemberRepository teamMemberRepo) {</span>
-<span class="nc" id="L18">    this.userRepo = userRepo;</span>
-<span class="nc" id="L19">    this.teamMemberRepo = teamMemberRepo;</span>
-<span class="nc" id="L20">  }</span>
+<span class="fc" id="L17">  public WorkScheduleAccess(UserRepository userRepo, TeamMemberRepository teamMemberRepo) {</span>
+<span class="fc" id="L18">    this.userRepo = userRepo;</span>
+<span class="fc" id="L19">    this.teamMemberRepo = teamMemberRepo;</span>
+<span class="fc" id="L20">  }</span>
 
   public void assertCanSelfManage(String userId) {
-<span class="nc bnc" id="L23" title="All 4 branches missed.">    if (!(isAdmin(userId) || isManager(userId))) {</span>
-<span class="nc" id="L24">      throw new AccessDeniedException(&quot;Only MANAGER or ADMIN can update their own schedule.&quot;);</span>
+<span class="fc bfc" id="L23" title="All 4 branches covered.">    if (!(isAdmin(userId) || isManager(userId))) {</span>
+<span class="fc" id="L24">      throw new AccessDeniedException(&quot;Only MANAGER or ADMIN can update their own schedule.&quot;);</span>
     }
-<span class="nc" id="L26">  }</span>
+<span class="fc" id="L26">  }</span>
 
   public void assertCanManage(String actorUserId, String targetUserId) {
-<span class="nc bnc" id="L29" title="All 4 branches missed.">    if (actorUserId == null || targetUserId == null) {</span>
-<span class="nc" id="L30">      throw new AccessDeniedException(&quot;Invalid users&quot;);</span>
+<span class="fc bfc" id="L29" title="All 4 branches covered.">    if (actorUserId == null || targetUserId == null) {</span>
+<span class="fc" id="L30">      throw new AccessDeniedException(&quot;Invalid users&quot;);</span>
     }
-<span class="nc bnc" id="L32" title="All 2 branches missed.">    if (actorUserId.equals(targetUserId)) {</span>
-<span class="nc" id="L33">      assertCanSelfManage(actorUserId);</span>
-<span class="nc" id="L34">      return;</span>
+<span class="fc bfc" id="L32" title="All 2 branches covered.">    if (actorUserId.equals(targetUserId)) {</span>
+<span class="fc" id="L33">      assertCanSelfManage(actorUserId);</span>
+<span class="fc" id="L34">      return;</span>
     }
-<span class="nc bnc" id="L36" title="All 2 branches missed.">    if (isAdmin(actorUserId)) return;</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">    if (isAdmin(actorUserId)) return;</span>
 
-<span class="nc bnc" id="L38" title="All 4 branches missed.">    if (isManager(actorUserId) &amp;&amp; shareTeamSafe(actorUserId, targetUserId)) return;</span>
+<span class="fc bfc" id="L38" title="All 4 branches covered.">    if (isManager(actorUserId) &amp;&amp; shareTeamSafe(actorUserId, targetUserId)) return;</span>
 
-<span class="nc" id="L40">    throw new AccessDeniedException(&quot;You are not allowed to modify this user's schedule.&quot;);</span>
+<span class="fc" id="L40">    throw new AccessDeniedException(&quot;You are not allowed to modify this user's schedule.&quot;);</span>
   }
 
   private boolean shareTeamSafe(String userA, String userB) {
-<span class="nc" id="L44">    List&lt;Long&gt; managerTeamIds = teamMemberRepo.findTeamIdsByUserId(userA);</span>
-<span class="nc bnc" id="L45" title="All 2 branches missed.">    if (managerTeamIds.isEmpty()) return false;</span>
-<span class="nc bnc" id="L46" title="All 2 branches missed.">    for (Long teamId : managerTeamIds) {</span>
-<span class="nc bnc" id="L47" title="All 2 branches missed.">      if (teamMemberRepo.existsByTeam_IdAndUser_Id(teamId, userB)) {</span>
-<span class="nc" id="L48">        return true;</span>
+<span class="fc" id="L44">    List&lt;Long&gt; managerTeamIds = teamMemberRepo.findTeamIdsByUserId(userA);</span>
+<span class="fc bfc" id="L45" title="All 2 branches covered.">    if (managerTeamIds.isEmpty()) return false;</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">    for (Long teamId : managerTeamIds) {</span>
+<span class="fc bfc" id="L47" title="All 2 branches covered.">      if (teamMemberRepo.existsByTeam_IdAndUser_Id(teamId, userB)) {</span>
+<span class="fc" id="L48">        return true;</span>
       }
-<span class="nc" id="L50">    }</span>
-<span class="nc" id="L51">    return false;</span>
+<span class="fc" id="L50">    }</span>
+<span class="fc" id="L51">    return false;</span>
   }
 
   private boolean isAdmin(String userId) {
-<span class="nc" id="L55">    return userRepo.findById(userId)</span>
-<span class="nc" id="L56">        .map(User::getRole)</span>
-<span class="nc" id="L57">        .map(String::toLowerCase)</span>
-<span class="nc" id="L58">        .map(s -&gt; s.contains(&quot;admin&quot;))</span>
-<span class="nc" id="L59">        .orElse(false);</span>
+<span class="fc" id="L55">    return userRepo.findById(userId)</span>
+<span class="fc" id="L56">        .map(User::getRole)</span>
+<span class="fc" id="L57">        .map(String::toLowerCase)</span>
+<span class="fc" id="L58">        .map(s -&gt; s.contains(&quot;admin&quot;))</span>
+<span class="fc" id="L59">        .orElse(false);</span>
   }
 
   private boolean isManager(String userId) {
-<span class="nc" id="L63">    return userRepo.findById(userId)</span>
-<span class="nc" id="L64">        .map(User::getRole)</span>
-<span class="nc" id="L65">        .map(String::toLowerCase)</span>
-<span class="nc" id="L66">        .map(s -&gt; s.contains(&quot;manager&quot;))</span>
-<span class="nc" id="L67">        .orElse(false);</span>
+<span class="fc" id="L63">    return userRepo.findById(userId)</span>
+<span class="fc" id="L64">        .map(User::getRole)</span>
+<span class="fc" id="L65">        .map(String::toLowerCase)</span>
+<span class="fc" id="L66">        .map(s -&gt; s.contains(&quot;manager&quot;))</span>
+<span class="fc" id="L67">        .orElse(false);</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

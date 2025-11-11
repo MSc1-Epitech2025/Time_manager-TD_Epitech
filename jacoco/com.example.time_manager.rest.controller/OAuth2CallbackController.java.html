@@ -17,51 +17,51 @@ public class OAuth2CallbackController {
     private final UserService userService;
     private final JwtUtil jwtUtil;
 
-<span class="nc" id="L20">    public OAuth2CallbackController(UserService userService, JwtUtil jwtUtil) {</span>
-<span class="nc" id="L21">        this.userService = userService;</span>
-<span class="nc" id="L22">        this.jwtUtil = jwtUtil;</span>
-<span class="nc" id="L23">    }</span>
+<span class="fc" id="L20">    public OAuth2CallbackController(UserService userService, JwtUtil jwtUtil) {</span>
+<span class="fc" id="L21">        this.userService = userService;</span>
+<span class="fc" id="L22">        this.jwtUtil = jwtUtil;</span>
+<span class="fc" id="L23">    }</span>
 
     @GetMapping(&quot;/oauth2/success&quot;)
     public ResponseEntity&lt;Void&gt; handleAzureCallback(Authentication auth, HttpServletResponse response) {
-<span class="nc bnc" id="L27" title="All 2 branches missed.">        if (auth == null) {</span>
-<span class="nc" id="L28">            throw new RuntimeException(&quot;No auth context&quot;);</span>
+<span class="fc bfc" id="L27" title="All 2 branches covered.">        if (auth == null) {</span>
+<span class="fc" id="L28">            throw new RuntimeException(&quot;No auth context&quot;);</span>
         }
 
-<span class="nc" id="L31">        var principal = (org.springframework.security.oauth2.core.oidc.user.OidcUser) auth.getPrincipal();</span>
-<span class="nc" id="L32">        String email = principal.getEmail();</span>
-<span class="nc" id="L33">        String azureOid = principal.getClaim(&quot;oid&quot;);</span>
+<span class="fc" id="L31">        var principal = (org.springframework.security.oauth2.core.oidc.user.OidcUser) auth.getPrincipal();</span>
+<span class="fc" id="L32">        String email = principal.getEmail();</span>
+<span class="fc" id="L33">        String azureOid = principal.getClaim(&quot;oid&quot;);</span>
 
-<span class="nc" id="L35">        User user = userService.findByEmail(email).orElseGet(() -&gt; {</span>
-<span class="nc" id="L36">            User u = new User();</span>
-<span class="nc" id="L37">            u.setEmail(email);</span>
-<span class="nc" id="L38">            u.setFirstName(principal.getGivenName());</span>
-<span class="nc" id="L39">            u.setLastName(principal.getFamilyName());</span>
-<span class="nc" id="L40">            u.setPassword(&quot;oauth2&quot;);</span>
-<span class="nc" id="L41">            u.setRole(&quot;[\&quot;employee\&quot;]&quot;);</span>
-<span class="nc" id="L42">            u.setAzureOid(azureOid);</span>
-<span class="nc" id="L43">            return userService.saveUser(u);</span>
+<span class="fc" id="L35">        User user = userService.findByEmail(email).orElseGet(() -&gt; {</span>
+<span class="fc" id="L36">            User u = new User();</span>
+<span class="fc" id="L37">            u.setEmail(email);</span>
+<span class="fc" id="L38">            u.setFirstName(principal.getGivenName());</span>
+<span class="fc" id="L39">            u.setLastName(principal.getFamilyName());</span>
+<span class="fc" id="L40">            u.setPassword(&quot;oauth2&quot;);</span>
+<span class="fc" id="L41">            u.setRole(&quot;[\&quot;employee\&quot;]&quot;);</span>
+<span class="fc" id="L42">            u.setAzureOid(azureOid);</span>
+<span class="fc" id="L43">            return userService.saveUser(u);</span>
         });
 
-<span class="nc bnc" id="L46" title="All 4 branches missed.">        if (user.getAzureOid() == null || user.getAzureOid().isBlank()) {</span>
-<span class="nc" id="L47">            user.setAzureOid(azureOid);</span>
-<span class="nc" id="L48">            userService.saveUser(user);</span>
+<span class="pc bpc" id="L46" title="1 of 4 branches missed.">        if (user.getAzureOid() == null || user.getAzureOid().isBlank()) {</span>
+<span class="fc" id="L47">            user.setAzureOid(azureOid);</span>
+<span class="fc" id="L48">            userService.saveUser(user);</span>
         }
 
-<span class="nc" id="L51">        String accessToken = jwtUtil.generateAccessToken(</span>
-<span class="nc" id="L52">                user.getEmail(), user.getId(), user.getFirstName(), user.getRole()</span>
+<span class="fc" id="L51">        String accessToken = jwtUtil.generateAccessToken(</span>
+<span class="fc" id="L52">                user.getEmail(), user.getId(), user.getFirstName(), user.getRole()</span>
         );
-<span class="nc" id="L54">        String refreshToken = jwtUtil.generateRefreshToken(user.getEmail(), user.getId());</span>
+<span class="fc" id="L54">        String refreshToken = jwtUtil.generateRefreshToken(user.getEmail(), user.getId());</span>
 
-<span class="nc" id="L56">        ResponseCookie accessCookie = ResponseCookie.from(&quot;access_token&quot;, accessToken)</span>
-<span class="nc" id="L57">                .httpOnly(true).secure(true).sameSite(&quot;None&quot;).path(&quot;/graphql&quot;).build();</span>
-<span class="nc" id="L58">        response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());</span>
+<span class="fc" id="L56">        ResponseCookie accessCookie = ResponseCookie.from(&quot;access_token&quot;, accessToken)</span>
+<span class="fc" id="L57">                .httpOnly(true).secure(true).sameSite(&quot;None&quot;).path(&quot;/graphql&quot;).build();</span>
+<span class="fc" id="L58">        response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());</span>
 
-<span class="nc" id="L60">        ResponseCookie refreshCookie = ResponseCookie.from(&quot;refresh_token&quot;, refreshToken)</span>
-<span class="nc" id="L61">                .httpOnly(true).secure(true).sameSite(&quot;None&quot;).path(&quot;/graphql&quot;).build();</span>
-<span class="nc" id="L62">        response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());</span>
+<span class="fc" id="L60">        ResponseCookie refreshCookie = ResponseCookie.from(&quot;refresh_token&quot;, refreshToken)</span>
+<span class="fc" id="L61">                .httpOnly(true).secure(true).sameSite(&quot;None&quot;).path(&quot;/graphql&quot;).build();</span>
+<span class="fc" id="L62">        response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());</span>
 
-<span class="nc" id="L64">        return ResponseEntity.ok().build();</span>
+<span class="fc" id="L64">        return ResponseEntity.ok().build();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

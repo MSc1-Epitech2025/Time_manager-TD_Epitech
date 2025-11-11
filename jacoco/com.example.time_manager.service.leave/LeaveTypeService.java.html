@@ -12,29 +12,29 @@ import java.util.List;
 @Transactional
 public class LeaveTypeService {
   private final LeaveTypeRepository repo;
-<span class="nc" id="L15">  public LeaveTypeService(LeaveTypeRepository repo) { this.repo = repo; }</span>
+<span class="fc" id="L15">  public LeaveTypeService(LeaveTypeRepository repo) { this.repo = repo; }</span>
 
-<span class="nc" id="L17">  public List&lt;LeaveType&gt; listAll() { return repo.findAll(); }</span>
+<span class="fc" id="L17">  public List&lt;LeaveType&gt; listAll() { return repo.findAll(); }</span>
 
   public LeaveType getByCode(String code) {
-<span class="nc" id="L20">    return repo.findById(code).orElseThrow(() -&gt; new IllegalArgumentException(&quot;LeaveType not found: &quot; + code));</span>
+<span class="fc" id="L20">    return repo.findById(code).orElseThrow(() -&gt; new IllegalArgumentException(&quot;LeaveType not found: &quot; + code));</span>
   }
 
   public LeaveType create(String code, String label) {
-<span class="nc bnc" id="L24" title="All 2 branches missed.">    if (repo.existsById(code)) throw new IllegalStateException(&quot;LeaveType already exists: &quot; + code);</span>
-<span class="nc" id="L25">    return repo.save(new LeaveType(code, label));</span>
+<span class="fc bfc" id="L24" title="All 2 branches covered.">    if (repo.existsById(code)) throw new IllegalStateException(&quot;LeaveType already exists: &quot; + code);</span>
+<span class="fc" id="L25">    return repo.save(new LeaveType(code, label));</span>
   }
 
   public LeaveType update(String code, String label) {
-<span class="nc" id="L29">    LeaveType lt = getByCode(code);</span>
-<span class="nc bnc" id="L30" title="All 2 branches missed.">    if (label != null) lt.setLabel(label);</span>
-<span class="nc" id="L31">    return repo.save(lt);</span>
+<span class="fc" id="L29">    LeaveType lt = getByCode(code);</span>
+<span class="fc bfc" id="L30" title="All 2 branches covered.">    if (label != null) lt.setLabel(label);</span>
+<span class="fc" id="L31">    return repo.save(lt);</span>
   }
 
   public boolean delete(String code) {
-<span class="nc bnc" id="L35" title="All 2 branches missed.">    if (!repo.existsById(code)) return false;</span>
-<span class="nc" id="L36">    repo.deleteById(code);</span>
-<span class="nc" id="L37">    return true;</span>
+<span class="fc bfc" id="L35" title="All 2 branches covered.">    if (!repo.existsById(code)) return false;</span>
+<span class="fc" id="L36">    repo.deleteById(code);</span>
+<span class="fc" id="L37">    return true;</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

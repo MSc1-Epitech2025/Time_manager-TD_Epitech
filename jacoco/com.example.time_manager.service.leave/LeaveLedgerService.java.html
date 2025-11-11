@@ -24,59 +24,59 @@ public class LeaveLedgerService {
 
   public LeaveLedgerService(LeaveLedgerRepository repo,
                             LeaveAccountRepository accountRepo,
-<span class="nc" id="L27">                            AbsenceRepository absenceRepo) {</span>
-<span class="nc" id="L28">    this.repo = repo;</span>
-<span class="nc" id="L29">    this.accountRepo = accountRepo;</span>
-<span class="nc" id="L30">    this.absenceRepo = absenceRepo;</span>
-<span class="nc" id="L31">  }</span>
+<span class="fc" id="L27">                            AbsenceRepository absenceRepo) {</span>
+<span class="fc" id="L28">    this.repo = repo;</span>
+<span class="fc" id="L29">    this.accountRepo = accountRepo;</span>
+<span class="fc" id="L30">    this.absenceRepo = absenceRepo;</span>
+<span class="fc" id="L31">  }</span>
 
   public LeaveLedger addEntry(Long accountId, LocalDate date, LeaveLedgerKind kind,
                               BigDecimal amount, Long refAbsenceId, String note) {
-<span class="nc bnc" id="L35" title="All 2 branches missed.">    if (amount == null) throw new IllegalArgumentException(&quot;amount is required&quot;);</span>
-<span class="nc bnc" id="L36" title="All 2 branches missed.">    if (amount.compareTo(BigDecimal.ZERO) &lt; 0)</span>
-<span class="nc" id="L37">      throw new IllegalArgumentException(&quot;amount must be &gt;= 0 (sign handled by kind)&quot;);</span>
+<span class="fc bfc" id="L35" title="All 2 branches covered.">    if (amount == null) throw new IllegalArgumentException(&quot;amount is required&quot;);</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">    if (amount.compareTo(BigDecimal.ZERO) &lt; 0)</span>
+<span class="fc" id="L37">      throw new IllegalArgumentException(&quot;amount must be &gt;= 0 (sign handled by kind)&quot;);</span>
 
-<span class="nc" id="L39">    LeaveAccount acc = accountRepo.findById(accountId)</span>
-<span class="nc" id="L40">      .orElseThrow(() -&gt; new IllegalArgumentException(&quot;LeaveAccount not found: &quot; + accountId));</span>
+<span class="fc" id="L39">    LeaveAccount acc = accountRepo.findById(accountId)</span>
+<span class="fc" id="L40">      .orElseThrow(() -&gt; new IllegalArgumentException(&quot;LeaveAccount not found: &quot; + accountId));</span>
 
-<span class="nc" id="L42">    LeaveLedger ll = new LeaveLedger();</span>
-<span class="nc" id="L43">    ll.setAccount(acc);</span>
-<span class="nc bnc" id="L44" title="All 2 branches missed.">    ll.setEntryDate(date != null ? date : LocalDate.now());</span>
-<span class="nc" id="L45">    ll.setKind(kind);</span>
-<span class="nc" id="L46">    ll.setAmount(amount);</span>
-<span class="nc bnc" id="L47" title="All 2 branches missed.">    if (refAbsenceId != null) {</span>
-<span class="nc" id="L48">      Absence abs = absenceRepo.findById(refAbsenceId)</span>
-<span class="nc" id="L49">        .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Absence not found: &quot; + refAbsenceId));</span>
-<span class="nc" id="L50">      ll.setReferenceAbsence(abs);</span>
+<span class="fc" id="L42">    LeaveLedger ll = new LeaveLedger();</span>
+<span class="fc" id="L43">    ll.setAccount(acc);</span>
+<span class="fc bfc" id="L44" title="All 2 branches covered.">    ll.setEntryDate(date != null ? date : LocalDate.now());</span>
+<span class="fc" id="L45">    ll.setKind(kind);</span>
+<span class="fc" id="L46">    ll.setAmount(amount);</span>
+<span class="fc bfc" id="L47" title="All 2 branches covered.">    if (refAbsenceId != null) {</span>
+<span class="fc" id="L48">      Absence abs = absenceRepo.findById(refAbsenceId)</span>
+<span class="fc" id="L49">        .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Absence not found: &quot; + refAbsenceId));</span>
+<span class="fc" id="L50">      ll.setReferenceAbsence(abs);</span>
     }
-<span class="nc" id="L52">    ll.setNote(note);</span>
-<span class="nc" id="L53">    return repo.save(ll);</span>
+<span class="fc" id="L52">    ll.setNote(note);</span>
+<span class="fc" id="L53">    return repo.save(ll);</span>
   }
 
   public LeaveLedger update(Long id, LocalDate date, BigDecimal amount, String note) {
-<span class="nc" id="L57">    LeaveLedger ll = repo.findById(id)</span>
-<span class="nc" id="L58">      .orElseThrow(() -&gt; new IllegalArgumentException(&quot;LeaveLedger not found: &quot; + id));</span>
-<span class="nc bnc" id="L59" title="All 2 branches missed.">    if (date != null) ll.setEntryDate(date);</span>
-<span class="nc bnc" id="L60" title="All 2 branches missed.">    if (amount != null) {</span>
-<span class="nc bnc" id="L61" title="All 2 branches missed.">      if (amount.compareTo(BigDecimal.ZERO) &lt; 0) throw new IllegalArgumentException(&quot;amount must be &gt;= 0&quot;);</span>
-<span class="nc" id="L62">      ll.setAmount(amount);</span>
+<span class="fc" id="L57">    LeaveLedger ll = repo.findById(id)</span>
+<span class="fc" id="L58">      .orElseThrow(() -&gt; new IllegalArgumentException(&quot;LeaveLedger not found: &quot; + id));</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">    if (date != null) ll.setEntryDate(date);</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">    if (amount != null) {</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">      if (amount.compareTo(BigDecimal.ZERO) &lt; 0) throw new IllegalArgumentException(&quot;amount must be &gt;= 0&quot;);</span>
+<span class="fc" id="L62">      ll.setAmount(amount);</span>
     }
-<span class="nc bnc" id="L64" title="All 2 branches missed.">    if (note != null) ll.setNote(note);</span>
-<span class="nc" id="L65">    return repo.save(ll);</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">    if (note != null) ll.setNote(note);</span>
+<span class="fc" id="L65">    return repo.save(ll);</span>
   }
 
   public boolean delete(Long id) {
-<span class="nc bnc" id="L69" title="All 2 branches missed.">    if (!repo.existsById(id)) return false;</span>
-<span class="nc" id="L70">    repo.deleteById(id);</span>
-<span class="nc" id="L71">    return true;</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">    if (!repo.existsById(id)) return false;</span>
+<span class="fc" id="L70">    repo.deleteById(id);</span>
+<span class="fc" id="L71">    return true;</span>
   }
 
   public List&lt;LeaveLedger&gt; listByAccount(Long accountId) {
-<span class="nc" id="L75">    return repo.findByAccount_IdOrderByEntryDateAsc(accountId);</span>
+<span class="fc" id="L75">    return repo.findByAccount_IdOrderByEntryDateAsc(accountId);</span>
   }
 
   public List&lt;LeaveLedger&gt; listByAccountBetween(Long accountId, LocalDate from, LocalDate to) {
-<span class="nc" id="L79">    return repo.findByAccount_IdAndEntryDateBetweenOrderByEntryDateAsc(accountId, from, to);</span>
+<span class="fc" id="L79">    return repo.findByAccount_IdAndEntryDateBetweenOrderByEntryDateAsc(accountId, from, to);</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>
