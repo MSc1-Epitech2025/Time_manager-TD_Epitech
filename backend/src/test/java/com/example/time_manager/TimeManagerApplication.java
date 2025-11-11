@@ -29,4 +29,17 @@ class TimeManagerApplicationTest {
         assertNotNull(annotation);
         assertEquals("com.example.time_manager", annotation.scanBasePackages()[0]);
     }
+
+    @Test
+    void testConstructorDoesNotThrow() {
+        assertDoesNotThrow(TimeManagerApplication::new);
+    }
+
+    @Test
+    void testMainWithNullArgsDoesNotThrow() {
+        try (MockedStatic<SpringApplication> mocked = mockStatic(SpringApplication.class)) {
+            assertDoesNotThrow(() -> TimeManagerApplication.main(null));
+            mocked.verify(() -> SpringApplication.run(TimeManagerApplication.class, (String[]) null)); // ✅ cast ajouté
+        }
+    }
 }
