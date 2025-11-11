@@ -1,3 +1,0 @@
-FROM sonarsource/sonar-scanner-cli:latest
-COPY . /usr/src
-WORKDIR /usr/src

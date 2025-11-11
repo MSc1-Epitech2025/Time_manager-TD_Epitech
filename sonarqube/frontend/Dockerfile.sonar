@@ -1,0 +1,12 @@
+FROM node:20-alpine AS builder
+WORKDIR /usr/src/app
+COPY ./frontend/package*.json ./
+RUN npm install
+COPY ./frontend .
+RUN npm run test -- --watch=false --browsers=ChromeHeadless --code-coverage
+
+FROM sonarsource/sonar-scanner-cli:latest
+WORKDIR /usr/src/app
+COPY --from=builder /usr/src/app .
+
+ENTRYPOINT ["sonar-scanner"]
