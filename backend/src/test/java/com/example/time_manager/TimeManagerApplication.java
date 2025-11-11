@@ -3,6 +3,7 @@ package com.example.time_manager;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -11,19 +12,21 @@ class TimeManagerApplicationTest {
 
     @Test
     void testMain_CallsSpringApplicationRun() {
-        try (MockedStatic<SpringApplication> mockedSpring = mockStatic(SpringApplication.class)) {
+        try (MockedStatic<SpringApplication> mocked = mockStatic(SpringApplication.class)) {
+            String[] args = {"--spring.profiles.active=test"};
 
-            TimeManagerApplication.main(new String[]{"--test"});
+            TimeManagerApplication.main(args);
 
-            mockedSpring.verify(() ->
-                    SpringApplication.run(TimeManagerApplication.class, new String[]{"--test"})
-            );
+            mocked.verify(() -> SpringApplication.run(TimeManagerApplication.class, args));
         }
     }
 
     @Test
     void testApplicationClassExists() {
-        assertDoesNotThrow(() -> Class.forName("com.example.time_manager.TimeManagerApplication"));
-        assertNotNull(TimeManagerApplication.class.getAnnotation(org.springframework.boot.autoconfigure.SpringBootApplication.class));
+        SpringBootApplication annotation =
+                TimeManagerApplication.class.getAnnotation(SpringBootApplication.class);
+
+        assertNotNull(annotation);
+        assertEquals("com.example.time_manager", annotation.scanBasePackages()[0]);
     }
 }
