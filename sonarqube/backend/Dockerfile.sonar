@@ -1,0 +1,12 @@
+FROM gradle:8.10.2-jdk21 AS builder
+WORKDIR /usr/src/app
+COPY . .
+
+WORKDIR /usr/src/app/backend
+RUN gradle clean test jacocoTestReport
+
+FROM sonarsource/sonar-scanner-cli:latest
+WORKDIR /usr/src/app
+COPY --from=builder /usr/src/app .
+
+ENTRYPOINT ["sonar-scanner"]
