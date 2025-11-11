@@ -39,8 +39,6 @@ public class LeaveLedger {
   @Column(name = "created_at", updatable = false, insertable = false)
   private Instant createdAt;
 
-  public LeaveLedger() {}
-
   // Getters / Setters
   public Long getId() { return id; }
   public void setId(Long id) { this.id = id; }
