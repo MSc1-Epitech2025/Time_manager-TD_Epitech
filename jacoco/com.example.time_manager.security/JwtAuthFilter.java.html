@@ -22,22 +22,22 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
 
-<span class="nc" id="L25">    public JwtAuthFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService) {</span>
-<span class="nc" id="L26">        this.jwtUtil = jwtUtil;</span>
-<span class="nc" id="L27">        this.userDetailsService = userDetailsService;</span>
-<span class="nc" id="L28">    }</span>
+<span class="fc" id="L25">    public JwtAuthFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService) {</span>
+<span class="fc" id="L26">        this.jwtUtil = jwtUtil;</span>
+<span class="fc" id="L27">        this.userDetailsService = userDetailsService;</span>
+<span class="fc" id="L28">    }</span>
 
     private String extractToken(HttpServletRequest request) {
         // 1) priorité au cookie &quot;access_token&quot;
-<span class="nc" id="L32">        Cookie[] cookies = request.getCookies();</span>
-<span class="nc bnc" id="L33" title="All 2 branches missed.">        if (cookies != null) {</span>
-<span class="nc bnc" id="L34" title="All 2 branches missed.">            for (Cookie c : cookies) {</span>
-<span class="nc bnc" id="L35" title="All 2 branches missed.">                if (&quot;access_token&quot;.equals(c.getName())) {</span>
-<span class="nc" id="L36">                    return c.getValue();</span>
+<span class="fc" id="L32">        Cookie[] cookies = request.getCookies();</span>
+<span class="fc bfc" id="L33" title="All 2 branches covered.">        if (cookies != null) {</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">            for (Cookie c : cookies) {</span>
+<span class="fc bfc" id="L35" title="All 2 branches covered.">                if (&quot;access_token&quot;.equals(c.getName())) {</span>
+<span class="fc" id="L36">                    return c.getValue();</span>
                 }
             }
         }
-<span class="nc" id="L40">        return null;</span>
+<span class="fc" id="L40">        return null;</span>
     }
 
     @Override
@@ -46,32 +46,32 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-<span class="nc" id="L49">        String token = extractToken(request);</span>
-<span class="nc" id="L50">        String username = null;</span>
+<span class="fc" id="L49">        String token = extractToken(request);</span>
+<span class="fc" id="L50">        String username = null;</span>
 
-<span class="nc bnc" id="L52" title="All 2 branches missed.">        if (token != null) {</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        if (token != null) {</span>
             try {
-<span class="nc" id="L54">                username = jwtUtil.extractUsername(token);</span>
-<span class="nc" id="L55">            } catch (Exception ignore) {</span>
-<span class="nc" id="L56">            }</span>
+<span class="fc" id="L54">                username = jwtUtil.extractUsername(token);</span>
+<span class="fc" id="L55">            } catch (Exception ignore) {</span>
+<span class="fc" id="L56">            }</span>
         }
 
-<span class="nc bnc" id="L59" title="All 6 branches missed.">        if (token != null &amp;&amp; username != null &amp;&amp; jwtUtil.isAccessTokenValid(token, username)) {</span>
-<span class="nc" id="L60">            UserDetails userDetails = userDetailsService.loadUserByUsername(username);</span>
+<span class="fc bfc" id="L59" title="All 6 branches covered.">        if (token != null &amp;&amp; username != null &amp;&amp; jwtUtil.isAccessTokenValid(token, username)) {</span>
+<span class="fc" id="L60">            UserDetails userDetails = userDetailsService.loadUserByUsername(username);</span>
 
-<span class="nc" id="L62">            var authToken = new UsernamePasswordAuthenticationToken(</span>
-<span class="nc" id="L63">                    userDetails, null, userDetails.getAuthorities());</span>
-<span class="nc" id="L64">            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));</span>
+<span class="fc" id="L62">            var authToken = new UsernamePasswordAuthenticationToken(</span>
+<span class="fc" id="L63">                    userDetails, null, userDetails.getAuthorities());</span>
+<span class="fc" id="L64">            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));</span>
 
-<span class="nc" id="L66">            SecurityContextHolder.getContext().setAuthentication(authToken);</span>
+<span class="fc" id="L66">            SecurityContextHolder.getContext().setAuthentication(authToken);</span>
 
-<span class="nc" id="L68">            System.out.println(&quot;User: &quot; + username);</span>
-<span class="nc" id="L69">            System.out.println(&quot;Authorities: &quot; + userDetails.getAuthorities());</span>
-<span class="nc" id="L70">        } else {</span>
-<span class="nc" id="L71">            SecurityContextHolder.clearContext();</span>
+<span class="fc" id="L68">            System.out.println(&quot;User: &quot; + username);</span>
+<span class="fc" id="L69">            System.out.println(&quot;Authorities: &quot; + userDetails.getAuthorities());</span>
+<span class="fc" id="L70">        } else {</span>
+<span class="fc" id="L71">            SecurityContextHolder.clearContext();</span>
         }
 
-<span class="nc" id="L74">        filterChain.doFilter(request, response);</span>
-<span class="nc" id="L75">    }</span>
+<span class="fc" id="L74">        filterChain.doFilter(request, response);</span>
+<span class="fc" id="L75">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>
