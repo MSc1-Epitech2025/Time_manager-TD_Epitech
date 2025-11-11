@@ -25,11 +25,9 @@ services:
     ports:
       - "${BACKEND_PORT}:8080"
     volumes:
-      - ./backend/src:/app/src
-      - ./backend/build.gradle:/app/build.gradle
-      - ./backend/settings.gradle:/app/settings.gradle
+      - ./backend:/app
       - gradle_cache:/home/gradle/.gradle
-    command: gradle bootRun --no-daemon
+    command: gradle bootRun --continuous --no-daemon
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       DB_CONTAINER_NAME: ${DB_CONTAINER_NAME:-mariadb}
@@ -117,41 +115,3 @@ services:
 volumes:
   mariadb_data:
   gradle_cache:
-
-# docker-compose for production build with MariaDB
-#version: "3.9"
-#
-#services:
-#  backend:
-#    build:
-#      context: ./backend
-#      dockerfile: Dockerfile
-#    container_name: backend
-#    ports:
-#      - "8080:8080"
-#    environment:
-#      SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/time_manager
-#      SPRING_DATASOURCE_USERNAME: root
-#      SPRING_DATASOURCE_PASSWORD: root
-#      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-#      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.MariaDBDialect
-#    depends_on:
-#      - mariadb
-#    restart: always
-#
-#  mariadb:
-#    image: mariadb:11
-#    container_name: mariadb
-#    restart: always
-#    environment:
-#      MARIADB_ROOT_PASSWORD: root
-#      MARIADB_DATABASE: time_manager
-#      MARIADB_USER: app_user
-#      MARIADB_PASSWORD: app_pass
-#    ports:
-#      - "3307:3306"
-#    volumes:
-#      - mariadb_data:/var/lib/mysql
-#
-#volumes:
-#  mariadb_data:
