@@ -13,44 +13,44 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 
 @Component
-<span class="nc" id="L16">public class GraphQlExceptionResolver extends DataFetcherExceptionResolverAdapter {</span>
+<span class="fc" id="L16">public class GraphQlExceptionResolver extends DataFetcherExceptionResolverAdapter {</span>
 
   @Override
   protected GraphQLError resolveToSingleError(Throwable ex, DataFetchingEnvironment env) {
 
-<span class="nc bnc" id="L21" title="All 2 branches missed.">    if (ex instanceof AccessDeniedException) {</span>
-<span class="nc" id="L22">      return GraphqlErrorBuilder.newError(env)</span>
-<span class="nc" id="L23">          .errorType(ErrorType.FORBIDDEN)</span>
-<span class="nc" id="L24">          .message(&quot;FORBIDDEN&quot;)</span>
-<span class="nc" id="L25">          .build();</span>
+<span class="fc bfc" id="L21" title="All 2 branches covered.">    if (ex instanceof AccessDeniedException) {</span>
+<span class="fc" id="L22">      return GraphqlErrorBuilder.newError(env)</span>
+<span class="fc" id="L23">          .errorType(ErrorType.FORBIDDEN)</span>
+<span class="fc" id="L24">          .message(&quot;FORBIDDEN&quot;)</span>
+<span class="fc" id="L25">          .build();</span>
     }
 
-<span class="nc bnc" id="L28" title="All 2 branches missed.">    if (ex instanceof EntityNotFoundException) {</span>
-<span class="nc" id="L29">      return GraphqlErrorBuilder.newError(env)</span>
-<span class="nc" id="L30">          .errorType(ErrorType.NOT_FOUND)</span>
-<span class="nc" id="L31">          .message(ex.getMessage())</span>
-<span class="nc" id="L32">          .build();</span>
+<span class="fc bfc" id="L28" title="All 2 branches covered.">    if (ex instanceof EntityNotFoundException) {</span>
+<span class="fc" id="L29">      return GraphqlErrorBuilder.newError(env)</span>
+<span class="fc" id="L30">          .errorType(ErrorType.NOT_FOUND)</span>
+<span class="fc" id="L31">          .message(ex.getMessage())</span>
+<span class="fc" id="L32">          .build();</span>
     }
 
-<span class="nc bnc" id="L35" title="All 4 branches missed.">    if (ex instanceof IllegalArgumentException || ex instanceof ConstraintViolationException) {</span>
-<span class="nc" id="L36">      return GraphqlErrorBuilder.newError(env)</span>
-<span class="nc" id="L37">          .errorType(ErrorType.BAD_REQUEST)</span>
-<span class="nc bnc" id="L38" title="All 2 branches missed.">          .message(ex.getMessage() != null ? ex.getMessage() : &quot;Invalid input&quot;)</span>
-<span class="nc" id="L39">          .build();</span>
+<span class="fc bfc" id="L35" title="All 4 branches covered.">    if (ex instanceof IllegalArgumentException || ex instanceof ConstraintViolationException) {</span>
+<span class="fc" id="L36">      return GraphqlErrorBuilder.newError(env)</span>
+<span class="fc" id="L37">          .errorType(ErrorType.BAD_REQUEST)</span>
+<span class="fc bfc" id="L38" title="All 2 branches covered.">          .message(ex.getMessage() != null ? ex.getMessage() : &quot;Invalid input&quot;)</span>
+<span class="fc" id="L39">          .build();</span>
     }
 
-<span class="nc bnc" id="L42" title="All 2 branches missed.">    if (ex instanceof DataIntegrityViolationException) {</span>
-<span class="nc" id="L43">      return GraphqlErrorBuilder.newError(env)</span>
-<span class="nc" id="L44">          .errorType(ErrorType.BAD_REQUEST)</span>
-<span class="nc" id="L45">          .message(&quot;Data integrity violation&quot;)</span>
-<span class="nc" id="L46">          .build();</span>
+<span class="fc bfc" id="L42" title="All 2 branches covered.">    if (ex instanceof DataIntegrityViolationException) {</span>
+<span class="fc" id="L43">      return GraphqlErrorBuilder.newError(env)</span>
+<span class="fc" id="L44">          .errorType(ErrorType.BAD_REQUEST)</span>
+<span class="fc" id="L45">          .message(&quot;Data integrity violation&quot;)</span>
+<span class="fc" id="L46">          .build();</span>
     }
 
-    // Fallback: laisse Spring logger, mais renvoie un message générique
-<span class="nc" id="L50">    return GraphqlErrorBuilder.newError(env)</span>
-<span class="nc" id="L51">        .errorType(ErrorType.INTERNAL_ERROR)</span>
-<span class="nc" id="L52">        .message(&quot;Unexpected error&quot;)</span>
-<span class="nc" id="L53">        .build();</span>
+    // Fallback: leaves Spring logger, but returns a generic message
+<span class="fc" id="L50">    return GraphqlErrorBuilder.newError(env)</span>
+<span class="fc" id="L51">        .errorType(ErrorType.INTERNAL_ERROR)</span>
+<span class="fc" id="L52">        .message(&quot;Unexpected error&quot;)</span>
+<span class="fc" id="L53">        .build();</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

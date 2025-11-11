@@ -38,67 +38,67 @@ public class LeaveAccountingBridge {
 
   public LeaveAccountingBridge(LeaveAccountRepository accountRepo,
                                LeaveLedgerRepository ledgerRepo,
-<span class="nc" id="L41">                               AbsenceDayRepository dayRepo) {</span>
-<span class="nc" id="L42">    this.accountRepo = accountRepo;</span>
-<span class="nc" id="L43">    this.ledgerRepo = ledgerRepo;</span>
-<span class="nc" id="L44">    this.dayRepo = dayRepo;</span>
-<span class="nc" id="L45">  }</span>
+<span class="fc" id="L41">                               AbsenceDayRepository dayRepo) {</span>
+<span class="fc" id="L42">    this.accountRepo = accountRepo;</span>
+<span class="fc" id="L43">    this.ledgerRepo = ledgerRepo;</span>
+<span class="fc" id="L44">    this.dayRepo = dayRepo;</span>
+<span class="fc" id="L45">  }</span>
 
   public void ensureDebitForApprovedAbsence(Absence absence) {
-<span class="nc bnc" id="L48" title="All 2 branches missed.">    if (absence.getStatus() != AbsenceStatus.APPROVED) return;</span>
+<span class="fc bfc" id="L48" title="All 2 branches covered.">    if (absence.getStatus() != AbsenceStatus.APPROVED) return;</span>
 
-<span class="nc" id="L50">    Optional&lt;String&gt; leaveCodeOpt = mapAbsenceToLeaveTypeCode(absence.getType());</span>
-<span class="nc bnc" id="L51" title="All 2 branches missed.">    if (leaveCodeOpt.isEmpty()) return; </span>
+<span class="fc" id="L50">    Optional&lt;String&gt; leaveCodeOpt = mapAbsenceToLeaveTypeCode(absence.getType());</span>
+<span class="fc bfc" id="L51" title="All 2 branches covered.">    if (leaveCodeOpt.isEmpty()) return; </span>
 
-<span class="nc" id="L53">    String leaveCode = leaveCodeOpt.get();</span>
-<span class="nc" id="L54">    String userId = absence.getUserId();</span>
+<span class="fc" id="L53">    String leaveCode = leaveCodeOpt.get();</span>
+<span class="fc" id="L54">    String userId = absence.getUserId();</span>
 
-<span class="nc" id="L56">    LeaveAccount account = accountRepo.findByUser_IdAndLeaveType_Code(userId, leaveCode)</span>
-<span class="nc" id="L57">        .orElseThrow(() -&gt; new IllegalStateException(</span>
+<span class="fc" id="L56">    LeaveAccount account = accountRepo.findByUser_IdAndLeaveType_Code(userId, leaveCode)</span>
+<span class="fc" id="L57">        .orElseThrow(() -&gt; new IllegalStateException(</span>
             &quot;No LeaveAccount for user=&quot; + userId + &quot; / leaveType=&quot; + leaveCode));
 
-<span class="nc" id="L60">    BigDecimal units = computeUnits(absence.getId()); </span>
-<span class="nc" id="L61">    LocalDate entryDate = absence.getStartDate();</span>
-<span class="nc" id="L62">    LeaveLedger ledger = ledgerRepo.findFirstByReferenceAbsence_Id(absence.getId())</span>
-<span class="nc" id="L63">        .orElseGet(LeaveLedger::new);</span>
+<span class="fc" id="L60">    BigDecimal units = computeUnits(absence.getId()); </span>
+<span class="fc" id="L61">    LocalDate entryDate = absence.getStartDate();</span>
+<span class="fc" id="L62">    LeaveLedger ledger = ledgerRepo.findFirstByReferenceAbsence_Id(absence.getId())</span>
+<span class="fc" id="L63">        .orElseGet(LeaveLedger::new);</span>
 
-<span class="nc" id="L65">    ledger.setAccount(account);</span>
-<span class="nc bnc" id="L66" title="All 2 branches missed.">    ledger.setEntryDate(entryDate != null ? entryDate : LocalDate.now());</span>
-<span class="nc" id="L67">    ledger.setKind(LeaveLedgerKind.DEBIT);</span>
-<span class="nc" id="L68">    ledger.setAmount(units);</span>
-<span class="nc" id="L69">    ledger.setReferenceAbsence(absence);</span>
-<span class="nc" id="L70">    ledger.setNote(&quot;Auto debit for absence #&quot; + absence.getId() + &quot; (&quot; + absence.getType() + &quot;)&quot;);</span>
+<span class="fc" id="L65">    ledger.setAccount(account);</span>
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">    ledger.setEntryDate(entryDate != null ? entryDate : LocalDate.now());</span>
+<span class="fc" id="L67">    ledger.setKind(LeaveLedgerKind.DEBIT);</span>
+<span class="fc" id="L68">    ledger.setAmount(units);</span>
+<span class="fc" id="L69">    ledger.setReferenceAbsence(absence);</span>
+<span class="fc" id="L70">    ledger.setNote(&quot;Auto debit for absence #&quot; + absence.getId() + &quot; (&quot; + absence.getType() + &quot;)&quot;);</span>
 
-<span class="nc" id="L72">    ledgerRepo.save(ledger);</span>
-<span class="nc" id="L73">  }</span>
+<span class="fc" id="L72">    ledgerRepo.save(ledger);</span>
+<span class="fc" id="L73">  }</span>
 
   public void removeDebitForAbsence(Long absenceId) {
-<span class="nc" id="L76">    ledgerRepo.deleteByReferenceAbsence_Id(absenceId);</span>
-<span class="nc" id="L77">  }</span>
+<span class="fc" id="L76">    ledgerRepo.deleteByReferenceAbsence_Id(absenceId);</span>
+<span class="fc" id="L77">  }</span>
 
   private BigDecimal computeUnits(Long absenceId) {
-<span class="nc" id="L80">    List&lt;AbsenceDay&gt; days = dayRepo.findByAbsenceIdOrderByAbsenceDateAsc(absenceId);</span>
-<span class="nc bnc" id="L81" title="All 2 branches missed.">    if (days.isEmpty()) return BigDecimal.ZERO;</span>
+<span class="fc" id="L80">    List&lt;AbsenceDay&gt; days = dayRepo.findByAbsenceIdOrderByAbsenceDateAsc(absenceId);</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">    if (days.isEmpty()) return BigDecimal.ZERO;</span>
 
-<span class="nc" id="L83">    double total = 0.0;</span>
-<span class="nc bnc" id="L84" title="All 2 branches missed.">    for (AbsenceDay d : days) {</span>
-<span class="nc bnc" id="L85" title="All 2 branches missed.">      AbsencePeriod p = d.getPeriod() != null ? d.getPeriod() : AbsencePeriod.FULL_DAY;</span>
-<span class="nc bnc" id="L86" title="All 2 branches missed.">      switch (p) {</span>
+<span class="fc" id="L83">    double total = 0.0;</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">    for (AbsenceDay d : days) {</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">      AbsencePeriod p = d.getPeriod() != null ? d.getPeriod() : AbsencePeriod.FULL_DAY;</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">      switch (p) {</span>
         case AM:
         case PM:
-<span class="nc" id="L89">          total += 0.5;</span>
-<span class="nc" id="L90">          break;</span>
+<span class="fc" id="L89">          total += 0.5;</span>
+<span class="fc" id="L90">          break;</span>
         case FULL_DAY:
         default:
-<span class="nc" id="L93">          total += 1.0;</span>
+<span class="fc" id="L93">          total += 1.0;</span>
       }
-<span class="nc" id="L95">    }</span>
-<span class="nc" id="L96">    return BigDecimal.valueOf(total);</span>
+<span class="fc" id="L95">    }</span>
+<span class="fc" id="L96">    return BigDecimal.valueOf(total);</span>
   }
 
   private Optional&lt;String&gt; mapAbsenceToLeaveTypeCode(AbsenceType type) {
-<span class="nc bnc" id="L100" title="All 2 branches missed.">    if (type == null) return Optional.empty();</span>
-<span class="nc" id="L101">    return Optional.ofNullable(TYPE_TO_LEAVE.get(type));</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">    if (type == null) return Optional.empty();</span>
+<span class="fc" id="L101">    return Optional.ofNullable(TYPE_TO_LEAVE.get(type));</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>
