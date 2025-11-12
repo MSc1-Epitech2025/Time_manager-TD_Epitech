@@ -1,6 +1,5 @@
-package com.example.time_manager.resolvers;
+package com.example.time_manager.graphql;
 
-import com.example.time_manager.graphql.GraphQlExceptionResolver;
 import graphql.GraphQLError;
 import graphql.execution.ExecutionStepInfo;
 import graphql.language.Field;
