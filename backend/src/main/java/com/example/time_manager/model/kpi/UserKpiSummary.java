@@ -17,15 +17,15 @@ private BigDecimal overtimeHours; // hours over planned
 private PunctualityStats punctuality; // late rate + delay
 
 
-private BigDecimal absenceDays; // total
+private BigDecimal absenceDays; 
 private List<AbsenceBreakdown> absenceByType;
 
 
-private List<LeaveBalance> leaveBalances; // VAC, RTT, ...
+private List<LeaveBalance> leaveBalances;
 
 
-private Integer reportsAuthored; // by this user as manager
-private Integer reportsReceived; // about this user
+private Integer reportsAuthored; 
+private Integer reportsReceived;
 
 private LocalDate periodStart;
 private LocalDate periodEnd;

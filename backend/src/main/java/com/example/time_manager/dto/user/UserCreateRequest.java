@@ -8,7 +8,7 @@ public class UserCreateRequest {
   @Email @NotBlank public String email;
   @NotBlank @Size(min=8) public String password;
   public String phone;
-  public String role;   // JSON string, ex: ["employee"]
+  public String role;   
   public String poste;
   public String avatarUrl;
 }

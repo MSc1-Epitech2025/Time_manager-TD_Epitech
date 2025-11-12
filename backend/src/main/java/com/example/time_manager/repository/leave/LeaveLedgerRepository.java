@@ -1,4 +1,3 @@
-// src/main/java/com/example/time_manager/repository/leave/LeaveLedgerRepository.java
 package com.example.time_manager.repository.leave;
 
 import java.math.BigDecimal;
@@ -19,7 +18,6 @@ public interface LeaveLedgerRepository extends JpaRepository<LeaveLedger, Long> 
   Optional<LeaveLedger> findFirstByReferenceAbsence_Id(Long absenceId);
   void deleteByReferenceAbsence_Id(Long absenceId);
 
-  /** Signed sum: ACCRUAL(+), ADJUSTMENT(+/-), other (-) */
   @Query("""
     select coalesce(sum(
       case ll.kind

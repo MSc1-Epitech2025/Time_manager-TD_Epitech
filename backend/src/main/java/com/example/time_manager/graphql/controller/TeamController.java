@@ -151,7 +151,6 @@ public java.util.List<TeamMembersGroup> myTeamMembers() {
     }
 
     /* ============================ INPUT RECORDS ======================== */
-    // Records used to bind GraphQL inputs to Java
 
     public record TeamInput(String name, String description) {}
     public record TeamUpdateInput(Long id, String name, String description) {}

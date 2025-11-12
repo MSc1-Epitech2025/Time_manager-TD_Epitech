@@ -167,22 +167,17 @@ public class ReportService {
         .orElseThrow(() -> new EntityNotFoundException("User not found: " + email));
   }
 
-  /**
-   * Naive role check from JSON string stored in User.role (e.g. ["employee","manager"]).
-   * Still used for ADMIN checks on read/update/delete.
-   */
   private boolean hasRole(User u, String roleUpper) {
     String raw = u.getRole();
     if (raw == null || raw.isBlank()) return false;
     String up = roleUpper.toUpperCase();
-    String normalized = raw.replaceAll("[\\[\\]\\s\\\"]", "").toUpperCase(); // EMPLOYEE,MANAGER,ADMIN
+    String normalized = raw.replaceAll("[\\[\\]\\s\\\"]", "").toUpperCase();
     for (String r : normalized.split(",")) {
       if (r.equals(up)) return true;
     }
     return false;
   }
 
-  /* ======================== ALIAS pour le contrôleur GraphQL ======================== */
 
   @Transactional(readOnly = true)
   public List<ReportResponse> listAll() {

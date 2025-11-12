@@ -1,4 +1,3 @@
-// AbsenceResponse.java
 package com.example.time_manager.dto.absence;
 
 import java.time.LocalDate;

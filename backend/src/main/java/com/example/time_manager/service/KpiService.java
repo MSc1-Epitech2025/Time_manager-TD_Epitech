@@ -30,7 +30,6 @@ public class KpiService {
 
     // -------------------- Helpers --------------------
     private static String weekdayEnumExpr(String aliasDateCol) {
-        // Map MariaDB WEEKDAY() (0=Mon .. 6=Sun) to ENUM('MON','TUE','WED','THU','FRI','SAT','SUN')
         return "CASE WEEKDAY(" + aliasDateCol + ") "
              + "WHEN 0 THEN 'MON' WHEN 1 THEN 'TUE' WHEN 2 THEN 'WED' WHEN 3 THEN 'THU' "
              + "WHEN 4 THEN 'FRI' WHEN 5 THEN 'SAT' ELSE 'SUN' END";

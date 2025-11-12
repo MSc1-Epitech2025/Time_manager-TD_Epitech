@@ -1,4 +1,3 @@
-// src/main/java/com/example/time_manager/repository/leave/LeaveAccountRepository.java
 package com.example.time_manager.repository.leave;
 
 import com.example.time_manager.model.leave.LeaveAccount;

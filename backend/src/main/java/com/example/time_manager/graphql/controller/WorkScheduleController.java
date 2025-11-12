@@ -15,7 +15,6 @@ import jakarta.validation.Valid;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
@@ -56,19 +55,18 @@ public class WorkScheduleController {
   @MutationMapping
   public WorkScheduleResponse upsertMyWorkSchedule(@Argument("input") @Valid WorkScheduleRequest input) {
     String me = currentUserId();
-    access.assertCanSelfManage(me);                    // <-- bloque EMPLOYEE
+    access.assertCanSelfManage(me);                  
     return workScheduleService.upsertForUser(me, input);
   }
 
   @MutationMapping
   public Boolean deleteMyWorkScheduleSlot(@Argument WorkDay day, @Argument WorkPeriod period) {
     String me = currentUserId();
-    access.assertCanSelfManage(me);                    // <-- bloque EMPLOYEE
+    access.assertCanSelfManage(me);                 
     workScheduleService.deleteSlot(me, day, period);
     return true;
   }
 
-  // Les mutations ciblant un autre user restent protégées par assertCanManage(...)
   @MutationMapping
   public WorkScheduleResponse upsertWorkSchedule(@Argument String userId, @Argument("input") @Valid WorkScheduleRequest input) {
     access.assertCanManage(currentUserId(), userId);

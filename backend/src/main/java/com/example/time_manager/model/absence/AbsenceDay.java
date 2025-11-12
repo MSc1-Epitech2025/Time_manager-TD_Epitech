@@ -4,11 +4,6 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-/**
- * Entité pour la table `absence_days`
- * - Clé étrangère vers `absence(id)` via ManyToOne
- * - Dates/heures en types Java Time
- */
 @Entity
 @Table(name = "absence_days")
 public class AbsenceDay {

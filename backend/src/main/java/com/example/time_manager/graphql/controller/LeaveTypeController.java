@@ -1,4 +1,3 @@
-// src/main/java/com/example/time_manager/graphql/controller/leave/LeaveTypeController.java
 package com.example.time_manager.graphql.controller;
 
 import com.example.time_manager.dto.leave.LeaveTypeCreateInput;

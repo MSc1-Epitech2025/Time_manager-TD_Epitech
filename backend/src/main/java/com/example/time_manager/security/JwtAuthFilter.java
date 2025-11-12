@@ -28,7 +28,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     }
 
     private String extractToken(HttpServletRequest request) {
-        // 1) priorité au cookie "access_token"
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie c : cookies) {

@@ -1,4 +1,3 @@
-// com.example.time_manager.dto.report.ReportCreateRequest
 package com.example.time_manager.dto.report;
 
 import jakarta.validation.constraints.NotBlank;
