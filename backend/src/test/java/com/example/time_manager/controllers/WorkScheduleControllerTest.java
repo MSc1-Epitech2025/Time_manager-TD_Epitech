@@ -1,4 +1,4 @@
-package com.example.time_manager.controller;
+package com.example.time_manager.controllers;
 
 import com.example.time_manager.dto.work_schedule.WorkScheduleBatchRequest;
 import com.example.time_manager.dto.work_schedule.WorkScheduleRequest;

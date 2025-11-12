@@ -1,4 +1,4 @@
-package com.example.time_manager.service;
+package com.example.time_manager.services;
 
 import com.example.time_manager.dto.team.TeamDto;
 import com.example.time_manager.model.Team;
@@ -7,6 +7,7 @@ import com.example.time_manager.model.User;
 import com.example.time_manager.repository.TeamMemberRepository;
 import com.example.time_manager.repository.TeamRepository;
 import com.example.time_manager.repository.UserRepository;
+import com.example.time_manager.service.TeamService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.*;
 import org.springframework.security.access.AccessDeniedException;

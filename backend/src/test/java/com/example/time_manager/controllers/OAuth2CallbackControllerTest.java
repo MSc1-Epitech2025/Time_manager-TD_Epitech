@@ -1,6 +1,7 @@
-package com.example.time_manager.rest.controller;
+package com.example.time_manager.controllers;
 
 import com.example.time_manager.model.User;
+import com.example.time_manager.rest.controller.OAuth2CallbackController;
 import com.example.time_manager.security.JwtUtil;
 import com.example.time_manager.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;

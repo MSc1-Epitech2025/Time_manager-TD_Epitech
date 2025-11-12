@@ -1,4 +1,4 @@
-package com.example.time_manager.service.absence;
+package com.example.time_manager.services.absence;
 
 import com.example.time_manager.dto.absence.AbsenceUpdateRequest;
 import com.example.time_manager.model.User;

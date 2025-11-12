@@ -1,4 +1,4 @@
-package com.example.time_manager.service.leave;
+package com.example.time_manager.services.leaves;
 
 import com.example.time_manager.model.User;
 import com.example.time_manager.model.leave.LeaveAccount;
@@ -6,6 +6,8 @@ import com.example.time_manager.model.leave.LeaveType;
 import com.example.time_manager.repository.UserRepository;
 import com.example.time_manager.repository.leave.LeaveAccountRepository;
 import com.example.time_manager.repository.leave.LeaveLedgerRepository;
+import com.example.time_manager.service.leave.LeaveAccountService;
+import com.example.time_manager.service.leave.LeaveTypeService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

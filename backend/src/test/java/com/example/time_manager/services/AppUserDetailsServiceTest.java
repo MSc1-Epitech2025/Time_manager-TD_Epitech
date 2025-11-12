@@ -1,7 +1,8 @@
-package com.example.time_manager.service;
+package com.example.time_manager.services;
 
 import com.example.time_manager.model.User;
 import com.example.time_manager.repository.UserRepository;
+import com.example.time_manager.service.AppUserDetailsService;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
