@@ -1,400 +1,388 @@
-// src/main/java/com/example/time_manager/service/KpiService.java
 package com.example.time_manager.service;
 
-import com.example.time_manager.dto.absence.AbsenceResponse;
-import com.example.time_manager.dto.kpi.*;
-import com.example.time_manager.model.absence.AbsenceStatus;
-import com.example.time_manager.service.leave.LeaveAccountService;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import com.example.time_manager.model.kpi.*;
+import com.example.time_manager.model.kpi.AbsenceBreakdown;
+import com.example.time_manager.model.kpi.LeaveBalance;
+import com.example.time_manager.model.kpi.PunctualityStats;
+import com.example.time_manager.model.kpi.TeamKpiSummary;
+import com.example.time_manager.model.kpi.UserKpiSummary;
+import com.example.time_manager.model.kpi.GlobalKpiSummary;
+
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.*;
-import java.time.format.DateTimeParseException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
-@Transactional(readOnly = true)
 public class KpiService {
 
-    private final AbsenceService absenceService;
-    private final ClockService clockService;
-    private final TeamService teamService;
-    private final UserService userService;
-    private final LeaveAccountService leaveAccountService;
-    private final WorkScheduleService workScheduleService;
+    private final JdbcTemplate jdbc;
 
-    // marge de tolérance (minutes) pour la ponctualité
-    private static final int DEFAULT_GRACE_MINUTES = 10;
-
-    public KpiService(AbsenceService absenceService,
-                      ClockService clockService,
-                      TeamService teamService,
-                      UserService userService,
-                      LeaveAccountService leaveAccountService,
-                      WorkScheduleService workScheduleService) {
-        this.absenceService = absenceService;
-        this.clockService = clockService;
-        this.teamService = teamService;
-        this.userService = userService;
-        this.leaveAccountService = leaveAccountService;
-        this.workScheduleService = workScheduleService;
+    public KpiService(JdbcTemplate jdbc) {
+        this.jdbc = jdbc;
     }
 
-    /* ===================== GLOBAL ===================== */
-
-    public KpiGlobal kpiGlobal(LocalDate from, LocalDate to) {
-        var users = userService.findAllUsers();
-        int totalUsers = users.size();
-
-        var teams = teamService.findAll();
-        int totalTeams = teams.size();
-
-        var absInRange = absenceService.listAll().stream()
-                .filter(a -> overlapsAbsenceByDays(a, from, to))
-                .toList();
-
-        var approved = absInRange.stream().filter(this::isApproved).toList();
-
-        long absenceRequests = absInRange.size();
-        long approvedAbsences = approved.size();
-        BigDecimal approvedDays = sumApprovedDays(approved);
-
-        long totalWorked = 0L, totalOvertime = 0L, lateArrivals = 0L, earlyLeaves = 0L;
-
-        for (var u : users) {
-            var bundle = computeUserTimeKpis(u.getId(), from, to, DEFAULT_GRACE_MINUTES);
-            totalWorked   += bundle.time().totalWorkedMinutes();
-            totalOvertime += bundle.time().totalOvertimeMinutes();
-            lateArrivals  += bundle.punctuality().lateArrivalsCount();
-            earlyLeaves   += bundle.punctuality().earlyLeavesCount();
-        }
-
-        long avgWorked = totalUsers > 0 ? totalWorked / totalUsers : 0L;
-
-        return new KpiGlobal(
-                new DateRange(from, to),
-                totalUsers,
-                totalTeams,
-                new AttendanceKpi(absenceRequests, approvedAbsences, approvedDays),
-                new TimeKpi(totalWorked, avgWorked, totalOvertime),
-                new PunctualityKpi(lateArrivals, earlyLeaves)
-        );
+    // -------------------- Helpers --------------------
+    private static String weekdayEnumExpr(String aliasDateCol) {
+        // Map MariaDB WEEKDAY() (0=Mon .. 6=Sun) to ENUM('MON','TUE','WED','THU','FRI','SAT','SUN')
+        return "CASE WEEKDAY(" + aliasDateCol + ") "
+             + "WHEN 0 THEN 'MON' WHEN 1 THEN 'TUE' WHEN 2 THEN 'WED' WHEN 3 THEN 'THU' "
+             + "WHEN 4 THEN 'FRI' WHEN 5 THEN 'SAT' ELSE 'SUN' END";
     }
 
-    /* ===================== BY USER ===================== */
-
-    public KpiUser kpiByUser(String userId, LocalDate from, LocalDate to) {
-        var absUser = absenceService.listForUser(userId).stream()
-                .filter(a -> overlapsAbsenceByDays(a, from, to))
-                .toList();
-
-        var approved = absUser.stream().filter(this::isApproved).toList();
-
-        long absenceRequests = absUser.size();
-        long approvedAbsences = approved.size();
-        BigDecimal approvedDays = sumApprovedDays(approved);
-
-        var timeBundle = computeUserTimeKpis(userId, from, to, DEFAULT_GRACE_MINUTES);
-
-        var balances = leaveAccountService.listByUser(userId).stream()
-                .map(acc -> new LeaveBalanceItem(
-                        acc.getLeaveType().getCode(),
-                        leaveAccountService.computeCurrentBalance(acc.getId())
-                ))
-                .toList();
-
-        return new KpiUser(
-                userId,
-                new DateRange(from, to),
-                new AttendanceKpi(absenceRequests, approvedAbsences, approvedDays),
-                timeBundle.time(),
-                timeBundle.punctuality(),
-                balances
-        );
+    private static BigDecimal nz(Number n) {
+        return (n == null) ? BigDecimal.ZERO : new BigDecimal(n.toString());
     }
 
-    /* ===================== BY TEAM ===================== */
-
-    public KpiTeam kpiByTeam(Long teamId, LocalDate from, LocalDate to) {
-        var members = teamService.listMembers(teamId);
-        int memberCount = members.size();
-
-        String managerEmail = getCurrentEmail();
-        var teamAbsences = absenceService.listTeamAbsences(managerEmail, teamId).stream()
-                .filter(a -> overlapsAbsenceByDays(a, from, to))
-                .toList();
-
-        var approved = teamAbsences.stream().filter(this::isApproved).toList();
-
-        long absenceRequests = teamAbsences.size();
-        long approvedAbsences = approved.size();
-        BigDecimal approvedDays = sumApprovedDays(approved);
-
-        long totalWorked = 0L, totalOvertime = 0L, late = 0L, early = 0L;
-
-        for (var u : members) {
-            var bundle = computeUserTimeKpis(u.getId(), from, to, DEFAULT_GRACE_MINUTES);
-            totalWorked   += bundle.time().totalWorkedMinutes();
-            totalOvertime += bundle.time().totalOvertimeMinutes();
-            late          += bundle.punctuality().lateArrivalsCount();
-            early         += bundle.punctuality().earlyLeavesCount();
-        }
-
-        long avgWorked = memberCount > 0 ? totalWorked / memberCount : 0L;
-
-        return new KpiTeam(
-                teamId,
-                new DateRange(from, to),
-                memberCount,
-                new AttendanceKpi(absenceRequests, approvedAbsences, approvedDays),
-                new TimeKpi(totalWorked, avgWorked, totalOvertime),
-                new PunctualityKpi(late, early)
-        );
+    private BigDecimal ratio(Number a, Number b) {
+        BigDecimal A = nz(a), B = nz(b);
+        if (B.compareTo(BigDecimal.ZERO) == 0) return BigDecimal.ZERO;
+        return A.multiply(BigDecimal.valueOf(100))
+                .divide(B, 2, java.math.RoundingMode.HALF_UP);
     }
 
-    /* ===================== Helpers ===================== */
+    // -------------------- Global --------------------
+    @Transactional(readOnly = true)
+    public GlobalKpiSummary getGlobal(LocalDate start, LocalDate end) {
+        GlobalKpiSummary k = new GlobalKpiSummary();
+        k.setPeriodStart(start);
+        k.setPeriodEnd(end);
 
-    private record TimeAndPunctuality(TimeKpi time, PunctualityKpi punctuality) {}
+        Integer headcount = jdbc.queryForObject("SELECT COUNT(*) FROM users", Integer.class);
+        k.setHeadcount(headcount);
 
-    private TimeAndPunctuality computeUserTimeKpis(String userId, LocalDate from, LocalDate to, int graceMinutes) {
-        ZoneId zone = ZoneId.systemDefault();
-        Instant fromInstant = from.atStartOfDay(zone).toInstant();
-        Instant toInstantExclusive = to.plusDays(1).atStartOfDay(zone).toInstant();
+        Integer managers = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM users WHERE JSON_CONTAINS(role, JSON_QUOTE('manager'))",
+                Integer.class);
+        Integer admins = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM users WHERE JSON_CONTAINS(role, JSON_QUOTE('admin'))",
+                Integer.class);
+        k.setManagersShare(ratio(managers, headcount));
+        k.setAdminsShare(ratio(admins, headcount));
 
-        // Clocks
-        @SuppressWarnings("unchecked")
-        List<Object> clocks = (List<Object>) (List<?>) clockService.listForUser(userId, fromInstant, toInstantExclusive);
+        Number presentDays = jdbc.queryForObject(
+                "SELECT COUNT(DISTINCT CONCAT(user_id,'#', DATE(`at`))) FROM clocks " +
+                "WHERE `at` BETWEEN ? AND ? AND kind='IN'",
+                Number.class, start, end.plusDays(1));
 
-        List<Object> sortedClocks = clocks.stream()
-                .sorted(Comparator.comparing(this::clockAtInstant))
-                .toList();
+        Number plannedDays = jdbc.queryForObject(
+                "WITH RECURSIVE d AS (" +
+                "  SELECT ? AS dt UNION ALL " +
+                "  SELECT DATE_ADD(dt, INTERVAL 1 DAY) FROM d WHERE dt < ?" +
+                ") " +
+                "SELECT COUNT(*) FROM (" +
+                "  SELECT DISTINCT ws.user_id, d.dt " +
+                "  FROM d " +
+                "  JOIN work_schedules ws ON ws.day_of_week = " + weekdayEnumExpr("d.dt") +
+                ") x",
+                Number.class, start, end);
+        k.setPresenceRate(ratio(presentDays, plannedDays));
 
-        Map<LocalDate, Long> workedByDay = computeWorkedMinutesPerDay(sortedClocks, zone);
-        long totalWorked = workedByDay.values().stream().mapToLong(Long::longValue).sum();
+        Number totalMinutes = jdbc.queryForObject(
+                "SELECT COALESCE(SUM(TIMESTAMPDIFF(MINUTE, first_in, last_out)),0) FROM (" +
+                "  SELECT user_id, DATE(`at`) d, " +
+                "         MIN(CASE WHEN kind='IN' THEN `at` END) AS first_in, " +
+                "         MAX(CASE WHEN kind='OUT' THEN `at` END) AS last_out " +
+                "  FROM clocks " +
+                "  WHERE `at` BETWEEN ? AND ? " +
+                "  GROUP BY user_id, DATE(`at`) " +
+                "  HAVING first_in IS NOT NULL AND last_out IS NOT NULL" +
+                ") t",
+                Number.class, start, end.plusDays(1));
 
-        // Schedules
-        @SuppressWarnings("unchecked")
-        List<Object> schedules = (List<Object>) (List<?>) workScheduleService.listForUser(userId);
+        Number dayCount = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM (" +
+                "  SELECT user_id, DATE(`at`) d " +
+                "  FROM clocks WHERE `at` BETWEEN ? AND ? " +
+                "  GROUP BY user_id, DATE(`at`)" +
+                ") s",
+                Number.class, start, end.plusDays(1));
 
-        Map<DayOfWeek, List<Object>> scheduleByDow =
-                schedules.stream().collect(Collectors.groupingBy(this::scheduleDayOfWeek));
+        BigDecimal avgHours = (nz(totalMinutes)
+                .divide(new BigDecimal(dayCount == null ? 1 : dayCount.longValue()), 2, java.math.RoundingMode.HALF_UP))
+                .divide(BigDecimal.valueOf(60), 2, java.math.RoundingMode.HALF_UP);
+        k.setAvgHoursPerDay(avgHours);
 
-        long overtimeTotal = 0L, lateArrivals = 0L, earlyLeaves = 0L;
+        Number absenceDays = jdbc.queryForObject(
+                "SELECT COALESCE(SUM(CASE period " +
+                " WHEN 'FULL_DAY' THEN 1 WHEN 'AM' THEN 0.5 WHEN 'PM' THEN 0.5 END),0) " +
+                "FROM absence_days ad " +
+                "JOIN absence a ON a.id = ad.absence_id " +
+                "WHERE absence_date BETWEEN ? AND ?",
+                Number.class, start, end);
+        k.setTotalAbsenceDays(nz(absenceDays));
+        k.setAbsenceRate(ratio(absenceDays, plannedDays));
 
-        for (var d = from; !d.isAfter(to); d = d.plusDays(1)) {
-            List<Object> daySched = scheduleByDow.getOrDefault(d.getDayOfWeek(), Collections.emptyList());
-            if (daySched.isEmpty()) continue;
+        Number approvalDelay = jdbc.queryForObject(
+                "SELECT AVG(TIMESTAMPDIFF(HOUR, created_at, approved_at)) " +
+                "FROM absence " +
+                "WHERE approved_at IS NOT NULL AND created_at BETWEEN ? AND ?",
+                Number.class, start.atStartOfDay(), end.plusDays(1).atStartOfDay());
+        k.setApprovalDelayHours(nz(approvalDelay));
 
-            long plannedMinutes = daySched.stream()
-                    .mapToLong(s -> Duration.between(scheduleStartTime(s), scheduleEndTime(s)).toMinutes())
-                    .sum();
+        Integer totalReports = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM reports WHERE created_at BETWEEN ? AND ?",
+                Integer.class, start.atStartOfDay(), end.plusDays(1).atStartOfDay());
+        k.setTotalReports(totalReports);
 
-            long worked = workedByDay.getOrDefault(d, 0L);
-            overtimeTotal += Math.max(0L, worked - plannedMinutes);
-
-            Instant firstIn = firstIn(sortedClocks, d, zone);
-            Instant lastOut = lastOut(sortedClocks, d, zone);
-
-            Optional<LocalTime> maybeFirstStart = daySched.stream()
-                    .map(this::scheduleStartTime)
-                    .min(LocalTime::compareTo);
-            Optional<LocalTime> maybeLastEnd = daySched.stream()
-                    .map(this::scheduleEndTime)
-                    .max(LocalTime::compareTo);
-
-            if (maybeFirstStart.isPresent() && firstIn != null) {
-                var plannedStart = ZonedDateTime.of(d, maybeFirstStart.get(), zone).toInstant();
-                if (firstIn.isAfter(plannedStart.plus(Duration.ofMinutes(graceMinutes)))) {
-                    lateArrivals++;
-                }
-            }
-            if (maybeLastEnd.isPresent() && lastOut != null) {
-                var plannedEnd = ZonedDateTime.of(d, maybeLastEnd.get(), zone).toInstant();
-                if (lastOut.isBefore(plannedEnd.minus(Duration.ofMinutes(graceMinutes)))) {
-                    earlyLeaves++;
-                }
-            }
-        }
-
-        return new TimeAndPunctuality(
-                new TimeKpi(totalWorked, 0L, overtimeTotal),
-                new PunctualityKpi(lateArrivals, earlyLeaves)
-        );
+        return k;
     }
 
-    /* ---- Absences ---- */
+    // -------------------- Team --------------------
+    @Transactional(readOnly = true)
+    public TeamKpiSummary getTeam(Integer teamId, LocalDate start, LocalDate end) {
+        TeamKpiSummary k = new TeamKpiSummary();
+        k.setTeamId(teamId);
+        k.setPeriodStart(start);
+        k.setPeriodEnd(end);
 
-    private static boolean overlapsAbsenceByDays(AbsenceResponse a, LocalDate from, LocalDate to) {
-        List<?> days = getDays(a);
-        if (days == null || days.isEmpty()) return false;
-        LocalDate min = null, max = null;
-        for (Object d : days) {
-            LocalDate date = extractAbsenceDate(d);
-            if (date == null) continue;
-            if (min == null || date.isBefore(min)) min = date;
-            if (max == null || date.isAfter(max))  max = date;
-        }
-        if (min == null || max == null) return false;
-        return !min.isAfter(to) && !max.isBefore(from);
+        Map<String, Object> team = jdbc.queryForMap("SELECT id, name FROM teams WHERE id=?", teamId);
+        k.setTeamName((String) team.get("name"));
+
+        Integer headcount = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM team_members WHERE team_id = ?",
+                Integer.class, teamId);
+        k.setHeadcount(headcount);
+
+        Number presentDays = jdbc.queryForObject(
+                "SELECT COUNT(DISTINCT CONCAT(c.user_id,'#', DATE(c.`at`))) " +
+                "FROM clocks c " +
+                "JOIN team_members tm ON tm.user_id = c.user_id AND tm.team_id = ? " +
+                "WHERE c.`at` BETWEEN ? AND ? AND c.kind='IN'",
+                Number.class, teamId, start, end.plusDays(1));
+
+        // plannedDays (chaîne SQL corrigée)
+        Number plannedDays = jdbc.queryForObject(
+                "WITH RECURSIVE d AS (" +
+                "  SELECT ? AS dt UNION ALL " +
+                "  SELECT DATE_ADD(dt, INTERVAL 1 DAY) FROM d WHERE dt < ?" +
+                ") " +
+                "SELECT COUNT(*) FROM (" +
+                "  SELECT DISTINCT ws.user_id, d.dt " +
+                "  FROM d " +
+                "  JOIN team_members tm ON tm.team_id = ? " +
+                "  JOIN work_schedules ws ON ws.user_id = tm.user_id " +
+                "     AND ws.day_of_week = " + weekdayEnumExpr("d.dt") +
+                ") x",
+                Number.class, start, end, teamId);
+        k.setPresenceRate(ratio(presentDays, plannedDays));
+
+        Number totalMinutes = jdbc.queryForObject(
+                "SELECT COALESCE(SUM(TIMESTAMPDIFF(MINUTE, first_in, last_out)),0) FROM (" +
+                "  SELECT c.user_id, DATE(c.`at`) d, " +
+                "         MIN(CASE WHEN c.kind='IN' THEN c.`at` END) AS first_in, " +
+                "         MAX(CASE WHEN c.kind='OUT' THEN c.`at` END) AS last_out " +
+                "  FROM clocks c " +
+                "  JOIN team_members tm ON tm.user_id = c.user_id AND tm.team_id = ? " +
+                "  WHERE c.`at` BETWEEN ? AND ? " +
+                "  GROUP BY c.user_id, DATE(c.`at`) " +
+                "  HAVING first_in IS NOT NULL AND last_out IS NOT NULL" +
+                ") t",
+                Number.class, teamId, start, end.plusDays(1));
+
+        Number dayCount = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM (" +
+                "  SELECT c.user_id, DATE(c.`at`) d " +
+                "  FROM clocks c " +
+                "  JOIN team_members tm ON tm.user_id=c.user_id AND tm.team_id=? " +
+                "  WHERE c.`at` BETWEEN ? AND ? " +
+                "  GROUP BY c.user_id, DATE(c.`at`)" +
+                ") s",
+                Number.class, teamId, start, end.plusDays(1));
+
+        BigDecimal avgHours = (nz(totalMinutes)
+                .divide(new BigDecimal(dayCount == null ? 1 : dayCount.longValue()), 2, java.math.RoundingMode.HALF_UP))
+                .divide(BigDecimal.valueOf(60), 2, java.math.RoundingMode.HALF_UP);
+        k.setAvgHoursPerDay(avgHours);
+
+        Number absenceDays = jdbc.queryForObject(
+                "SELECT COALESCE(SUM(CASE ad.period " +
+                " WHEN 'FULL_DAY' THEN 1 WHEN 'AM' THEN 0.5 WHEN 'PM' THEN 0.5 END),0) " +
+                "FROM absence_days ad " +
+                "JOIN absence a ON a.id = ad.absence_id " +
+                "JOIN team_members tm ON tm.user_id = a.user_id AND tm.team_id = ? " +
+                "WHERE ad.absence_date BETWEEN ? AND ?",
+                Number.class, teamId, start, end);
+        k.setAbsenceRate(ratio(absenceDays, plannedDays));
+
+        Integer reports = jdbc.queryForObject(
+                "SELECT COUNT(*) " +
+                "FROM reports r " +
+                "JOIN team_members tm ON tm.user_id = r.author_id " +
+                "WHERE tm.team_id = ? AND r.created_at BETWEEN ? AND ?",
+                Integer.class, teamId, start.atStartOfDay(), end.plusDays(1).atStartOfDay());
+        k.setReportsAuthored(reports);
+
+        return k;
     }
 
-    private static List<?> getDays(AbsenceResponse a) {
-        try { return (List<?>) a.getClass().getMethod("days").invoke(a); } catch (Exception ignore) {}
-        try { return (List<?>) a.getClass().getMethod("getDays").invoke(a); } catch (Exception ignore) {}
-        return List.of();
-    }
+    // -------------------- User --------------------
+    @Transactional(readOnly = true)
+    public UserKpiSummary getUser(UUID userId, LocalDate start, LocalDate end) {
+        UserKpiSummary k = new UserKpiSummary();
+        k.setUserId(userId);
+        k.setPeriodStart(start);
+        k.setPeriodEnd(end);
 
-    private static LocalDate extractAbsenceDate(Object absenceDay) {
-        Object v = invokeAny(absenceDay, List.of("getAbsenceDate", "absenceDate", "getDate", "date", "getDay", "day"));
-        if (v instanceof LocalDate ld) return ld;
-        if (v instanceof CharSequence cs) {
-            try { return LocalDate.parse(cs.toString()); } catch (DateTimeParseException ignored) {}
-        }
-        return null;
-    }
+        Map<String, Object> u = jdbc.queryForMap(
+                "SELECT CONCAT(first_name, ' ', last_name) AS full_name FROM users WHERE id = ?",
+                userId.toString());
+        k.setFullName((String) u.get("full_name"));
 
-    private static BigDecimal sumApprovedDays(List<AbsenceResponse> absences) {
-        BigDecimal total = BigDecimal.ZERO;
-        for (var a : absences) {
-            for (Object d : getDays(a)) {
-                Object p = invokeAny(d, List.of("getPeriod", "period"));
-                String period = (p == null) ? "FULL_DAY" : p.toString().toUpperCase();
-                switch (period) {
-                    case "AM", "PM" -> total = total.add(BigDecimal.valueOf(0.5));
-                    default         -> total = total.add(BigDecimal.ONE);
-                }
-            }
-        }
-        return total;
-    }
+        Number presentDays = jdbc.queryForObject(
+                "SELECT COUNT(DISTINCT DATE(`at`)) " +
+                "FROM clocks WHERE user_id = ? AND `at` BETWEEN ? AND ? AND kind='IN'",
+                Number.class, userId.toString(), start, end.plusDays(1));
 
-    private boolean isApproved(AbsenceResponse a) {
-        Object v = invokeAny(a, List.of("getStatus", "status", "getState", "state", "getApprovalStatus", "approvalStatus"));
-        if (v == null) return true; // fallback pragmatique
-        if (v instanceof AbsenceStatus s) return s == AbsenceStatus.APPROVED;
-        String s = v.toString().trim().toUpperCase();
-        return s.equals("APPROVED") || s.equals("APPROUVÉ") || s.equals("APPROUVE")
-                || s.equals("VALIDATED") || s.equals("VALIDEE") || s.equals("VALIDÉE");
-    }
+        Number plannedDays = jdbc.queryForObject(
+                "WITH RECURSIVE d AS (" +
+                "  SELECT ? AS dt UNION ALL " +
+                "  SELECT DATE_ADD(dt, INTERVAL 1 DAY) FROM d WHERE dt < ?" +
+                ") " +
+                "SELECT COUNT(*) FROM (" +
+                "  SELECT DISTINCT d.dt " +
+                "  FROM d " +
+                "  JOIN work_schedules ws ON ws.user_id = ? " +
+                "     AND ws.day_of_week = " + weekdayEnumExpr("d.dt") +
+                ") x",
+                Number.class, start, end, userId.toString());
+        k.setPresenceRate(ratio(presentDays, plannedDays));
 
-    /* ---- Pointage ---- */
+        Number totalMinutes = jdbc.queryForObject(
+                "SELECT COALESCE(SUM(TIMESTAMPDIFF(MINUTE, first_in, last_out)),0) FROM (" +
+                "  SELECT DATE(`at`) d, " +
+                "         MIN(CASE WHEN kind='IN' THEN `at` END) AS first_in, " +
+                "         MAX(CASE WHEN kind='OUT' THEN `at` END) AS last_out " +
+                "  FROM clocks " +
+                "  WHERE user_id = ? AND `at` BETWEEN ? AND ? " +
+                "  GROUP BY DATE(`at`) " +
+                "  HAVING first_in IS NOT NULL AND last_out IS NOT NULL" +
+                ") t",
+                Number.class, userId.toString(), start, end.plusDays(1));
 
-    private static Map<LocalDate, Long> computeWorkedMinutesPerDay(List<Object> clocks, ZoneId zone) {
-        Map<LocalDate, Long> result = new HashMap<>();
-        Instant pendingIn = null;
+        Number dayCount = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM (" +
+                "  SELECT DATE(`at`) d " +
+                "  FROM clocks WHERE user_id=? AND `at` BETWEEN ? AND ? " +
+                "  GROUP BY DATE(`at`)" +
+                ") s",
+                Number.class, userId.toString(), start, end.plusDays(1));
 
-        for (Object c : clocks) {
-            String kind = clockKind(c);
-            if ("IN".equals(kind)) {
-                if (pendingIn == null) pendingIn = clockAt(c);
-            } else if ("OUT".equals(kind)) {
-                if (pendingIn != null) {
-                    Instant out = clockAt(c);
-                    long minutes = Math.max(0L, Duration.between(pendingIn, out).toMinutes());
-                    LocalDate day = LocalDateTime.ofInstant(pendingIn, zone).toLocalDate();
-                    result.merge(day, minutes, Long::sum);
-                    pendingIn = null;
-                }
-            }
-        }
-        return result;
-    }
+        BigDecimal avgHours = (nz(totalMinutes)
+                .divide(new BigDecimal(dayCount == null ? 1 : dayCount.longValue()), 2, java.math.RoundingMode.HALF_UP))
+                .divide(BigDecimal.valueOf(60), 2, java.math.RoundingMode.HALF_UP);
+        k.setAvgHoursPerDay(avgHours);
 
-    private Instant firstIn(List<Object> clocks, LocalDate day, ZoneId zone) {
-        Instant best = null;
-        for (Object c : clocks) {
-            if (!"IN".equals(clockKind(c))) continue;
-            Instant t = clockAt(c);
-            if (!LocalDateTime.ofInstant(t, zone).toLocalDate().equals(day)) continue;
-            if (best == null || t.isBefore(best)) best = t;
-        }
-        return best;
-    }
+        Number plannedMinutes = jdbc.queryForObject(
+                "WITH RECURSIVE d AS (" +
+                "  SELECT ? AS dt UNION ALL " +
+                "  SELECT DATE_ADD(dt, INTERVAL 1 DAY) FROM d WHERE dt < ?" +
+                ") " +
+                "SELECT COALESCE(SUM(TIMESTAMPDIFF(MINUTE, ws.start_time, ws.end_time)),0) " +
+                "FROM d " +
+                "JOIN work_schedules ws ON ws.user_id = ? " +
+                "  AND ws.day_of_week = " + weekdayEnumExpr("d.dt"),
+                Number.class, start, end, userId.toString());
+        BigDecimal overtime = nz(totalMinutes)
+                .subtract(nz(plannedMinutes))
+                .divide(BigDecimal.valueOf(60), 2, java.math.RoundingMode.HALF_UP);
+        k.setOvertimeHours(overtime);
 
-    private Instant lastOut(List<Object> clocks, LocalDate day, ZoneId zone) {
-        Instant best = null;
-        for (Object c : clocks) {
-            if (!"OUT".equals(clockKind(c))) continue;
-            Instant t = clockAt(c);
-            if (!LocalDateTime.ofInstant(t, zone).toLocalDate().equals(day)) continue;
-            if (best == null || t.isAfter(best)) best = t;
-        }
-        return best;
-    }
+        Number lateCount = jdbc.queryForObject(
+                "WITH RECURSIVE d AS (" +
+                "  SELECT ? AS dt UNION ALL " +
+                "  SELECT DATE_ADD(dt, INTERVAL 1 DAY) FROM d WHERE dt < ?" +
+                ") " +
+                "SELECT COUNT(*) FROM (" +
+                "  SELECT d.dt, " +
+                "    (SELECT MIN(start_time) FROM work_schedules ws " +
+                "     WHERE ws.user_id=? AND ws.day_of_week = " + weekdayEnumExpr("d.dt") + ") AS plan_start, " +
+                "    (SELECT MIN(`at`) FROM clocks c " +
+                "     WHERE c.user_id=? AND DATE(c.`at`)=d.dt AND c.kind='IN') AS first_in " +
+                "  FROM d" +
+                ") z " +
+                "WHERE plan_start IS NOT NULL AND first_in IS NOT NULL AND TIME(first_in) > plan_start",
+                Number.class, start, end, userId.toString(), userId.toString());
+        BigDecimal lateRate = ratio(lateCount, plannedDays);
 
-    private Instant clockAtInstant(Object c) { return clockAt(c); }
+        Number avgDelayMin = jdbc.queryForObject(
+                "WITH RECURSIVE d AS (" +
+                "  SELECT ? AS dt UNION ALL " +
+                "  SELECT DATE_ADD(dt, INTERVAL 1 DAY) FROM d WHERE dt < ?" +
+                ") " +
+                "SELECT COALESCE(AVG(TIMESTAMPDIFF(MINUTE, plan_start, first_in)),0) FROM (" +
+                "  SELECT d.dt, " +
+                "    (SELECT MIN(start_time) FROM work_schedules ws " +
+                "     WHERE ws.user_id=? AND ws.day_of_week = " + weekdayEnumExpr("d.dt") + ") AS plan_start, " +
+                "    (SELECT MIN(`at`) FROM clocks c " +
+                "     WHERE c.user_id=? AND DATE(c.`at`)=d.dt AND c.kind='IN') AS first_in " +
+                "  FROM d" +
+                ") z " +
+                "WHERE plan_start IS NOT NULL AND first_in IS NOT NULL AND TIME(first_in) > plan_start",
+                Number.class, start, end, userId.toString(), userId.toString());
+        k.setPunctuality(new PunctualityStats(lateRate, nz(avgDelayMin)));
 
-    private static Instant clockAt(Object c) {
-        Object v = invokeAny(c, List.of("at", "getAt", "timestamp", "getTimestamp", "time", "getTime"));
-        if (v instanceof Instant i) return i;
-        if (v instanceof ZonedDateTime zdt) return zdt.toInstant();
-        if (v instanceof LocalDateTime ldt) return ldt.atZone(ZoneId.systemDefault()).toInstant();
-        if (v instanceof OffsetDateTime odt) return odt.toInstant();
-        if (v instanceof Number n) return Instant.ofEpochMilli(n.longValue());
-        if (v instanceof CharSequence cs) {
-            String s = cs.toString();
-            try { return Instant.parse(s); } catch (Exception ignore) {}
-            try { return OffsetDateTime.parse(s).toInstant(); } catch (Exception ignore) {}
-            try { return LocalDateTime.parse(s).atZone(ZoneId.systemDefault()).toInstant(); } catch (Exception ignore) {}
-        }
-        throw new IllegalStateException("Clock entry has no parsable timestamp: " + c);
-    }
+        Number absDays = jdbc.queryForObject(
+                "SELECT COALESCE(SUM(CASE period " +
+                " WHEN 'FULL_DAY' THEN 1 WHEN 'AM' THEN 0.5 WHEN 'PM' THEN 0.5 END),0) " +
+                "FROM absence_days ad " +
+                "JOIN absence a ON a.id=ad.absence_id " +
+                "WHERE a.user_id=? AND ad.absence_date BETWEEN ? AND ?",
+                Number.class, userId.toString(), start, end);
+        k.setAbsenceDays(nz(absDays));
 
-    private static String clockKind(Object c) {
-        Object v = invokeAny(c, List.of("kind", "getKind", "type", "getType"));
-        if (v == null) return "";
-        String s = v.toString().trim().toUpperCase();
-        if (s.endsWith("IN"))  return "IN";
-        if (s.endsWith("OUT")) return "OUT";
-        return s;
-    }
+        List<AbsenceBreakdown> byType = jdbc.query(
+                "SELECT a.type, " +
+                "       SUM(CASE ad.period WHEN 'FULL_DAY' THEN 1 WHEN 'AM' THEN 0.5 WHEN 'PM' THEN 0.5 END) AS days " +
+                "FROM absence a " +
+                "JOIN absence_days ad ON a.id=ad.absence_id " +
+                "WHERE a.user_id=? AND ad.absence_date BETWEEN ? AND ? " +
+                "GROUP BY a.type",
+                (rs, i) -> new AbsenceBreakdown(rs.getString("type"), rs.getBigDecimal("days")),
+                userId.toString(), start, end);
+        k.setAbsenceByType(byType);
 
-    /* ---- Planning ---- */
+        List<LeaveBalance> balances = jdbc.query(
+                "SELECT la.leave_type, la.opening_balance, " +
+                "       COALESCE(SUM(CASE ll.kind WHEN 'ACCRUAL' THEN ll.amount END),0) AS accrued, " +
+                "       COALESCE(SUM(CASE ll.kind WHEN 'DEBIT' THEN ll.amount END),0)   AS debited, " +
+                "       COALESCE(SUM(CASE ll.kind WHEN 'ADJUSTMENT' THEN ll.amount END),0) AS adjustments, " +
+                "       COALESCE(SUM(CASE ll.kind WHEN 'CARRYOVER_EXPIRE' THEN ll.amount END),0) AS expired " +
+                "FROM leave_accounts la " +
+                "LEFT JOIN leave_ledger ll ON ll.account_id = la.id AND ll.entry_date BETWEEN ? AND ? " +
+                "WHERE la.user_id = ? " +
+                "GROUP BY la.id, la.leave_type, la.opening_balance",
+                new RowMapper<LeaveBalance>() {
+                    @Override public LeaveBalance mapRow(ResultSet rs, int rowNum) throws SQLException {
+                        BigDecimal opening = rs.getBigDecimal("opening_balance");
+                        BigDecimal accrued = nz(rs.getBigDecimal("accrued"));
+                        BigDecimal debited = nz(rs.getBigDecimal("debited"));
+                        BigDecimal adjustments = nz(rs.getBigDecimal("adjustments"));
+                        BigDecimal expired = nz(rs.getBigDecimal("expired"));
+                        BigDecimal current = opening.add(accrued).add(adjustments).subtract(debited).subtract(expired);
+                        return new LeaveBalance(
+                                rs.getString("leave_type"),
+                                opening, accrued, debited, adjustments, expired, current
+                        );
+                    }
+                }, start, end, userId.toString());
+        k.setLeaveBalances(balances);
 
-    private DayOfWeek scheduleDayOfWeek(Object s) {
-        Object v = invokeAny(s, List.of("dayOfWeek", "getDayOfWeek", "dow", "getDow"));
-        if (v instanceof DayOfWeek dow) return dow;
-        if (v instanceof Number n) return DayOfWeek.of(n.intValue());
-        if (v instanceof CharSequence cs) return DayOfWeek.valueOf(cs.toString().trim().toUpperCase());
-        return DayOfWeek.MONDAY;
-    }
+        Integer authored = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM reports WHERE author_id=? AND created_at BETWEEN ? AND ?",
+                Integer.class, userId.toString(), start.atStartOfDay(), end.plusDays(1).atStartOfDay());
+        Integer received = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM reports WHERE target_user_id=? AND created_at BETWEEN ? AND ?",
+                Integer.class, userId.toString(), start.atStartOfDay(), end.plusDays(1).atStartOfDay());
+        k.setReportsAuthored(authored);
+        k.setReportsReceived(received);
 
-    private LocalTime scheduleStartTime(Object s) {
-        Object v = invokeAny(s, List.of("startTime", "getStartTime", "from", "getFrom"));
-        return toLocalTime(v, LocalTime.of(9, 0));
-    }
-
-    private LocalTime scheduleEndTime(Object s) {
-        Object v = invokeAny(s, List.of("endTime", "getEndTime", "to", "getTo"));
-        return toLocalTime(v, LocalTime.of(17, 0));
-    }
-
-    private static LocalTime toLocalTime(Object v, LocalTime fallback) {
-        if (v instanceof LocalTime lt) return lt;
-        if (v instanceof CharSequence cs) {
-            String s = cs.toString();
-            try { return LocalTime.parse(s); } catch (DateTimeParseException ignore) {}
-            try { return OffsetTime.parse(s).toLocalTime(); } catch (Exception ignore) {}
-        }
-        return fallback;
-    }
-
-    /* ---- Utils ---- */
-
-    private static Object invokeAny(Object target, List<String> methodNames) {
-        for (String name : methodNames) {
-            try { return target.getClass().getMethod(name).invoke(target); }
-            catch (Exception ignored) {}
-        }
-        return null;
-    }
-
-    private String getCurrentEmail() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        return (auth != null ? auth.getName() : null);
+        return k;
     }
 }
