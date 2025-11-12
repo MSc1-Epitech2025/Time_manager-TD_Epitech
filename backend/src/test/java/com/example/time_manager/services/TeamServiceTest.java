@@ -9,6 +9,7 @@ import com.example.time_manager.repository.TeamRepository;
 import com.example.time_manager.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.*;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -61,7 +62,7 @@ class TeamServiceTest {
     void findAllForAdmin_shouldThrow_whenNotAdmin() {
         setAuth("E", "ROLE_EMPLOYEE");
         assertThatThrownBy(() -> service.findAllForAdmin())
-                .isInstanceOf(SecurityException.class)
+                .isInstanceOf(AccessDeniedException.class)
                 .hasMessageContaining("ADMIN");
     }
 
@@ -92,7 +93,7 @@ class TeamServiceTest {
     void findManagedByCurrentUser_shouldThrow_ifNotManager() {
         setAuth("E1", "ROLE_EMPLOYEE");
         assertThatThrownBy(() -> service.findManagedByCurrentUser())
-                .isInstanceOf(SecurityException.class)
+                .isInstanceOf(AccessDeniedException.class)
                 .hasMessageContaining("MANAGER");
     }
 
@@ -116,7 +117,7 @@ class TeamServiceTest {
         setAuth("U2");
         when(memberRepo.existsByTeam_IdAndUser_Id(5L, "U2")).thenReturn(false);
         assertThatThrownBy(() -> service.listMembers(5L))
-                .isInstanceOf(SecurityException.class);
+                .isInstanceOf(AccessDeniedException.class);
     }
 
     @Test
@@ -150,7 +151,7 @@ class TeamServiceTest {
         setAuth("E1", "ROLE_EMPLOYEE");
         TeamDto dto = new TeamDto();
         assertThatThrownBy(() -> service.create(dto))
-                .isInstanceOf(SecurityException.class);
+                .isInstanceOf(AccessDeniedException.class);
     }
 
     @Test
@@ -173,7 +174,7 @@ class TeamServiceTest {
     void update_shouldThrow_ifNotAdmin() {
         setAuth("U", "ROLE_EMPLOYEE");
         assertThatThrownBy(() -> service.update(1L, new TeamDto()))
-                .isInstanceOf(SecurityException.class);
+                .isInstanceOf(AccessDeniedException.class);
     }
 
     @Test
@@ -196,7 +197,7 @@ class TeamServiceTest {
     void delete_shouldThrow_ifNotAdmin() {
         setAuth("U", "ROLE_EMPLOYEE");
         assertThatThrownBy(() -> service.delete(1L))
-                .isInstanceOf(SecurityException.class);
+                .isInstanceOf(AccessDeniedException.class);
     }
 
     @Test
@@ -261,7 +262,7 @@ class TeamServiceTest {
         setAuth("M1", "ROLE_MANAGER");
         when(memberRepo.existsByTeam_IdAndUser_Id(1L, "M1")).thenReturn(false);
         assertThatThrownBy(() -> service.addMember(1L, "U1"))
-                .isInstanceOf(SecurityException.class)
+                .isInstanceOf(AccessDeniedException.class)
                 .hasMessageContaining("only ADMIN or MANAGER");
     }
 
@@ -278,7 +279,7 @@ class TeamServiceTest {
     void currentUserId_shouldThrow_ifNoAuth() {
         SecurityContextHolder.clearContext();
         assertThatThrownBy(() -> service.findTeamsOfCurrentUser())
-                .isInstanceOf(SecurityException.class);
+                .isInstanceOf(AccessDeniedException.class);
     }
 
     @Test
@@ -289,6 +290,82 @@ class TeamServiceTest {
         m.setAccessible(true);
         assertThat((boolean) m.invoke(service, u, "manager")).isTrue();
     }
+
+    @Test
+    void isCurrentUserMemberOfTeam_shouldDelegateToRepo() {
+        setAuth("U1");
+        when(memberRepo.existsByTeam_IdAndUser_Id(5L, "U1")).thenReturn(true);
+        assertThat(service.isCurrentUserMemberOfTeam(5L)).isTrue();
+        verify(memberRepo).existsByTeam_IdAndUser_Id(5L, "U1");
+    }
+
+    @Test
+    void requireRole_shouldThrow_ifMissingAuthority() throws Exception {
+        setAuth("E1", "ROLE_EMPLOYEE");
+        var method = TeamService.class.getDeclaredMethod("requireRole", String.class);
+        method.setAccessible(true);
+
+        try {
+            method.invoke(service, "MANAGER");
+            fail("Expected AccessDeniedException");
+        } catch (java.lang.reflect.InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            assertThat(cause)
+                    .isInstanceOf(AccessDeniedException.class)
+                    .hasMessageContaining("MANAGER");
+        }
+    }
+
+    @Test
+    void hasAnyAuthority_shouldReturnFalse_whenAuthIsNullOrEmpty() throws Exception {
+        var method = TeamService.class.getDeclaredMethod("hasAnyAuthority", org.springframework.security.core.Authentication.class, String[].class);
+        method.setAccessible(true);
+
+        boolean res1 = (boolean) method.invoke(null, (Object) null, new String[]{"ADMIN"});
+        assertThat(res1).isFalse();
+
+        var auth = new TestingAuthenticationToken("U", null);
+        auth.setAuthenticated(true);
+        boolean res2 = (boolean) method.invoke(null, auth, new String[]{"ADMIN"});
+        assertThat(res2).isFalse();
+    }
+
+    @Test
+    void addMember_shouldWork_whenManagerMember() {
+        setAuth("M1", "ROLE_MANAGER");
+        when(memberRepo.existsByTeam_IdAndUser_Id(1L, "M1")).thenReturn(true);
+
+        Team team = new Team();
+        team.setId(1L);
+        User user = new User();
+        user.setId("U2");
+
+        when(teamRepo.findById(1L)).thenReturn(Optional.of(team));
+        when(userRepo.findById("U2")).thenReturn(Optional.of(user));
+
+        service.addMember(1L, "U2");
+        verify(memberRepo).save(any(TeamMember.class));
+    }
+
+    @Test
+    void removeMember_shouldWork_whenManagerMember() {
+        setAuth("M1", "ROLE_MANAGER");
+        when(memberRepo.existsByTeam_IdAndUser_Id(1L, "M1")).thenReturn(true);
+        when(memberRepo.existsByTeam_IdAndUser_Id(1L, "U2")).thenReturn(true);
+        service.removeMember(1L, "U2");
+        verify(memberRepo).deleteByTeam_IdAndUser_Id(1L, "U2");
+    }
+
+    @Test
+    void hasGlobalRole_shouldReturnFalse_whenRoleIsNull() throws Exception {
+        User u = new User();
+        u.setRole(null);
+        var m = TeamService.class.getDeclaredMethod("hasGlobalRole", User.class, String.class);
+        m.setAccessible(true);
+        boolean result = (boolean) m.invoke(service, u, "manager");
+        assertThat(result).isFalse();
+    }
+
 
     private static void setAuth(String userId, String... roles) {
         var auth = new TestingAuthenticationToken(userId, null, roles);

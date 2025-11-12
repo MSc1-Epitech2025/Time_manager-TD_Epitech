@@ -31,9 +31,6 @@ private LocalDate periodStart;
 private LocalDate periodEnd;
 
 
-public UserKpiSummary() {}
-
-
 // getters/setters
 public UUID getUserId() { return userId; }
 public void setUserId(UUID userId) { this.userId = userId; }

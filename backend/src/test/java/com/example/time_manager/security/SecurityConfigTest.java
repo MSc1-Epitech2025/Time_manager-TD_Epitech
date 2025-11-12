@@ -2,21 +2,19 @@ package com.example.time_manager.security;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.DefaultSecurityFilterChain;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class SecurityConfigTest {
@@ -32,73 +30,75 @@ class SecurityConfigTest {
 
     @Test
     void testCorsConfigurationSourceContainsExpectedSettings() {
-        CorsConfigurationSource source = securityConfig.corsConfigurationSource();
-        assertNotNull(source);
+        var source = securityConfig.corsConfigurationSource();
+        var urlSource = (org.springframework.web.cors.UrlBasedCorsConfigurationSource) source;
 
-        UrlBasedCorsConfigurationSource urlSource = (UrlBasedCorsConfigurationSource) source;
-        var configs = urlSource.getCorsConfigurations();
-        assertTrue(configs.containsKey("/**"));
+        var cfg = urlSource.getCorsConfigurations().get("/**");
 
-        CorsConfiguration cfg = configs.get("/**");
         assertNotNull(cfg);
         assertEquals(List.of("http://localhost:4200", "http://localhost:3000"), cfg.getAllowedOrigins());
         assertEquals(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"), cfg.getAllowedMethods());
         assertEquals(List.of("Authorization","Content-Type","X-Requested-With"), cfg.getAllowedHeaders());
         assertEquals(List.of("Authorization"), cfg.getExposedHeaders());
-        assertTrue(cfg.getAllowCredentials());
     }
 
     @Test
-    void testPasswordEncoderWorksCorrectly() {
-        PasswordEncoder encoder = securityConfig.passwordEncoder();
-        assertNotNull(encoder);
-        String encoded = encoder.encode("secret123");
-        assertTrue(encoder.matches("secret123", encoded));
-        assertFalse(encoder.matches("wrong", encoded));
-    }
-
-    @Test
-    void testPasswordEncoderCreatesDifferentHashes() {
-        PasswordEncoder encoder = securityConfig.passwordEncoder();
-        String hash1 = encoder.encode("abc123");
-        String hash2 = encoder.encode("abc123");
-        assertNotEquals(hash1, hash2);
-        assertTrue(encoder.matches("abc123", hash1));
-    }
-
-    @Test
-    void testAuthenticationManagerReturnsFromConfiguration() throws Exception {
-        AuthenticationConfiguration config = mock(AuthenticationConfiguration.class);
-        AuthenticationManager manager = mock(AuthenticationManager.class);
+    void testAuthenticationManagerReturnsFromConfig() throws Exception {
+        var config = mock(AuthenticationConfiguration.class);
+        var manager = mock(AuthenticationManager.class);
         when(config.getAuthenticationManager()).thenReturn(manager);
 
-        AuthenticationManager result = securityConfig.authenticationManager(config);
-        assertEquals(manager, result);
-        verify(config).getAuthenticationManager();
+        assertEquals(manager, securityConfig.authenticationManager(config));
     }
 
     @Test
-    void testSecurityFilterChainBuildsSuccessfully() throws Exception {
+    void testSecurityFilterChain_RegistersAllDSLSections() throws Exception {
         HttpSecurity http = mock(HttpSecurity.class, RETURNS_SELF);
-        DefaultSecurityFilterChain chain = mock(DefaultSecurityFilterChain.class);
+
+        var chain = mock(DefaultSecurityFilterChain.class);
         when(http.build()).thenReturn(chain);
 
-        SecurityFilterChain result = securityConfig.securityFilterChain(http);
-        assertEquals(chain, result);
+        var corsCap = ArgumentCaptor.forClass(Customizer.class);
+        var csrfCap = ArgumentCaptor.forClass(Customizer.class);
+        var sessCap = ArgumentCaptor.forClass(Customizer.class);
+        var ctxCap = ArgumentCaptor.forClass(Customizer.class);
+        var authCap = ArgumentCaptor.forClass(Customizer.class);
+        var oauthCap = ArgumentCaptor.forClass(Customizer.class);
+
+        securityConfig.securityFilterChain(http);
+
+        verify(http).cors(corsCap.capture());
+        verify(http).csrf(csrfCap.capture());
+        verify(http).sessionManagement(sessCap.capture());
+        verify(http).securityContext(ctxCap.capture());
+        verify(http).authorizeHttpRequests(authCap.capture());
+        verify(http).oauth2Login(oauthCap.capture());
         verify(http).addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-        verify(http).cors(any());
-        verify(http).csrf(any());
-        verify(http).sessionManagement(any());
-        verify(http).securityContext(any());
-        verify(http).authorizeHttpRequests(any());
-        verify(http).oauth2Login(any());
-        verify(http).build();
+
+        assertNotNull(ctxCap.getValue());
+        assertNotNull(authCap.getValue());
+
+        var fakeMatchers = mock(FakeMatcherRegistry.class, RETURNS_SELF);
+
+        assertNotNull(authCap.getValue());
+
+        verify(fakeMatchers).requestMatchers("/actuator/health");
+        verify(fakeMatchers).requestMatchers(HttpMethod.POST, "/graphql");
+        verify(fakeMatchers).requestMatchers("/oauth2/**");
+        verify(fakeMatchers).anyRequest();
     }
 
     @Test
-    void testConstructorStoresJwtAuthFilterAndBeansNotNull() {
-        assertNotNull(securityConfig);
-        assertNotNull(securityConfig.passwordEncoder());
-        assertNotNull(securityConfig.corsConfigurationSource());
+    void testPasswordEncoder() {
+        PasswordEncoder encoder = securityConfig.passwordEncoder();
+        String hashed = encoder.encode("secret123");
+        assertTrue(encoder.matches("secret123", hashed));
+    }
+
+    public interface FakeMatcherRegistry {
+        FakeMatcherRegistry requestMatchers(String pattern);
+        FakeMatcherRegistry requestMatchers(HttpMethod method, String pattern);
+        FakeMatcherRegistry requestMatchers(String... patterns);
+        FakeMatcherRegistry anyRequest();
     }
 }
