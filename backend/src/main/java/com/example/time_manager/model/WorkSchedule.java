@@ -18,7 +18,7 @@ private Long id;
 
 
 @Column(name = "user_id", nullable = false, length = 36)
-private String userId; // UUID (String)
+private String userId;
 
 
 @Enumerated(EnumType.STRING)

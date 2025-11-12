@@ -35,13 +35,6 @@ public class AppUserDetailsService implements UserDetailsService {
                 u.getEmail(), u.getPassword(), authorities);
     }
 
-    /**
-     * Gestion simple des rôles :
-     * - Accepte JSON array (ex: ["admin","manager"]) OU string (ex: "admin manager")
-     * - Découpe sur espaces/virgules/; |, met en minuscule
-     * - PAS de préfixe ROLE_
-     * - Fallback: "employee" si vide
-     */
 private Collection<? extends GrantedAuthority> mapAuthorities(User u) {
     String raw = u.getRole();
     if (raw == null || raw.isBlank()) {
@@ -50,7 +43,6 @@ private Collection<? extends GrantedAuthority> mapAuthorities(User u) {
     try {
         List<String> roles;
         if (raw.startsWith("[")) {
-            // Parse JSON array
             roles = mapper.readValue(raw, new TypeReference<List<String>>() {});
         } else {
             roles = List.of(raw);
@@ -60,7 +52,7 @@ private Collection<? extends GrantedAuthority> mapAuthorities(User u) {
             .filter(s -> s != null)
             .map(String::trim)
             .filter(s -> !s.isEmpty())
-            .map(String::toUpperCase) // Convertit en majuscules
+            .map(String::toUpperCase) 
             .distinct()
             .map(SimpleGrantedAuthority::new)
             .collect(Collectors.toList());

@@ -6,7 +6,6 @@ import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.graphql.data.method.annotation.SchemaMapping;
-import org.springframework.security.access.method.P;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 
@@ -152,7 +151,6 @@ public java.util.List<TeamMembersGroup> myTeamMembers() {
     }
 
     /* ============================ INPUT RECORDS ======================== */
-    // Records used to bind GraphQL inputs to Java
 
     public record TeamInput(String name, String description) {}
     public record TeamUpdateInput(Long id, String name, String description) {}

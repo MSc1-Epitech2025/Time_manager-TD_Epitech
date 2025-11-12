@@ -1,4 +1,3 @@
-// src/main/java/com/example/time_manager/model/leave/LeaveType.java
 package com.example.time_manager.model.leave;
 
 import jakarta.persistence.Column;

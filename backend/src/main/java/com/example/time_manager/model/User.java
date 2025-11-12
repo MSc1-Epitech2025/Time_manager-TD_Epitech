@@ -29,7 +29,6 @@ public class User {
     @Column(name = "avatar_url", length = 500)
     private String avatarUrl;
     private String azureOid;
-    // === Constructors ===
 
     public User() {
     }
@@ -45,8 +44,6 @@ public class User {
         this.password = password;
         this.azureOid = azureOid;
     }
-
-    // === Getters & Setters ===
 
     public String getId() {return id;}
     public void setId(String id) {this.id = id;}

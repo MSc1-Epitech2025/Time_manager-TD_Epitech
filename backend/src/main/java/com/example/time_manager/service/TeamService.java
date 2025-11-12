@@ -7,7 +7,6 @@ import com.example.time_manager.model.User;
 import com.example.time_manager.repository.TeamMemberRepository;
 import com.example.time_manager.repository.TeamRepository;
 import com.example.time_manager.repository.UserRepository;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
@@ -15,6 +14,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.access.AccessDeniedException;
+
 
 import java.util.*;
 
@@ -115,6 +116,9 @@ public class TeamService {
         List<User> members = teamMemberRepo.findUsersByTeamId(teamId);
         return members.stream().filter(u -> hasGlobalRole(u, "manager")).toList();
     }
+    public boolean isCurrentUserMemberOfTeam(Long teamId) {
+    return isMemberOf(teamId, currentUserId());
+    }
 
     /* ===================== Mutations ===================== */
     /**
@@ -191,68 +195,56 @@ public class TeamService {
     }
 
     /* ===================== AuthZ Helpers ===================== */
-    private String currentUserId() {
-        var auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || auth.getName() == null) {
-            throw new SecurityException("Unauthenticated");
-        }
-        String subject = auth.getName();
-        if (subject.contains("@")) {
-            return userRepo.findByEmail(subject)
-                    .map(User::getId)
-                    .orElseThrow(() -> new IllegalStateException("No user for email subject: " + subject));
-        }
-
-        // Otherwise assume subject is already the UUID
-        return subject;
+private String currentUserId() {
+    var auth = SecurityContextHolder.getContext().getAuthentication();
+    if (auth == null || auth.getName() == null) {
+        throw new AccessDeniedException("Unauthenticated");
     }
+    String subject = auth.getName();
+    if (subject.contains("@")) {
+        return userRepo.findByEmail(subject)
+                .map(User::getId)
+                .orElseThrow(() -> new AccessDeniedException("No user for email subject: " + subject));
+    }
+    return subject;
+}
 
     /**
      * True if current principal has ROLE_ADMIN.
      */
     private boolean isAdmin() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        return auth != null && auth.getAuthorities() != null
-                && auth.getAuthorities().stream()
-                        .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+        return hasAnyAuthority(auth, "ADMIN", "ROLE_ADMIN");
     }
 
     /**
      * True if current principal has ROLE_MANAGER.
      */
-    private boolean isManager() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        return auth != null && auth.getAuthorities() != null
-                && auth.getAuthorities().stream()
-                        .anyMatch(a -> "ROLE_MANAGER".equals(a.getAuthority()));
-    }
+private boolean isManager() {
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    return hasAnyAuthority(auth, "MANAGER", "ROLE_MANAGER");
+}
+ 
 
     /**
      * Enforce ADMIN role.
      */
-    private void requireAdmin() {
-        if (!isAdmin()) {
-            throw new SecurityException("Forbidden: requires ADMIN");
-        }
+private void requireAdmin() {
+    if (!isAdmin()) {
+        throw new AccessDeniedException("Forbidden: requires ADMIN");
     }
+}
 
     /**
      * Enforce a given high-level role (expects upper-case like "MANAGER"). It
      * maps to Spring Security authorities prefixed with "ROLE_".
      */
-    private void requireRole(String roleUpper) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || auth.getAuthorities() == null) {
-            throw new SecurityException("Unauthenticated");
-        }
-        String expected = "ROLE_" + roleUpper;
-        boolean ok = auth.getAuthorities().stream()
-                .anyMatch(a -> expected.equals(a.getAuthority()));
-        if (!ok) {
-            throw new SecurityException("Forbidden: requires " + expected);
-        }
+private void requireRole(String roleUpper) {
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    if (!hasAnyAuthority(auth, roleUpper, "ROLE_" + roleUpper)) {
+        throw new AccessDeniedException("Forbidden: requires " + roleUpper);
     }
-
+}
     /**
      * Check if a user entity has a given global role (roles stored as JSON
      * string). Example JSON: ["employee","manager","admin"]
@@ -286,29 +278,27 @@ public class TeamService {
      * Allow viewing team members if: - current user is ADMIN, or - current user
      * is a member of the team.
      */
-    private void assertCanViewTeamMembers(Long teamId) {
-        String me = currentUserId();
-        if (isAdmin()) {
-            return;
-        }
-        if (isMemberOf(teamId, me)) {
-            return;
-        }
-        throw new SecurityException("Forbidden: not allowed to view members of this team");
-    }
+private void assertCanViewTeamMembers(Long teamId) {
+    String me = currentUserId();
+    if (isAdmin()) return;
+    if (isMemberOf(teamId, me)) return;
+    throw new AccessDeniedException("Forbidden: not allowed to view members of this team");
+}
 
     /**
      * Allow managing team members if: - current user is ADMIN, or - current
      * user is MANAGER and a member of the team.
      */
-    private void assertCanManageTeamMembers(Long teamId) {
-        String me = currentUserId();
-        if (isAdmin()) {
-            return;
-        }
-        if (isManager() && isMemberOf(teamId, me)) {
-            return;
-        }
-        throw new SecurityException("Forbidden: only ADMIN or MANAGER member of the team can modify members");
+private void assertCanManageTeamMembers(Long teamId) {
+    String me = currentUserId();
+    if (isAdmin()) return;
+    if (isManager() && isMemberOf(teamId, me)) return;
+    throw new AccessDeniedException("Forbidden: only ADMIN or MANAGER member of the team can modify members");
+}
+    private static boolean hasAnyAuthority(Authentication auth, String... values) {
+        if (auth == null || auth.getAuthorities() == null) return false;
+        var expected = java.util.Set.of(values);
+        return auth.getAuthorities().stream().anyMatch(a -> expected.contains(a.getAuthority()));
     }
+
 }

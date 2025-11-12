@@ -10,14 +10,13 @@ public class Clock {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // user_id CHAR(36) NOT NULL
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     private User user;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "kind", nullable = false, length = 3)
-    private ClockKind kind; // IN / OUT
+    private ClockKind kind;
 
     @Column(name = "at", nullable = false)
     private Instant at;
