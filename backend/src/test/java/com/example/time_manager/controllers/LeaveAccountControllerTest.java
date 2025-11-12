@@ -1,4 +1,4 @@
-package com.example.time_manager.controller;
+package com.example.time_manager.controllers;
 
 import com.example.time_manager.dto.leave.LeaveAccountCreateInput;
 import com.example.time_manager.dto.leave.LeaveAccountUpdateInput;

@@ -1,10 +1,11 @@
-package com.example.time_manager.service.leave;
+package com.example.time_manager.services.leaves;
 
 import com.example.time_manager.model.absence.*;
 import com.example.time_manager.model.leave.*;
 import com.example.time_manager.repository.AbsenceDayRepository;
 import com.example.time_manager.repository.leave.LeaveAccountRepository;
 import com.example.time_manager.repository.leave.LeaveLedgerRepository;
+import com.example.time_manager.service.leave.LeaveAccountingBridge;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -38,7 +39,7 @@ class LeaveAccountingBridgeTest {
 
         assertEquals(Optional.of("RTT"), method.invoke(bridge, AbsenceType.RTT));
         assertEquals(Optional.of("VAC"), method.invoke(bridge, AbsenceType.VACATION));
-        assertEquals(Optional.empty(), method.invoke(bridge, AbsenceType.SICK)); // ✅ remplacé
+        assertEquals(Optional.empty(), method.invoke(bridge, AbsenceType.SICK));
         assertEquals(Optional.empty(), method.invoke(bridge, (Object) null));
     }
 
@@ -82,7 +83,7 @@ class LeaveAccountingBridgeTest {
     void testEnsureDebit_NoMappingFound() {
         Absence absence = new Absence();
         absence.setStatus(AbsenceStatus.APPROVED);
-        absence.setType(AbsenceType.SICK); // ✅ remplacé
+        absence.setType(AbsenceType.SICK);
         bridge.ensureDebitForApprovedAbsence(absence);
         verifyNoInteractions(accountRepo, ledgerRepo);
     }

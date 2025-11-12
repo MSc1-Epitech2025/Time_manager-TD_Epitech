@@ -1,8 +1,9 @@
-package com.example.time_manager.security;
+package com.example.time_manager.services;
 
 import com.example.time_manager.model.User;
 import com.example.time_manager.repository.TeamMemberRepository;
 import com.example.time_manager.repository.UserRepository;
+import com.example.time_manager.security.WorkScheduleAccess;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.access.AccessDeniedException;

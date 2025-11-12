@@ -1,4 +1,4 @@
-package com.example.time_manager.service;
+package com.example.time_manager.services;
 
 import com.example.time_manager.dto.work_schedule.WorkScheduleBatchRequest;
 import com.example.time_manager.dto.work_schedule.WorkScheduleRequest;
@@ -7,6 +7,7 @@ import com.example.time_manager.model.WorkDay;
 import com.example.time_manager.model.WorkPeriod;
 import com.example.time_manager.model.WorkSchedule;
 import com.example.time_manager.repository.WorkScheduleRepository;
+import com.example.time_manager.service.WorkScheduleService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
 

@@ -1,4 +1,4 @@
-package com.example.time_manager.service;
+package com.example.time_manager.services;
 
 import com.example.time_manager.dto.report.ReportCreateRequest;
 import com.example.time_manager.dto.report.ReportResponse;
@@ -7,6 +7,7 @@ import com.example.time_manager.model.Report;
 import com.example.time_manager.model.User;
 import com.example.time_manager.repository.ReportRepository;
 import com.example.time_manager.repository.UserRepository;
+import com.example.time_manager.service.ReportService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.access.AccessDeniedException;

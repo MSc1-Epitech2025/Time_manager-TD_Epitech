@@ -1,4 +1,4 @@
-package com.example.time_manager.service;
+package com.example.time_manager.services;
 
 import com.example.time_manager.dto.clock.ClockCreateRequest;
 import com.example.time_manager.dto.clock.ClockResponse;
@@ -7,6 +7,7 @@ import com.example.time_manager.model.ClockKind;
 import com.example.time_manager.model.User;
 import com.example.time_manager.repository.ClockRepository;
 import com.example.time_manager.repository.UserRepository;
+import com.example.time_manager.service.ClockService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
 

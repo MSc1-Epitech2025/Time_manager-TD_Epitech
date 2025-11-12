@@ -1,5 +1,6 @@
-package com.example.time_manager.graphql.controller;
+package com.example.time_manager.controllers;
 
+import com.example.time_manager.graphql.controller.KpiGraphQLController;
 import com.example.time_manager.model.kpi.GlobalKpiSummary;
 import com.example.time_manager.model.kpi.TeamKpiSummary;
 import com.example.time_manager.model.kpi.UserKpiSummary;
