@@ -1,67 +1,69 @@
-# src/main/resources/graphql/kpi.graphqls
 
-# Scalars utilisés par les DTOs (LocalDate/long/BigDecimal).
-# Si tu as déjà des scalars globaux, tu peux les regrouper.
-scalar Date
-scalar Long
-scalar BigDecimal
-
-type DateRange {
-  from: Date!
-  to: Date!
+type LeaveBalance {
+  leaveType: String
+  openingBalance: Float
+  accrued: Float
+  debited: Float
+  adjustments: Float
+  expired: Float
+  currentBalance: Float
 }
 
-type AttendanceKpi {
-  absenceRequests: Long!
-  approvedAbsences: Long!
-  approvedDays: BigDecimal!
+type AbsenceBreakdown {
+  type: String
+  days: Float
 }
 
-type TimeKpi {
-  totalWorkedMinutes: Long!
-  avgWorkedMinutesPerUser: Long!
-  totalOvertimeMinutes: Long!
+type PunctualityStats {
+  lateRate: Float
+  avgDelayMinutes: Float
 }
 
-type PunctualityKpi {
-  lateArrivalsCount: Long!
-  earlyLeavesCount: Long!
+type GlobalKpiSummary {
+  headcount: Int
+  managersShare: Float
+  adminsShare: Float
+  presenceRate: Float
+  avgHoursPerDay: Float
+  totalAbsenceDays: Float
+  absenceRate: Float
+  approvalDelayHours: Float
+  totalReports: Int
+  periodStart: String
+  periodEnd: String
 }
 
-type LeaveBalanceItem {
-  leaveTypeCode: String!
-  balance: BigDecimal!
+type TeamKpiSummary {
+  teamId: ID
+  teamName: String
+  headcount: Int
+  presenceRate: Float
+  avgHoursPerDay: Float
+  absenceRate: Float
+  reportsAuthored: Int
+  periodStart: String
+  periodEnd: String
 }
 
-type KpiGlobal {
-  range: DateRange!
-  totalUsers: Int!
-  totalTeams: Int!
-  attendance: AttendanceKpi!
-  time: TimeKpi!
-  punctuality: PunctualityKpi!
+type UserKpiSummary {
+  userId: ID
+  fullName: String
+  presenceRate: Float
+  avgHoursPerDay: Float
+  overtimeHours: Float
+  punctuality: PunctualityStats
+  absenceDays: Float
+  absenceByType: [AbsenceBreakdown!]
+  leaveBalances: [LeaveBalance!]
+  reportsAuthored: Int
+  reportsReceived: Int
+  periodStart: String
+  periodEnd: String
 }
 
-type KpiUser {
-  userId: ID!
-  range: DateRange!
-  attendance: AttendanceKpi!
-  time: TimeKpi!
-  punctuality: PunctualityKpi!
-  leaveBalances: [LeaveBalanceItem!]!
-}
-
-type KpiTeam {
-  teamId: ID!
-  range: DateRange!
-  memberCount: Int!
-  attendance: AttendanceKpi!
-  time: TimeKpi!
-  punctuality: PunctualityKpi!
-}
 
 extend type Query {
-  kpiGlobal(from: Date, to: Date): KpiGlobal!
-  kpiByUser(userId: ID!, from: Date, to: Date): KpiUser!
-  kpiByTeam(teamId: ID!, from: Date, to: Date): KpiTeam!
+  globalKpi(startDate: String!, endDate: String!): GlobalKpiSummary!
+  teamKpi(teamId: ID!, startDate: String!, endDate: String!): TeamKpiSummary!
+  userKpi(userId: ID!, startDate: String!, endDate: String!): UserKpiSummary!
 }
