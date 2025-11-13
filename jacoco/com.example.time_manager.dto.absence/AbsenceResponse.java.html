@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AbsenceResponse.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">time-manager</a> &gt; <a href="index.source.html" class="el_package">com.example.time_manager.dto.absence</a> &gt; <span class="el_source">AbsenceResponse.java</span></div><h1>AbsenceResponse.java</h1><pre class="source lang-java linenums">// AbsenceResponse.java
-package com.example.time_manager.dto.absence;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AbsenceResponse.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">time-manager</a> &gt; <a href="index.source.html" class="el_package">com.example.time_manager.dto.absence</a> &gt; <span class="el_source">AbsenceResponse.java</span></div><h1>AbsenceResponse.java</h1><pre class="source lang-java linenums">package com.example.time_manager.dto.absence;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -22,33 +21,33 @@ public class AbsenceResponse {
   private LocalDateTime updatedAt;
   private List&lt;AbsenceDayResponse&gt; days;
 
-<span class="fc" id="L25">  public AbsenceResponse() {}</span>
+<span class="fc" id="L24">  public AbsenceResponse() {}</span>
 
-<span class="fc" id="L27">  public Long getId() { return id; }</span>
-<span class="fc" id="L28">  public void setId(Long id) { this.id = id; }</span>
-<span class="nc" id="L29">  public String getUserId() { return userId; }</span>
-<span class="fc" id="L30">  public void setUserId(String userId) { this.userId = userId; }</span>
-<span class="nc" id="L31">  public LocalDate getStartDate() { return startDate; }</span>
-<span class="fc" id="L32">  public void setStartDate(LocalDate startDate) { this.startDate = startDate; }</span>
-<span class="nc" id="L33">  public LocalDate getEndDate() { return endDate; }</span>
-<span class="fc" id="L34">  public void setEndDate(LocalDate endDate) { this.endDate = endDate; }</span>
-<span class="nc" id="L35">  public AbsenceType getType() { return type; }</span>
-<span class="fc" id="L36">  public void setType(AbsenceType type) { this.type = type; }</span>
-<span class="nc" id="L37">  public String getReason() { return reason; }</span>
-<span class="fc" id="L38">  public void setReason(String reason) { this.reason = reason; }</span>
-<span class="nc" id="L39">  public String getSupportingDocumentUrl() { return supportingDocumentUrl; }</span>
-<span class="fc" id="L40">  public void setSupportingDocumentUrl(String supportingDocumentUrl) { this.supportingDocumentUrl = supportingDocumentUrl; }</span>
-<span class="fc" id="L41">  public AbsenceStatus getStatus() { return status; }</span>
-<span class="fc" id="L42">  public void setStatus(AbsenceStatus status) { this.status = status; }</span>
-<span class="nc" id="L43">  public String getApprovedBy() { return approvedBy; }</span>
-<span class="fc" id="L44">  public void setApprovedBy(String approvedBy) { this.approvedBy = approvedBy; }</span>
-<span class="nc" id="L45">  public LocalDateTime getApprovedAt() { return approvedAt; }</span>
-<span class="fc" id="L46">  public void setApprovedAt(LocalDateTime approvedAt) { this.approvedAt = approvedAt; }</span>
-<span class="nc" id="L47">  public LocalDateTime getCreatedAt() { return createdAt; }</span>
-<span class="fc" id="L48">  public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }</span>
-<span class="nc" id="L49">  public LocalDateTime getUpdatedAt() { return updatedAt; }</span>
-<span class="fc" id="L50">  public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }</span>
-<span class="nc" id="L51">  public List&lt;AbsenceDayResponse&gt; getDays() { return days; }</span>
-<span class="fc" id="L52">  public void setDays(List&lt;AbsenceDayResponse&gt; days) { this.days = days; }</span>
+<span class="fc" id="L26">  public Long getId() { return id; }</span>
+<span class="fc" id="L27">  public void setId(Long id) { this.id = id; }</span>
+<span class="nc" id="L28">  public String getUserId() { return userId; }</span>
+<span class="fc" id="L29">  public void setUserId(String userId) { this.userId = userId; }</span>
+<span class="nc" id="L30">  public LocalDate getStartDate() { return startDate; }</span>
+<span class="fc" id="L31">  public void setStartDate(LocalDate startDate) { this.startDate = startDate; }</span>
+<span class="nc" id="L32">  public LocalDate getEndDate() { return endDate; }</span>
+<span class="fc" id="L33">  public void setEndDate(LocalDate endDate) { this.endDate = endDate; }</span>
+<span class="nc" id="L34">  public AbsenceType getType() { return type; }</span>
+<span class="fc" id="L35">  public void setType(AbsenceType type) { this.type = type; }</span>
+<span class="nc" id="L36">  public String getReason() { return reason; }</span>
+<span class="fc" id="L37">  public void setReason(String reason) { this.reason = reason; }</span>
+<span class="nc" id="L38">  public String getSupportingDocumentUrl() { return supportingDocumentUrl; }</span>
+<span class="fc" id="L39">  public void setSupportingDocumentUrl(String supportingDocumentUrl) { this.supportingDocumentUrl = supportingDocumentUrl; }</span>
+<span class="fc" id="L40">  public AbsenceStatus getStatus() { return status; }</span>
+<span class="fc" id="L41">  public void setStatus(AbsenceStatus status) { this.status = status; }</span>
+<span class="nc" id="L42">  public String getApprovedBy() { return approvedBy; }</span>
+<span class="fc" id="L43">  public void setApprovedBy(String approvedBy) { this.approvedBy = approvedBy; }</span>
+<span class="nc" id="L44">  public LocalDateTime getApprovedAt() { return approvedAt; }</span>
+<span class="fc" id="L45">  public void setApprovedAt(LocalDateTime approvedAt) { this.approvedAt = approvedAt; }</span>
+<span class="nc" id="L46">  public LocalDateTime getCreatedAt() { return createdAt; }</span>
+<span class="fc" id="L47">  public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }</span>
+<span class="nc" id="L48">  public LocalDateTime getUpdatedAt() { return updatedAt; }</span>
+<span class="fc" id="L49">  public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }</span>
+<span class="nc" id="L50">  public List&lt;AbsenceDayResponse&gt; getDays() { return days; }</span>
+<span class="fc" id="L51">  public void setDays(List&lt;AbsenceDayResponse&gt; days) { this.days = days; }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>KpiGraphQLController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">time-manager</a> &gt; <a href="index.source.html" class="el_package">com.example.time_manager.graphql.controller</a> &gt; <span class="el_source">KpiGraphQLController.java</span></div><h1>KpiGraphQLController.java</h1><pre class="source lang-java linenums">package com.example.time_manager.graphql.controller;
+
+import com.example.time_manager.model.kpi.GlobalKpiSummary;
+import com.example.time_manager.model.kpi.TeamKpiSummary;
+import com.example.time_manager.model.kpi.UserKpiSummary;
+import com.example.time_manager.service.KpiService;
+
+import org.springframework.graphql.data.method.annotation.Argument;
+import org.springframework.graphql.data.method.annotation.QueryMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+
+import java.time.LocalDate;
+import java.util.UUID;
+
+@Controller
+public class KpiGraphQLController {
+
+    private final KpiService kpiService;
+
+<span class="fc" id="L21">    public KpiGraphQLController(KpiService kpiService) {</span>
+<span class="fc" id="L22">        this.kpiService = kpiService;</span>
+<span class="fc" id="L23">    }</span>
+
+    @QueryMapping
+    @PreAuthorize(&quot;hasAnyAuthority('ADMIN','MANAGER')&quot;)
+    public GlobalKpiSummary globalKpi(@Argument String startDate,
+                                      @Argument String endDate) {
+<span class="fc" id="L29">        LocalDate start = LocalDate.parse(startDate);</span>
+<span class="fc" id="L30">        LocalDate end   = LocalDate.parse(endDate);</span>
+<span class="fc" id="L31">        return kpiService.getGlobal(start, end);</span>
+    }
+
+    @QueryMapping
+    @PreAuthorize(&quot;hasAnyAuthority('ADMIN','MANAGER')&quot;)
+    public TeamKpiSummary teamKpi(@Argument Integer teamId,
+                                  @Argument String startDate,
+                                  @Argument String endDate) {
+<span class="fc" id="L39">        LocalDate start = LocalDate.parse(startDate);</span>
+<span class="fc" id="L40">        LocalDate end   = LocalDate.parse(endDate);</span>
+<span class="fc" id="L41">        return kpiService.getTeam(teamId, start, end);</span>
+    }
+
+    @QueryMapping
+    @PreAuthorize(&quot;hasAnyAuthority('ADMIN','MANAGER')&quot;) 
+    public UserKpiSummary userKpi(@Argument UUID userId,
+                                  @Argument String startDate,
+                                  @Argument String endDate) {
+<span class="fc" id="L49">        LocalDate start = LocalDate.parse(startDate);</span>
+<span class="fc" id="L50">        LocalDate end   = LocalDate.parse(endDate);</span>
+<span class="fc" id="L51">        return kpiService.getUser(userId, start, end);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LeaveBalance.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">time-manager</a> &gt; <a href="index.source.html" class="el_package">com.example.time_manager.model.kpi</a> &gt; <span class="el_source">LeaveBalance.java</span></div><h1>LeaveBalance.java</h1><pre class="source lang-java linenums">package com.example.time_manager.model.kpi;
+
+import java.math.BigDecimal;
+
+
+public class LeaveBalance {
+private String leaveType; 
+private BigDecimal openingBalance;
+private BigDecimal accrued; 
+private BigDecimal debited; 
+private BigDecimal adjustments; 
+private BigDecimal expired;
+private BigDecimal currentBalance;
+
+
+<span class="fc" id="L16">public LeaveBalance() {}</span>
+
+
+public LeaveBalance(String leaveType, BigDecimal openingBalance, BigDecimal accrued,
+BigDecimal debited, BigDecimal adjustments, BigDecimal expired,
+<span class="fc" id="L21">BigDecimal currentBalance) {</span>
+<span class="fc" id="L22">this.leaveType = leaveType;</span>
+<span class="fc" id="L23">this.openingBalance = openingBalance;</span>
+<span class="fc" id="L24">this.accrued = accrued;</span>
+<span class="fc" id="L25">this.debited = debited;</span>
+<span class="fc" id="L26">this.adjustments = adjustments;</span>
+<span class="fc" id="L27">this.expired = expired;</span>
+<span class="fc" id="L28">this.currentBalance = currentBalance;</span>
+<span class="fc" id="L29">}</span>
+
+
+<span class="fc" id="L32">public String getLeaveType() { return leaveType; }</span>
+<span class="fc" id="L33">public void setLeaveType(String leaveType) { this.leaveType = leaveType; }</span>
+
+
+<span class="fc" id="L36">public BigDecimal getOpeningBalance() { return openingBalance; }</span>
+<span class="fc" id="L37">public void setOpeningBalance(BigDecimal openingBalance) { this.openingBalance = openingBalance; }</span>
+
+
+<span class="fc" id="L40">public BigDecimal getAccrued() { return accrued; }</span>
+<span class="fc" id="L41">public void setAccrued(BigDecimal accrued) { this.accrued = accrued; }</span>
+
+
+<span class="fc" id="L44">public BigDecimal getDebited() { return debited; }</span>
+<span class="fc" id="L45">public void setDebited(BigDecimal debited) { this.debited = debited; }</span>
+
+
+<span class="fc" id="L48">public BigDecimal getAdjustments() { return adjustments; }</span>
+<span class="fc" id="L49">public void setAdjustments(BigDecimal adjustments) { this.adjustments = adjustments; }</span>
+
+
+<span class="fc" id="L52">public BigDecimal getExpired() { return expired; }</span>
+<span class="fc" id="L53">public void setExpired(BigDecimal expired) { this.expired = expired; }</span>
+
+
+<span class="fc" id="L56">public BigDecimal getCurrentBalance() { return currentBalance; }</span>
+<span class="fc" id="L57">public void setCurrentBalance(BigDecimal currentBalance) { this.currentBalance = currentBalance; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

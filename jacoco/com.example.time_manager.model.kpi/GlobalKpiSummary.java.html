@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GlobalKpiSummary.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">time-manager</a> &gt; <a href="index.source.html" class="el_package">com.example.time_manager.model.kpi</a> &gt; <span class="el_source">GlobalKpiSummary.java</span></div><h1>GlobalKpiSummary.java</h1><pre class="source lang-java linenums">package com.example.time_manager.model.kpi;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+public class GlobalKpiSummary {
+
+    private Integer headcount;
+    private BigDecimal managersShare;      
+    private BigDecimal adminsShare;        
+
+    private BigDecimal presenceRate;       
+    private BigDecimal avgHoursPerDay;     
+
+    private BigDecimal totalAbsenceDays;   
+    private BigDecimal absenceRate;        
+    private BigDecimal approvalDelayHours; 
+
+    private Integer totalReports;          
+
+    private LocalDate periodStart;
+    private LocalDate periodEnd;
+
+<span class="fc" id="L24">    public GlobalKpiSummary() {}</span>
+
+<span class="fc" id="L26">    public Integer getHeadcount() { return headcount; }</span>
+<span class="fc" id="L27">    public void setHeadcount(Integer headcount) { this.headcount = headcount; }</span>
+
+<span class="fc" id="L29">    public BigDecimal getManagersShare() { return managersShare; }</span>
+<span class="fc" id="L30">    public void setManagersShare(BigDecimal managersShare) { this.managersShare = managersShare; }</span>
+
+<span class="fc" id="L32">    public BigDecimal getAdminsShare() { return adminsShare; }</span>
+<span class="fc" id="L33">    public void setAdminsShare(BigDecimal adminsShare) { this.adminsShare = adminsShare; }</span>
+
+<span class="fc" id="L35">    public BigDecimal getPresenceRate() { return presenceRate; }</span>
+<span class="fc" id="L36">    public void setPresenceRate(BigDecimal presenceRate) { this.presenceRate = presenceRate; }</span>
+
+<span class="fc" id="L38">    public BigDecimal getAvgHoursPerDay() { return avgHoursPerDay; }</span>
+<span class="fc" id="L39">    public void setAvgHoursPerDay(BigDecimal avgHoursPerDay) { this.avgHoursPerDay = avgHoursPerDay; }</span>
+
+<span class="fc" id="L41">    public BigDecimal getTotalAbsenceDays() { return totalAbsenceDays; }</span>
+<span class="fc" id="L42">    public void setTotalAbsenceDays(BigDecimal totalAbsenceDays) { this.totalAbsenceDays = totalAbsenceDays; }</span>
+
+<span class="fc" id="L44">    public BigDecimal getAbsenceRate() { return absenceRate; }</span>
+<span class="fc" id="L45">    public void setAbsenceRate(BigDecimal absenceRate) { this.absenceRate = absenceRate; }</span>
+
+<span class="fc" id="L47">    public BigDecimal getApprovalDelayHours() { return approvalDelayHours; }</span>
+<span class="fc" id="L48">    public void setApprovalDelayHours(BigDecimal approvalDelayHours) { this.approvalDelayHours = approvalDelayHours; }</span>
+
+<span class="fc" id="L50">    public Integer getTotalReports() { return totalReports; }</span>
+<span class="fc" id="L51">    public void setTotalReports(Integer totalReports) { this.totalReports = totalReports; }</span>
+
+<span class="fc" id="L53">    public LocalDate getPeriodStart() { return periodStart; }</span>
+<span class="fc" id="L54">    public void setPeriodStart(LocalDate periodStart) { this.periodStart = periodStart; }</span>
+
+<span class="fc" id="L56">    public LocalDate getPeriodEnd() { return periodEnd; }</span>
+<span class="fc" id="L57">    public void setPeriodEnd(LocalDate periodEnd) { this.periodEnd = periodEnd; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

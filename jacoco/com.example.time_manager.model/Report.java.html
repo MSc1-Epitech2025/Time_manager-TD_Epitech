@@ -8,15 +8,15 @@ import java.time.Instant;
 <span class="fc" id="L8">public class Report {</span>
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY) // id INT AUTO_INCREMENT
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
   @ManyToOne(optional = false)
-  @JoinColumn(name = &quot;author_id&quot;, nullable = false)   // CHAR(36) FK -&gt; users(id)
+  @JoinColumn(name = &quot;author_id&quot;, nullable = false)  
   private User author;
 
   @ManyToOne(optional = false)
-  @JoinColumn(name = &quot;target_user_id&quot;, nullable = false) // CHAR(36) FK -&gt; users(id)
+  @JoinColumn(name = &quot;target_user_id&quot;, nullable = false) 
   private User target;
 
   @Column(nullable = false, length = 255)

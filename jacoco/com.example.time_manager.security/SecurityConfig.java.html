@@ -27,54 +27,54 @@ public class SecurityConfig {
 
   private final JwtAuthFilter jwtAuthFilter;
 
-<span class="fc" id="L30">  public SecurityConfig(JwtAuthFilter jwtAuthFilter) {</span>
-<span class="fc" id="L31">    this.jwtAuthFilter = jwtAuthFilter;</span>
-<span class="fc" id="L32">  }</span>
+<span class="nc" id="L30">  public SecurityConfig(JwtAuthFilter jwtAuthFilter) {</span>
+<span class="nc" id="L31">    this.jwtAuthFilter = jwtAuthFilter;</span>
+<span class="nc" id="L32">  }</span>
 
   @Bean
   SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-<span class="fc" id="L36">      http</span>
-<span class="pc" id="L37">          .cors(cors -&gt; cors.configurationSource(corsConfigurationSource()))</span>
-<span class="pc" id="L38">          .csrf(csrf -&gt; csrf.ignoringRequestMatchers(&quot;/graphql&quot;))</span>
-<span class="pc" id="L39">          .sessionManagement(sm -&gt; sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))</span>
-<span class="pc" id="L40">          .securityContext(sc -&gt; sc</span>
+<span class="nc" id="L36">      http</span>
+<span class="nc" id="L37">          .cors(cors -&gt; cors.configurationSource(corsConfigurationSource()))</span>
+<span class="nc" id="L38">          .csrf(csrf -&gt; csrf.ignoringRequestMatchers(&quot;/graphql&quot;))</span>
+<span class="nc" id="L39">          .sessionManagement(sm -&gt; sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))</span>
+<span class="nc" id="L40">          .securityContext(sc -&gt; sc</span>
 <span class="nc" id="L41">              .requireExplicitSave(false)</span>
 <span class="nc" id="L42">              .securityContextRepository(new NullSecurityContextRepository())</span>
           )
-<span class="fc" id="L44">          .authorizeHttpRequests(auth -&gt; auth</span>
+<span class="nc" id="L44">          .authorizeHttpRequests(auth -&gt; auth</span>
 <span class="nc" id="L45">              .requestMatchers(&quot;/actuator/health&quot;).permitAll()</span>
 <span class="nc" id="L46">              .requestMatchers(HttpMethod.POST, &quot;/graphql&quot;).permitAll()</span>
 <span class="nc" id="L47">              .requestMatchers(&quot;/oauth2/**&quot;).permitAll()</span>
 <span class="nc" id="L48">              .anyRequest().authenticated()</span>
           )
-<span class="pc" id="L50">          .oauth2Login(oauth -&gt; oauth.defaultSuccessUrl(&quot;/oauth2/success&quot;, true))</span>
-<span class="fc" id="L51">          .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);</span>
+<span class="nc" id="L50">          .oauth2Login(oauth -&gt; oauth.defaultSuccessUrl(&quot;/oauth2/success&quot;, true))</span>
+<span class="nc" id="L51">          .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);</span>
 
-<span class="fc" id="L53">      return http.build();</span>
+<span class="nc" id="L53">      return http.build();</span>
   }
 
   @Bean
   CorsConfigurationSource corsConfigurationSource() {
-<span class="fc" id="L58">    CorsConfiguration cfg = new CorsConfiguration();</span>
-<span class="fc" id="L59">    cfg.setAllowedOrigins(List.of(&quot;http://localhost:4200&quot;, &quot;http://localhost:3000&quot;));</span>
-<span class="fc" id="L60">    cfg.setAllowedMethods(List.of(&quot;GET&quot;,&quot;POST&quot;,&quot;PUT&quot;,&quot;PATCH&quot;,&quot;DELETE&quot;,&quot;OPTIONS&quot;));</span>
-<span class="fc" id="L61">    cfg.setAllowedHeaders(List.of(&quot;Authorization&quot;,&quot;Content-Type&quot;,&quot;X-Requested-With&quot;));</span>
-<span class="fc" id="L62">    cfg.setExposedHeaders(List.of(&quot;Authorization&quot;));</span>
-<span class="fc" id="L63">    cfg.setAllowCredentials(true);</span>
+<span class="nc" id="L58">    CorsConfiguration cfg = new CorsConfiguration();</span>
+<span class="nc" id="L59">    cfg.setAllowedOrigins(List.of(&quot;http://localhost:4200&quot;, &quot;http://localhost:3000&quot;));</span>
+<span class="nc" id="L60">    cfg.setAllowedMethods(List.of(&quot;GET&quot;,&quot;POST&quot;,&quot;PUT&quot;,&quot;PATCH&quot;,&quot;DELETE&quot;,&quot;OPTIONS&quot;));</span>
+<span class="nc" id="L61">    cfg.setAllowedHeaders(List.of(&quot;Authorization&quot;,&quot;Content-Type&quot;,&quot;X-Requested-With&quot;));</span>
+<span class="nc" id="L62">    cfg.setExposedHeaders(List.of(&quot;Authorization&quot;));</span>
+<span class="nc" id="L63">    cfg.setAllowCredentials(true);</span>
 
-<span class="fc" id="L65">    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();</span>
-<span class="fc" id="L66">    source.registerCorsConfiguration(&quot;/**&quot;, cfg);</span>
-<span class="fc" id="L67">    return source;</span>
+<span class="nc" id="L65">    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();</span>
+<span class="nc" id="L66">    source.registerCorsConfiguration(&quot;/**&quot;, cfg);</span>
+<span class="nc" id="L67">    return source;</span>
   }
 
   @Bean
   PasswordEncoder passwordEncoder() {
-<span class="fc" id="L72">    return new BCryptPasswordEncoder();</span>
+<span class="nc" id="L72">    return new BCryptPasswordEncoder();</span>
   }
 
   @Bean
   AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
-<span class="fc" id="L77">    return configuration.getAuthenticationManager();</span>
+<span class="nc" id="L77">    return configuration.getAuthenticationManager();</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

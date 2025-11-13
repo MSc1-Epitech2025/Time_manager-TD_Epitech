@@ -35,41 +35,33 @@ public class AppUserDetailsService implements UserDetailsService {
 <span class="fc" id="L35">                u.getEmail(), u.getPassword(), authorities);</span>
     }
 
-    /**
-     * Gestion simple des rôles :
-     * - Accepte JSON array (ex: [&quot;admin&quot;,&quot;manager&quot;]) OU string (ex: &quot;admin manager&quot;)
-     * - Découpe sur espaces/virgules/; |, met en minuscule
-     * - PAS de préfixe ROLE_
-     * - Fallback: &quot;employee&quot; si vide
-     */
 private Collection&lt;? extends GrantedAuthority&gt; mapAuthorities(User u) {
-<span class="fc" id="L46">    String raw = u.getRole();</span>
-<span class="fc bfc" id="L47" title="All 4 branches covered.">    if (raw == null || raw.isBlank()) {</span>
-<span class="fc" id="L48">        return List.of(new SimpleGrantedAuthority(&quot;EMPLOYEE&quot;));</span>
+<span class="fc" id="L39">    String raw = u.getRole();</span>
+<span class="fc bfc" id="L40" title="All 4 branches covered.">    if (raw == null || raw.isBlank()) {</span>
+<span class="fc" id="L41">        return List.of(new SimpleGrantedAuthority(&quot;EMPLOYEE&quot;));</span>
     }
     try {
         List&lt;String&gt; roles;
-<span class="fc bfc" id="L52" title="All 2 branches covered.">        if (raw.startsWith(&quot;[&quot;)) {</span>
-            // Parse JSON array
-<span class="fc" id="L54">            roles = mapper.readValue(raw, new TypeReference&lt;List&lt;String&gt;&gt;() {});</span>
+<span class="fc bfc" id="L45" title="All 2 branches covered.">        if (raw.startsWith(&quot;[&quot;)) {</span>
+<span class="fc" id="L46">            roles = mapper.readValue(raw, new TypeReference&lt;List&lt;String&gt;&gt;() {});</span>
         } else {
-<span class="fc" id="L56">            roles = List.of(raw);</span>
+<span class="fc" id="L48">            roles = List.of(raw);</span>
         }
         
-<span class="fc" id="L59">        var authorities = roles.stream()</span>
-<span class="pc bpc" id="L60" title="1 of 2 branches missed.">            .filter(s -&gt; s != null)</span>
-<span class="fc" id="L61">            .map(String::trim)</span>
-<span class="pc bpc" id="L62" title="1 of 2 branches missed.">            .filter(s -&gt; !s.isEmpty())</span>
-<span class="fc" id="L63">            .map(String::toUpperCase) // Convertit en majuscules</span>
-<span class="fc" id="L64">            .distinct()</span>
-<span class="fc" id="L65">            .map(SimpleGrantedAuthority::new)</span>
-<span class="fc" id="L66">            .collect(Collectors.toList());</span>
+<span class="fc" id="L51">        var authorities = roles.stream()</span>
+<span class="pc bpc" id="L52" title="1 of 2 branches missed.">            .filter(s -&gt; s != null)</span>
+<span class="fc" id="L53">            .map(String::trim)</span>
+<span class="pc bpc" id="L54" title="1 of 2 branches missed.">            .filter(s -&gt; !s.isEmpty())</span>
+<span class="fc" id="L55">            .map(String::toUpperCase) </span>
+<span class="fc" id="L56">            .distinct()</span>
+<span class="fc" id="L57">            .map(SimpleGrantedAuthority::new)</span>
+<span class="fc" id="L58">            .collect(Collectors.toList());</span>
         
-<span class="fc bfc" id="L68" title="All 2 branches covered.">        return authorities.isEmpty() </span>
-<span class="fc" id="L69">            ? List.of(new SimpleGrantedAuthority(&quot;EMPLOYEE&quot;))</span>
-<span class="fc" id="L70">            : authorities;</span>
-<span class="nc" id="L71">    } catch (Exception e) {</span>
-<span class="nc" id="L72">        return List.of(new SimpleGrantedAuthority(raw.toUpperCase()));</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">        return authorities.isEmpty() </span>
+<span class="fc" id="L61">            ? List.of(new SimpleGrantedAuthority(&quot;EMPLOYEE&quot;))</span>
+<span class="fc" id="L62">            : authorities;</span>
+<span class="nc" id="L63">    } catch (Exception e) {</span>
+<span class="nc" id="L64">        return List.of(new SimpleGrantedAuthority(raw.toUpperCase()));</span>
     }
 }
 }

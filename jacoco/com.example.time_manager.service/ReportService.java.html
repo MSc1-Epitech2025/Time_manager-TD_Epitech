@@ -167,48 +167,43 @@ public class ReportService {
 <span class="pc" id="L167">        .orElseThrow(() -&gt; new EntityNotFoundException(&quot;User not found: &quot; + email));</span>
   }
 
-  /**
-   * Naive role check from JSON string stored in User.role (e.g. [&quot;employee&quot;,&quot;manager&quot;]).
-   * Still used for ADMIN checks on read/update/delete.
-   */
   private boolean hasRole(User u, String roleUpper) {
-<span class="fc" id="L175">    String raw = u.getRole();</span>
-<span class="pc bpc" id="L176" title="2 of 4 branches missed.">    if (raw == null || raw.isBlank()) return false;</span>
-<span class="fc" id="L177">    String up = roleUpper.toUpperCase();</span>
-<span class="fc" id="L178">    String normalized = raw.replaceAll(&quot;[\\[\\]\\s\\\&quot;]&quot;, &quot;&quot;).toUpperCase(); // EMPLOYEE,MANAGER,ADMIN</span>
-<span class="fc bfc" id="L179" title="All 2 branches covered.">    for (String r : normalized.split(&quot;,&quot;)) {</span>
-<span class="fc bfc" id="L180" title="All 2 branches covered.">      if (r.equals(up)) return true;</span>
+<span class="fc" id="L171">    String raw = u.getRole();</span>
+<span class="pc bpc" id="L172" title="2 of 4 branches missed.">    if (raw == null || raw.isBlank()) return false;</span>
+<span class="fc" id="L173">    String up = roleUpper.toUpperCase();</span>
+<span class="fc" id="L174">    String normalized = raw.replaceAll(&quot;[\\[\\]\\s\\\&quot;]&quot;, &quot;&quot;).toUpperCase();</span>
+<span class="fc bfc" id="L175" title="All 2 branches covered.">    for (String r : normalized.split(&quot;,&quot;)) {</span>
+<span class="fc bfc" id="L176" title="All 2 branches covered.">      if (r.equals(up)) return true;</span>
     }
-<span class="fc" id="L182">    return false;</span>
+<span class="fc" id="L178">    return false;</span>
   }
 
-  /* ======================== ALIAS pour le contrôleur GraphQL ======================== */
 
   @Transactional(readOnly = true)
   public List&lt;ReportResponse&gt; listAll() {
-<span class="nc" id="L189">    return listAllForAdmin();</span>
+<span class="nc" id="L184">    return listAllForAdmin();</span>
   }
 
   @Transactional(readOnly = true)
   public List&lt;ReportResponse&gt; listMineByEmail(String email) {
-<span class="nc" id="L194">    return listAuthoredByEmail(email);</span>
+<span class="nc" id="L189">    return listAuthoredByEmail(email);</span>
   }
 
   @Transactional(readOnly = true)
   public ReportResponse loadVisibleByEmail(String email, Long id) {
-<span class="nc" id="L199">    return getVisibleTo(email, id);</span>
+<span class="nc" id="L194">    return getVisibleTo(email, id);</span>
   }
 
   public ReportResponse create(String authorEmail, ReportCreateRequest req) {
-<span class="nc" id="L203">    return createForAuthorEmail(authorEmail, req);</span>
+<span class="nc" id="L198">    return createForAuthorEmail(authorEmail, req);</span>
   }
 
   public ReportResponse update(String email, Long id, ReportUpdateRequest req) {
-<span class="nc" id="L207">    return updateVisibleTo(email, id, req);</span>
+<span class="nc" id="L202">    return updateVisibleTo(email, id, req);</span>
   }
 
   public void delete(String email, Long id) {
-<span class="nc" id="L211">    deleteVisibleTo(email, id);</span>
-<span class="nc" id="L212">  }</span>
+<span class="nc" id="L206">    deleteVisibleTo(email, id);</span>
+<span class="nc" id="L207">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

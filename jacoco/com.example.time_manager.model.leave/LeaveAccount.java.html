@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LeaveAccount.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">time-manager</a> &gt; <a href="index.source.html" class="el_package">com.example.time_manager.model.leave</a> &gt; <span class="el_source">LeaveAccount.java</span></div><h1>LeaveAccount.java</h1><pre class="source lang-java linenums">// src/main/java/com/example/time_manager/model/leave/LeaveAccount.java
-package com.example.time_manager.model.leave;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LeaveAccount.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">time-manager</a> &gt; <a href="index.source.html" class="el_package">com.example.time_manager.model.leave</a> &gt; <span class="el_source">LeaveAccount.java</span></div><h1>LeaveAccount.java</h1><pre class="source lang-java linenums">package com.example.time_manager.model.leave;
 
 import com.example.time_manager.model.User;
 import jakarta.persistence.*;
@@ -26,10 +25,10 @@ public class LeaveAccount {
   @JoinColumn(name = &quot;leave_type&quot;, referencedColumnName = &quot;code&quot;, nullable = false)
   private LeaveType leaveType;
 
-<span class="fc" id="L29">  @Column(name = &quot;opening_balance&quot;, precision = 6, scale = 2)</span>
+<span class="fc" id="L28">  @Column(name = &quot;opening_balance&quot;, precision = 6, scale = 2)</span>
   private BigDecimal openingBalance = BigDecimal.ZERO;
 
-<span class="fc" id="L32">  @Column(name = &quot;accrual_per_month&quot;, precision = 5, scale = 3)</span>
+<span class="fc" id="L31">  @Column(name = &quot;accrual_per_month&quot;, precision = 5, scale = 3)</span>
   private BigDecimal accrualPerMonth = BigDecimal.ZERO;
 
   @Column(name = &quot;max_carryover&quot;, precision = 6, scale = 2)
@@ -41,24 +40,24 @@ public class LeaveAccount {
   @Column(name = &quot;created_at&quot;, updatable = false, insertable = false)
   private Instant createdAt;
 
-<span class="fc" id="L44">  public LeaveAccount() {}</span>
+<span class="fc" id="L43">  public LeaveAccount() {}</span>
 
   // Getters / Setters
-<span class="fc" id="L47">  public Long getId() { return id; }</span>
-<span class="fc" id="L48">  public void setId(Long id) { this.id = id; }</span>
-<span class="fc" id="L49">  public User getUser() { return user; }</span>
-<span class="fc" id="L50">  public void setUser(User user) { this.user = user; }</span>
-<span class="fc" id="L51">  public LeaveType getLeaveType() { return leaveType; }</span>
-<span class="fc" id="L52">  public void setLeaveType(LeaveType leaveType) { this.leaveType = leaveType; }</span>
-<span class="fc" id="L53">  public BigDecimal getOpeningBalance() { return openingBalance; }</span>
-<span class="fc" id="L54">  public void setOpeningBalance(BigDecimal openingBalance) { this.openingBalance = openingBalance; }</span>
-<span class="fc" id="L55">  public BigDecimal getAccrualPerMonth() { return accrualPerMonth; }</span>
-<span class="fc" id="L56">  public void setAccrualPerMonth(BigDecimal accrualPerMonth) { this.accrualPerMonth = accrualPerMonth; }</span>
-<span class="fc" id="L57">  public BigDecimal getMaxCarryover() { return maxCarryover; }</span>
-<span class="fc" id="L58">  public void setMaxCarryover(BigDecimal maxCarryover) { this.maxCarryover = maxCarryover; }</span>
-<span class="fc" id="L59">  public LocalDate getCarryoverExpireOn() { return carryoverExpireOn; }</span>
-<span class="fc" id="L60">  public void setCarryoverExpireOn(LocalDate carryoverExpireOn) { this.carryoverExpireOn = carryoverExpireOn; }</span>
-<span class="fc" id="L61">  public Instant getCreatedAt() { return createdAt; }</span>
-<span class="fc" id="L62">  public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }</span>
+<span class="fc" id="L46">  public Long getId() { return id; }</span>
+<span class="fc" id="L47">  public void setId(Long id) { this.id = id; }</span>
+<span class="fc" id="L48">  public User getUser() { return user; }</span>
+<span class="fc" id="L49">  public void setUser(User user) { this.user = user; }</span>
+<span class="fc" id="L50">  public LeaveType getLeaveType() { return leaveType; }</span>
+<span class="fc" id="L51">  public void setLeaveType(LeaveType leaveType) { this.leaveType = leaveType; }</span>
+<span class="fc" id="L52">  public BigDecimal getOpeningBalance() { return openingBalance; }</span>
+<span class="fc" id="L53">  public void setOpeningBalance(BigDecimal openingBalance) { this.openingBalance = openingBalance; }</span>
+<span class="fc" id="L54">  public BigDecimal getAccrualPerMonth() { return accrualPerMonth; }</span>
+<span class="fc" id="L55">  public void setAccrualPerMonth(BigDecimal accrualPerMonth) { this.accrualPerMonth = accrualPerMonth; }</span>
+<span class="fc" id="L56">  public BigDecimal getMaxCarryover() { return maxCarryover; }</span>
+<span class="fc" id="L57">  public void setMaxCarryover(BigDecimal maxCarryover) { this.maxCarryover = maxCarryover; }</span>
+<span class="fc" id="L58">  public LocalDate getCarryoverExpireOn() { return carryoverExpireOn; }</span>
+<span class="fc" id="L59">  public void setCarryoverExpireOn(LocalDate carryoverExpireOn) { this.carryoverExpireOn = carryoverExpireOn; }</span>
+<span class="fc" id="L60">  public Instant getCreatedAt() { return createdAt; }</span>
+<span class="fc" id="L61">  public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

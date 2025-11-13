@@ -4,11 +4,6 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-/**
- * Entité pour la table `absence_days`
- * - Clé étrangère vers `absence(id)` via ManyToOne
- * - Dates/heures en types Java Time
- */
 @Entity
 @Table(name = &quot;absence_days&quot;)
 public class AbsenceDay {
@@ -25,7 +20,7 @@ public class AbsenceDay {
   @Column(name = &quot;absence_date&quot;, nullable = false)
   private LocalDate absenceDate;
 
-<span class="fc" id="L28">  @Enumerated(EnumType.STRING)</span>
+<span class="fc" id="L23">  @Enumerated(EnumType.STRING)</span>
   @Column(name = &quot;period&quot;, nullable = false, length = 20)
   private AbsencePeriod period = AbsencePeriod.FULL_DAY;
 
@@ -35,25 +30,25 @@ public class AbsenceDay {
   @Column(name = &quot;end_time&quot;)
   private LocalTime endTime;
 
-<span class="fc" id="L38">  public AbsenceDay() {}</span>
+<span class="fc" id="L33">  public AbsenceDay() {}</span>
 
   // Getters / Setters
-<span class="fc" id="L41">  public Long getId() { return id; }</span>
-<span class="fc" id="L42">  public void setId(Long id) { this.id = id; }</span>
+<span class="fc" id="L36">  public Long getId() { return id; }</span>
+<span class="fc" id="L37">  public void setId(Long id) { this.id = id; }</span>
 
-<span class="nc" id="L44">  public Absence getAbsence() { return absence; }</span>
-<span class="fc" id="L45">  public void setAbsence(Absence absence) { this.absence = absence; }</span>
+<span class="nc" id="L39">  public Absence getAbsence() { return absence; }</span>
+<span class="fc" id="L40">  public void setAbsence(Absence absence) { this.absence = absence; }</span>
 
-<span class="fc" id="L47">  public LocalDate getAbsenceDate() { return absenceDate; }</span>
-<span class="fc" id="L48">  public void setAbsenceDate(LocalDate absenceDate) { this.absenceDate = absenceDate; }</span>
+<span class="fc" id="L42">  public LocalDate getAbsenceDate() { return absenceDate; }</span>
+<span class="fc" id="L43">  public void setAbsenceDate(LocalDate absenceDate) { this.absenceDate = absenceDate; }</span>
 
-<span class="fc" id="L50">  public AbsencePeriod getPeriod() { return period; }</span>
-<span class="fc" id="L51">  public void setPeriod(AbsencePeriod period) { this.period = period; }</span>
+<span class="fc" id="L45">  public AbsencePeriod getPeriod() { return period; }</span>
+<span class="fc" id="L46">  public void setPeriod(AbsencePeriod period) { this.period = period; }</span>
 
-<span class="fc" id="L53">  public LocalTime getStartTime() { return startTime; }</span>
-<span class="fc" id="L54">  public void setStartTime(LocalTime startTime) { this.startTime = startTime; }</span>
+<span class="fc" id="L48">  public LocalTime getStartTime() { return startTime; }</span>
+<span class="fc" id="L49">  public void setStartTime(LocalTime startTime) { this.startTime = startTime; }</span>
 
-<span class="fc" id="L56">  public LocalTime getEndTime() { return endTime; }</span>
-<span class="fc" id="L57">  public void setEndTime(LocalTime endTime) { this.endTime = endTime; }</span>
+<span class="fc" id="L51">  public LocalTime getEndTime() { return endTime; }</span>
+<span class="fc" id="L52">  public void setEndTime(LocalTime endTime) { this.endTime = endTime; }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

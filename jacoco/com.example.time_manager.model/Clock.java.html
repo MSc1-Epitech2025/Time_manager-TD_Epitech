@@ -10,29 +10,28 @@ import java.time.Instant;
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // user_id CHAR(36) NOT NULL
     @ManyToOne(optional = false)
     @JoinColumn(name = &quot;user_id&quot;, referencedColumnName = &quot;id&quot;, nullable = false)
     private User user;
 
     @Enumerated(EnumType.STRING)
     @Column(name = &quot;kind&quot;, nullable = false, length = 3)
-    private ClockKind kind; // IN / OUT
+    private ClockKind kind;
 
     @Column(name = &quot;at&quot;, nullable = false)
     private Instant at;
 
     // getters/setters
-<span class="fc" id="L26">    public Long getId() { return id; }</span>
-<span class="fc" id="L27">    public void setId(Long id) { this.id = id; }</span>
+<span class="fc" id="L25">    public Long getId() { return id; }</span>
+<span class="fc" id="L26">    public void setId(Long id) { this.id = id; }</span>
 
-<span class="fc" id="L29">    public User getUser() { return user; }</span>
-<span class="fc" id="L30">    public void setUser(User user) { this.user = user; }</span>
+<span class="fc" id="L28">    public User getUser() { return user; }</span>
+<span class="fc" id="L29">    public void setUser(User user) { this.user = user; }</span>
 
-<span class="fc" id="L32">    public ClockKind getKind() { return kind; }</span>
-<span class="fc" id="L33">    public void setKind(ClockKind kind) { this.kind = kind; }</span>
+<span class="fc" id="L31">    public ClockKind getKind() { return kind; }</span>
+<span class="fc" id="L32">    public void setKind(ClockKind kind) { this.kind = kind; }</span>
 
-<span class="fc" id="L35">    public Instant getAt() { return at; }</span>
-<span class="fc" id="L36">    public void setAt(Instant at) { this.at = at; }</span>
+<span class="fc" id="L34">    public Instant getAt() { return at; }</span>
+<span class="fc" id="L35">    public void setAt(Instant at) { this.at = at; }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

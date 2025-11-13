@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserKpiSummary.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">time-manager</a> &gt; <a href="index.source.html" class="el_package">com.example.time_manager.model.kpi</a> &gt; <span class="el_source">UserKpiSummary.java</span></div><h1>UserKpiSummary.java</h1><pre class="source lang-java linenums">package com.example.time_manager.model.kpi;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
+
+
+<span class="fc" id="L9">public class UserKpiSummary {</span>
+private UUID userId;
+private String fullName;
+
+
+private BigDecimal presenceRate; // % presence days / planned days
+private BigDecimal avgHoursPerDay; // hours
+private BigDecimal overtimeHours; // hours over planned
+private PunctualityStats punctuality; // late rate + delay
+
+
+private BigDecimal absenceDays; 
+private List&lt;AbsenceBreakdown&gt; absenceByType;
+
+
+private List&lt;LeaveBalance&gt; leaveBalances;
+
+
+private Integer reportsAuthored; 
+private Integer reportsReceived;
+
+private LocalDate periodStart;
+private LocalDate periodEnd;
+
+
+// getters/setters
+<span class="fc" id="L35">public UUID getUserId() { return userId; }</span>
+<span class="fc" id="L36">public void setUserId(UUID userId) { this.userId = userId; }</span>
+
+
+<span class="fc" id="L39">public String getFullName() { return fullName; }</span>
+<span class="fc" id="L40">public void setFullName(String fullName) { this.fullName = fullName; }</span>
+
+
+<span class="fc" id="L43">public BigDecimal getPresenceRate() { return presenceRate; }</span>
+<span class="fc" id="L44">public void setPresenceRate(BigDecimal presenceRate) { this.presenceRate = presenceRate; }</span>
+
+
+<span class="fc" id="L47">public BigDecimal getAvgHoursPerDay() { return avgHoursPerDay; }</span>
+<span class="fc" id="L48">public void setAvgHoursPerDay(BigDecimal avgHoursPerDay) { this.avgHoursPerDay = avgHoursPerDay; }</span>
+
+
+<span class="fc" id="L51">public BigDecimal getOvertimeHours() { return overtimeHours; }</span>
+<span class="fc" id="L52">public void setOvertimeHours(BigDecimal overtimeHours) { this.overtimeHours = overtimeHours; }</span>
+
+
+<span class="fc" id="L55">public PunctualityStats getPunctuality() { return punctuality; }</span>
+<span class="fc" id="L56">public void setPunctuality(PunctualityStats punctuality) { this.punctuality = punctuality; }</span>
+
+
+<span class="fc" id="L59">public BigDecimal getAbsenceDays() { return absenceDays; }</span>
+<span class="fc" id="L60">public void setAbsenceDays(BigDecimal absenceDays) { this.absenceDays = absenceDays; }</span>
+
+<span class="fc" id="L62">public List&lt;AbsenceBreakdown&gt; getAbsenceByType() { return absenceByType; }</span>
+<span class="fc" id="L63">public void setAbsenceByType(List&lt;AbsenceBreakdown&gt; absenceByType) { this.absenceByType = absenceByType; }</span>
+
+
+<span class="fc" id="L66">public List&lt;LeaveBalance&gt; getLeaveBalances() { return leaveBalances; }</span>
+<span class="fc" id="L67">public void setLeaveBalances(List&lt;LeaveBalance&gt; leaveBalances) { this.leaveBalances = leaveBalances; }</span>
+
+
+<span class="fc" id="L70">public Integer getReportsAuthored() { return reportsAuthored; }</span>
+<span class="fc" id="L71">public void setReportsAuthored(Integer reportsAuthored) { this.reportsAuthored = reportsAuthored; }</span>
+
+
+<span class="fc" id="L74">public Integer getReportsReceived() { return reportsReceived; }</span>
+<span class="fc" id="L75">public void setReportsReceived(Integer reportsReceived) { this.reportsReceived = reportsReceived; }</span>
+
+
+<span class="fc" id="L78">public LocalDate getPeriodStart() { return periodStart; }</span>
+<span class="fc" id="L79">public void setPeriodStart(LocalDate periodStart) { this.periodStart = periodStart; }</span>
+
+
+<span class="fc" id="L82">public LocalDate getPeriodEnd() { return periodEnd; }</span>
+<span class="fc" id="L83">public void setPeriodEnd(LocalDate periodEnd) { this.periodEnd = periodEnd; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>
