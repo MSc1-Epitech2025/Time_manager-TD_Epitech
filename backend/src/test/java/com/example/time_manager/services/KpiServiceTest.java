@@ -25,10 +25,7 @@ class KpiServiceTest {
         jdbc = mock(JdbcTemplate.class);
         service = new KpiService(jdbc);
     }
-
-    // ----------------------------------------------------
-    // Helper: nz()
-    // ----------------------------------------------------
+    
     @Test
     void testNzHelper() throws Exception {
         var nz = KpiService.class.getDeclaredMethod("nz", Number.class);
@@ -39,9 +36,6 @@ class KpiServiceTest {
         assertEquals(new BigDecimal("3.14"), nz.invoke(service, 3.14));
     }
 
-    // ----------------------------------------------------
-    // Helper: ratio()
-    // ----------------------------------------------------
     @Test
     void testRatioHelper() throws Exception {
         var ratio = KpiService.class.getDeclaredMethod("ratio", Number.class, Number.class);
@@ -52,9 +46,6 @@ class KpiServiceTest {
         assertEquals(new BigDecimal("33.33"), ratio.invoke(service, 1, 3));
     }
 
-    // ----------------------------------------------------
-    // Global KPI
-    // ----------------------------------------------------
     @Test
     void testGetGlobal() {
 
@@ -99,22 +90,19 @@ class KpiServiceTest {
         assertEquals(start, k.getPeriodStart());
         assertEquals(end,   k.getPeriodEnd());
 
-        assertEquals(new BigDecimal("20.00"), k.getManagersShare()); // 2 / 10 * 100
-        assertEquals(new BigDecimal("10.00"), k.getAdminsShare());   // 1 / 10 * 100
+        assertEquals(new BigDecimal("20.00"), k.getManagersShare());
+        assertEquals(new BigDecimal("10.00"), k.getAdminsShare());
 
-        assertEquals(new BigDecimal("50.00"), k.getPresenceRate());  // 50/100
+        assertEquals(new BigDecimal("50.00"), k.getPresenceRate());
 
-        assertEquals(new BigDecimal("1.00"), k.getAvgHoursPerDay()); // 3000/50 = 60min = 1h
+        assertEquals(new BigDecimal("1.00"), k.getAvgHoursPerDay());
         assertEquals(new BigDecimal("20"), k.getTotalAbsenceDays());
-        assertEquals(new BigDecimal("20.00"), k.getAbsenceRate());   // 20/100
+        assertEquals(new BigDecimal("20.00"), k.getAbsenceRate());
 
         assertEquals(new BigDecimal("12"), k.getApprovalDelayHours());
         assertEquals(8, k.getTotalReports());
     }
 
-    // ----------------------------------------------------
-    // TEAM KPI
-    // ----------------------------------------------------
     @Test
     void testGetTeam() {
 
@@ -155,9 +143,6 @@ class KpiServiceTest {
         assertEquals(3, k.getReportsAuthored());
     }
 
-    // ----------------------------------------------------
-    // USER KPI
-    // ----------------------------------------------------
     @Test
     void testGetUser() {
 
@@ -217,5 +202,91 @@ class KpiServiceTest {
         assertEquals(1, k.getAbsenceByType().size());
         assertEquals(2, k.getReportsAuthored());
         assertEquals(1, k.getReportsReceived());
+    }
+
+    @Test
+    void testBigDecimalDivision_dayCountNull() throws Exception {
+        var method = KpiService.class.getDeclaredMethod("ratio", Number.class, Number.class);
+        method.setAccessible(true);
+
+        BigDecimal result = (BigDecimal) method.invoke(service, 10, null);
+
+        assertEquals(BigDecimal.ZERO, result);
+    }
+
+    @Test
+    void testBigDecimalDivision_dayCountNotNull() throws Exception {
+        var method = KpiService.class.getDeclaredMethod("ratio", Number.class, Number.class);
+        method.setAccessible(true);
+
+        BigDecimal result = (BigDecimal) method.invoke(service, 10, 4);
+
+        assertEquals(new BigDecimal("250.00"), result);
+    }
+
+    @Test
+    void testLeaveBalanceAndAbsenceBreakdownViaGetUser() {
+
+        UUID uid = UUID.randomUUID();
+        LocalDate start = LocalDate.of(2024, 1, 1);
+        LocalDate end   = LocalDate.of(2024, 1, 31);
+
+        when(jdbc.queryForMap(contains("FROM users WHERE id"), any()))
+                .thenReturn(Map.of("full_name", "Alice Smith"));
+
+        when(jdbc.queryForObject(contains("DISTINCT DATE"), eq(Number.class), any(), any(), any()))
+                .thenReturn(10);
+
+        when(jdbc.queryForObject(contains("WITH RECURSIVE d"), eq(Number.class), any(), any(), any()))
+                .thenReturn(20);
+
+        when(jdbc.queryForObject(contains("SUM(TIMESTAMPDIFF"), eq(Number.class), any(), any(), any()))
+                .thenReturn(600);
+
+        when(jdbc.queryForObject(startsWith("SELECT COUNT(*) FROM ("), eq(Number.class), any(), any(), any()))
+                .thenReturn(10);
+
+        when(jdbc.queryForObject(contains("SUM(CASE period"), eq(Number.class), any(), any(), any()))
+                .thenReturn(5);
+
+        when(jdbc.query(
+                contains("GROUP BY a.type"),
+                any(RowMapper.class),
+                any(), any(), any()
+        )).thenReturn(List.of(
+                new AbsenceBreakdown("SICK", new BigDecimal("3")),
+                new AbsenceBreakdown("VAC", new BigDecimal("1.5"))
+        ));
+
+        when(jdbc.query(
+                contains("leave_accounts"),
+                any(RowMapper.class),
+                any(), any(), any()
+        )).thenReturn(List.of(
+                new LeaveBalance("CP",
+                        BigDecimal.TEN, BigDecimal.ONE, BigDecimal.ONE,
+                        BigDecimal.ZERO, BigDecimal.ZERO, new BigDecimal("10")),
+                new LeaveBalance("RTT",
+                        new BigDecimal("5"), new BigDecimal("3"), new BigDecimal("1"),
+                        new BigDecimal("1"), new BigDecimal("0"), new BigDecimal("7"))
+        ));
+
+        when(jdbc.queryForObject(contains("author_id"), eq(Integer.class), any(), any(), any()))
+                .thenReturn(2);
+
+        when(jdbc.queryForObject(contains("target_user_id"), eq(Integer.class), any(), any(), any()))
+                .thenReturn(1);
+
+        UserKpiSummary k = service.getUser(uid, start, end);
+
+        assertEquals("Alice Smith", k.getFullName());
+
+        assertEquals(2, k.getAbsenceByType().size());
+        assertEquals("VAC", k.getAbsenceByType().get(1).getType());
+        assertEquals(new BigDecimal("1.5"), k.getAbsenceByType().get(1).getDays());
+
+        assertEquals(2, k.getLeaveBalances().size());
+        assertEquals("RTT", k.getLeaveBalances().get(1).getLeaveType());
+        assertEquals(new BigDecimal("7"), k.getLeaveBalances().get(1).getCurrentBalance());
     }
 }
