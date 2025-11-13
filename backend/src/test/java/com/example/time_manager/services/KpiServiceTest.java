@@ -1,433 +1,221 @@
-//package com.example.time_manager.service;
-//
-//import com.example.time_manager.model.kpi.*;
-//import org.springframework.jdbc.core.JdbcTemplate;
-//import org.springframework.stereotype.Service;
-//
-//import java.math.BigDecimal;
-//import java.math.RoundingMode;
-//import java.time.LocalDate;
-//import java.util.*;
-//
-//@Service
-//public class KpiServiceTest {
-//
-//    private final JdbcTemplate jdbc;
-//
-//    public KpiService(JdbcTemplate jdbc) {
-//        this.jdbc = jdbc;
-//    }
-//
-//    // Helper method to convert null to zero
-//    private BigDecimal nz(Number value) {
-//        if (value == null) {
-//            return BigDecimal.ZERO;
-//        }
-//        return new BigDecimal(value.toString());
-//    }
-//
-//    // Helper method to calculate ratio as percentage
-//    private BigDecimal ratio(Number numerator, Number denominator) {
-//        BigDecimal num = nz(numerator);
-//        BigDecimal den = nz(denominator);
-//
-//        if (den.compareTo(BigDecimal.ZERO) == 0) {
-//            return BigDecimal.ZERO;
-//        }
-//
-//        return num.multiply(BigDecimal.valueOf(100))
-//                .divide(den, 2, RoundingMode.HALF_UP);
-//    }
-//
-//    // Generate CASE expression for weekday enum
-//    private static String weekdayEnumExpr(String dateColumn) {
-//        return String.format(
-//                "CASE WEEKDAY(%s) " +
-//                        "WHEN 0 THEN 'MON' " +
-//                        "WHEN 1 THEN 'TUE' " +
-//                        "WHEN 2 THEN 'WED' " +
-//                        "WHEN 3 THEN 'THU' " +
-//                        "WHEN 4 THEN 'FRI' " +
-//                        "WHEN 5 THEN 'SAT' " +
-//                        "WHEN 6 THEN 'SUN' " +
-//                        "END",
-//                dateColumn
-//        );
-//    }
-//
-//    public GlobalKpiSummary getGlobal(LocalDate startDate, LocalDate endDate) {
-//        GlobalKpiSummary summary = new GlobalKpiSummary();
-//
-//        // Headcount
-//        Integer headcount = jdbc.queryForObject(
-//                "SELECT COUNT(*) FROM users",
-//                Integer.class
-//        );
-//        summary.setHeadcount(headcount != null ? headcount : 0);
-//
-//        // Managers and Admins
-//        Integer managers = jdbc.queryForObject(
-//                "SELECT COUNT(*) FROM users WHERE JSON_CONTAINS(role, JSON_QUOTE('manager'))",
-//                Integer.class
-//        );
-//        Integer admins = jdbc.queryForObject(
-//                "SELECT COUNT(*) FROM users WHERE JSON_CONTAINS(role, JSON_QUOTE('admin'))",
-//                Integer.class
-//        );
-//
-//        summary.setManagersShare(ratio(managers, headcount));
-//        summary.setAdminsShare(ratio(admins, headcount));
-//
-//        // Presence days
-//        Number presenceDays = jdbc.queryForObject(
-//                "SELECT COUNT(*) FROM clocks WHERE kind='IN' AND DATE(clock_time) BETWEEN ? AND ?",
-//                Number.class,
-//                startDate, endDate
-//        );
-//
-//        // Expected work days
-//        Number expectedDays = jdbc.queryForObject(
-//                "WITH RECURSIVE dates AS (" +
-//                        "  SELECT ? AS dt UNION ALL " +
-//                        "  SELECT DATE_ADD(dt, INTERVAL 1 DAY) FROM dates WHERE dt < ?" +
-//                        ") " +
-//                        "SELECT COUNT(*) FROM dates d " +
-//                        "JOIN work_schedules ws ON WEEKDAY(d.dt) = ws.day_of_week " +
-//                        "WHERE ws.is_working_day = TRUE",
-//                Number.class,
-//                startDate, endDate
-//        );
-//
-//        summary.setPresenceRate(ratio(presenceDays, expectedDays));
-//
-//        // Total hours worked
-//        Number totalMinutes = jdbc.queryForObject(
-//                "SELECT COALESCE(SUM(TIMESTAMPDIFF(MINUTE, clock_time, " +
-//                        "  LEAD(clock_time) OVER (PARTITION BY user_id ORDER BY clock_time))), 0) " +
-//                        "FROM clocks WHERE kind='IN' AND DATE(clock_time) BETWEEN ? AND ?",
-//                Number.class,
-//                startDate, endDate
-//        );
-//
-//        // Active days (days with at least one clock-in)
-//        Number activeDays = jdbc.queryForObject(
-//                "SELECT COUNT(*) FROM (" +
-//                        "  SELECT DISTINCT user_id, DATE(clock_time) " +
-//                        "  FROM clocks WHERE kind='IN' AND DATE(clock_time) BETWEEN ? AND ? " +
-//                        "  GROUP BY user_id, DATE(clock_time)" +
-//                        ") AS active",
-//                Number.class,
-//                startDate, endDate
-//        );
-//
-//        BigDecimal avgHours = BigDecimal.ZERO;
-//        if (activeDays != null && activeDays.intValue() > 0) {
-//            avgHours = nz(totalMinutes)
-//                    .divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP)
-//                    .divide(nz(activeDays), 2, RoundingMode.HALF_UP);
-//        }
-//        summary.setAvgHoursPerDay(avgHours);
-//
-//        // Absence days
-//        Number absenceDays = jdbc.queryForObject(
-//                "SELECT COUNT(*) FROM absence_days ad " +
-//                        "JOIN absence a ON ad.absence_id = a.id " +
-//                        "WHERE ad.absence_date BETWEEN ? AND ?",
-//                Number.class,
-//                startDate, endDate
-//        );
-//
-//        summary.setAbsenceRate(ratio(absenceDays, expectedDays));
-//
-//        // Average absence duration
-//        Number avgAbsenceDuration = jdbc.queryForObject(
-//                "SELECT AVG(TIMESTAMPDIFF(DAY, start_date, end_date)) " +
-//                        "FROM absence WHERE start_date BETWEEN ? AND ?",
-//                Number.class,
-//                startDate, endDate
-//        );
-//        summary.setAvgAbsenceDuration(nz(avgAbsenceDuration));
-//
-//        // Total reports
-//        Integer totalReports = jdbc.queryForObject(
-//                "SELECT COUNT(*) FROM reports WHERE DATE(created_at) BETWEEN ? AND ?",
-//                Integer.class,
-//                startDate, endDate
-//        );
-//        summary.setTotalReports(totalReports != null ? totalReports : 0);
-//
-//        return summary;
-//    }
-//
-//    public TeamKpiSummary getTeam(Integer teamId, LocalDate startDate, LocalDate endDate) {
-//        TeamKpiSummary summary = new TeamKpiSummary();
-//
-//        // Team info
-//        Map<String, Object> teamInfo = jdbc.queryForMap(
-//                "SELECT id, name FROM teams WHERE id = ?",
-//                teamId
-//        );
-//        summary.setTeamId((Integer) teamInfo.get("id"));
-//        summary.setTeamName((String) teamInfo.get("name"));
-//
-//        // Member count
-//        Integer memberCount = jdbc.queryForObject(
-//                "SELECT COUNT(*) FROM team_members WHERE team_id = ?",
-//                Integer.class,
-//                teamId
-//        );
-//        summary.setMemberCount(memberCount != null ? memberCount : 0);
-//
-//        // Presence days
-//        Number presenceDays = jdbc.queryForObject(
-//                "SELECT COUNT(*) FROM clocks c " +
-//                        "JOIN team_members tm ON c.user_id = tm.user_id " +
-//                        "WHERE tm.team_id = ? AND c.kind='IN' AND DATE(c.clock_time) BETWEEN ? AND ?",
-//                Number.class,
-//                teamId, startDate, endDate
-//        );
-//
-//        // Expected work days
-//        Number expectedDays = jdbc.queryForObject(
-//                "WITH RECURSIVE dates AS (" +
-//                        "  SELECT ? AS dt UNION ALL " +
-//                        "  SELECT DATE_ADD(dt, INTERVAL 1 DAY) FROM dates WHERE dt < ?" +
-//                        ") " +
-//                        "SELECT COUNT(*) FROM dates d " +
-//                        "JOIN work_schedules ws ON WEEKDAY(d.dt) = ws.day_of_week " +
-//                        "JOIN team_members tm ON ws.user_id = tm.user_id " +
-//                        "WHERE tm.team_id = ? AND ws.is_working_day = TRUE",
-//                Number.class,
-//                startDate, endDate, teamId
-//        );
-//
-//        summary.setPresenceRate(ratio(presenceDays, expectedDays));
-//
-//        // Total hours worked
-//        Number totalMinutes = jdbc.queryForObject(
-//                "SELECT COALESCE(SUM(TIMESTAMPDIFF(MINUTE, c.clock_time, " +
-//                        "  LEAD(c.clock_time) OVER (PARTITION BY c.user_id ORDER BY c.clock_time))), 0) " +
-//                        "FROM clocks c " +
-//                        "JOIN team_members tm ON c.user_id = tm.user_id " +
-//                        "WHERE tm.team_id = ? AND c.kind='IN' AND DATE(c.clock_time) BETWEEN ? AND ?",
-//                Number.class,
-//                teamId, startDate, endDate
-//        );
-//
-//        // Active days
-//        Number activeDays = jdbc.queryForObject(
-//                "SELECT COUNT(*) FROM (" +
-//                        "  SELECT DISTINCT c.user_id, DATE(c.clock_time) " +
-//                        "  FROM clocks c " +
-//                        "  JOIN team_members tm ON c.user_id = tm.user_id " +
-//                        "  WHERE tm.team_id = ? AND c.kind='IN' AND DATE(c.clock_time) BETWEEN ? AND ? " +
-//                        "  GROUP BY c.user_id, DATE(c.clock_time)" +
-//                        ") AS active",
-//                Number.class,
-//                teamId, startDate, endDate
-//        );
-//
-//        BigDecimal avgHours = BigDecimal.ZERO;
-//        if (activeDays != null && activeDays.intValue() > 0) {
-//            avgHours = nz(totalMinutes)
-//                    .divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP)
-//                    .divide(nz(activeDays), 2, RoundingMode.HALF_UP);
-//        }
-//        summary.setAvgHoursPerDay(avgHours);
-//
-//        // Absence days
-//        Number absenceDays = jdbc.queryForObject(
-//                "SELECT COUNT(*) FROM absence_days ad " +
-//                        "JOIN absence a ON ad.absence_id = a.id " +
-//                        "JOIN team_members tm ON a.user_id = tm.user_id " +
-//                        "WHERE tm.team_id = ? AND ad.absence_date BETWEEN ? AND ?",
-//                Number.class,
-//                teamId, startDate, endDate
-//        );
-//
-//        summary.setAbsenceRate(ratio(absenceDays, expectedDays));
-//
-//        // Total reports
-//        Integer totalReports = jdbc.queryForObject(
-//                "SELECT COUNT(*) FROM reports r " +
-//                        "JOIN team_members tm ON r.user_id = tm.user_id " +
-//                        "WHERE tm.team_id = ? AND DATE(r.created_at) BETWEEN ? AND ?",
-//                Integer.class,
-//                teamId, startDate, endDate
-//        );
-//        summary.setTotalReports(totalReports != null ? totalReports : 0);
-//
-//        return summary;
-//    }
-//
-//    public UserKpiSummary getUser(UUID userId, LocalDate startDate, LocalDate endDate) {
-//        UserKpiSummary summary = new UserKpiSummary();
-//
-//        // User info
-//        Map<String, Object> userInfo = jdbc.queryForMap(
-//                "SELECT full_name FROM users WHERE id = ?",
-//                userId
-//        );
-//        summary.setFullName((String) userInfo.get("full_name"));
-//
-//        // Presence days
-//        Number presenceDays = jdbc.queryForObject(
-//                "SELECT COUNT(*) FROM clocks WHERE user_id = ? AND kind='IN' AND DATE(clock_time) BETWEEN ? AND ?",
-//                Number.class,
-//                userId, startDate, endDate
-//        );
-//
-//        // Expected work days
-//        Number expectedDays = jdbc.queryForObject(
-//                "WITH RECURSIVE dates AS (" +
-//                        "  SELECT ? AS dt UNION ALL " +
-//                        "  SELECT DATE_ADD(dt, INTERVAL 1 DAY) FROM dates WHERE dt < ?" +
-//                        ") " +
-//                        "SELECT COUNT(*) FROM dates d " +
-//                        "JOIN work_schedules ws ON WEEKDAY(d.dt) = ws.day_of_week " +
-//                        "WHERE ws.user_id = ? AND ws.is_working_day = TRUE",
-//                Number.class,
-//                startDate, endDate, userId
-//        );
-//
-//        summary.setPresenceRate(ratio(presenceDays, expectedDays));
-//
-//        // Total hours worked
-//        Number totalMinutes = jdbc.queryForObject(
-//                "SELECT COALESCE(SUM(TIMESTAMPDIFF(MINUTE, clock_time, " +
-//                        "  LEAD(clock_time) OVER (PARTITION BY user_id ORDER BY clock_time))), 0) " +
-//                        "FROM clocks WHERE user_id = ? AND kind='IN' AND DATE(clock_time) BETWEEN ? AND ?",
-//                Number.class,
-//                userId, startDate, endDate
-//        );
-//
-//        // Active days
-//        Number activeDays = jdbc.queryForObject(
-//                "SELECT COUNT(*) FROM (" +
-//                        "  SELECT DISTINCT DATE(clock_time) " +
-//                        "  FROM clocks WHERE user_id = ? AND kind='IN' AND DATE(clock_time) BETWEEN ? AND ? " +
-//                        "  GROUP BY DATE(clock_time)" +
-//                        ") AS active",
-//                Number.class,
-//                userId, startDate, endDate
-//        );
-//
-//        BigDecimal avgHours = BigDecimal.ZERO;
-//        if (activeDays != null && activeDays.intValue() > 0) {
-//            avgHours = nz(totalMinutes)
-//                    .divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP)
-//                    .divide(nz(activeDays), 2, RoundingMode.HALF_UP);
-//        }
-//        summary.setAvgHoursPerDay(avgHours);
-//
-//        // Overtime calculation
-//        Number plannedMinutes = jdbc.queryForObject(
-//                "SELECT COALESCE(SUM(TIMESTAMPDIFF(MINUTE, plan_start, plan_end)), 0) " +
-//                        "FROM work_schedules ws " +
-//                        "WHERE ws.user_id = ? AND ws.is_working_day = TRUE",
-//                Number.class,
-//                userId, startDate, endDate
-//        );
-//
-//        BigDecimal overtimeHours = nz(totalMinutes)
-//                .subtract(nz(plannedMinutes))
-//                .divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP);
-//        summary.setOvertimeHours(overtimeHours);
-//
-//        // Punctuality
-//        PunctualityKpi punctuality = new PunctualityKpi();
-//
-//        Number lateDays = jdbc.queryForObject(
-//                "SELECT COUNT(*) FROM (" +
-//                        "  SELECT c.user_id, DATE(c.clock_time) AS dt " +
-//                        "  FROM clocks c " +
-//                        "  JOIN work_schedules ws ON c.user_id = ws.user_id AND WEEKDAY(c.clock_time) = ws.day_of_week " +
-//                        "  WHERE c.user_id = ? AND c.kind='IN' AND DATE(c.clock_time) BETWEEN ? AND ? " +
-//                        "  AND TIME(c.clock_time) > ws.plan_start " +
-//                        "  GROUP BY c.user_id, DATE(c.clock_time)" +
-//                        ") AS late",
-//                Number.class,
-//                userId, startDate, endDate, userId
-//        );
-//
-//        punctuality.setLateRate(ratio(lateDays, activeDays));
-//
-//        Number avgDelayMinutes = jdbc.queryForObject(
-//                "SELECT AVG(TIMESTAMPDIFF(MINUTE, ws.plan_start, TIME(c.clock_time))) " +
-//                        "FROM clocks c " +
-//                        "JOIN work_schedules ws ON c.user_id = ws.user_id AND WEEKDAY(c.clock_time) = ws.day_of_week " +
-//                        "WHERE c.user_id = ? AND c.kind='IN' AND DATE(c.clock_time) BETWEEN ? AND ? " +
-//                        "AND TIME(c.clock_time) > ws.plan_start",
-//                Number.class,
-//                userId, startDate, endDate, userId
-//        );
-//
-//        punctuality.setAvgDelayMinutes(nz(avgDelayMinutes));
-//        summary.setPunctuality(punctuality);
-//
-//        // Absence days
-//        Number absenceDays = jdbc.queryForObject(
-//                "SELECT COUNT(*) FROM absence_days ad " +
-//                        "JOIN absence a ON ad.absence_id = a.id " +
-//                        "WHERE a.user_id = ? AND ad.absence_date BETWEEN ? AND ?",
-//                Number.class,
-//                userId, startDate, endDate
-//        );
-//
-//        summary.setAbsenceRate(ratio(absenceDays, expectedDays));
-//
-//        // Absence by type
-//        List<AbsenceByType> absenceByType = jdbc.query(
-//                "SELECT a.type, SUM(TIMESTAMPDIFF(DAY, a.start_date, a.end_date)) AS days " +
-//                        "FROM absence a " +
-//                        "WHERE a.user_id = ? AND a.start_date BETWEEN ? AND ? " +
-//                        "GROUP BY a.type",
-//                (rs, rowNum) -> {
-//                    AbsenceByType abt = new AbsenceByType();
-//                    abt.setType(rs.getString("type"));
-//                    abt.setDays(rs.getBigDecimal("days"));
-//                    return abt;
-//                },
-//                userId, startDate, endDate
-//        );
-//        summary.setAbsenceByType(absenceByType);
-//
-//        // Leave balances
-//        List<LeaveBalance> leaveBalances = jdbc.query(
-//                "SELECT la.leave_type, la.opening_balance, la.accrued, la.debited, la.adjustments, la.expired " +
-//                        "FROM leave_accounts la " +
-//                        "WHERE la.user_id = ? AND la.year = YEAR(?) AND la.month = MONTH(?)",
-//                (rs, rowNum) -> {
-//                    LeaveBalance lb = new LeaveBalance();
-//                    lb.setLeaveType(rs.getString("leave_type"));
-//                    lb.setOpeningBalance(rs.getBigDecimal("opening_balance"));
-//                    lb.setAccrued(rs.getBigDecimal("accrued"));
-//                    lb.setDebited(rs.getBigDecimal("debited"));
-//                    lb.setAdjustments(rs.getBigDecimal("adjustments"));
-//                    lb.setExpired(rs.getBigDecimal("expired"));
-//
-//                    // Calculate current balance
-//                    BigDecimal current = nz(lb.getOpeningBalance())
-//                            .add(nz(lb.getAccrued()))
-//                            .subtract(nz(lb.getDebited()))
-//                            .add(nz(lb.getAdjustments()))
-//                            .subtract(nz(lb.getExpired()));
-//                    lb.setCurrentBalance(current);
-//
-//                    return lb;
-//                },
-//                userId, startDate, endDate
-//        );
-//        summary.setLeaveBalances(leaveBalances);
-//
-//        // Total reports
-//        Integer totalReports = jdbc.queryForObject(
-//                "SELECT COUNT(*) FROM reports WHERE user_id = ? AND DATE(created_at) BETWEEN ? AND ?",
-//                Integer.class,
-//                userId, startDate, endDate
-//        );
-//        summary.setTotalReports(totalReports != null ? totalReports : 0);
-//
-//        return summary;
-//    }
-//}
+package com.example.time_manager.services;
+
+import com.example.time_manager.model.kpi.*;
+import com.example.time_manager.service.KpiService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+class KpiServiceTest {
+
+    private JdbcTemplate jdbc;
+    private KpiService service;
+
+    @BeforeEach
+    void setup() {
+        jdbc = mock(JdbcTemplate.class);
+        service = new KpiService(jdbc);
+    }
+
+    // ----------------------------------------------------
+    // Helper: nz()
+    // ----------------------------------------------------
+    @Test
+    void testNzHelper() throws Exception {
+        var nz = KpiService.class.getDeclaredMethod("nz", Number.class);
+        nz.setAccessible(true);
+
+        assertEquals(BigDecimal.ZERO, nz.invoke(service, (Number) null));
+        assertEquals(new BigDecimal("5"), nz.invoke(service, 5));
+        assertEquals(new BigDecimal("3.14"), nz.invoke(service, 3.14));
+    }
+
+    // ----------------------------------------------------
+    // Helper: ratio()
+    // ----------------------------------------------------
+    @Test
+    void testRatioHelper() throws Exception {
+        var ratio = KpiService.class.getDeclaredMethod("ratio", Number.class, Number.class);
+        ratio.setAccessible(true);
+
+        assertEquals(BigDecimal.ZERO, ratio.invoke(service, 10, 0));
+        assertEquals(new BigDecimal("50.00"), ratio.invoke(service, 1, 2));
+        assertEquals(new BigDecimal("33.33"), ratio.invoke(service, 1, 3));
+    }
+
+    // ----------------------------------------------------
+    // Global KPI
+    // ----------------------------------------------------
+    @Test
+    void testGetGlobal() {
+
+        LocalDate start = LocalDate.of(2024, 1, 1);
+        LocalDate end   = LocalDate.of(2024, 1, 31);
+
+        // Mock chain
+        when(jdbc.queryForObject(contains("SELECT COUNT(*) FROM users"), eq(Integer.class)))
+                .thenReturn(10);
+
+        when(jdbc.queryForObject(contains("manager"), eq(Integer.class)))
+                .thenReturn(2);
+
+        when(jdbc.queryForObject(contains("admin"), eq(Integer.class)))
+                .thenReturn(1);
+
+        when(jdbc.queryForObject(contains("DISTINCT CONCAT"), eq(Number.class), any(), any()))
+                .thenReturn(50);
+
+        when(jdbc.queryForObject(contains("WITH RECURSIVE d"), eq(Number.class), any(), any()))
+                .thenReturn(100);
+
+        when(jdbc.queryForObject(contains("SUM(TIMESTAMPDIFF"), eq(Number.class), any(), any()))
+                .thenReturn(3000); // minutes
+
+        when(jdbc.queryForObject(startsWith("SELECT COUNT(*) FROM ("), eq(Number.class), any(), any()))
+                .thenReturn(50);
+
+        when(jdbc.queryForObject(contains("absence_days"), eq(Number.class), any(), any()))
+                .thenReturn(20);
+
+        when(jdbc.queryForObject(contains("approved_at"), eq(Number.class), any(), any()))
+                .thenReturn(12);
+
+        when(jdbc.queryForObject(contains("FROM reports"), eq(Integer.class), any(), any()))
+                .thenReturn(8);
+
+        GlobalKpiSummary k = service.getGlobal(start, end);
+
+        assertNotNull(k);
+        assertEquals(10, k.getHeadcount());
+        assertEquals(start, k.getPeriodStart());
+        assertEquals(end,   k.getPeriodEnd());
+
+        assertEquals(new BigDecimal("20.00"), k.getManagersShare()); // 2 / 10 * 100
+        assertEquals(new BigDecimal("10.00"), k.getAdminsShare());   // 1 / 10 * 100
+
+        assertEquals(new BigDecimal("50.00"), k.getPresenceRate());  // 50/100
+
+        assertEquals(new BigDecimal("1.00"), k.getAvgHoursPerDay()); // 3000/50 = 60min = 1h
+        assertEquals(new BigDecimal("20"), k.getTotalAbsenceDays());
+        assertEquals(new BigDecimal("20.00"), k.getAbsenceRate());   // 20/100
+
+        assertEquals(new BigDecimal("12"), k.getApprovalDelayHours());
+        assertEquals(8, k.getTotalReports());
+    }
+
+    // ----------------------------------------------------
+    // TEAM KPI
+    // ----------------------------------------------------
+    @Test
+    void testGetTeam() {
+
+        LocalDate start = LocalDate.of(2024, 1, 1);
+        LocalDate end   = LocalDate.of(2024, 1, 31);
+
+        when(jdbc.queryForMap(contains("FROM teams"), any()))
+                .thenReturn(Map.of("name", "DevTeam"));
+
+        when(jdbc.queryForObject(contains("team_members"), eq(Integer.class), any()))
+                .thenReturn(5);
+
+        when(jdbc.queryForObject(contains("DISTINCT CONCAT"), eq(Number.class), any(), any(), any()))
+                .thenReturn(10);
+
+        when(jdbc.queryForObject(contains("WITH RECURSIVE d"), eq(Number.class), any(), any(), any()))
+                .thenReturn(20);
+
+        when(jdbc.queryForObject(contains("SUM(TIMESTAMPDIFF"), eq(Number.class), any(), any(), any()))
+                .thenReturn(600);
+
+        when(jdbc.queryForObject(startsWith("SELECT COUNT(*) FROM ("), eq(Number.class), any(), any(), any()))
+                .thenReturn(10);
+
+        when(jdbc.queryForObject(contains("absence_days"), eq(Number.class), any(), any(), any()))
+                .thenReturn(5);
+
+        when(jdbc.queryForObject(startsWith("SELECT COUNT(*) FROM reports"), eq(Integer.class), any(), any(), any()))
+                .thenReturn(3);
+
+        TeamKpiSummary k = service.getTeam(7, start, end);
+
+        assertEquals("DevTeam", k.getTeamName());
+        assertEquals(5, k.getHeadcount());
+        assertEquals(new BigDecimal("50.00"), k.getPresenceRate());
+        assertEquals(new BigDecimal("1.00"), k.getAvgHoursPerDay());
+        assertEquals(new BigDecimal("25.00"), k.getAbsenceRate()); // 5/20
+        assertEquals(3, k.getReportsAuthored());
+    }
+
+    // ----------------------------------------------------
+    // USER KPI
+    // ----------------------------------------------------
+    @Test
+    void testGetUser() {
+
+        UUID uid = UUID.randomUUID();
+        LocalDate start = LocalDate.of(2024, 1, 1);
+        LocalDate end   = LocalDate.of(2024, 1, 31);
+
+        when(jdbc.queryForMap(contains("FROM users WHERE id"), any()))
+                .thenReturn(Map.of("full_name", "Alice Smith"));
+
+        when(jdbc.queryForObject(contains("DISTINCT DATE"), eq(Number.class), any(), any(), any()))
+                .thenReturn(10);
+
+        when(jdbc.queryForObject(contains("WITH RECURSIVE d"), eq(Number.class), any(), any(), any()))
+                .thenReturn(20);
+
+        when(jdbc.queryForObject(contains("SUM(TIMESTAMPDIFF"), eq(Number.class), any(), any(), any()))
+                .thenReturn(600);
+
+        when(jdbc.queryForObject(startsWith("SELECT COUNT(*) FROM ("), eq(Number.class), any(), any(), any()))
+                .thenReturn(10);
+
+        when(jdbc.queryForObject(
+                contains("SUM(CASE period"),
+                eq(Number.class),
+                any(), any(), any()
+        )).thenReturn(5);
+
+        when(jdbc.query(
+                contains("GROUP BY a.type"),
+                any(RowMapper.class),
+                any(), any(), any()
+        )).thenReturn(List.of(
+                new AbsenceBreakdown("SICK", new BigDecimal("3"))
+        ));
+
+        when(jdbc.query(
+                contains("leave_accounts"),
+                any(RowMapper.class),
+                any(), any(), any()
+        )).thenReturn(List.of(new LeaveBalance("CP",
+                BigDecimal.TEN, BigDecimal.ONE, BigDecimal.ONE,
+                BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.TEN)));
+
+        when(jdbc.queryForObject(contains("author_id"), eq(Integer.class), any(), any(), any()))
+                .thenReturn(2);
+
+        when(jdbc.queryForObject(contains("target_user_id"), eq(Integer.class), any(), any(), any()))
+                .thenReturn(1);
+
+        UserKpiSummary k = service.getUser(uid, start, end);
+
+        assertEquals("Alice Smith", k.getFullName());
+        assertEquals(new BigDecimal("50.00"), k.getPresenceRate());
+        assertEquals(new BigDecimal("1.00"), k.getAvgHoursPerDay());
+        assertEquals(new BigDecimal("5"), k.getAbsenceDays());
+        assertEquals(1, k.getAbsenceByType().size());
+        assertEquals(2, k.getReportsAuthored());
+        assertEquals(1, k.getReportsReceived());
+    }
+}
