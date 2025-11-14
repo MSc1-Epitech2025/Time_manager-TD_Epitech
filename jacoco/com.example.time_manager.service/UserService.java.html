@@ -98,15 +98,15 @@ public class UserService {
 public User updateUser(String id, UpdateUserInput in) {
 <span class="fc" id="L99">    User u = findByIdOrThrow(id);</span>
 
-<span class="pc bpc" id="L101" title="1 of 2 branches missed.">    if (in.firstName() != null) u.setFirstName(in.firstName());</span>
-<span class="pc bpc" id="L102" title="1 of 2 branches missed.">    if (in.lastName()  != null) u.setLastName(in.lastName());</span>
-<span class="pc bpc" id="L103" title="1 of 2 branches missed.">    if (in.email()     != null) u.setEmail(in.email());</span>
-<span class="pc bpc" id="L104" title="1 of 2 branches missed.">    if (in.phone()     != null) u.setPhone(in.phone());</span>
-<span class="pc bpc" id="L105" title="1 of 2 branches missed.">    if (in.role()      != null) u.setRole(in.role());</span>
-<span class="pc bpc" id="L106" title="1 of 2 branches missed.">    if (in.poste()     != null) u.setPoste(in.poste());</span>
-<span class="pc bpc" id="L107" title="1 of 2 branches missed.">    if (in.avatarUrl() != null) u.setAvatarUrl(in.avatarUrl());</span>
-<span class="pc bpc" id="L108" title="3 of 4 branches missed.">    if (in.password()  != null &amp;&amp; !in.password().isBlank()) {</span>
-<span class="nc" id="L109">        u.setPassword(passwordEncoder.encode(in.password()));</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">    if (in.firstName() != null) u.setFirstName(in.firstName());</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">    if (in.lastName()  != null) u.setLastName(in.lastName());</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">    if (in.email()     != null) u.setEmail(in.email());</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">    if (in.phone()     != null) u.setPhone(in.phone());</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">    if (in.role()      != null) u.setRole(in.role());</span>
+<span class="fc bfc" id="L106" title="All 2 branches covered.">    if (in.poste()     != null) u.setPoste(in.poste());</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">    if (in.avatarUrl() != null) u.setAvatarUrl(in.avatarUrl());</span>
+<span class="pc bpc" id="L108" title="1 of 4 branches missed.">    if (in.password()  != null &amp;&amp; !in.password().isBlank()) {</span>
+<span class="fc" id="L109">        u.setPassword(passwordEncoder.encode(in.password()));</span>
     }
 
 <span class="fc" id="L112">    return userRepository.save(u);</span>
