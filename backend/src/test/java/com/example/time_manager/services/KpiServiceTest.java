@@ -25,7 +25,7 @@ class KpiServiceTest {
         jdbc = mock(JdbcTemplate.class);
         service = new KpiService(jdbc);
     }
-    
+
     @Test
     void testNzHelper() throws Exception {
         var nz = KpiService.class.getDeclaredMethod("nz", Number.class);
@@ -52,7 +52,6 @@ class KpiServiceTest {
         LocalDate start = LocalDate.of(2024, 1, 1);
         LocalDate end   = LocalDate.of(2024, 1, 31);
 
-        // Mock chain
         when(jdbc.queryForObject(contains("SELECT COUNT(*) FROM users"), eq(Integer.class)))
                 .thenReturn(10);
 
