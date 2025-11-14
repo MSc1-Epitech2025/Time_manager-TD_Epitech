@@ -1,5 +1,5 @@
 -- ==========================================================
--- USERS (inchangés)
+-- USERS
 -- ==========================================================
 INSERT INTO users (id, first_name, last_name, email, phone, role, poste, password)
 VALUES
@@ -31,13 +31,11 @@ VALUES
 ;
 
 -- ==========================================================
--- WORK SCHEDULES (planning complet LUNDI → VENDREDI, AM/PM)
+-- WORK SCHEDULES (full shedules for users)
 -- ==========================================================
 
--- Alex : 9h-12h / 13h-17h
 INSERT INTO work_schedules (user_id, day_of_week, period, start_time, end_time)
 VALUES
-  -- Lundi à vendredi
   ((SELECT id FROM users WHERE email = 'alex.fraioli@epitech.eu'), 'MON', 'AM', '09:00:00', '12:00:00'),
   ((SELECT id FROM users WHERE email = 'alex.fraioli@epitech.eu'), 'MON', 'PM', '13:00:00', '17:00:00'),
   ((SELECT id FROM users WHERE email = 'alex.fraioli@epitech.eu'), 'TUE', 'AM', '09:00:00', '12:00:00'),
@@ -49,7 +47,6 @@ VALUES
   ((SELECT id FROM users WHERE email = 'alex.fraioli@epitech.eu'), 'FRI', 'AM', '09:00:00', '12:00:00'),
   ((SELECT id FROM users WHERE email = 'alex.fraioli@epitech.eu'), 'FRI', 'PM', '13:00:00', '16:00:00');
 
--- Gaspard : 9h-12h30 / 14h-18h
 INSERT INTO work_schedules (user_id, day_of_week, period, start_time, end_time)
 VALUES
   ((SELECT id FROM users WHERE email = 'gaspard.malmon@epitech.eu'), 'MON', 'AM', '09:00:00', '12:30:00'),
@@ -63,7 +60,6 @@ VALUES
   ((SELECT id FROM users WHERE email = 'gaspard.malmon@epitech.eu'), 'FRI', 'AM', '09:00:00', '12:30:00'),
   ((SELECT id FROM users WHERE email = 'gaspard.malmon@epitech.eu'), 'FRI', 'PM', '14:00:00', '17:00:00');
 
--- Clément : 9h-12h / 13h-17h (développeur)
 INSERT INTO work_schedules (user_id, day_of_week, period, start_time, end_time)
 VALUES
   ((SELECT id FROM users WHERE email = 'clement.hamimi@epitech.eu'), 'MON', 'AM', '09:00:00', '12:00:00'),
@@ -77,7 +73,6 @@ VALUES
   ((SELECT id FROM users WHERE email = 'clement.hamimi@epitech.eu'), 'FRI', 'AM', '09:00:00', '12:00:00'),
   ((SELECT id FROM users WHERE email = 'clement.hamimi@epitech.eu'), 'FRI', 'PM', '13:00:00', '16:00:00');
 
--- Armand : 9h-12h / 13h30-17h30 (QA)
 INSERT INTO work_schedules (user_id, day_of_week, period, start_time, end_time)
 VALUES
   ((SELECT id FROM users WHERE email = 'armand.braud@epitech.eu'), 'MON', 'AM', '09:00:00', '12:00:00'),
@@ -92,10 +87,9 @@ VALUES
   ((SELECT id FROM users WHERE email = 'armand.braud@epitech.eu'), 'FRI', 'PM', '13:30:00', '16:30:00');
 
 -- ==========================================================
--- CLOCKS (check-in/out sur plusieurs jours)
+-- CLOCKS
 -- ==========================================================
 
--- Semaine du 2025-10-06 pour Clément & Armand
 INSERT INTO clocks (user_id, kind, `at`)
 VALUES
   -- Clément
@@ -120,7 +114,6 @@ VALUES
   ((SELECT id FROM users WHERE email = 'armand.braud@epitech.eu'), 'IN',  '2025-10-09 09:00:00'),
   ((SELECT id FROM users WHERE email = 'armand.braud@epitech.eu'), 'OUT', '2025-10-09 17:35:00');
 
--- Quelques clocks pour Gaspard et Alex
 INSERT INTO clocks (user_id, kind, `at`)
 VALUES
   -- Gaspard
@@ -137,7 +130,6 @@ VALUES
 -- ABSENCE + ABSENCE_DAYS
 -- ==========================================================
 
--- 1) Clément : 1 jour SICK complet (2025-10-13)
 INSERT INTO absence (user_id, start_date, end_date, type, reason, status, approved_by, approved_at)
 VALUES
   (
@@ -155,7 +147,6 @@ INSERT INTO absence_days (absence_id, absence_date, period, start_time, end_time
 VALUES
   (@abs_clement_sick, '2025-10-13', 'FULL_DAY', '09:00:00', '17:00:00');
 
--- 2) Armand : absence PERSONNELLE l’après-midi (2025-10-10, comme avant mais plus complet)
 INSERT INTO absence (user_id, start_date, end_date, type, reason, status, approved_by, approved_at)
 VALUES
   (
@@ -173,7 +164,7 @@ INSERT INTO absence_days (absence_id, absence_date, period, start_time, end_time
 VALUES
   (@abs_armand_personal, '2025-10-10', 'PM', '13:30:00', '17:30:00');
 
--- 3) Alex : 3 jours VACATION (2025-10-20 → 2025-10-22)
+-- 3) Alex : 3 days of VACATION (2025-10-20 → 2025-10-22)
 INSERT INTO absence (user_id, start_date, end_date, type, reason, status, approved_by, approved_at)
 VALUES
   (
@@ -193,7 +184,7 @@ VALUES
   (@abs_alex_vac, '2025-10-21', 'FULL_DAY', '09:00:00', '17:00:00'),
   (@abs_alex_vac, '2025-10-22', 'FULL_DAY', '09:00:00', '17:00:00');
 
--- 4) Gaspard : RTT le 2025-10-03 après-midi
+-- 4) Gaspard : RTT 2025-10-03 PM
 INSERT INTO absence (user_id, start_date, end_date, type, reason, status, approved_by, approved_at)
 VALUES
   (
@@ -246,8 +237,7 @@ INSERT INTO leave_types (code, label) VALUES
 ON DUPLICATE KEY UPDATE label = VALUES(label);
 
 -- ==========================================================
--- LEAVE ACCOUNTS (VAC + RTT + SICK) pour chaque user
--- opening_balance en jours, accrual_per_month en jours/mois
+-- LEAVE ACCOUNTS (VAC + RTT + SICK) 
 -- ==========================================================
 
 -- Alex
@@ -299,7 +289,7 @@ ON DUPLICATE KEY UPDATE
   carryover_expire_on = VALUES(carryover_expire_on);
 
 -- ==========================================================
--- LEAVE LEDGER (exemples : accruals + débits liés aux absences)
+-- LEAVE LEDGER 
 -- ==========================================================
 
 -- Accrual VAC Sep & Oct 2025 pour tout le monde
@@ -329,8 +319,7 @@ VALUES
   ((SELECT id FROM leave_accounts WHERE user_id = (SELECT id FROM users WHERE email='armand.braud@epitech.eu') AND leave_type='VAC'),
    '2025-10-31', 'ACCRUAL', 2.08, NULL, 'Monthly accrual Oct 2025');
 
--- Débits liés aux absences définies plus haut
--- Alex : 3 jours de VAC (20-22/10/2025)
+-- Alex : 3 days of  VAC (20-22/10/2025)
 INSERT INTO leave_ledger (account_id, entry_date, kind, amount, reference_absence_id, note)
 VALUES
   (
@@ -338,7 +327,7 @@ VALUES
     '2025-10-22', 'DEBIT', 3.00, @abs_alex_vac, '3 days paid vacation'
   );
 
--- Gaspard : 0.5 RTT le 03/10/2025
+-- Gaspard : 0.5 RTT 03/10/2025
 INSERT INTO leave_ledger (account_id, entry_date, kind, amount, reference_absence_id, note)
 VALUES
   (
@@ -346,7 +335,7 @@ VALUES
     '2025-10-03', 'DEBIT', 0.50, @abs_gaspard_rtt, 'RTT afternoon'
   );
 
--- Clément : 1 jour SICK (généralement non décompté du VAC, juste un exemple d’ajustement)
+-- Clément : 1 DAU SICK
 INSERT INTO leave_ledger (account_id, entry_date, kind, amount, reference_absence_id, note)
 VALUES
   (
@@ -354,7 +343,7 @@ VALUES
     '2025-10-13', 'DEBIT', 1.00, @abs_clement_sick, '1 sick day used'
   );
 
--- Armand : ajustement manuel +0.5 VAC
+-- Armand : +0.5 VAC
 INSERT INTO leave_ledger (account_id, entry_date, kind, amount, reference_absence_id, note)
 VALUES
   (
