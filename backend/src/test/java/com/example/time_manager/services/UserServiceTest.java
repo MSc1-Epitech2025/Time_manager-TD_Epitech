@@ -360,4 +360,45 @@ class UserServiceTestTest {
 
         assertThat(result).isFalse();
     }
+
+    @Test
+    void updateUser_shouldUpdateAllFieldsAndEncodePassword() {
+
+        UserRepository userRepository = mock(UserRepository.class);
+        PasswordEncoder encoder = mock(PasswordEncoder.class);
+        UserService userService = new UserService(userRepository, encoder);
+
+        User u = new User();
+        u.setId("id");
+
+        when(userRepository.findById("id")).thenReturn(Optional.of(u));
+        when(encoder.encode("newPass")).thenReturn("ENCODED_PASS");
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        UpdateUserInput input = mock(UpdateUserInput.class);
+
+        when(input.firstName()).thenReturn("John");
+        when(input.lastName()).thenReturn("Doe");
+        when(input.email()).thenReturn("john@doe.com");
+        when(input.phone()).thenReturn("0600000000");
+        when(input.role()).thenReturn("ADMIN");
+        when(input.poste()).thenReturn("Developer");
+        when(input.avatarUrl()).thenReturn("http://avatar.com/img.png");
+        when(input.password()).thenReturn("newPass");
+
+        User result = userService.updateUser("id", input);
+
+        assertThat(result.getFirstName()).isEqualTo("John");
+        assertThat(result.getLastName()).isEqualTo("Doe");
+        assertThat(result.getEmail()).isEqualTo("john@doe.com");
+        assertThat(result.getPhone()).isEqualTo("0600000000");
+        assertThat(result.getRole()).isEqualTo("ADMIN");
+        assertThat(result.getPoste()).isEqualTo("Developer");
+        assertThat(result.getAvatarUrl()).isEqualTo("http://avatar.com/img.png");
+
+        assertThat(result.getPassword()).isEqualTo("ENCODED_PASS");
+
+        verify(encoder).encode("newPass");
+        verify(userRepository).save(u);
+    }
 }
