@@ -367,6 +367,75 @@ class TeamServiceTest {
         assertThat(result).isFalse();
     }
 
+    @Test
+    void update_shouldSkipNullFields() {
+        setAuth("A", "ROLE_ADMIN");
+
+        TeamDto dto = new TeamDto();
+        dto.setName(null);
+        dto.setDescription(null);
+
+        Team t = new Team();
+        t.setId(5L);
+        t.setName("OLD");
+        t.setDescription("OLD_DESC");
+
+        when(teamRepo.findById(5L)).thenReturn(Optional.of(t));
+        when(teamRepo.save(any())).thenReturn(t);
+
+        Team res = service.update(5L, dto);
+
+        assertThat(res.getName()).isEqualTo("OLD");
+        assertThat(res.getDescription()).isEqualTo("OLD_DESC");
+    }
+
+    @Test
+    void currentUserId_shouldThrow_ifAuthNameIsNull() {
+        var auth = mock(org.springframework.security.core.Authentication.class);
+        when(auth.getName()).thenReturn(null);
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        assertThatThrownBy(() -> service.findTeamsOfCurrentUser())
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("Unauthenticated");
+    }
+
+    @Test
+    void addMember_shouldWork_forManagerMember_directBranch() {
+        setAuth("M1", "ROLE_MANAGER");
+
+        when(memberRepo.existsByTeam_IdAndUser_Id(1L, "M1"))
+                .thenReturn(true);
+
+        Team team = new Team();
+        team.setId(1L);
+        User user = new User();
+        user.setId("U9");
+
+        when(teamRepo.findById(1L)).thenReturn(Optional.of(team));
+        when(userRepo.findById("U9")).thenReturn(Optional.of(user));
+
+        service.addMember(1L, "U9");
+
+        verify(memberRepo).save(any(TeamMember.class));
+    }
+
+    @Test
+    void hasAnyAuthority_shouldReturnFalse_whenAuthoritiesNull() throws Exception {
+        var method = TeamService.class.getDeclaredMethod(
+                "hasAnyAuthority",
+                org.springframework.security.core.Authentication.class,
+                String[].class
+        );
+        method.setAccessible(true);
+
+        var auth = mock(org.springframework.security.core.Authentication.class);
+        when(auth.getAuthorities()).thenReturn(null); // <-- branche non couverte
+
+        boolean result = (boolean) method.invoke(null, auth, new String[]{"ADMIN"});
+
+        assertThat(result).isFalse();
+    }
 
     private static void setAuth(String userId, String... roles) {
         var auth = new TestingAuthenticationToken(userId, null, roles);

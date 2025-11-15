@@ -45,7 +45,6 @@ class OAuth2CallbackControllerTest {
 
     @Test
     void testHandleAzureCallback_UserAlreadyExists_WithMissingAzureOid() {
-        // --- Arrange ---
         when(authentication.getPrincipal()).thenReturn(principal);
         when(principal.getEmail()).thenReturn("test@example.com");
         when(principal.getClaim("oid")).thenReturn("AZURE-123");
@@ -57,7 +56,7 @@ class OAuth2CallbackControllerTest {
         existing.setEmail("test@example.com");
         existing.setFirstName("John");
         existing.setLastName("Doe");
-        existing.setAzureOid(""); // simulate missing azureOid
+        existing.setAzureOid("");
         existing.setRole("[\"employee\"]");
 
         when(userService.findByEmail("test@example.com")).thenReturn(Optional.of(existing));
@@ -66,10 +65,8 @@ class OAuth2CallbackControllerTest {
         when(jwtUtil.generateAccessToken(any(), any(), any(), any())).thenReturn("access123");
         when(jwtUtil.generateRefreshToken(any(), any())).thenReturn("refresh123");
 
-        // --- Act ---
         ResponseEntity<Void> result = controller.handleAzureCallback(authentication, response);
 
-        // --- Assert ---
         assertEquals(200, result.getStatusCode().value());
         verify(response, atLeast(2)).addHeader(eq(HttpHeaders.SET_COOKIE), anyString());
         verify(userService, times(1)).saveUser(existing);
@@ -100,7 +97,7 @@ class OAuth2CallbackControllerTest {
         ResponseEntity<Void> result = controller.handleAzureCallback(authentication, response);
 
         assertEquals(200, result.getStatusCode().value());
-        verify(userService, never()).saveUser(existing); // no re-save, since azureOid present
+        verify(userService, never()).saveUser(existing);
         verify(response, atLeast(2)).addHeader(eq(HttpHeaders.SET_COOKIE), anyString());
     }
 
@@ -134,5 +131,48 @@ class OAuth2CallbackControllerTest {
         assertEquals("Brown", saved.getLastName());
         assertEquals("OID-NEW", saved.getAzureOid());
         verify(response, atLeast(2)).addHeader(eq(HttpHeaders.SET_COOKIE), anyString());
+    }
+
+    @Test
+    void testHandleAzureCallback_UserAlreadyExists_WithNullAzureOid() {
+        when(authentication.getPrincipal()).thenReturn(principal);
+        when(principal.getEmail()).thenReturn("nulloid@example.com");
+        when(principal.getClaim("oid")).thenReturn("OID-NULL");
+        when(principal.getGivenName()).thenReturn("Nora");
+        when(principal.getFamilyName()).thenReturn("Gray");
+
+        User existing = new User();
+        existing.setId("U3");
+        existing.setEmail("nulloid@example.com");
+        existing.setFirstName("Nora");
+        existing.setLastName("Gray");
+        existing.setAzureOid(null);
+        existing.setRole("[\"employee\"]");
+
+        when(userService.findByEmail("nulloid@example.com"))
+                .thenReturn(Optional.of(existing));
+
+        when(userService.saveUser(existing)).thenReturn(existing);
+
+        when(jwtUtil.generateAccessToken(any(), any(), any(), any()))
+                .thenReturn("accessNull");
+        when(jwtUtil.generateRefreshToken(any(), any()))
+                .thenReturn("refreshNull");
+
+        ResponseEntity<Void> result = controller.handleAzureCallback(authentication, response);
+
+        assertEquals(200, result.getStatusCode().value());
+
+        verify(userService, times(1)).saveUser(existing);
+
+        verify(response, atLeast(2)).addHeader(eq(HttpHeaders.SET_COOKIE), anyString());
+
+        verify(jwtUtil).generateAccessToken(
+                eq("nulloid@example.com"),
+                eq("U3"),
+                eq("Nora"),
+                eq("[\"employee\"]")
+        );
+        verify(jwtUtil).generateRefreshToken(eq("nulloid@example.com"), eq("U3"));
     }
 }

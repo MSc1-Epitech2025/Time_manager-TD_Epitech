@@ -157,4 +157,39 @@ class LeaveAccountingBridgeTest {
         bridge.removeDebitForAbsence(99L);
         verify(ledgerRepo).deleteByReferenceAbsence_Id(99L);
     }
+
+    @Test
+    void testEnsureDebit_UsesLocalDateNowWhenStartDateIsNull() {
+        Absence absence = new Absence();
+        absence.setId(10L);
+        absence.setStatus(AbsenceStatus.APPROVED);
+        absence.setType(AbsenceType.RTT);
+        absence.setUserId("U_TEST");
+        absence.setStartDate(null);
+
+        LeaveAccount acc = new LeaveAccount();
+        when(accountRepo.findByUser_IdAndLeaveType_Code("U_TEST", "RTT"))
+                .thenReturn(Optional.of(acc));
+
+        AbsenceDay d = new AbsenceDay();
+        d.setPeriod(AbsencePeriod.FULL_DAY);
+        when(dayRepo.findByAbsenceIdOrderByAbsenceDateAsc(10L))
+                .thenReturn(List.of(d));
+
+        when(ledgerRepo.findFirstByReferenceAbsence_Id(10L))
+                .thenReturn(Optional.empty());
+
+        LeaveLedger ledgerSaved = new LeaveLedger();
+        when(ledgerRepo.save(any(LeaveLedger.class)))
+                .thenAnswer(inv -> {
+                    LeaveLedger l = inv.getArgument(0);
+                    ledgerSaved.setEntryDate(l.getEntryDate());
+                    return l;
+                });
+
+        bridge.ensureDebitForApprovedAbsence(absence);
+
+        assertEquals(LocalDate.now(), ledgerSaved.getEntryDate());
+    }
+
 }
