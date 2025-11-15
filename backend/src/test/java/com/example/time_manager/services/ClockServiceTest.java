@@ -175,4 +175,62 @@ class ClockServiceTest {
         assertThat(r.userId).isEqualTo("U10");
         assertThat(r.kind).isEqualTo(ClockKind.OUT);
     }
+
+    @Test
+    void listForUser_fromOnly_shouldUseOrderByDesc() {
+        Clock c = new Clock();
+        User u = new User();
+        u.setId("U3");
+        c.setUser(u);
+        c.setId(99L);
+
+        when(clockRepo.findByUserIdOrderByAtDesc("U3")).thenReturn(List.of(c));
+
+        var res = service.listForUser("U3", Instant.now(), null);
+
+        assertThat(res).hasSize(1);
+        assertThat(res.get(0).id).isEqualTo(99L);
+        verify(clockRepo).findByUserIdOrderByAtDesc("U3");
+    }
+
+    @Test
+    void listForUser_toOnly_shouldUseOrderByDesc() {
+        Clock c = new Clock();
+        User u = new User();
+        u.setId("U3");
+        c.setUser(u);
+        c.setId(77L);
+
+        when(clockRepo.findByUserIdOrderByAtDesc("U3")).thenReturn(List.of(c));
+
+        var res = service.listForUser("U3", null, Instant.now());
+
+        assertThat(res).hasSize(1);
+        assertThat(res.get(0).id).isEqualTo(77L);
+        verify(clockRepo).findByUserIdOrderByAtDesc("U3");
+    }
+
+    @Test
+    void punch_shouldAllow_whenLastKindIsDifferent() {
+        User user = new User();
+        user.setId("U1");
+        when(userRepo.findByEmail("me@test.com")).thenReturn(Optional.of(user));
+
+        Clock last = new Clock();
+        last.setKind(ClockKind.OUT); // last != new punch kind
+        when(clockRepo.findTopByUserIdOrderByAtDesc("U1")).thenReturn(Optional.of(last));
+
+        Clock saved = new Clock();
+        saved.setId(10L);
+        saved.setUser(user);
+        saved.setKind(ClockKind.IN);
+        saved.setAt(Instant.now());
+        when(clockRepo.save(any())).thenReturn(saved);
+
+        ClockCreateRequest req = new ClockCreateRequest(ClockKind.IN, null);
+        ClockResponse res = service.createForMe("me@test.com", req);
+
+        assertThat(res.id).isEqualTo(10L);
+        assertThat(res.kind).isEqualTo(ClockKind.IN);
+    }
 }

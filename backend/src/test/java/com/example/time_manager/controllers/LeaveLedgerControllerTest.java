@@ -82,7 +82,7 @@ class LeaveLedgerControllerTest {
         verify(service).addEntry(
                 12L,
                 LocalDate.parse("2024-05-01"),
-                LeaveLedgerKind.ACCRUAL, // ✅ cohérent
+                LeaveLedgerKind.ACCRUAL,
                 BigDecimal.valueOf(3.5),
                 77L,
                 "Bonus leave"
@@ -189,5 +189,29 @@ class LeaveLedgerControllerTest {
 
         assertEquals("Update failed", ex.getMessage());
         verify(service).update(eq(99L), any(), any(), eq("Error case"));
+    }
+
+    @Test
+    void testLeaveLedgerByAccount_FromOnly() {
+        List<LeaveLedger> mockList = List.of(new LeaveLedger());
+        when(service.listByAccount(10L)).thenReturn(mockList);
+
+        List<LeaveLedger> result =
+                controller.leaveLedgerByAccount(10L, "2024-01-01", null);
+
+        assertEquals(1, result.size());
+        verify(service).listByAccount(10L);
+    }
+
+    @Test
+    void testLeaveLedgerByAccount_ToOnly() {
+        List<LeaveLedger> mockList = List.of(new LeaveLedger());
+        when(service.listByAccount(10L)).thenReturn(mockList);
+
+        List<LeaveLedger> result =
+                controller.leaveLedgerByAccount(10L, null, "2024-12-31");
+
+        assertEquals(1, result.size());
+        verify(service).listByAccount(10L);
     }
 }

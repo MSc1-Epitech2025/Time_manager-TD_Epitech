@@ -37,8 +37,6 @@ class WorkScheduleControllerTest {
         SecurityContextHolder.clearContext();
     }
 
-    /* ======================= QUERIES ======================= */
-
     @Test
     void testWorkSchedulesByUser_ReturnsList() {
         List<WorkScheduleResponse> mockList = List.of(
@@ -70,8 +68,6 @@ class WorkScheduleControllerTest {
         assertEquals(1, result.size());
         verify(workScheduleService).listForUser("1");
     }
-
-    /* ======================= MUTATIONS ======================= */
 
     @Test
     void testUpsertMyWorkSchedule_Success() {
@@ -158,8 +154,6 @@ class WorkScheduleControllerTest {
         verify(workScheduleService).deleteSlot("U2", WorkDay.FRI, WorkPeriod.PM);
     }
 
-    /* ======================= HELPERS ======================= */
-
     @Test
     void testCurrentUserId_ThrowsIfNoAuth() {
         SecurityContextHolder.clearContext();
@@ -176,7 +170,18 @@ class WorkScheduleControllerTest {
         assertTrue(ex.getMessage().contains("User not found by email"));
     }
 
-    /* ======================= UTILS ======================= */
+    @Test
+    void testCurrentUserId_ThrowsIfAuthNameIsNull() {
+        var auth = mock(org.springframework.security.core.Authentication.class);
+        when(auth.getName()).thenReturn(null);
+
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        EntityNotFoundException ex =
+                assertThrows(EntityNotFoundException.class, this::invokeCurrentUserId);
+
+        assertTrue(ex.getMessage().contains("No authenticated user found"));
+    }
 
     private User makeUser(String id, String email) {
         User u = new User();

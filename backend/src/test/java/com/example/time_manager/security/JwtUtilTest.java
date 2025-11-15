@@ -7,12 +7,10 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Base64;
 import java.util.Date;
-import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class JwtUtilTest {
-
     private JwtUtil jwtUtil;
 
     private final String username = "john.doe";
@@ -132,5 +130,37 @@ class JwtUtilTest {
         assertNotNull(claims.get("uid"));
         assertNotNull(claims.getExpiration());
         assertTrue(claims.getExpiration().after(new Date(System.currentTimeMillis() - 1000)));
+    }
+
+    @Test
+    void testAccessTokenValid_WithCorrectUsernameButExpiredDate() throws Exception {
+        ReflectionTestUtils.setField(jwtUtil, "expMinutes", 0L);
+
+        String token = jwtUtil.generateAccessToken(username, userId, firstName, role);
+
+        Thread.sleep(1);
+
+        try {
+            boolean valid = jwtUtil.isAccessTokenValid(token, username);
+            assertFalse(valid);
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+            assertTrue(true);
+        }
+    }
+
+    @Test
+    void testRefreshTokenValid_WithCorrectUsernameButExpiredDate() throws Exception {
+        ReflectionTestUtils.setField(jwtUtil, "refreshDays", 0L);
+
+        String token = jwtUtil.generateRefreshToken(username, userId);
+
+        Thread.sleep(1);
+
+        try {
+            boolean valid = jwtUtil.isRefreshTokenValid(token, username);
+            assertFalse(valid);
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+            assertTrue(true);
+        }
     }
 }

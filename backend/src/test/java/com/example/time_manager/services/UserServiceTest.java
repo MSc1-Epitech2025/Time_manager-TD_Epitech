@@ -401,4 +401,43 @@ class UserServiceTestTest {
         verify(encoder).encode("newPass");
         verify(userRepository).save(u);
     }
+
+    @Test
+    void updateUser_shouldNotEncodePassword_whenPasswordIsNullOrBlank() {
+        UserRepository userRepository = mock(UserRepository.class);
+        PasswordEncoder encoder = mock(PasswordEncoder.class);
+        UserService userService = new UserService(userRepository, encoder);
+
+        User u = new User();
+        u.setId("id");
+        u.setPassword("OLD_HASH");
+
+        when(userRepository.findById("id")).thenReturn(Optional.of(u));
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        UpdateUserInput input = mock(UpdateUserInput.class);
+
+        when(input.firstName()).thenReturn(null);
+        when(input.lastName()).thenReturn(null);
+        when(input.email()).thenReturn(null);
+        when(input.phone()).thenReturn(null);
+        when(input.role()).thenReturn(null);
+        when(input.poste()).thenReturn(null);
+        when(input.avatarUrl()).thenReturn(null);
+
+        when(input.password()).thenReturn(null);
+
+        User resultNull = userService.updateUser("id", input);
+
+        assertThat(resultNull.getPassword()).isEqualTo("OLD_HASH");
+        verify(encoder, never()).encode(anyString());
+
+        when(input.password()).thenReturn("   ");
+
+        User resultBlank = userService.updateUser("id", input);
+
+        assertThat(resultBlank.getPassword()).isEqualTo("OLD_HASH");
+        verify(encoder, never()).encode(anyString());
+    }
+
 }
