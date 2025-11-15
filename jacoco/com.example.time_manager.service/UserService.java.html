@@ -105,7 +105,7 @@ public User updateUser(String id, UpdateUserInput in) {
 <span class="fc bfc" id="L105" title="All 2 branches covered.">    if (in.role()      != null) u.setRole(in.role());</span>
 <span class="fc bfc" id="L106" title="All 2 branches covered.">    if (in.poste()     != null) u.setPoste(in.poste());</span>
 <span class="fc bfc" id="L107" title="All 2 branches covered.">    if (in.avatarUrl() != null) u.setAvatarUrl(in.avatarUrl());</span>
-<span class="pc bpc" id="L108" title="1 of 4 branches missed.">    if (in.password()  != null &amp;&amp; !in.password().isBlank()) {</span>
+<span class="fc bfc" id="L108" title="All 4 branches covered.">    if (in.password()  != null &amp;&amp; !in.password().isBlank()) {</span>
 <span class="fc" id="L109">        u.setPassword(passwordEncoder.encode(in.password()));</span>
     }
 

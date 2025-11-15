@@ -44,7 +44,7 @@ public class ClockService {
 <span class="fc" id="L44">                .orElseThrow(() -&gt; new EntityNotFoundException(&quot;User not found: &quot; + email));</span>
 
 <span class="fc" id="L46">        var last = clockRepo.findTopByUserIdOrderByAtDesc(user.getId());</span>
-<span class="pc bpc" id="L47" title="1 of 4 branches missed.">        if (last.isPresent() &amp;&amp; last.get().getKind() == kind) {</span>
+<span class="fc bfc" id="L47" title="All 4 branches covered.">        if (last.isPresent() &amp;&amp; last.get().getKind() == kind) {</span>
 <span class="fc" id="L48">            throw new IllegalStateException(&quot;Cannot punch &quot; + kind + &quot; twice in a row&quot;);</span>
         }
 
@@ -70,7 +70,7 @@ public class ClockService {
     @Transactional(readOnly = true)
     public List&lt;ClockResponse&gt; listForUser(String userId, Instant from, Instant to) {
         List&lt;Clock&gt; rows;
-<span class="pc bpc" id="L73" title="1 of 4 branches missed.">        if (from != null &amp;&amp; to != null) {</span>
+<span class="fc bfc" id="L73" title="All 4 branches covered.">        if (from != null &amp;&amp; to != null) {</span>
 <span class="fc" id="L74">            rows = clockRepo.findByUserIdAndAtBetweenOrderByAtAsc(userId, from, to);</span>
         } else {
 <span class="fc" id="L76">            rows = clockRepo.findByUserIdOrderByAtDesc(userId);</span>

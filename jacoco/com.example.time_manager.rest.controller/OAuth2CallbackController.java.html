@@ -43,7 +43,7 @@ public class OAuth2CallbackController {
 <span class="fc" id="L43">            return userService.saveUser(u);</span>
         });
 
-<span class="pc bpc" id="L46" title="1 of 4 branches missed.">        if (user.getAzureOid() == null || user.getAzureOid().isBlank()) {</span>
+<span class="fc bfc" id="L46" title="All 4 branches covered.">        if (user.getAzureOid() == null || user.getAzureOid().isBlank()) {</span>
 <span class="fc" id="L47">            user.setAzureOid(azureOid);</span>
 <span class="fc" id="L48">            userService.saveUser(user);</span>
         }

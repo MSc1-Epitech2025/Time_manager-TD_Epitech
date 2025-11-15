@@ -140,10 +140,10 @@ public class TeamService {
     public Team update(Long id, @Valid TeamDto dto) {
 <span class="fc" id="L141">        requireAdmin();</span>
 <span class="fc" id="L142">        Team t = findById(id);</span>
-<span class="pc bpc" id="L143" title="1 of 2 branches missed.">        if (dto.getName() != null) {</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">        if (dto.getName() != null) {</span>
 <span class="fc" id="L144">            t.setName(dto.getName());</span>
         }
-<span class="pc bpc" id="L146" title="1 of 2 branches missed.">        if (dto.getDescription() != null) {</span>
+<span class="fc bfc" id="L146" title="All 2 branches covered.">        if (dto.getDescription() != null) {</span>
 <span class="fc" id="L147">            t.setDescription(dto.getDescription());</span>
         }
 <span class="fc" id="L149">        return teamRepo.save(t);</span>
@@ -197,7 +197,7 @@ public class TeamService {
     /* ===================== AuthZ Helpers ===================== */
 private String currentUserId() {
 <span class="fc" id="L199">    var auth = SecurityContextHolder.getContext().getAuthentication();</span>
-<span class="pc bpc" id="L200" title="1 of 4 branches missed.">    if (auth == null || auth.getName() == null) {</span>
+<span class="fc bfc" id="L200" title="All 4 branches covered.">    if (auth == null || auth.getName() == null) {</span>
 <span class="fc" id="L201">        throw new AccessDeniedException(&quot;Unauthenticated&quot;);</span>
     }
 <span class="fc" id="L203">    String subject = auth.getName();</span>
@@ -296,7 +296,7 @@ private void assertCanManageTeamMembers(Long teamId) {
 <span class="fc" id="L296">    throw new AccessDeniedException(&quot;Forbidden: only ADMIN or MANAGER member of the team can modify members&quot;);</span>
 }
     private static boolean hasAnyAuthority(Authentication auth, String... values) {
-<span class="pc bpc" id="L299" title="1 of 4 branches missed.">        if (auth == null || auth.getAuthorities() == null) return false;</span>
+<span class="fc bfc" id="L299" title="All 4 branches covered.">        if (auth == null || auth.getAuthorities() == null) return false;</span>
 <span class="fc" id="L300">        var expected = java.util.Set.of(values);</span>
 <span class="fc" id="L301">        return auth.getAuthorities().stream().anyMatch(a -&gt; expected.contains(a.getAuthority()));</span>
     }

@@ -25,7 +25,7 @@ public class LeaveLedgerController {
   public List&lt;LeaveLedger&gt; leaveLedgerByAccount(@Argument Long accountId,
                                                 @Argument String from,
                                                 @Argument String to) {
-<span class="pc bpc" id="L28" title="1 of 4 branches missed.">    if (from != null &amp;&amp; to != null) {</span>
+<span class="fc bfc" id="L28" title="All 4 branches covered.">    if (from != null &amp;&amp; to != null) {</span>
 <span class="fc" id="L29">      return service.listByAccountBetween(accountId, LocalDate.parse(from), LocalDate.parse(to));</span>
     }
 <span class="fc" id="L31">    return service.listByAccount(accountId);</span>

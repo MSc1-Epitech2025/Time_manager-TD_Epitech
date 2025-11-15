@@ -63,7 +63,7 @@ public class LeaveAccountingBridge {
 <span class="fc" id="L63">        .orElseGet(LeaveLedger::new);</span>
 
 <span class="fc" id="L65">    ledger.setAccount(account);</span>
-<span class="pc bpc" id="L66" title="1 of 2 branches missed.">    ledger.setEntryDate(entryDate != null ? entryDate : LocalDate.now());</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">    ledger.setEntryDate(entryDate != null ? entryDate : LocalDate.now());</span>
 <span class="fc" id="L67">    ledger.setKind(LeaveLedgerKind.DEBIT);</span>
 <span class="fc" id="L68">    ledger.setAmount(units);</span>
 <span class="fc" id="L69">    ledger.setReferenceAbsence(absence);</span>

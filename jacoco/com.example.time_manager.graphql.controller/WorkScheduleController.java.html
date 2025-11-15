@@ -87,7 +87,7 @@ public class WorkScheduleController {
 
   private String currentUserId() {
 <span class="fc" id="L89">    var auth = SecurityContextHolder.getContext().getAuthentication();</span>
-<span class="pc bpc" id="L90" title="1 of 4 branches missed.">    if (auth == null || auth.getName() == null) {</span>
+<span class="fc bfc" id="L90" title="All 4 branches covered.">    if (auth == null || auth.getName() == null) {</span>
 <span class="fc" id="L91">      throw new EntityNotFoundException(&quot;No authenticated user found&quot;);</span>
     }
 <span class="fc" id="L93">    return userRepository.findByEmail(auth.getName())</span>
