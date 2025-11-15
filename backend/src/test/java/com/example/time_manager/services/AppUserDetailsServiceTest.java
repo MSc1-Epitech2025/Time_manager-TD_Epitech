@@ -139,6 +139,51 @@ class AppUserDetailsServiceTest {
                 .containsExactly("MANAGER");
     }
 
+    @Test
+    void mapAuthorities_shouldIgnoreNullEntries() {
+        UserRepository repo = mock(UserRepository.class);
+        AppUserDetailsService service = new AppUserDetailsService(repo);
+
+        User u = new User();
+        u.setRole("[null, \"admin\"]");
+
+        var authorities = invokeMapAuthorities(service, u);
+
+        assertThat(authorities)
+                .extracting(GrantedAuthority::getAuthority)
+                .containsExactly("ADMIN");
+    }
+
+    @Test
+    void mapAuthorities_shouldIgnoreEmptyStrings() {
+        UserRepository repo = mock(UserRepository.class);
+        AppUserDetailsService service = new AppUserDetailsService(repo);
+
+        User u = new User();
+        u.setRole("[\"\", \"employee\"]");
+
+        var authorities = invokeMapAuthorities(service, u);
+
+        assertThat(authorities)
+                .extracting(GrantedAuthority::getAuthority)
+                .containsExactly("EMPLOYEE");
+    }
+
+    @Test
+    void mapAuthorities_shouldFallbackToRawUppercase_onJsonError() {
+        UserRepository repo = mock(UserRepository.class);
+        AppUserDetailsService service = new AppUserDetailsService(repo);
+
+        User u = new User();
+        u.setRole("[invalid-json");
+
+        var authorities = invokeMapAuthorities(service, u);
+
+        assertThat(authorities)
+                .extracting(GrantedAuthority::getAuthority)
+                .containsExactly("[INVALID-JSON");
+    }
+
     @SuppressWarnings("unchecked")
     private List<GrantedAuthority> invokeMapAuthorities(AppUserDetailsService service, User u) {
         try {

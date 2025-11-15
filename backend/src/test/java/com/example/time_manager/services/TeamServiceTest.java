@@ -430,7 +430,7 @@ class TeamServiceTest {
         method.setAccessible(true);
 
         var auth = mock(org.springframework.security.core.Authentication.class);
-        when(auth.getAuthorities()).thenReturn(null); // <-- branche non couverte
+        when(auth.getAuthorities()).thenReturn(null);
 
         boolean result = (boolean) method.invoke(null, auth, new String[]{"ADMIN"});
 
@@ -440,5 +440,20 @@ class TeamServiceTest {
     private static void setAuth(String userId, String... roles) {
         var auth = new TestingAuthenticationToken(userId, null, roles);
         SecurityContextHolder.getContext().setAuthentication(auth);
+    }
+
+    @Test
+    void assertCanManageTeamMembers_shouldReturn_whenManagerAndMember() throws Exception {
+        setAuth("M1", "ROLE_MANAGER");
+
+        when(memberRepo.existsByTeam_IdAndUser_Id(5L, "M1")).thenReturn(true);
+
+        var method = TeamService.class.getDeclaredMethod("assertCanManageTeamMembers", Long.class);
+        method.setAccessible(true);
+
+        assertThatCode(() -> method.invoke(service, 5L))
+                .doesNotThrowAnyException();
+
+        verify(memberRepo).existsByTeam_IdAndUser_Id(5L, "M1");
     }
 }

@@ -7,6 +7,7 @@ import com.example.time_manager.service.AbsenceService;
 import com.example.time_manager.service.leave.LeaveAccountingBridge;
 import org.junit.jupiter.api.*;
 import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.lang.reflect.InvocationTargetException;
@@ -217,4 +218,94 @@ class AbsenceServiceHelpersTest {
 
         assertThat(res).isNotNull();
     }
+
+    @Test
+    void isAdmin_shouldReturnFalse_whenAuthoritiesNull() throws Exception {
+        Authentication auth = mock(Authentication.class);
+        when(auth.getAuthorities()).thenReturn(null);
+
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        Method m = AbsenceService.class.getDeclaredMethod("isAdmin");
+        m.setAccessible(true);
+
+        boolean result = (boolean) m.invoke(service);
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    void currentUserId_shouldThrow_whenAuthNameNull() throws Exception {
+        Authentication auth = mock(Authentication.class);
+        when(auth.getName()).thenReturn(null);
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        Method m = AbsenceService.class.getDeclaredMethod("currentUserId");
+        m.setAccessible(true);
+
+        assertThatThrownBy(() -> m.invoke(service))
+                .hasRootCauseInstanceOf(SecurityException.class)
+                .hasRootCauseMessage("Unauthenticated");
+    }
+
+    @Test
+    void hasRole_shouldReturnFalse_whenRoleBlank() throws Exception {
+        User u = new User();
+        u.setRole("   ");
+
+        Method m = AbsenceService.class.getDeclaredMethod("hasRole", User.class, String.class);
+        m.setAccessible(true);
+
+        boolean result = (boolean) m.invoke(service, u, "ADMIN");
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    void validateDates_shouldThrow_whenEndNull() throws Exception {
+        Method m = AbsenceService.class.getDeclaredMethod("validateDates", LocalDate.class, LocalDate.class);
+        m.setAccessible(true);
+
+        Throwable t = catchThrowable(() -> m.invoke(service, LocalDate.now(), null));
+
+        assertThat(t.getCause())
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("startDate and endDate are required");
+    }
+
+    @Test
+    void toDto_shouldSetCreatedAndUpdatedAtNull_whenTimestampsNull() throws Exception {
+        Absence a = new Absence();
+        a.setId(1L);
+        a.setUserId("U1");
+        a.setStartDate(LocalDate.now());
+        a.setEndDate(LocalDate.now());
+
+        Method m = AbsenceService.class.getDeclaredMethod("toDto", Absence.class, List.class);
+        m.setAccessible(true);
+
+        var dto = (com.example.time_manager.dto.absence.AbsenceResponse)
+                m.invoke(service, a, List.of());
+
+        assertThat(dto.getCreatedAt()).isNull();
+        assertThat(dto.getUpdatedAt()).isNull();
+    }
+
+    @Test
+    void canManagerActOn_shouldReturnFalse_whenTeamsButUserNotFound() throws Exception {
+        User manager = new User();
+        manager.setId("M1");
+
+        when(teamMemberRepo.findTeamIdsByUserId("M1"))
+                .thenReturn(List.of(10L, 20L));
+
+        when(teamMemberRepo.existsByTeam_IdAndUser_Id(anyLong(), eq("U2")))
+                .thenReturn(false);
+
+        Method m = AbsenceService.class.getDeclaredMethod("canManagerActOn", User.class, String.class);
+        m.setAccessible(true);
+
+        boolean result = (boolean) m.invoke(service, manager, "U2");
+
+        assertThat(result).isFalse();
+    }
+
 }
