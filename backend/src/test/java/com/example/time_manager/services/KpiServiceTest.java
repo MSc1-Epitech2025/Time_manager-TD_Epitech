@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
 import java.math.BigDecimal;
+import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -68,7 +69,7 @@ class KpiServiceTest {
                 .thenReturn(100);
 
         when(jdbc.queryForObject(contains("SUM(TIMESTAMPDIFF"), eq(Number.class), any(), any()))
-                .thenReturn(3000); // minutes
+                .thenReturn(3000);
 
         when(jdbc.queryForObject(startsWith("SELECT COUNT(*) FROM ("), eq(Number.class), any(), any()))
                 .thenReturn(50);
@@ -138,7 +139,7 @@ class KpiServiceTest {
         assertEquals(5, k.getHeadcount());
         assertEquals(new BigDecimal("50.00"), k.getPresenceRate());
         assertEquals(new BigDecimal("1.00"), k.getAvgHoursPerDay());
-        assertEquals(new BigDecimal("25.00"), k.getAbsenceRate()); // 5/20
+        assertEquals(new BigDecimal("25.00"), k.getAbsenceRate());
         assertEquals(3, k.getReportsAuthored());
     }
 
@@ -287,5 +288,159 @@ class KpiServiceTest {
         assertEquals(2, k.getLeaveBalances().size());
         assertEquals("RTT", k.getLeaveBalances().get(1).getLeaveType());
         assertEquals(new BigDecimal("7"), k.getLeaveBalances().get(1).getCurrentBalance());
+    }
+
+    @Test
+    void testAbsenceBreakdownRowMapperExecution() throws Exception {
+        UUID uid = UUID.randomUUID();
+        LocalDate start = LocalDate.of(2024,1,1);
+        LocalDate end = LocalDate.of(2024,1,31);
+
+        when(jdbc.queryForMap(anyString(), any()))
+                .thenReturn(Map.of("full_name", "Test User"));
+
+        when(jdbc.queryForObject(contains("DISTINCT DATE"), eq(Number.class), any(), any(), any()))
+                .thenReturn(5);
+
+        when(jdbc.queryForObject(contains("WITH RECURSIVE d"), eq(Number.class), any(), any(), any()))
+                .thenReturn(10);
+
+        when(jdbc.queryForObject(contains("SUM(TIMESTAMPDIFF"), eq(Number.class), any(), any(), any()))
+                .thenReturn(600);
+
+        when(jdbc.queryForObject(startsWith("SELECT COUNT(*) FROM ("), eq(Number.class), any(), any(), any()))
+                .thenReturn(5);
+
+        when(jdbc.queryForObject(contains("SUM(CASE period"), eq(Number.class), any(), any(), any()))
+                .thenReturn(2);
+
+        when(jdbc.query(
+                contains("GROUP BY a.type"),
+                any(RowMapper.class),
+                any(), any(), any()
+        )).thenAnswer(invocation -> {
+            RowMapper<AbsenceBreakdown> mapper = invocation.getArgument(1);
+            ResultSet rs = mock(ResultSet.class);
+            when(rs.getString("type")).thenReturn("SICK");
+            when(rs.getBigDecimal("days")).thenReturn(new BigDecimal("2.5"));
+
+            return List.of(mapper.mapRow(rs, 0));
+        });
+
+        when(jdbc.query(contains("leave_accounts"), any(RowMapper.class), any(), any(), any()))
+                .thenReturn(List.of());
+
+        when(jdbc.queryForObject(contains("author_id"), eq(Integer.class), any(), any(), any()))
+                .thenReturn(1);
+
+        when(jdbc.queryForObject(contains("target_user_id"), eq(Integer.class), any(), any(), any()))
+                .thenReturn(1);
+
+        UserKpiSummary k = service.getUser(uid, start, end);
+
+        assertEquals("SICK", k.getAbsenceByType().get(0).getType());
+        assertEquals(new BigDecimal("2.5"), k.getAbsenceByType().get(0).getDays());
+    }
+
+    @Test
+    void testLeaveBalanceRowMapperExecution() {
+
+        UUID uid = UUID.randomUUID();
+        LocalDate start = LocalDate.now();
+        LocalDate end = LocalDate.now();
+
+        when(jdbc.queryForMap(anyString(), any()))
+                .thenReturn(Map.of("full_name", "Tester"));
+
+        when(jdbc.queryForObject(contains("DISTINCT DATE"), eq(Number.class), any(), any(), any()))
+                .thenReturn(5);
+
+        when(jdbc.queryForObject(contains("WITH RECURSIVE d"), eq(Number.class), any(), any(), any()))
+                .thenReturn(10);
+
+        when(jdbc.queryForObject(contains("SUM(TIMESTAMPDIFF"), eq(Number.class), any(), any(), any()))
+                .thenReturn(600);
+
+        when(jdbc.queryForObject(startsWith("SELECT COUNT(*) FROM ("), eq(Number.class), any(), any(), any()))
+                .thenReturn(5);
+
+        when(jdbc.queryForObject(contains("SUM(CASE period"), eq(Number.class), any(), any(), any()))
+                .thenReturn(2);
+
+        when(jdbc.query(
+                contains("GROUP BY a.type"),
+                any(RowMapper.class),
+                any(), any(), any()
+        )).thenReturn(List.of());
+
+        when(jdbc.query(
+                contains("leave_accounts"),
+                any(RowMapper.class),
+                any(), any(), any()
+        )).thenAnswer(invocation -> {
+            RowMapper<LeaveBalance> mapper = invocation.getArgument(1);
+
+            ResultSet rs = mock(ResultSet.class);
+            when(rs.getString("leave_type")).thenReturn("CP");
+            when(rs.getBigDecimal("opening_balance")).thenReturn(new BigDecimal("10"));
+            when(rs.getBigDecimal("accrued")).thenReturn(new BigDecimal("3"));
+            when(rs.getBigDecimal("debited")).thenReturn(new BigDecimal("2"));
+            when(rs.getBigDecimal("adjustments")).thenReturn(new BigDecimal("1"));
+            when(rs.getBigDecimal("expired")).thenReturn(BigDecimal.ZERO);
+
+            LeaveBalance lb = mapper.mapRow(rs, 0);
+            return List.of(lb);
+        });
+
+        when(jdbc.queryForObject(contains("author_id"), eq(Integer.class), any(), any(), any()))
+                .thenReturn(1);
+
+        when(jdbc.queryForObject(contains("target_user_id"), eq(Integer.class), any(), any(), any()))
+                .thenReturn(1);
+
+        UserKpiSummary summary = service.getUser(uid, start, end);
+
+        LeaveBalance lb = summary.getLeaveBalances().get(0);
+
+        assertEquals("CP", lb.getLeaveType());
+        assertEquals(new BigDecimal("12"), lb.getCurrentBalance());
+    }
+
+    @Test
+    void testDivisionByDayCountNullInGetUser() {
+        UUID uid = UUID.randomUUID();
+        LocalDate start = LocalDate.of(2024,1,1);
+        LocalDate end = LocalDate.of(2024,1,31);
+
+        when(jdbc.queryForMap(anyString(), any()))
+                .thenReturn(Map.of("full_name","Test"));
+
+        when(jdbc.queryForObject(contains("DISTINCT DATE"), eq(Number.class), any(), any(), any()))
+                .thenReturn(5);
+
+        when(jdbc.queryForObject(contains("WITH RECURSIVE d"), eq(Number.class), any(), any(), any()))
+                .thenReturn(10);
+
+        when(jdbc.queryForObject(contains("SUM(TIMESTAMPDIFF"), eq(Number.class), any(), any(), any()))
+                .thenReturn(600);
+
+        when(jdbc.queryForObject(startsWith("SELECT COUNT(*) FROM ("), eq(Number.class), any(), any(), any()))
+                .thenReturn(null);
+
+        when(jdbc.queryForObject(contains("SUM(CASE period"), eq(Number.class), any(), any(), any()))
+                .thenReturn(3);
+
+        when(jdbc.query(anyString(), any(RowMapper.class), any(), any(), any()))
+                .thenReturn(List.of());
+
+        when(jdbc.queryForObject(contains("author_id"), eq(Integer.class), any(), any(), any()))
+                .thenReturn(1);
+
+        when(jdbc.queryForObject(contains("target_user_id"), eq(Integer.class), any(), any(), any()))
+                .thenReturn(1);
+
+        UserKpiSummary summary = service.getUser(uid, start, end);
+
+        assertNotNull(summary.getAvgHoursPerDay());
     }
 }

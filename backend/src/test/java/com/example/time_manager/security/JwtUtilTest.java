@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.lang.reflect.Method;
 import java.util.Base64;
 import java.util.Date;
 
@@ -162,5 +163,60 @@ class JwtUtilTest {
         } catch (io.jsonwebtoken.ExpiredJwtException e) {
             assertTrue(true);
         }
+    }
+
+    @Test
+    void testAccessTokenValid_CoversExpirationCheck() throws Exception {
+        ReflectionTestUtils.setField(jwtUtil, "expMinutes", 5L);
+        String token = jwtUtil.generateAccessToken(username, userId, firstName, role);
+
+        Method parseMethod = JwtUtil.class.getDeclaredMethod("parseAccessClaims", String.class);
+        parseMethod.setAccessible(true);
+        Claims claims = (Claims) parseMethod.invoke(jwtUtil, token);
+
+        assertTrue(claims.getExpiration().after(new Date()));
+        assertEquals(username, claims.getSubject());
+
+        boolean valid = jwtUtil.isAccessTokenValid(token, username);
+
+        assertTrue(valid);
+    }
+
+
+    @Test
+    void testRefreshTokenValid_CoversExpirationCheck() throws Exception {
+        ReflectionTestUtils.setField(jwtUtil, "refreshDays", 5L);
+        String token = jwtUtil.generateRefreshToken(username, userId);
+
+        Method parseMethod = JwtUtil.class.getDeclaredMethod("parseRefreshClaims", String.class);
+        parseMethod.setAccessible(true);
+        Claims claims = (Claims) parseMethod.invoke(jwtUtil, token);
+
+        assertTrue(claims.getExpiration().after(new Date()));
+        assertEquals(username, claims.getSubject());
+
+        boolean valid = jwtUtil.isRefreshTokenValid(token, username);
+
+        assertTrue(valid);
+    }
+
+    @Test
+    void testAccessTokenInvalid_WrongUsernameButNotExpired() {
+        ReflectionTestUtils.setField(jwtUtil, "expMinutes", 10L);
+        String token = jwtUtil.generateAccessToken(username, userId, firstName, role);
+
+        boolean valid = jwtUtil.isAccessTokenValid(token, "differentUser");
+
+        assertFalse(valid);
+    }
+
+    @Test
+    void testRefreshTokenInvalid_WrongUsernameButNotExpired() {
+        ReflectionTestUtils.setField(jwtUtil, "refreshDays", 10L);
+        String token = jwtUtil.generateRefreshToken(username, userId);
+
+        boolean valid = jwtUtil.isRefreshTokenValid(token, "differentUser");
+
+        assertFalse(valid);
     }
 }

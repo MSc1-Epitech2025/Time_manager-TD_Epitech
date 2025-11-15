@@ -246,6 +246,102 @@ class ReportServiceTest {
                 .isInstanceOf(EntityNotFoundException.class);
     }
 
+    @Test
+    void wrapper_create_shouldCall_createForAuthorEmail() {
+        ReportCreateRequest req = new ReportCreateRequest();
+        req.setTargetUserId("T1");
+
+        ReportService spyService = spy(new ReportService(reportRepo, userRepo));
+        doReturn(new ReportResponse()).when(spyService).createForAuthorEmail(anyString(), any());
+
+        spyService.create("email@test.com", req);
+
+        verify(spyService).createForAuthorEmail("email@test.com", req);
+    }
+
+    @Test
+    void wrapper_update_shouldCall_updateVisibleTo() {
+        ReportUpdateRequest req = new ReportUpdateRequest();
+
+        ReportService spyService = spy(new ReportService(reportRepo, userRepo));
+        doReturn(new ReportResponse()).when(spyService).updateVisibleTo(anyString(), anyLong(), any());
+
+        spyService.update("me@test.com", 10L, req);
+
+        verify(spyService).updateVisibleTo("me@test.com", 10L, req);
+    }
+
+    @Test
+    void wrapper_delete_shouldCall_deleteVisibleTo() {
+        ReportService spyService = spy(new ReportService(reportRepo, userRepo));
+        doNothing().when(spyService).deleteVisibleTo(anyString(), anyLong());
+
+        spyService.delete("me@test.com", 42L);
+
+        verify(spyService).deleteVisibleTo("me@test.com", 42L);
+    }
+
+    @Test
+    void wrapper_loadVisibleByEmail_shouldCall_getVisibleTo() {
+        ReportService spyService = spy(new ReportService(reportRepo, userRepo));
+        doReturn(new ReportResponse()).when(spyService).getVisibleTo(anyString(), anyLong());
+
+        spyService.loadVisibleByEmail("me@test.com", 5L);
+
+        verify(spyService).getVisibleTo("me@test.com", 5L);
+    }
+
+    @Test
+    void wrapper_listMineByEmail_shouldCall_listAuthoredByEmail() {
+        ReportService spyService = spy(new ReportService(reportRepo, userRepo));
+        doReturn(List.of()).when(spyService).listAuthoredByEmail(anyString());
+
+        spyService.listMineByEmail("me@test.com");
+
+        verify(spyService).listAuthoredByEmail("me@test.com");
+    }
+
+    @Test
+    void wrapper_listAll_shouldCall_listAllForAdmin() {
+        ReportService spyService = spy(new ReportService(reportRepo, userRepo));
+        doReturn(List.of()).when(spyService).listAllForAdmin();
+
+        spyService.listAll();
+
+        verify(spyService).listAllForAdmin();
+    }
+
+    @Test
+    void hasRole_shouldReturnFalse_whenRoleNull() {
+        User u = makeUser("X", "x@test.com", null);
+        boolean result = invokeHasRole(u, "ADMIN");
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    void hasRole_shouldReturnFalse_whenRoleBlank() {
+        User u = makeUser("X", "x@test.com", "   ");
+        boolean result = invokeHasRole(u, "ADMIN");
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    void hasRole_shouldReturnTrue_whenRoleMatches() {
+        User u = makeUser("X", "x@test.com", "[\"ADMIN\"]");
+        boolean result = invokeHasRole(u, "ADMIN");
+        assertThat(result).isTrue();
+    }
+
+    private boolean invokeHasRole(User u, String role) {
+        try {
+            var m = ReportService.class.getDeclaredMethod("hasRole", User.class, String.class);
+            m.setAccessible(true);
+            return (boolean) m.invoke(service, u, role);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private static User makeUser(String id, String email, String role) {
         User u = new User();
         u.setId(id);

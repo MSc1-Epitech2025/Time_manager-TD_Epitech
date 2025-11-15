@@ -153,4 +153,42 @@ class AbsenceServiceUpdateTest {
         verify(dayRepo).saveAll(anyList());
         assertThat(res.getId()).isEqualTo(50L);
     }
+
+    @Test
+    void updateVisibleTo_shouldUpdateAllNonNullFields() {
+        var auth = new TestingAuthenticationToken("ADMIN", null, "ROLE_ADMIN");
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        User admin = new User();
+        admin.setId("ADMIN");
+        admin.setRole("[\"ADMIN\"]");
+        when(userRepo.findByEmail("admin@test.com")).thenReturn(Optional.of(admin));
+
+        Absence a = new Absence();
+        a.setId(99L);
+        a.setUserId("U1");
+        a.setStatus(AbsenceStatus.PENDING);
+        a.setStartDate(LocalDate.of(2025, 1, 1));
+        a.setEndDate(LocalDate.of(2025, 1, 2));
+
+        when(absenceRepo.findById(99L)).thenReturn(Optional.of(a));
+        when(absenceRepo.save(any())).thenReturn(a);
+        when(dayRepo.findByAbsenceIdOrderByAbsenceDateAsc(99L))
+                .thenReturn(List.of());
+
+        AbsenceUpdateRequest req = new AbsenceUpdateRequest();
+        req.setStartDate(LocalDate.of(2030, 1, 1));
+        req.setEndDate(LocalDate.of(2030, 1, 2));
+        req.setType(AbsenceType.SICK);
+        req.setReason("new reason");
+        req.setSupportingDocumentUrl("newUrl");
+
+        var res = service.updateVisibleTo("admin@test.com", 99L, req);
+
+        assertThat(res.getStartDate()).isEqualTo(LocalDate.of(2030,1,1));
+        assertThat(res.getEndDate()).isEqualTo(LocalDate.of(2030,1,2));
+        assertThat(res.getType()).isEqualTo(AbsenceType.SICK);
+        assertThat(res.getReason()).isEqualTo("new reason");
+        assertThat(res.getSupportingDocumentUrl()).isEqualTo("newUrl");
+    }
 }
