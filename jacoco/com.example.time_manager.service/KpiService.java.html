@@ -274,7 +274,7 @@ public class KpiService {
 <span class="fc" id="L274">                Number.class, userId.toString(), start, end.plusDays(1));</span>
 
 <span class="fc" id="L276">        BigDecimal avgHours = (nz(totalMinutes)</span>
-<span class="pc bpc" id="L277" title="1 of 2 branches missed.">                .divide(new BigDecimal(dayCount == null ? 1 : dayCount.longValue()), 2, java.math.RoundingMode.HALF_UP))</span>
+<span class="fc bfc" id="L277" title="All 2 branches covered.">                .divide(new BigDecimal(dayCount == null ? 1 : dayCount.longValue()), 2, java.math.RoundingMode.HALF_UP))</span>
 <span class="fc" id="L278">                .divide(BigDecimal.valueOf(60), 2, java.math.RoundingMode.HALF_UP);</span>
 <span class="fc" id="L279">        k.setAvgHoursPerDay(avgHours);</span>
 
@@ -343,7 +343,7 @@ public class KpiService {
                 &quot;JOIN absence_days ad ON a.id=ad.absence_id &quot; +
                 &quot;WHERE a.user_id=? AND ad.absence_date BETWEEN ? AND ? &quot; +
                 &quot;GROUP BY a.type&quot;,
-<span class="nc" id="L346">                (rs, i) -&gt; new AbsenceBreakdown(rs.getString(&quot;type&quot;), rs.getBigDecimal(&quot;days&quot;)),</span>
+<span class="fc" id="L346">                (rs, i) -&gt; new AbsenceBreakdown(rs.getString(&quot;type&quot;), rs.getBigDecimal(&quot;days&quot;)),</span>
 <span class="fc" id="L347">                userId.toString(), start, end);</span>
 <span class="fc" id="L348">        k.setAbsenceByType(byType);</span>
 
@@ -359,14 +359,14 @@ public class KpiService {
                 &quot;GROUP BY la.id, la.leave_type, la.opening_balance&quot;,
 <span class="fc" id="L360">                new RowMapper&lt;LeaveBalance&gt;() {</span>
                     @Override public LeaveBalance mapRow(ResultSet rs, int rowNum) throws SQLException {
-<span class="nc" id="L362">                        BigDecimal opening = rs.getBigDecimal(&quot;opening_balance&quot;);</span>
-<span class="nc" id="L363">                        BigDecimal accrued = nz(rs.getBigDecimal(&quot;accrued&quot;));</span>
-<span class="nc" id="L364">                        BigDecimal debited = nz(rs.getBigDecimal(&quot;debited&quot;));</span>
-<span class="nc" id="L365">                        BigDecimal adjustments = nz(rs.getBigDecimal(&quot;adjustments&quot;));</span>
-<span class="nc" id="L366">                        BigDecimal expired = nz(rs.getBigDecimal(&quot;expired&quot;));</span>
-<span class="nc" id="L367">                        BigDecimal current = opening.add(accrued).add(adjustments).subtract(debited).subtract(expired);</span>
-<span class="nc" id="L368">                        return new LeaveBalance(</span>
-<span class="nc" id="L369">                                rs.getString(&quot;leave_type&quot;),</span>
+<span class="fc" id="L362">                        BigDecimal opening = rs.getBigDecimal(&quot;opening_balance&quot;);</span>
+<span class="fc" id="L363">                        BigDecimal accrued = nz(rs.getBigDecimal(&quot;accrued&quot;));</span>
+<span class="fc" id="L364">                        BigDecimal debited = nz(rs.getBigDecimal(&quot;debited&quot;));</span>
+<span class="fc" id="L365">                        BigDecimal adjustments = nz(rs.getBigDecimal(&quot;adjustments&quot;));</span>
+<span class="fc" id="L366">                        BigDecimal expired = nz(rs.getBigDecimal(&quot;expired&quot;));</span>
+<span class="fc" id="L367">                        BigDecimal current = opening.add(accrued).add(adjustments).subtract(debited).subtract(expired);</span>
+<span class="fc" id="L368">                        return new LeaveBalance(</span>
+<span class="fc" id="L369">                                rs.getString(&quot;leave_type&quot;),</span>
                                 opening, accrued, debited, adjustments, expired, current
                         );
                     }

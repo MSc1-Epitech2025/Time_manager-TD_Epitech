@@ -169,7 +169,7 @@ public class ReportService {
 
   private boolean hasRole(User u, String roleUpper) {
 <span class="fc" id="L171">    String raw = u.getRole();</span>
-<span class="pc bpc" id="L172" title="2 of 4 branches missed.">    if (raw == null || raw.isBlank()) return false;</span>
+<span class="fc bfc" id="L172" title="All 4 branches covered.">    if (raw == null || raw.isBlank()) return false;</span>
 <span class="fc" id="L173">    String up = roleUpper.toUpperCase();</span>
 <span class="fc" id="L174">    String normalized = raw.replaceAll(&quot;[\\[\\]\\s\\\&quot;]&quot;, &quot;&quot;).toUpperCase();</span>
 <span class="fc bfc" id="L175" title="All 2 branches covered.">    for (String r : normalized.split(&quot;,&quot;)) {</span>
@@ -181,29 +181,29 @@ public class ReportService {
 
   @Transactional(readOnly = true)
   public List&lt;ReportResponse&gt; listAll() {
-<span class="nc" id="L184">    return listAllForAdmin();</span>
+<span class="fc" id="L184">    return listAllForAdmin();</span>
   }
 
   @Transactional(readOnly = true)
   public List&lt;ReportResponse&gt; listMineByEmail(String email) {
-<span class="nc" id="L189">    return listAuthoredByEmail(email);</span>
+<span class="fc" id="L189">    return listAuthoredByEmail(email);</span>
   }
 
   @Transactional(readOnly = true)
   public ReportResponse loadVisibleByEmail(String email, Long id) {
-<span class="nc" id="L194">    return getVisibleTo(email, id);</span>
+<span class="fc" id="L194">    return getVisibleTo(email, id);</span>
   }
 
   public ReportResponse create(String authorEmail, ReportCreateRequest req) {
-<span class="nc" id="L198">    return createForAuthorEmail(authorEmail, req);</span>
+<span class="fc" id="L198">    return createForAuthorEmail(authorEmail, req);</span>
   }
 
   public ReportResponse update(String email, Long id, ReportUpdateRequest req) {
-<span class="nc" id="L202">    return updateVisibleTo(email, id, req);</span>
+<span class="fc" id="L202">    return updateVisibleTo(email, id, req);</span>
   }
 
   public void delete(String email, Long id) {
-<span class="nc" id="L206">    deleteVisibleTo(email, id);</span>
-<span class="nc" id="L207">  }</span>
+<span class="fc" id="L206">    deleteVisibleTo(email, id);</span>
+<span class="fc" id="L207">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

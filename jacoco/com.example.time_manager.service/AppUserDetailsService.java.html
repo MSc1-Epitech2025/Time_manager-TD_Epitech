@@ -49,9 +49,9 @@ private Collection&lt;? extends GrantedAuthority&gt; mapAuthorities(User u) {
         }
         
 <span class="fc" id="L51">        var authorities = roles.stream()</span>
-<span class="pc bpc" id="L52" title="1 of 2 branches missed.">            .filter(s -&gt; s != null)</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">            .filter(s -&gt; s != null)</span>
 <span class="fc" id="L53">            .map(String::trim)</span>
-<span class="pc bpc" id="L54" title="1 of 2 branches missed.">            .filter(s -&gt; !s.isEmpty())</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">            .filter(s -&gt; !s.isEmpty())</span>
 <span class="fc" id="L55">            .map(String::toUpperCase) </span>
 <span class="fc" id="L56">            .distinct()</span>
 <span class="fc" id="L57">            .map(SimpleGrantedAuthority::new)</span>
@@ -60,8 +60,8 @@ private Collection&lt;? extends GrantedAuthority&gt; mapAuthorities(User u) {
 <span class="fc bfc" id="L60" title="All 2 branches covered.">        return authorities.isEmpty() </span>
 <span class="fc" id="L61">            ? List.of(new SimpleGrantedAuthority(&quot;EMPLOYEE&quot;))</span>
 <span class="fc" id="L62">            : authorities;</span>
-<span class="nc" id="L63">    } catch (Exception e) {</span>
-<span class="nc" id="L64">        return List.of(new SimpleGrantedAuthority(raw.toUpperCase()));</span>
+<span class="fc" id="L63">    } catch (Exception e) {</span>
+<span class="fc" id="L64">        return List.of(new SimpleGrantedAuthority(raw.toUpperCase()));</span>
     }
 }
 }
