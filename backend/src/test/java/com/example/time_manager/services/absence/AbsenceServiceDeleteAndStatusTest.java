@@ -156,4 +156,55 @@ class AbsenceServiceDeleteAndStatusTest {
         assertThatThrownBy(() -> service.deleteVisibleTo("ghost@test.com", 1L))
                 .isInstanceOf(EntityNotFoundException.class);
     }
+
+    @Test
+    void deleteVisibleTo_shouldThrow_ifOwnerButNotPending() {
+        var auth = new TestingAuthenticationToken("U1", null, "ROLE_EMPLOYEE");
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        User owner = new User();
+        owner.setId("U1");
+        owner.setRole("[\"EMPLOYEE\"]");
+
+        when(userRepo.findByEmail("owner@test.com")).thenReturn(Optional.of(owner));
+
+        Absence a = new Absence();
+        a.setId(88L);
+        a.setUserId("U1");
+        a.setStatus(AbsenceStatus.APPROVED);
+
+        when(absenceRepo.findById(88L)).thenReturn(Optional.of(a));
+
+        assertThatThrownBy(() -> service.deleteVisibleTo("owner@test.com", 88L))
+                .isInstanceOf(org.springframework.security.access.AccessDeniedException.class)
+                .hasMessageContaining("owner can delete only while PENDING");
+    }
+
+    @Test
+    void setStatus_shouldHandleDefaultCase() {
+        var auth = new TestingAuthenticationToken("ADMIN", null, "ROLE_ADMIN");
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        User admin = new User();
+        admin.setId("ADMIN");
+        admin.setEmail("admin@test.com");
+        admin.setRole("[\"ADMIN\"]");
+        when(userRepo.findByEmail("admin@test.com")).thenReturn(Optional.of(admin));
+
+        Absence a = new Absence();
+        a.setId(77L);
+        a.setUserId("U1");
+        a.setStatus(AbsenceStatus.PENDING);
+
+        when(absenceRepo.findById(77L)).thenReturn(Optional.of(a));
+        when(absenceRepo.save(any())).thenReturn(a);
+        when(dayRepo.findByAbsenceIdOrderByAbsenceDateAsc(77L)).thenReturn(List.of());
+
+        AbsenceStatusUpdateRequest req = new AbsenceStatusUpdateRequest();
+        req.setStatus(AbsenceStatus.REJECTED);
+
+        var res = service.setStatus("admin@test.com", 77L, req);
+
+        assertThat(res.getStatus()).isEqualTo(AbsenceStatus.REJECTED);
+    }
 }

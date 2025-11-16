@@ -456,4 +456,25 @@ class TeamServiceTest {
 
         verify(memberRepo).existsByTeam_IdAndUser_Id(5L, "M1");
     }
+
+    @Test
+    void addMember_shouldEnterManagerMemberBranch_andCoverManagerCheck() {
+        setAuth("M1", "ROLE_MANAGER");
+
+        when(memberRepo.existsByTeam_IdAndUser_Id(10L, "M1"))
+                .thenReturn(true);
+
+        Team team = new Team();
+        team.setId(10L);
+
+        User newUser = new User();
+        newUser.setId("U99");
+
+        when(teamRepo.findById(10L)).thenReturn(Optional.of(team));
+        when(userRepo.findById("U99")).thenReturn(Optional.of(newUser));
+
+        service.addMember(10L, "U99");
+
+        verify(memberRepo).save(any(TeamMember.class));
+    }
 }

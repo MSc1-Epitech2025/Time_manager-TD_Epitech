@@ -272,6 +272,34 @@ class AbsenceServiceReadTest {
         assertThat(res).isEmpty();
     }
 
+    @Test
+    void listTeamAbsences_shouldIterateOverMultipleTeams() {
+        var auth = new TestingAuthenticationToken("M1", null, "ROLE_MANAGER");
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        User manager = new User();
+        manager.setId("M1");
+        manager.setRole("[\"MANAGER\"]");
+        when(userRepo.findByEmail("manager@test.com")).thenReturn(Optional.of(manager));
+
+        when(teamMemberRepo.findTeamIdsByUserId("M1")).thenReturn(List.of(1L, 2L));
+
+        when(teamMemberRepo.findUsersByTeamId(1L)).thenReturn(List.of(makeUser("U1")));
+        when(teamMemberRepo.findUsersByTeamId(2L)).thenReturn(List.of(makeUser("U2")));
+
+        Absence abs = new Absence();
+        abs.setId(100L);
+        abs.setUserId("U1");
+
+        when(absenceRepo.findByUserIdInOrderByStartDateDesc(List.of("U1","U2")))
+                .thenReturn(List.of(abs));
+        when(dayRepo.findByAbsenceIdOrderByAbsenceDateAsc(100L)).thenReturn(List.of());
+
+        var res = service.listTeamAbsences("manager@test.com", null);
+
+        assertThat(res).hasSize(1);
+    }
+
     private static User makeUser(String id) {
         User u = new User();
         u.setId(id);

@@ -443,4 +443,48 @@ class KpiServiceTest {
 
         assertNotNull(summary.getAvgHoursPerDay());
     }
+
+    @Test
+    void testDayCountNotNullInGetUser_overtimeBranch() {
+        UUID uid = UUID.randomUUID();
+        LocalDate start = LocalDate.of(2024,1,1);
+        LocalDate end = LocalDate.of(2024,1,31);
+
+        when(jdbc.queryForMap(anyString(), any()))
+                .thenReturn(Map.of("full_name","Test"));
+
+        when(jdbc.queryForObject(contains("DISTINCT DATE"), eq(Number.class), any(), any(), any()))
+                .thenReturn(5);
+
+        when(jdbc.queryForObject(contains("WITH RECURSIVE d"), eq(Number.class), any(), any(), any()))
+                .thenReturn(10);
+
+        when(jdbc.queryForObject(contains("SUM(TIMESTAMPDIFF"), eq(Number.class), any(), any(), any()))
+                .thenReturn(600);
+
+        when(jdbc.queryForObject(startsWith("SELECT COUNT(*) FROM ("), eq(Number.class), any(), any(), any()))
+                .thenReturn(5);
+
+        when(jdbc.queryForObject(contains("SUM(CASE period"), eq(Number.class), any(), any(), any()))
+                .thenReturn(3);
+
+        when(jdbc.queryForObject(
+                contains("SUM(TIMESTAMPDIFF(MINUTE, ws.start_time, ws.end_time))"),
+                eq(Number.class),
+                any(), any(), any()
+        )).thenReturn(300);
+
+        when(jdbc.query(anyString(), any(RowMapper.class), any(), any(), any()))
+                .thenReturn(List.of());
+
+        when(jdbc.queryForObject(contains("author_id"), eq(Integer.class), any(), any(), any()))
+                .thenReturn(1);
+
+        when(jdbc.queryForObject(contains("target_user_id"), eq(Integer.class), any(), any(), any()))
+                .thenReturn(1);
+
+        UserKpiSummary k = service.getUser(uid, start, end);
+
+        assertEquals(new BigDecimal("5.00"), k.getOvertimeHours());
+    }
 }
