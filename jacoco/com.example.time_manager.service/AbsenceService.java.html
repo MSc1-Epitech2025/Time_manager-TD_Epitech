@@ -147,10 +147,10 @@ public List&lt;AbsenceResponse&gt; listTeamAbsences(String managerEmail, Long te
 <span class="fc bfc" id="L147" title="All 2 branches covered.">    for (var u : users) teamUserIds.add(u.getId());</span>
 <span class="fc" id="L148">  } else {</span>
 <span class="fc" id="L149">    var managerTeams = teamMemberRepo.findTeamIdsByUserId(manager.getId());</span>
-<span class="pc bpc" id="L150" title="1 of 2 branches missed.">    for (Long tid : managerTeams) {</span>
-<span class="nc" id="L151">      var users = teamMemberRepo.findUsersByTeamId(tid);</span>
-<span class="nc bnc" id="L152" title="All 2 branches missed.">      for (var u : users) teamUserIds.add(u.getId());</span>
-<span class="nc" id="L153">    }</span>
+<span class="fc bfc" id="L150" title="All 2 branches covered.">    for (Long tid : managerTeams) {</span>
+<span class="fc" id="L151">      var users = teamMemberRepo.findUsersByTeamId(tid);</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">      for (var u : users) teamUserIds.add(u.getId());</span>
+<span class="fc" id="L153">    }</span>
   }
 
 <span class="fc bfc" id="L156" title="All 2 branches covered.">  if (teamUserIds.isEmpty()) return List.of();</span>
@@ -241,11 +241,11 @@ public List&lt;AbsenceResponse&gt; listTeamAbsences(String managerEmail, Long te
 <span class="fc" id="L241">    boolean isOwner = a.getUserId().equals(requester.getId());</span>
 <span class="fc" id="L242">    boolean isManager = hasRole(requester, &quot;MANAGER&quot;);</span>
 
-<span class="pc bpc" id="L244" title="4 of 8 branches missed.">    if (!(isAdmin || isOwner || (isManager &amp;&amp; canManagerActOn(requester, a.getUserId())))) {</span>
+<span class="pc bpc" id="L244" title="3 of 8 branches missed.">    if (!(isAdmin || isOwner || (isManager &amp;&amp; canManagerActOn(requester, a.getUserId())))) {</span>
 <span class="fc" id="L245">      throw new org.springframework.security.access.AccessDeniedException(&quot;Forbidden&quot;);</span>
     }
-<span class="pc bpc" id="L247" title="7 of 8 branches missed.">    if (!isAdmin &amp;&amp; !isManager &amp;&amp; !(isOwner &amp;&amp; a.getStatus() == AbsenceStatus.PENDING)) {</span>
-<span class="nc" id="L248">      throw new org.springframework.security.access.AccessDeniedException(&quot;Forbidden: owner can delete only while PENDING&quot;);</span>
+<span class="pc bpc" id="L247" title="3 of 8 branches missed.">    if (!isAdmin &amp;&amp; !isManager &amp;&amp; !(isOwner &amp;&amp; a.getStatus() == AbsenceStatus.PENDING)) {</span>
+<span class="fc" id="L248">      throw new org.springframework.security.access.AccessDeniedException(&quot;Forbidden: owner can delete only while PENDING&quot;);</span>
     }
 <span class="fc" id="L250">    leaveAccountingBridge.removeDebitForAbsence(id);</span>
 <span class="fc" id="L251">    dayRepo.deleteByAbsenceId(id);</span>
@@ -309,8 +309,8 @@ public List&lt;AbsenceResponse&gt; listTeamAbsences(String managerEmail, Long te
 <span class="fc" id="L309">    dto.setStatus(a.getStatus());</span>
 <span class="fc" id="L310">    dto.setApprovedBy(a.getApprovedBy());</span>
 <span class="fc" id="L311">    dto.setApprovedAt(a.getApprovedAt());</span>
-<span class="pc bpc" id="L312" title="1 of 2 branches missed.">    dto.setCreatedAt(a.getCreatedAt() != null ? a.getCreatedAt().toLocalDateTime() : null);</span>
-<span class="pc bpc" id="L313" title="1 of 2 branches missed.">    dto.setUpdatedAt(a.getUpdatedAt() != null ? a.getUpdatedAt().toLocalDateTime() : null);</span>
+<span class="fc bfc" id="L312" title="All 2 branches covered.">    dto.setCreatedAt(a.getCreatedAt() != null ? a.getCreatedAt().toLocalDateTime() : null);</span>
+<span class="fc bfc" id="L313" title="All 2 branches covered.">    dto.setUpdatedAt(a.getUpdatedAt() != null ? a.getUpdatedAt().toLocalDateTime() : null);</span>
 
 <span class="fc" id="L315">    List&lt;AbsenceDayResponse&gt; dayDtos = new ArrayList&lt;&gt;();</span>
 <span class="fc bfc" id="L316" title="All 2 branches covered.">    for (AbsenceDay d : days) {</span>
@@ -333,7 +333,7 @@ private boolean hasRole(User u, String roleUpper) {
 <span class="fc" id="L333">  String cleaned = raw.replaceAll(&quot;[\\[\\]\&quot;]&quot;, &quot;&quot;).toUpperCase();</span>
 <span class="fc bfc" id="L334" title="All 2 branches covered.">  for (String token : cleaned.split(&quot;[\\s,;|,]+&quot;)) {</span>
 <span class="fc" id="L335">    String r = token.trim();</span>
-<span class="pc bpc" id="L336" title="1 of 4 branches missed.">    if (!r.isEmpty() &amp;&amp; r.equals(roleUpper)) {</span>
+<span class="fc bfc" id="L336" title="All 4 branches covered.">    if (!r.isEmpty() &amp;&amp; r.equals(roleUpper)) {</span>
 <span class="fc" id="L337">      return true;</span>
     }
   }
