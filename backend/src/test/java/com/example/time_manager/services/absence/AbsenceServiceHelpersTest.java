@@ -308,4 +308,42 @@ class AbsenceServiceHelpersTest {
         assertThat(result).isFalse();
     }
 
+    @Test
+    void hasRole_shouldMatchEvenWithDirtyFormatting() throws Exception {
+        User u = new User();
+        u.setRole(" [ ADMIN ]; ");
+
+        Method m = AbsenceService.class.getDeclaredMethod("hasRole", User.class, String.class);
+        m.setAccessible(true);
+
+        boolean result = (boolean) m.invoke(service, u, "ADMIN");
+
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    void toDto_shouldSetCreatedAtAndUpdatedAt_whenTimestampsNotNull() throws Exception {
+        Absence a = new Absence();
+        a.setId(42L);
+        a.setUserId("U1");
+        a.setStartDate(LocalDate.now());
+        a.setEndDate(LocalDate.now());
+
+        var createdField = Absence.class.getDeclaredField("createdAt");
+        createdField.setAccessible(true);
+        createdField.set(a, java.sql.Timestamp.valueOf(LocalDateTime.of(2024, 1, 1, 10, 0)));
+
+        var updatedField = Absence.class.getDeclaredField("updatedAt");
+        updatedField.setAccessible(true);
+        updatedField.set(a, java.sql.Timestamp.valueOf(LocalDateTime.of(2024, 1, 2, 11, 0)));
+
+        Method m = AbsenceService.class.getDeclaredMethod("toDto", Absence.class, List.class);
+        m.setAccessible(true);
+
+        var dto = (com.example.time_manager.dto.absence.AbsenceResponse)
+                m.invoke(service, a, List.of());
+
+        assertThat(dto.getCreatedAt()).isEqualTo(LocalDateTime.of(2024, 1, 1, 10, 0));
+        assertThat(dto.getUpdatedAt()).isEqualTo(LocalDateTime.of(2024, 1, 2, 11, 0));
+    }
 }
