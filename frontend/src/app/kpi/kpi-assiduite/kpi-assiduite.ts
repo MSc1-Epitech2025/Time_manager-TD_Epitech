@@ -1,5 +1,5 @@
 import { Component, AfterViewInit, ViewChild, ElementRef, Input, OnChanges, SimpleChanges } from '@angular/core';
-import { Chart, registerables } from 'chart.js';
+import { Chart, registerables ,ChartConfiguration } from 'chart.js';
 Chart.register(...registerables);
 
 @Component({
@@ -25,12 +25,12 @@ export class KpiAssiduiteComponent implements AfterViewInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['selectedKpi']) this.updateTitle();
-    if (this.chart) this.updateChart();
+    if ((changes['data'] || changes['selectedKpi']) && this.chart) this.updateChart();
   }
 
   updateTitle() {
     switch (this.selectedKpi) {
-      case 'absenteeism': this.title = 'Absences rate'; break;
+      case 'absenteeism': this.title = 'Absence rate'; break;
       case 'attendance': this.title = 'Attendance rate'; break;
       case 'productivity': this.title = 'Productivity rate'; break;
     }
@@ -117,7 +117,8 @@ export class KpiAssiduiteComponent implements AfterViewInit, OnChanges {
           ctx.fillText(mainValue + '%', x, y);
           ctx.restore();
         }
-      }
+      },
+      plugins: [centerTextPlugin]
     };
 
     this.chart = new Chart(ctx, {
