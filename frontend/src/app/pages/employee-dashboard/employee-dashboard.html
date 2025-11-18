@@ -6,33 +6,33 @@
 
     <header class="content-grid profile-zone">
       <div class="profile-card">
-        <img src="assets/profile-placeholder.png" alt="Profil" class="profile-img" />
+        <img src="img/userProfil.png" alt="Profil" class="profile-img" />
         <div class="profile-info">
-          <h3>{{ user.name }}</h3>
-          <p>{{ user.poste || 'Poste non renseigne' }}</p>
+          <h3>{{ user.name }} </h3>
           <span class="email">{{ user.email }}</span>
+          <p>{{ user.poste || 'No information' }}</p>
         </div>
       </div>
 
       <div class="work-status">
         <p class="status-text">
-          Temps travaille aujourd'hui :
+          Time worked today :
           <span>{{ todayHoursMinutes.hours }}h {{ todayHoursMinutes.minutes }}m</span>
         </p>
-        <p class="status-subtext" *ngIf="isWorking">Session en cours depuis {{ formattedTimer }}</p>
+        <p class="status-subtext" *ngIf="isWorking">Session en cours depuis <span class="timer-text">{{ formattedTimer }}</span></p>
         <button
           class="btn btn-primary"
           (click)="toggleWorkStatus()"
           [disabled]="actionPending">
           <mat-icon>{{ isWorking ? 'pause_circle' : 'play_circle' }}</mat-icon>
-          {{ statusLabel === 'Demarrer' ? 'Demarrer' : 'Mettre en pause' }}
+          {{ statusLabel === 'Demarrer' ? 'Start' : 'Pause' }}
         </button>
       </div>
     </header>
 
     <section class="content-grid metrics-zone">
       <div class="card large">
-        <h3>Vue hebdomadaire</h3>
+        <h3>Global view</h3>
         <mat-card class="chart-card">
           <div class="chart-container" *ngIf="!loadingStats; else loading">
             <canvas
@@ -42,7 +42,7 @@
               chartType="pie"></canvas>
           </div>
           <ng-template #loading>
-            <div class="loading">Chargement des statistiques...</div>
+            <div class="loading">Loading your statistic...</div>
           </ng-template>
         </mat-card>
       </div>
@@ -51,11 +51,15 @@
         <h3>Actions rapides</h3>
         <button mat-raised-button color="primary" (click)="goToPlanning()">
           <mat-icon>calendar_month</mat-icon>
-          Consulter mon planning
+            View my schedule
         </button>
-        <button mat-stroked-button color="accent" (click)="logout()">
-          <mat-icon>logout</mat-icon>
-          Deconnexion
+        <button mat-raised-button color="primary" (click)="goToPlanning()">
+          <mat-icon>groups</mat-icon>
+            View my Teams
+        </button>
+        <button mat-raised-button color="primary" (click)="goToPlanning()">
+          <mat-icon>calendar_month</mat-icon>
+            View time logs
         </button>
       </div>
     </section>

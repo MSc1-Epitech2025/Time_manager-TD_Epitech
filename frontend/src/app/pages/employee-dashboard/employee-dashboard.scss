@@ -103,6 +103,8 @@ $shadow: 0 6px 18px rgba(16, 24, 40, 0.08);
   flex-direction: column;
   padding: 1.5rem 2rem;
   overflow: hidden;
+  background-color: rgb(28, 26, 26);
+  height: 100vh;
 }
 
 /* === HEADER === */
@@ -177,6 +179,7 @@ $shadow: 0 6px 18px rgba(16, 24, 40, 0.08);
   align-items: center;
   gap: 0.8rem;
   text-align: center;
+  position: relative;
 
   .status-text {
     color: var(--c-text);
@@ -185,6 +188,22 @@ $shadow: 0 6px 18px rgba(16, 24, 40, 0.08);
       color: #22c55e;
       font-weight: 700;
     }
+  }
+  .status-subtext{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 4px;
+    border-radius: 10px;
+    background-color:rgb(81, 35, 69);
+    color: white;
+    position: absolute;
+    top: -40px;
+  }
+  .timer-text{
+    font-weight: 800;
+    font-size:large;
+    color: var(--c-primary);
   }
 
   .status-buttons {
@@ -208,6 +227,23 @@ $shadow: 0 6px 18px rgba(16, 24, 40, 0.08);
         }
       }
     }
+  }
+}
+.btn-primary{
+   background: var(--c-primary);
+    border: none;
+    border-radius: $radius;
+    padding: 0.9rem 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: #fff;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+
+  &:hover {
+      background: #a78bfa;
   }
 }
 

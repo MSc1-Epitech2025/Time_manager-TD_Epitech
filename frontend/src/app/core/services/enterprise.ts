@@ -1,97 +1,173 @@
-// src/app/core/manager.service.ts
+// frontend/src/app/core/services/enterprise.ts
 import { Injectable } from '@angular/core';
-import { AuthService } from './auth';
+import { HttpClient } from '@angular/common/http';
+import { Observable, map } from 'rxjs';
+
+const GRAPHQL_ENDPOINT = 'http://localhost:8030/graphql';
+
+// Interfaces
+export interface User {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string[];
+  poste?: string;
+  avatarUrl?: string;
+}
+
+export interface Clock {
+  id: number;
+  userId: string;
+  kind: 'IN' | 'OUT';
+  at: string;
+}
+
+export interface Absence {
+  id: number;
+  userId: string;
+  startDate: string;
+  endDate: string;
+  type: string;
+  status: string;
+}
+
+export interface LeaveAccount {
+  id: number;
+  userId: string;
+  leaveType: string;
+  openingBalance: number;
+  accrualPerMonth: number;
+}
 
 @Injectable({ providedIn: 'root' })
 export class EnterpriseService {
-  private graphqlUrl = 'http://localhost:8030/graphql';
+  constructor(private http: HttpClient) {}
 
-  constructor(private auth: AuthService) {}
-
-  private async graphqlRequest(query: string) {
-    // On ne fait plus appel à ensureValidAccessToken()
-    // car le système d'auth utilise maintenant les cookies (credentials: 'include')
-    const response = await fetch(this.graphqlUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include', // 🔥 Très important
-      body: JSON.stringify({ query }),
-    });
-
-    if (!response.ok) throw new Error('Erreur lors de la requête GraphQL');
-    const result = await response.json();
-    if (result.errors) throw new Error(result.errors[0].message);
-    return result.data;
-  }
-
-  async getManagerInfo() {
+  // -------------------- UTILISATEURS --------------------
+  getUsers(): Observable<User[]> {
     const query = `
       query {
-        managerProfile {
+        users {
           id
-          name
+          firstName
+          lastName
           email
-          department
-          teams {
+          role
+          poste
+          avatarUrl
+        }
+      }
+    `;
+    return this.http.post<any>(GRAPHQL_ENDPOINT, { query })
+      .pipe(map(res => res.data?.users || []));
+  }
+
+  // -------------------- HORAIRES (Clocks) --------------------
+  getClocks(userId?: string): Observable<Clock[]> {
+    const variables: any = {};
+    let query = '';
+
+    if (userId) {
+      query = `
+        query getUserClocks($userId: ID!) {
+          clocks(userId: $userId) {
             id
-            name
+            userId
+            kind
+            at
           }
         }
-      }
-    `;
-    const data = await this.graphqlRequest(query);
-    return data.managerProfile;
+      `;
+      variables.userId = userId;
+    } else {
+      query = `
+        query {
+          clocks {
+            id
+            userId
+            kind
+            at
+          }
+        }
+      `;
+    }
+
+    return this.http.post<any>(GRAPHQL_ENDPOINT, { query, variables })
+      .pipe(map(res => res.data?.clocks || []));
   }
 
-  async updateManagerInfo(input: { name?: string; email?: string; department?: string }) {
-    const query = `
-      mutation {
-        updateManager(input: { 
-          name: "${input.name ?? ''}", 
-          email: "${input.email ?? ''}", 
-          department: "${input.department ?? ''}" 
-        }) {
-          id
-          name
-          email
-          department
+  // -------------------- ABSENCES --------------------
+  getAbsences(userId?: string): Observable<Absence[]> {
+    const variables: any = {};
+    let query = '';
+
+    if (userId) {
+      query = `
+        query getUserAbsences($userId: ID!) {
+          absences(userId: $userId) {
+            id
+            userId
+            startDate
+            endDate
+            type
+            status
+          }
         }
-      }
-    `;
-    const data = await this.graphqlRequest(query);
-    return data.updateManager;
+      `;
+      variables.userId = userId;
+    } else {
+      query = `
+        query {
+          absences {
+            id
+            userId
+            startDate
+            endDate
+            type
+            status
+          }
+        }
+      `;
+    }
+
+    return this.http.post<any>(GRAPHQL_ENDPOINT, { query, variables })
+      .pipe(map(res => res.data?.absences || []));
   }
 
-  async getEmployees() {
-    const query = `
-      query {
-        managerEmployees {
-          id
-          name
-          email
-          position
-        }
-      }
-    `;
-    const data = await this.graphqlRequest(query);
-    return data.managerEmployees;
-  }
+  // -------------------- COMPTE DE CONGÉS --------------------
+  getLeaveAccounts(userId?: string): Observable<LeaveAccount[]> {
+    const variables: any = {};
+    let query = '';
 
-  async addEmployee(input: { name: string; email: string; position: string }) {
-    const query = `
-      mutation {
-        addEmployee(input: { 
-          name: "${input.name}", 
-          email: "${input.email}", 
-          position: "${input.position}" 
-        }) {
-          id
-          name
-          email
+    if (userId) {
+      query = `
+        query getUserLeaveAccounts($userId: ID!) {
+          leaveAccounts(userId: $userId) {
+            id
+            userId
+            leaveType
+            openingBalance
+            accrualPerMonth
+          }
         }
-      }
-    `;
-    const data = await this.graphqlRequest(query);
-    return data.addEmployee;
+      `;
+      variables.userId = userId;
+    } else {
+      query = `
+        query {
+          leaveAccounts {
+            id
+            userId
+            leaveType
+            openingBalance
+            accrualPerMonth
+          }
+        }
+      `;
+    }
+
+    return this.http.post<any>(GRAPHQL_ENDPOINT, { query, variables })
+      .pipe(map(res => res.data?.leaveAccounts || []));
   }
 }
