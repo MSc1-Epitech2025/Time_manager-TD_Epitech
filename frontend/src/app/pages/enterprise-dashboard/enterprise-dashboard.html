@@ -1,5 +1,6 @@
 <div class="dashboard-container">
 
+
   <!-- HEADER -->
   <header class="dashboard-header">
     <div class="header-left">
@@ -7,9 +8,11 @@
     </div>
   </header>
 
-  <!-- SUMMARY KPIs -->
+  <!-- KPIs SYNTHÉTIQUES -->
   <section class="dashboard-summary">
-    <div class="summary-card positive" (click)="selectKpi('attendance')" [class.active]="selectedKpi === 'attendance'">
+    <div class="summary-card positive"
+         (click)="selectKpi('attendance')"
+         [class.active]="selectedKpi === 'attendance'">
       <div class="card-icon">💼</div>
       <div class="card-info">
         <div class="stats-row">
@@ -19,8 +22,9 @@
       </div>
     </div>
 
-    <div class="summary-card negative" (click)="selectKpi('absenteeism')"
-      [class.active]="selectedKpi === 'absenteeism'">
+    <div class="summary-card negative"
+         (click)="selectKpi('absenteeism')"
+         [class.active]="selectedKpi === 'absenteeism'">
       <div class="card-icon icon-mixed">
         <mat-icon>person</mat-icon>
         <mat-icon class="not">do_not_disturb</mat-icon>
@@ -33,8 +37,9 @@
       </div>
     </div>
 
-    <div class="summary-card positive" (click)="selectKpi('productivity')"
-      [class.active]="selectedKpi === 'productivity'">
+    <div class="summary-card positive"
+         (click)="selectKpi('productivity')"
+         [class.active]="selectedKpi === 'productivity'">
       <div class="card-icon">⚙️</div>
       <div class="card-info">
         <div class="stats-row">
@@ -49,15 +54,21 @@
   <section class="dashboard-board">
     <div class="navigation-tabs">
       <div class="left-nav">
-        <button class="nav-btn" [class.active]="selectedKpi === 'absenteeism'" (click)="selectKpi('absenteeism')">
+        <button class="nav-btn"
+                [class.active]="selectedKpi === 'absenteeism'"
+                (click)="selectKpi('absenteeism')">
           Absenteeism
         </button>
 
-        <button class="nav-btn" [class.active]="selectedKpi === 'attendance'" (click)="selectKpi('attendance')">
+        <button class="nav-btn"
+                [class.active]="selectedKpi === 'attendance'"
+                (click)="selectKpi('attendance')">
           Attendance
         </button>
 
-        <button class="nav-btn" [class.active]="selectedKpi === 'productivity'" (click)="selectKpi('productivity')">
+        <button class="nav-btn"
+                [class.active]="selectedKpi === 'productivity'"
+                (click)="selectKpi('productivity')">
           Productivity
         </button>
       </div>
@@ -78,8 +89,9 @@
 
       <!-- CAMEMBERT KPI -->
       <div class="kpi-camenbert">
-        <app-kpi-assiduite [data]="pieChartData.datasets[0].data" [selectedKpi]="selectedKpi"
-          [labels]="pieChartData.labels">
+        <app-kpi-assiduite
+          [data]="pieChartData.datasets[0].data"
+          [selectedKpi]="selectedKpi">
         </app-kpi-assiduite>
       </div>
 
@@ -87,101 +99,133 @@
 
         <!-- =================== PODIUM ABSENCES =================== -->
         <div class="podium-card">
+  <h4>Top {{selectedKpi}} 🏆</h4>
 
-          <div class="podium-header">
-            <h4>
-              {{
-              selectedKpi === 'absenteeism'
-              ? 'Absenteeism percent'
-              : selectedKpi === 'attendance'
-              ? 'Attendance percent'
-              : 'Productivity percent'
-              }}
-            </h4>
+  <ng-container [ngSwitch]="selectedKpi">
 
+    <!-- Absences -->
+    <ng-container *ngSwitchCase="'absenteeism'">
+      <ng-container *ngIf="topAbsences.length > 0; else noData">
+        <div class="podium-wrapper">
+
+          <div class="podium-step second" *ngIf="topAbsences[1]">
+            <div class="step-value">{{ topAbsences[1].count }}</div>
+            <div class="step-name">{{ topAbsences[1].name }}</div>
+            <div class="step-rank">2</div>
           </div>
 
-          <ng-container [ngSwitch]="selectedKpi">
+          <div class="podium-step first" *ngIf="topAbsences[0]">
+            <div class="step-value">{{ topAbsences[0].count }}</div>
+            <div class="step-name">{{ topAbsences[0].name }}</div>
+            <div class="step-rank">1</div>
+          </div>
 
-            <!-- Absenteeism List -->
-            <ng-container *ngIf="selectedKpi === 'absenteeism'">
-              <div *ngIf="topAbsences.length > 0; else noData">
-                <div class="kpi-list">
-                  <div class="kpi-item" *ngFor="let item of topAbsences">
-                    <span class="item-name">{{ item.name }}</span>
-                    <span class="item-value">{{ item.count }}</span>
-                  </div>
-                </div>
-              </div>
-            </ng-container>
+          <div class="podium-step third" *ngIf="topAbsences[2]">
+            <div class="step-value">{{ topAbsences[2].count }}</div>
+            <div class="step-name">{{ topAbsences[2].name }}</div>
+            <div class="step-rank">3</div>
+          </div>
 
-
-            <!-- Attendance List -->
-            <ng-container *ngIf="selectedKpi === 'attendance'">
-              <div *ngIf="topAttendance.length > 0; else noData">
-                <div class="kpi-list">
-                  <div class="kpi-item" *ngFor="let item of topAttendance">
-                    <span class="item-name">{{ item.name }}</span>
-                    <span class="item-value">{{ item.count }}</span>
-                  </div>
-                </div>
-              </div>
-            </ng-container>
-
-            <!-- Productivity List -->
-            <ng-container *ngIf="selectedKpi === 'productivity'">
-              <div *ngIf="topProductivity.length > 0; else noData">
-                <div class="kpi-list">
-                  <div class="kpi-item" *ngFor="let item of topProductivity">
-                    <span class="item-name">{{ item.name }}</span>
-                    <span class="item-value">{{ item.percent | number:'1.0-2' }} %</span>
-                  </div>
-                </div>
-              </div>
-            </ng-container>
-
-            <!-- Default / no data -->
-            <ng-template #noData>
-              <p class="none">No data</p>
-            </ng-template>
-
-          </ng-container>
         </div>
+      </ng-container>
+    </ng-container>
+
+    <!-- Attendance -->
+    <ng-container *ngSwitchCase="'attendance'">
+      <ng-container *ngIf="topAttendance.length > 0; else noData">
+        <div class="podium-wrapper">
+
+          <div class="podium-step second" *ngIf="topAttendance[1]">
+            <div class="step-value">{{ topAttendance[1].count }}</div>
+            <div class="step-name">{{ topAttendance[1].name }}</div>
+            <div class="step-rank">2</div>
+          </div>
+
+          <div class="podium-step first" *ngIf="topAttendance[0]">
+            <div class="step-value">{{ topAttendance[0].count }}</div>
+            <div class="step-name">{{ topAttendance[0].name }}</div>
+            <div class="step-rank">1</div>
+          </div>
+
+          <div class="podium-step third" *ngIf="topAttendance[2]">
+            <div class="step-value">{{ topAttendance[2].count }}</div>
+            <div class="step-name">{{ topAttendance[2].name }}</div>
+            <div class="step-rank">3</div>
+          </div>
+
+        </div>
+      </ng-container>
+    </ng-container>
+
+    <!-- Productivity -->
+    <ng-container *ngSwitchCase="'productivity'">
+      <ng-container *ngIf="topProductivity.length > 0; else noData">
+        <div class="podium-wrapper">
+
+          <div class="podium-step second" *ngIf="topProductivity[1]">
+            <div class="step-value">{{ topProductivity[1].hours | number:'1.0-2' }}</div>
+            <div class="step-name">{{ topProductivity[1].name }}</div>
+            <div class="step-rank">2</div>
+          </div>
+
+          <div class="podium-step first" *ngIf="topProductivity[0]">
+            <div class="step-value">{{ topProductivity[0].hours | number:'1.0-2' }}</div>
+            <div class="step-name">{{ topProductivity[0].name }}</div>
+            <div class="step-rank">1</div>
+          </div>
+
+          <div class="podium-step third" *ngIf="topProductivity[2]">
+            <div class="step-value">{{ topProductivity[2].hours | number:'1.0-2' }}</div>
+            <div class="step-name">{{ topProductivity[2].name }}</div>
+            <div class="step-rank">3</div>
+          </div>
+
+        </div>
+      </ng-container>
+    </ng-container>
+
+    <!-- Default / no data -->
+    <ng-template #noData>
+      <p class="none">No data</p>
+    </ng-template>
+
+  </ng-container>
+</div>
 
         <!-- =================== PRODUCTIVITY TABLE =================== -->
         <div class="clock-card" *ngIf="selectedKpi == 'productivity'">
           <h3>Check-in times</h3>
 
           <table class="clock-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Team</th>
-                <th *ngIf="selectedPeriod === 'day'">Clock-in</th>
-                <th>Working time</th>
-              </tr>
-            </thead>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Team</th>
+      <th *ngIf="selectedPeriod === 'day'">Clock-in</th>
+      <th>Working time</th>
+    </tr>
+  </thead>
 
-            <tbody>
-              <tr *ngFor="let item of filteredUsers">
-                <td>{{ item.nom }}</td>
-                <td>{{ item.equipe }}</td>
+  <tbody>
+    <tr *ngFor="let item of filteredUsers">
+      <td>{{ item.nom }}</td>
+      <td>{{ item.equipe }}</td>
 
-                <!-- CLOCK-IN visible seulement si période = day -->
-                <td *ngIf="selectedPeriod === 'day'">
-                  <span class="clock-badge">
-                    {{ getPointage(item.id) }}
-                  </span>
-                </td>
+      <!-- CLOCK-IN visible seulement si période = day -->
+      <td *ngIf="selectedPeriod === 'day'">
+        <span class="clock-badge">
+          {{ getPointage(item.id) }}
+        </span>
+      </td>
 
-                <td>
-                  <span class="worktime-badge">
-                    {{ getTempsTravail(item.id) }}
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+      <td>
+        <span class="worktime-badge">
+          {{ getTempsTravail(item.id) }}
+        </span>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
         </div>
 
@@ -201,7 +245,7 @@
             </select>
           </div>
 
-          <div class="stats" *ngIf="selectedPeriod === 'day'">
+          <div class="stats">
             <div class="stat-item">
               <span class="value">{{ presentCount }}</span>
               <span class="label">Presents</span>
@@ -229,19 +273,13 @@
               <tr *ngFor="let user of filteredUsers">
                 <td>{{ user.nom }}</td>
                 <td>{{ user.equipe }}</td>
-                <td *ngIf="selectedPeriod === 'day'">
-                  <span class="status-badge" [class.present]="getPresence(user.id)"
-                    [class.absent]="getPresence(user.id) === false">
-                    {{ getPresence(user.id) ? 'Present' : 'Late' }}
+                <td>
+                  <span class="status-badge"
+                        [class.present]="getPresence(user.id) === true"
+                        [class.absent]="getPresence(user.id) === false">
+                    {{ getPresence(user.id) ? 'Present' : 'Absent' }}
                   </span>
                 </td>
-
-                <td *ngIf="selectedPeriod !== 'day'">
-                  <span class="status-badge">
-                    {{ getPresenceCount(user.id).present }} / {{ getPresenceCount(user.id).total }}
-                  </span>
-                </td>
-
               </tr>
             </tbody>
           </table>
@@ -253,7 +291,9 @@
     <!-- =================== COMPARATIF =================== -->
     <div class="second-row">
       <div class="kpi-comparatif">
-        <app-kpi-comparatif [comparativeData]="getComparativeMonthlyData(selectedKpi)" [selectedKpi]="selectedKpi">
+        <app-kpi-comparatif
+          [comparativeData]="getComparativeMonthlyData(selectedKpi)"
+          [selectedKpi]="selectedKpi">
         </app-kpi-comparatif>
       </div>
     </div>

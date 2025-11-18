@@ -11,7 +11,8 @@
 
 
 .kpi-card {
-  position: relative;
+  //background: linear-gradient(180deg, var(--c-card) 0%, var(--c-accent) 100%);
+    position: relative;
   background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(244, 114, 182, 0.15));
   backdrop-filter: blur(12px);
   border: 1px solid var(--c-border);
@@ -20,6 +21,7 @@
   padding: 20px 24px;
   display: flex;
   flex-direction: column;
+  //height: 420px;
   transition: all 0.3s ease;
   margin-bottom: 1px;
 }
@@ -35,12 +37,14 @@
   font-size: 1.3rem;
   font-weight: 600;
   margin-bottom: 10px;
+  //color: #111827;
   margin: 0;
 }
 
 .subtitle {
   color: #6b7280;
   font-size: 0.9rem;
+  margin-top: 4px;
   margin-top: 4px;
 }
 
@@ -54,6 +58,7 @@
 
 canvas {
   display: block;
+  //flex: 1;
   min-height: 300px;
   width: 100% !important;
   height: auto !important;

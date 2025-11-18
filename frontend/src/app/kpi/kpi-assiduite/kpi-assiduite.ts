@@ -1,5 +1,5 @@
 import { Component, AfterViewInit, ViewChild, ElementRef, Input, OnChanges, SimpleChanges } from '@angular/core';
-import { Chart, registerables ,ChartConfiguration } from 'chart.js';
+import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
 
 @Component({
@@ -11,13 +11,12 @@ export class KpiAssiduiteComponent implements AfterViewInit, OnChanges {
 
   @ViewChild('assiduiteChart', { static: false }) chartRef!: ElementRef<HTMLCanvasElement>;
 
-  @Input() data!: number[];           
-  @Input() labels: string[] = [];      
+  @Input() data!: number[];       // [valeur1, valeur2, valeur3?]
   @Input() selectedKpi!: 'absenteeism' | 'attendance' | 'productivity';
 
   chart?: Chart;
   title = '';
-
+  
   ngAfterViewInit() {
     this.updateTitle();
     this.renderChart();
@@ -25,46 +24,44 @@ export class KpiAssiduiteComponent implements AfterViewInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['selectedKpi']) this.updateTitle();
-    if (this.chart) this.updateChart();
+    if ((changes['data'] || changes['selectedKpi']) && this.chart) this.updateChart();
   }
 
   updateTitle() {
     switch (this.selectedKpi) {
-      case 'absenteeism': this.title = 'Absences rate'; break;
+      case 'absenteeism': this.title = 'Absence rate'; break;
       case 'attendance': this.title = 'Attendance rate'; break;
       case 'productivity': this.title = 'Productivity rate'; break;
     }
   }
 
-  buildDynamicColors(count: number) {
-    const baseColors = [
-      '#A78BFA','#D946EF','#F472B6','#5D0092'
-    ];
-
-    const colors: string[] = [];
-    for (let i = 0; i < count; i++) {
-      colors.push(baseColors[i % baseColors.length]);
-    }
-    return colors;
-  }
-
+  // 🔥 Couleurs selon KPI
   getColors() {
-    if (this.selectedKpi === 'absenteeism') {
-      return this.buildDynamicColors(this.data.length);
-    }
-
     switch (this.selectedKpi) {
-      case 'attendance': return ['#22c55e', '#ef4444'];
-      case 'productivity': return ['#3b82f6', '#9ca3af'];
+
+      case 'absenteeism':
+        return ['#f88bfaff','#85007eff']; 
+      case 'attendance':
+        return ['#22c55e', '#f59e0b', '#ef4444']; 
+
+      case 'productivity':
+        return ['#3b82f6', '#9ca3af'];
     }
-    return [];
   }
 
+  // 🔥 Labels selon KPI
   getLabels() {
-    if (this.selectedKpi === 'absenteeism') return this.labels ?? [];
-    if (this.selectedKpi === 'attendance') return ['Presence','Absence'];
-    if (this.selectedKpi === 'productivity') return ['Productivity','Non-Productivity'];
-    return [];
+    switch (this.selectedKpi) {
+
+      case 'absenteeism':
+        return ['Présence', 'Absence'];
+
+      case 'attendance':
+        return ['Presence', 'Delay' ,'Absence'];
+
+      case 'productivity':
+        return ['Productivity', 'Non-Productivity'];
+    }
   }
 
   updateChart() {
@@ -78,49 +75,17 @@ export class KpiAssiduiteComponent implements AfterViewInit, OnChanges {
   }
 
   renderChart() {
+    if (!this.kpi || !this.chartRef?.nativeElement) return;
+
     const ctx = this.chartRef.nativeElement.getContext('2d');
     if (!ctx) return;
 
-    const centerTextPlugin = {
-      id: 'centerText',
-      afterDraw: (chart: any) => {
-        const { ctx, chartArea } = chart;
-        const x = (chartArea.left + chartArea.right) / 2;
-        const y = (chartArea.top + chartArea.bottom) / 2;
+    const taux = this.kpi.tauxAssiduite;
 
-        ctx.save();
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#ffffff';
+    // Détruit le graphique existant avant de recréer
+    if (this.chart) this.chart.destroy();
 
-        const allZero = !this.data || this.data.every(v => v === 0);
-
-        if (allZero) {
-          ctx.font = `bold 28px Inter`;
-  
-          ctx.strokeStyle = 'black';
-          ctx.lineWidth = 3;
-          ctx.font = `bold 40px Inter`;
-          ctx.fillText('No data', x, y);
-          ctx.restore();
-          return;
-        }
-        else if (this.selectedKpi !== 'absenteeism') {
-
-          const mainValue = this.data[0];
-          ctx.font = `bold 28px Inter`;
-  
-          ctx.strokeStyle = 'black';
-          ctx.lineWidth = 3;
-  
-          ctx.strokeText(mainValue + '%', x, y);
-          ctx.fillText(mainValue + '%', x, y);
-          ctx.restore();
-        }
-      }
-    };
-
-    const config: ChartConfiguration<'doughnut', number[], string> = {
+    this.chart = new Chart(ctx, {
       type: 'doughnut',
       data: {
         labels: this.getLabels(),
@@ -139,21 +104,12 @@ export class KpiAssiduiteComponent implements AfterViewInit, OnChanges {
         plugins: {
           legend: {
             display: true,
-            position: 'bottom',
-            labels: { color: 'white' }
+            text: `Taux d’assiduité ${taux.toFixed(1)}%`,
+            color: '#333',
+            font: { size: 18, weight: 'bold' }
           }
-        },
-        layout: {
-  padding: {
-    top: 30,
-    bottom: 10,
-    left: 10,
-    right: 10
-  }
-}
-
-      },
-      plugins: [centerTextPlugin]
-    };
+        }
+      }
+    });
   }
 }
