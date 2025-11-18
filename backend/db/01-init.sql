@@ -51,7 +51,7 @@ CREATE TABLE reports (
     FOREIGN KEY (target_user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE work_schedules (=
+CREATE TABLE work_schedules (
                                 id INT PRIMARY KEY AUTO_INCREMENT,
                                 user_id CHAR(36) NOT NULL,
                                 day_of_week ENUM('MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN') NOT NULL,
@@ -119,4 +119,4 @@ CREATE TABLE leave_ledger (
   INDEX idx_ledger_account_date (account_id, entry_date),
   FOREIGN KEY (account_id) REFERENCES leave_accounts(id) ON DELETE CASCADE,
   FOREIGN KEY (reference_absence_id) REFERENCES absence(id) ON DELETE SET NULL
-) ;
+);
