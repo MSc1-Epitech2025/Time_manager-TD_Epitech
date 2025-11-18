@@ -1,4 +1,5 @@
 <div class="dashboard-container">
+
   <!-- HEADER -->
   <header class="dashboard-header">
     <div class="header-left">
@@ -6,45 +7,295 @@
     </div>
   </header>
 
-  <!-- Section export -->
-  <section class="dashboard-export">
-    <button (click)="exportData()" class="export-btn">📊 Export Report</button>
-  </section>
-
-  <!-- GRAPH GLOBAL -->
-  <section class="kpi-global">
-    <h2>Global Productivity Evolution</h2>
-  </section>
-
   <!-- SUMMARY KPIs -->
   <section class="dashboard-summary">
-    <div class="summary-card">
-      <div class="icon positive">💼</div>
-      <h3>Attendance Rate</h3>
-      <p class="value">96%</p>
-      <small class="trend positive">+2.1% vs last month</small>
+    <div class="summary-card positive"
+         (click)="selectKpi('attendance')"
+         [class.active]="selectedKpi === 'attendance'">
+      <div class="card-icon">💼</div>
+      <div class="card-info">
+        <div class="stats-row">
+          <span class="value">{{ attendanceStats?.present || 0 }}</span>
+        </div>
+        <h3>Attendance</h3>
+      </div>
     </div>
-    <div class="summary-card">
-      <div class="icon negative">🚫</div>
-      <h3>Absenteeism Rate</h3>
-      <p class="value">4%</p>
-      <small class="trend negative">-0.5%</small>
+
+    <div class="summary-card negative"
+         (click)="selectKpi('absenteeism')"
+         [class.active]="selectedKpi === 'absenteeism'">
+      <div class="card-icon icon-mixed">
+        <mat-icon>person</mat-icon>
+        <mat-icon class="not">do_not_disturb</mat-icon>
+      </div>
+      <div class="card-info">
+        <div class="stats-row">
+          <span class="value">{{ absenteeismStats?.totalAbsences || 0 }}</span>
+        </div>
+        <h3>Absenteeism</h3>
+      </div>
     </div>
-    <div class="summary-card">
-      <div class="icon positive">⚙️</div>
-      <h3>Hourly Productivity</h3>
-      <p class="value">7.8 h/jour</p>
-      <small class="trend positive">+0.3 h</small>
+
+    <div class="summary-card positive"
+         (click)="selectKpi('productivity')"
+         [class.active]="selectedKpi === 'productivity'">
+      <div class="card-icon">⚙️</div>
+      <div class="card-info">
+        <div class="stats-row">
+          <span class="value">{{ productivityStats?.averageHours || 0 }} h</span>
+        </div>
+        <h3>Productivity</h3>
+      </div>
     </div>
   </section>
 
-  <!-- DETAILED KPIs -->
-  <section class="dashboard-grid">
-    <app-kpi-assiduite class="dashboard-card"></app-kpi-assiduite>
-    <app-kpi-absenteisme class="dashboard-card"></app-kpi-absenteisme>
-    <app-kpi-productivite class="dashboard-card"></app-kpi-productivite>
-    <app-kpi-comparatif class="dashboard-card"></app-kpi-comparatif>
-    <app-kpi-conges class="dashboard-card"></app-kpi-conges>
-    <app-kpi-alertes class="dashboard-card"></app-kpi-alertes>
+  <!-- KPIs DÉTAILLÉS -->
+  <section class="dashboard-board">
+    <div class="navigation-tabs">
+      <div class="left-nav">
+        <button class="nav-btn"
+                [class.active]="selectedKpi === 'absenteeism'"
+                (click)="selectKpi('absenteeism')">
+          Absenteeism
+        </button>
+
+        <button class="nav-btn"
+                [class.active]="selectedKpi === 'attendance'"
+                (click)="selectKpi('attendance')">
+          Attendance
+        </button>
+
+        <button class="nav-btn"
+                [class.active]="selectedKpi === 'productivity'"
+                (click)="selectKpi('productivity')">
+          Productivity
+        </button>
+      </div>
+
+      <div class="right-nav">
+        <div class="filter-container date-filter">
+          <label for="dateFilter">Filter by :</label>
+          <select id="dateFilter" [(ngModel)]="selectedPeriod">
+            <option value="day">Day</option>
+            <option value="week">Week</option>
+            <option value="month">Month</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="first-row">
+
+      <!-- CAMEMBERT KPI -->
+      <div class="kpi-camenbert">
+        <app-kpi-assiduite
+          [data]="pieChartData.datasets[0].data"
+          [selectedKpi]="selectedKpi">
+        </app-kpi-assiduite>
+      </div>
+
+      <div class="second-element">
+
+        <!-- =================== PODIUM ABSENCES =================== -->
+        <div class="podium-card">
+  <h4>Top {{selectedKpi}} 🏆</h4>
+
+  <ng-container [ngSwitch]="selectedKpi">
+
+    <!-- Absences -->
+    <ng-container *ngSwitchCase="'absenteeism'">
+      <ng-container *ngIf="topAbsences.length > 0; else noData">
+        <div class="podium-wrapper">
+
+          <div class="podium-step second" *ngIf="topAbsences[1]">
+            <div class="step-value">{{ topAbsences[1].count }}</div>
+            <div class="step-name">{{ topAbsences[1].name }}</div>
+            <div class="step-rank">2</div>
+          </div>
+
+          <div class="podium-step first" *ngIf="topAbsences[0]">
+            <div class="step-value">{{ topAbsences[0].count }}</div>
+            <div class="step-name">{{ topAbsences[0].name }}</div>
+            <div class="step-rank">1</div>
+          </div>
+
+          <div class="podium-step third" *ngIf="topAbsences[2]">
+            <div class="step-value">{{ topAbsences[2].count }}</div>
+            <div class="step-name">{{ topAbsences[2].name }}</div>
+            <div class="step-rank">3</div>
+          </div>
+
+        </div>
+      </ng-container>
+    </ng-container>
+
+    <!-- Attendance -->
+    <ng-container *ngSwitchCase="'attendance'">
+      <ng-container *ngIf="topAttendance.length > 0; else noData">
+        <div class="podium-wrapper">
+
+          <div class="podium-step second" *ngIf="topAttendance[1]">
+            <div class="step-value">{{ topAttendance[1].count }}</div>
+            <div class="step-name">{{ topAttendance[1].name }}</div>
+            <div class="step-rank">2</div>
+          </div>
+
+          <div class="podium-step first" *ngIf="topAttendance[0]">
+            <div class="step-value">{{ topAttendance[0].count }}</div>
+            <div class="step-name">{{ topAttendance[0].name }}</div>
+            <div class="step-rank">1</div>
+          </div>
+
+          <div class="podium-step third" *ngIf="topAttendance[2]">
+            <div class="step-value">{{ topAttendance[2].count }}</div>
+            <div class="step-name">{{ topAttendance[2].name }}</div>
+            <div class="step-rank">3</div>
+          </div>
+
+        </div>
+      </ng-container>
+    </ng-container>
+
+    <!-- Productivity -->
+    <ng-container *ngSwitchCase="'productivity'">
+      <ng-container *ngIf="topProductivity.length > 0; else noData">
+        <div class="podium-wrapper">
+
+          <div class="podium-step second" *ngIf="topProductivity[1]">
+            <div class="step-value">{{ topProductivity[1].hours | number:'1.0-2' }}</div>
+            <div class="step-name">{{ topProductivity[1].name }}</div>
+            <div class="step-rank">2</div>
+          </div>
+
+          <div class="podium-step first" *ngIf="topProductivity[0]">
+            <div class="step-value">{{ topProductivity[0].hours | number:'1.0-2' }}</div>
+            <div class="step-name">{{ topProductivity[0].name }}</div>
+            <div class="step-rank">1</div>
+          </div>
+
+          <div class="podium-step third" *ngIf="topProductivity[2]">
+            <div class="step-value">{{ topProductivity[2].hours | number:'1.0-2' }}</div>
+            <div class="step-name">{{ topProductivity[2].name }}</div>
+            <div class="step-rank">3</div>
+          </div>
+
+        </div>
+      </ng-container>
+    </ng-container>
+
+    <!-- Default / no data -->
+    <ng-template #noData>
+      <p class="none">No data</p>
+    </ng-template>
+
+  </ng-container>
+</div>
+
+        <!-- =================== PRODUCTIVITY TABLE =================== -->
+        <div class="clock-card" *ngIf="selectedKpi == 'productivity'">
+          <h3>Check-in times</h3>
+
+          <table class="clock-table">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Team</th>
+      <th *ngIf="selectedPeriod === 'day'">Clock-in</th>
+      <th>Working time</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr *ngFor="let item of filteredUsers">
+      <td>{{ item.nom }}</td>
+      <td>{{ item.equipe }}</td>
+
+      <!-- CLOCK-IN visible seulement si période = day -->
+      <td *ngIf="selectedPeriod === 'day'">
+        <span class="clock-badge">
+          {{ getPointage(item.id) }}
+        </span>
+      </td>
+
+      <td>
+        <span class="worktime-badge">
+          {{ getTempsTravail(item.id) }}
+        </span>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+        </div>
+
+        <!-- =================== ATTENDANCE / ABSENTEEISM LIST =================== -->
+        <div class="presence-card" *ngIf="selectedKpi !== 'productivity'">
+          <div class="presence-header">
+            <h3>Team presence</h3>
+          </div>
+
+          <div class="filter-container">
+            <label for="teamFilter">Filter by team : </label>
+            <select id="teamFilter" [(ngModel)]="selectedTeam">
+              <option value="">All teams</option>
+              <option *ngFor="let team of teams" [value]="team">
+                {{ team }}
+              </option>
+            </select>
+          </div>
+
+          <div class="stats">
+            <div class="stat-item">
+              <span class="value">{{ presentCount }}</span>
+              <span class="label">Presents</span>
+            </div>
+            <div class="stat-item">
+              <span class="value red">{{ absentCount }}</span>
+              <span class="label">Absents</span>
+            </div>
+            <div class="stat-item">
+              <span class="value">{{ filteredUsers.length }}</span>
+              <span class="label">Total</span>
+            </div>
+          </div>
+
+          <table class="presence-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Team</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr *ngFor="let user of filteredUsers">
+                <td>{{ user.nom }}</td>
+                <td>{{ user.equipe }}</td>
+                <td>
+                  <span class="status-badge"
+                        [class.present]="getPresence(user.id) === true"
+                        [class.absent]="getPresence(user.id) === false">
+                    {{ getPresence(user.id) ? 'Present' : 'Absent' }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- =================== COMPARATIF =================== -->
+    <div class="second-row">
+      <div class="kpi-comparatif">
+        <app-kpi-comparatif
+          [comparativeData]="getComparativeMonthlyData(selectedKpi)"
+          [selectedKpi]="selectedKpi">
+        </app-kpi-comparatif>
+      </div>
+    </div>
+
   </section>
 </div>
