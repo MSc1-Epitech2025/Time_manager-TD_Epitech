@@ -15,7 +15,7 @@ import { Router } from '@angular/router';
 //Service (gardés mais non utilisés pour le mode fake)
 import { ManagerService } from '../../core/services/manager';
 import { AuthService } from '../../core/services/auth';
-import { EnterpriseService, User } from '../../core/services/enterprise';
+import { EnterpriseService } from '../../core/services/enterprise';
 import { ReportService } from '../../core/services/report';
 //Services
 import { KpiService } from '../../core/services/kpi';
@@ -104,7 +104,7 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
   // ---------- Fake data local ----------
   users: Utilisateur[] = users;
   // backend users (non utilisés en fake mode)
-  user: User[] = [];
+  //user: User[] = [];
   loading = false;
 
   // KPI selection
@@ -329,11 +329,21 @@ private normalizeTime(t: string | undefined): string {
   // ------------------------------------------------------------------
 
   ngOnInit(): void {
+    /*
+    // Test d'appel service enterprise
+     this.enterpriseService.getCompanySummary().subscribe(data => {
+    console.log("Company Summary (TEST) :", data);
+  });
+
+  this.enterpriseService.getAllEmployees().subscribe(users => {
+    console.log("All Employees (TEST) :", users);
+  });
+    */
     // calcul initial
     this.updateFilteredByPeriod();
     this.updateFilteredUsers();
     this.loadKpiData();
-    console.log('test', this.user);
+    //console.log('test', this.user);
 
     // init chart example (inchangé)
     const ctx = document.getElementById('globalChart') as HTMLCanvasElement | null;
