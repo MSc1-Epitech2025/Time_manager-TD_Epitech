@@ -1,0 +1,46 @@
+type KpiUser {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  email: String!
+  poste: String
+  team: String
+}
+
+type KpiClock {
+  id: ID!
+  userId: ID!
+  kind: String!
+  at: String!
+}
+
+type KpiAbsenceDay {
+  absenceDate: String!
+  period: String!
+}
+
+type KpiAbsence {
+  id: ID!
+  userId: ID!
+  startDate: String
+  endDate: String
+  status: String!
+  type: String!
+  days: [KpiAbsenceDay!]
+}
+
+type KpiSchedule {
+  userId: ID!
+  date: String!
+}
+
+type KpiFullData {
+  users: [KpiUser!]!
+  clocks: [KpiClock!]!
+  absences: [KpiAbsence!]!
+  schedules: [KpiSchedule!]!
+}
+
+extend type Query {
+  kpiFullData: KpiFullData!
+}
