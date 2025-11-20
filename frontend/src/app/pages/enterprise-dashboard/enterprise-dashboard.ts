@@ -17,6 +17,7 @@ import { ManagerService } from '../../core/services/manager';
 import { AuthService } from '../../core/services/auth';
 import { EnterpriseService } from '../../core/services/enterprise';
 import { ReportService } from '../../core/services/report';
+import { KpiService } from '../../core/services/kpi';
 
 // Kpi Components
 import { KpiAssiduiteComponent } from '../../kpi/kpi-assiduite/kpi-assiduite';
@@ -164,7 +165,8 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
     private auth: AuthService,
     private managerService: ManagerService,
     private reportService: ReportService,
-    private enterpriseService: EnterpriseService // injected but unused in fake mode
+    private enterpriseService: EnterpriseService, // injected but unused in fake mode
+    private kpiService: KpiService
   ) { }
 
   // ------------------ Méthodes utilitaires ajoutées ------------------
@@ -232,6 +234,8 @@ private normalizeTime(t: string | undefined): string {
   }
   // ------------------------------------------------------------------
 
+
+
   ngOnInit(): void {
     /*
     // Test d'appel service enterprise
@@ -243,11 +247,19 @@ private normalizeTime(t: string | undefined): string {
     console.log("All Employees (TEST) :", users);
   });
     */
-    // calcul initial
-    this.updateFilteredByPeriod();
+  this.kpiService.loadFullData().subscribe(data => {
+    console.log('KPI back data', data);
+
+    // transformer les données ici
+    // créer une structure "users" compatible avec ta fake data actuelle
+    this.users = data;
+    console.log('Transformed users:', this.users);
+    //this.users = this.transformToLocalUsers(data);
     this.updateFilteredUsers();
+    this.updateFilteredByPeriod();
     this.loadKpiData();
-    //console.log('test', this.user);
+  });
+
 
     // init chart example (inchangé)
     const ctx = document.getElementById('globalChart') as HTMLCanvasElement | null;
