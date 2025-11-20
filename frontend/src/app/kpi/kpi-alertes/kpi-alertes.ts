@@ -1,6 +1,6 @@
 // kpi-alertes.component.ts
 import { Component, OnInit } from '@angular/core';
-import { KpiService, KpiAlerte } from '../../core/services/kpi';
+import { KpiService } from '../../core/services/kpi'; // KpiAlerte
 import { CommonModule } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
 
@@ -24,7 +24,8 @@ import { MatTabsModule } from '@angular/material/tabs';
   `]
 })
 export class KpiAlertesComponent implements OnInit {
-  alertes: KpiAlerte[] = [];
+  //alertes: KpiAlerte[] = []; 
   constructor(private kpiService: KpiService) {}
-  ngOnInit() { this.kpiService.getAlertes().subscribe(a => this.alertes = a); }
+  ngOnInit() { //this.kpiService.getAlertes().subscribe(a => this.alertes = a); 
+    }
 }
