@@ -19,7 +19,7 @@ export interface PresenceDuJour {
   tempsTravail: string;
 }
 
-export interface Utilisateur {
+export interface KpiAbsence {
   id: string;
   nom: string;
   equipe: string;
@@ -28,6 +28,7 @@ export interface Utilisateur {
 
 @Injectable({ providedIn: 'root' })
 export class KpiService {
+
   constructor(private http: HttpClient) {}
 
   // ───────────────────────────────────────────────
