@@ -13,7 +13,7 @@ export class KpiProductiviteComponent implements AfterViewInit {
   constructor(private kpiService: KpiService) {}
 
   ngAfterViewInit() {
-    this.kpiService.getProductivite().subscribe(kpi => {
+   /* this.kpiService.getProductivite().subscribe(kpi => {
       const ctx = this.chartRef.nativeElement.getContext('2d');
       new Chart(ctx!, {
         type: 'line',
@@ -29,6 +29,6 @@ export class KpiProductiviteComponent implements AfterViewInit {
         },
         options: { scales: { y: { beginAtZero: true, max: 100 } } }
       });
-    });
+    });*/
   }
 }
