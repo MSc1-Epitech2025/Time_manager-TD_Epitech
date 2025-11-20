@@ -1,89 +1,61 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { map, catchError } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
 
-export interface KpiAssiduite {
-  tauxAssiduite: number;
-  joursTravailles: number;
-  joursOuvres: number;
-  periode: string;
+export interface PresenceDay {
+  date: Date;
+  presence: boolean;
+  absences: number;
+  pointage: string | null;
+  tempsTravail: string;
 }
 
-export interface KpiAbsenteisme {
-  tauxGlobal: number;
-  parEquipe: { equipe: string; taux: number }[];
-}
-
-export interface KpiProductivite {
-  periodes: string[];
-  valeurs: number[];
-}
-
-export interface KpiComparatif {
-  equipes: string[];
-  productivite: number[];
-  assiduite: number[];
-}
-
-export interface KpiConges {
-  type: string;
-  jours: number;
-}
-
-export interface KpiAlerte {
-  type: string;
-  message: string;
-  niveau: 'warning' | 'danger';
+export interface Utilisateur {
+  id: string;
+  nom: string;
+  equipe: string;
+  historique: PresenceDay[];
 }
 
 @Injectable({ providedIn: 'root' })
 export class KpiService {
-  getAssiduite(): Observable<KpiAssiduite> {
-    return of({
-      tauxAssiduite: 92.5,
-      joursTravailles: 185,
-      joursOuvres: 200,
-      periode: 'Janvier - Septembre 2025'
+  constructor(private http: HttpClient) {}
+
+  loadFullData(): Observable<Utilisateur[]> {
+    return this.http.get<any>('http://localhost:8030/kpi/fullData').pipe(
+      map((response) => this.transform(response)),
+      catchError((error) => {
+        console.error('Error loading KPI data', error);
+        return of([]);  
+      })
+    );
+  }
+  
+
+   private transform(raw: any): Utilisateur[] {
+    const users = raw.users;
+    const clocks = raw.clocks;
+    const absences = raw.absences;
+    const schedules = raw.schedules;
+
+    return users.map((u: any) => {
+      const historique = this.buildHistory(
+        clocks.filter((c: any) => c.userId === u.id),
+        absences.filter((a: any) => a.userId === u.id),
+        schedules.filter((s: any) => s.userId === u.id)
+      );
+
+      return {
+        id: u.id,
+        nom: `${u.firstName} ${u.lastName}`,
+        equipe: u.team ?? 'Aucune équipe',
+        historique
+      };
     });
   }
 
-  getAbsenteisme(): Observable<KpiAbsenteisme> {
-    return of({
-      tauxGlobal: 7.5,
-      parEquipe: [
-        { equipe: 'Development', taux: 6.2 },
-        { equipe: 'Marketing', taux: 8.5 },
-        { equipe: 'Support', taux: 9.3 }
-      ]
-    });
-  }
-
-  getProductivite(): Observable<KpiProductivite> {
-    return of({
-      periodes: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-      valeurs: [85, 88, 90, 84, 92, 95]
-    });
-  }
-
-  getComparatif(): Observable<KpiComparatif> {
-    return of({
-      equipes: ['Dev', 'Marketing', 'Support'],
-      productivite: [90, 85, 88],
-      assiduite: [95, 91, 89]
-    });
-  }
-
-  getConges(): Observable<KpiConges[]> {
-    return of([
-      { type: 'Paid Leave', jours: 120 },
-      { type: 'Compensatory Time', jours: 45 },
-      { type: 'Sick Leave', jours: 30 }
-    ]);
-  }
-
-  getAlertes(): Observable<KpiAlerte[]> {
-    return of([
-      { type: 'Absenteeism', message: 'High rate (> 10%) in Support team', niveau: 'danger' },
-      { type: 'Productivity', message: 'Decreased by 5% compared to previous month', niveau: 'warning' }
-    ]);
+  private buildHistory(clocks: any[], absences: any[], schedules: any[]): PresenceDay[] {
+    const historyMap: { [date: string]: PresenceDay } = {};
   }
 }
