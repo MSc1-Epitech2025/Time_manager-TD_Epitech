@@ -25,7 +25,6 @@ import { KpiAbsenteismeComponent } from '../../kpi/kpi-absenteisme/kpi-absenteis
 import { KpiComparatifComponent } from '../../kpi/kpi-comparatif/kpi-comparatif';
 import { KpiCongesComponent } from '../../kpi/kpi-conges/kpi-conges';
 import { KpiProductiviteComponent } from '../../kpi/kpi-productivite/kpi-productivite';
-import { KpiAlertesComponent } from '../../kpi/kpi-alertes/kpi-alertes';
 import { KpiRapportsComponent } from '../../kpi/kpi-rapports/kpi-rapports';
 
 // Data 
@@ -61,7 +60,6 @@ interface Utilisateur {
     NgChartsModule,
     KpiAssiduiteComponent,
     KpiAbsenteismeComponent,
-    KpiAlertesComponent,
     KpiComparatifComponent,
     KpiCongesComponent,
     KpiProductiviteComponent,
@@ -237,6 +235,7 @@ private normalizeTime(t: string | undefined): string {
 
 
   ngOnInit(): void {
+    console.log('Enterprise Dashboard initialized.');
     /*
     // Test d'appel service enterprise
      this.enterpriseService.getCompanySummary().subscribe(data => {
@@ -252,8 +251,7 @@ private normalizeTime(t: string | undefined): string {
 
     // transformer les données ici
     // créer une structure "users" compatible avec ta fake data actuelle
-    this.users = data;
-    console.log('Transformed users:', this.users);
+    //this.users = data;
     //this.users = this.transformToLocalUsers(data);
     this.updateFilteredUsers();
     this.updateFilteredByPeriod();
