@@ -8,21 +8,41 @@
 .planning-header {
     display: flex;
     align-items: center;
-    gap: 1rem;
     justify-content: space-between;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
+    gap: 2rem;
+
+    .header-left {
+        flex: 1;
+    }
+
+    .header-right {
+        display: flex;
+        gap: 1rem;
+    }
 
     h2 {
         display: flex;
         align-items: center;
         gap: 0.5rem;
         color: #a78bfa;
+        margin: 0;
     }
 
     .role-tag {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
         padding: 0.5rem 1rem;
         border-radius: 8px;
         font-weight: 500;
+        margin: 0;
+
+        mat-icon {
+            font-size: 1.1rem;
+            height: 1.1rem;
+            width: 1.1rem;
+        }
 
         &.manager {
             background-color: #a78bfa33;
@@ -33,38 +53,291 @@
             background-color: #f472b633;
             color: #f472b6;
         }
-    }
-}
 
-.filters {
-    margin: 0 0 1rem;
-
-    .people-select {
-        width: 360px;
-        max-width: 100%;
-    }
-}
-
-full-calendar {
-    background-color: #2a2a3c;
-    border-radius: 12px;
-    padding: 0.5rem 0.75rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-
-    /* Teinte douce pour les événements d'absence */
-    .absence-event {
-        .fc-event-main {
-            background: #a78bfa33;
-            color: #e9d5ff;
-            border-left: 3px solid #a78bfa;
-            padding-left: 6px;
+        &.admin {
+            background-color: #ec409933;
+            color: #ec4099;
         }
     }
 }
 
-/* Optionnel : titres colonnes / heures plus lisibles en sombre */
-.fc-theme-standard .fc-scrollgrid,
-.fc .fc-timegrid-slot-label-cushion,
-.fc .fc-col-header-cell-cushion {
-    color: #e5e7eb;
+.controls-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+
+    .actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .action-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        mat-icon {
+            font-size: 1.2rem;
+            height: 1.2rem;
+            width: 1.2rem;
+        }
+    }
+
+    .team-selector {
+        color: #a78bfa;
+
+        mat-icon {
+            margin-right: 0.5rem;
+        }
+    }
+
+    .people-filter {
+        flex: 1;
+        min-width: 300px;
+    }
+}
+
+.people-select {
+    width: 100%;
+    max-width: 400px;
+}
+
+.filters-section {
+    margin-bottom: 1.5rem;
+
+    .filter-group {
+        background-color: #2a2a3c;
+        border-radius: 8px;
+        padding: 1rem;
+        border: 1px solid #3a3a4c;
+        cursor: pointer;
+
+        &[open] summary {
+            border-bottom: 1px solid #3a3a4c;
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+    }
+
+    .filter-title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        color: #a78bfa;
+        user-select: none;
+
+        mat-icon {
+            font-size: 1.1rem;
+            height: 1.1rem;
+            width: 1.1rem;
+        }
+    }
+
+    .filter-content {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .filter-subsection {
+        h4 {
+            margin: 0 0 0.75rem;
+            font-size: 0.9rem;
+            color: #d1d5db;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+    }
+
+    .filter-options {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .filter-checkbox {
+        font-size: 0.9rem;
+        color: #e5e7eb;
+
+        ::ng-deep .mdc-checkbox__native-control:checked {
+            color: #a78bfa;
+        }
+    }
+}
+
+.calendar-wrapper {
+    background-color: #2a2a3c;
+    border-radius: 12px;
+    padding: 0.75rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+
+    full-calendar {
+        /* FullCalendar styling */
+    }
+}
+
+.loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 400px;
+    color: #9ca3af;
+    font-size: 1.1rem;
+    gap: 1rem;
+
+    mat-icon {
+        font-size: 3rem;
+        height: 3rem;
+        width: 3rem;
+        animation: spin 2s linear infinite;
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* FullCalendar Theme Customization */
+::ng-deep {
+    .fc {
+        --fc-bg-event-opacity: 0.8;
+        --fc-border-color: #3a3a4c;
+        --fc-button-bg-color: #a78bfa;
+        --fc-button-border-color: #a78bfa;
+        --fc-button-hover-bg-color: #9372cc;
+        --fc-button-hover-border-color: #9372cc;
+        --fc-button-active-bg-color: #8b5ecc;
+        --fc-button-active-border-color: #8b5ecc;
+        --fc-event-bg-color: #a78bfa;
+        --fc-event-border-color: #a78bfa;
+        --fc-event-text-color: #1e1e28;
+        --fc-highlight-bg-color: rgba(167, 139, 250, 0.1);
+        --fc-neutral-bg-color: #2a2a3c;
+        --fc-neutral-text-color: #e5e7eb;
+        --fc-page-bg-color: transparent;
+        --fc-text-muted-color: #9ca3af;
+        color: #e5e7eb;
+    }
+
+    .fc-button {
+        text-transform: capitalize;
+        font-weight: 500;
+    }
+
+    .fc-col-header-cell {
+        background-color: #1e1e28;
+        color: #d1d5db;
+        padding: 0.75rem;
+        font-weight: 600;
+    }
+
+    .fc-daygrid-day {
+        background-color: #2a2a3c;
+
+        &.fc-day-other {
+            background-color: #1e1e28;
+        }
+
+        &.fc-day-today {
+            background-color: rgba(167, 139, 250, 0.15) !important;
+        }
+    }
+
+    .fc-timegrid-slot {
+        height: 3rem;
+    }
+
+    .fc-timegrid-slot-label {
+        vertical-align: middle;
+        font-size: 0.85rem;
+    }
+
+    .fc-event {
+        padding: 0.25rem !important;
+
+        &.absence-event {
+            &.absence-status-pending {
+                --fc-event-bg-color: #fbbf24;
+                --fc-event-border-color: #f59e0b;
+                --fc-event-text-color: #78350f;
+            }
+
+            &.absence-status-approved {
+                --fc-event-bg-color: #86efac;
+                --fc-event-border-color: #22c55e;
+                --fc-event-text-color: #15803d;
+            }
+
+            &.absence-status-rejected {
+                --fc-event-bg-color: #f87171;
+                --fc-event-border-color: #ef4444;
+                --fc-event-text-color: #7f1d1d;
+            }
+
+            .fc-event-main {
+                padding-left: 6px;
+                border-left: 3px solid currentColor;
+            }
+        }
+    }
+
+    .fc-scrollgrid,
+    .fc-timegrid-slot-label-cushion,
+    .fc-col-header-cell-cushion {
+        color: #e5e7eb;
+    }
+
+    .fc-daygrid-day-number {
+        color: #d1d5db;
+        padding: 0.5rem;
+    }
+
+    .fc-daygrid-day-frame {
+        background-color: #2a2a3c;
+    }
+
+    .fc-theme-standard .fc-scrollgrid {
+        border-color: #3a3a4c;
+    }
+
+    .fc-theme-standard .fc-scrollgrid-sync-inner {
+        background-color: #2a2a3c;
+    }
+
+    /* Now indicator styling */
+    .fc-now-indicator-line {
+        border-color: #ec4099;
+        border-width: 2px;
+    }
+
+    .fc-now-indicator-arrow {
+        border-color: #ec4099;
+    }
+
+    /* Popover styling */
+    .fc-popover {
+        background-color: #2a2a3c;
+        border-color: #3a3a4c;
+    }
+
+    .fc-popover-header {
+        background-color: #1e1e28;
+        color: #a78bfa;
+    }
+
+    .fc-popover-body {
+        color: #e5e7eb;
+    }
 }

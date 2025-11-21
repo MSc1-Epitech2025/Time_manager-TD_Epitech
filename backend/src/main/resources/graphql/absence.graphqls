@@ -1,3 +1,6 @@
+# Scalar type for Java Long support
+scalar Long
+
 enum AbsenceType {
   SICK
   VACATION
@@ -53,6 +56,16 @@ input AbsenceCreateInput {
   periodByDate: [PeriodByDateInput!]
 }
 
+# Alias input type for frontend compatibility
+input CreateAbsenceInput {
+  startDate: String!
+  endDate: String!
+  type: AbsenceType!
+  reason: String
+  supportingDocumentUrl: String
+  periodByDate: [PeriodByDateInput!]
+}
+
 input PeriodByDateInput {
   date: String!            
   period: AbsencePeriod!   
@@ -76,11 +89,12 @@ extend type Query {
   absencesByUser(userId: ID!): [Absence!]!
   allAbsences: [Absence!]!
   absence(id: ID!): Absence
-  myTeamAbsences(teamId: ID): [Absence!]!
+  myTeamAbsences(teamId: Long): [Absence!]!
 }
 
 extend type Mutation {
   createAbsence(input: AbsenceCreateInput!): Absence!
+  createAbsenceNew(input: CreateAbsenceInput!): Absence!
   updateAbsence(id: ID!, input: AbsenceUpdateInput!): Absence!
   setAbsenceStatus(id: ID!, input: AbsenceStatusUpdateInput!): Absence!
   deleteAbsence(id: ID!): Boolean!

@@ -1,11 +1,12 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { MatNativeDateModule } from '@angular/material/core';
 import { WeatherService } from './core/services/weather';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, MatNativeDateModule],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })

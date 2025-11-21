@@ -1,36 +1,121 @@
 <div class="planning-container">
   <header class="planning-header">
-    <h2>
-      <mat-icon fontSet="material-icons-outlined" fontIcon="calendar_month"></mat-icon>
-      Planning of {{ userName || 'my team' }}
-    </h2>
+    <div class="header-left">
+      <h2>
+        <mat-icon fontSet="material-icons-outlined" fontIcon="calendar_month"></mat-icon>
+        Planning of {{ userName || 'my team' }}
+      </h2>
+    </div>
 
-    <p *ngIf="isManager; else employeeMode" class="role-tag manager">Manager mode</p>
-    <ng-template #employeeMode>
-      <p class="role-tag employee">Employee mode</p>
-    </ng-template>
+    <div class="header-right">
+      <p *ngIf="isManager; else employeeMode" class="role-tag manager">
+        <mat-icon matPrefix fontSet="material-icons-outlined" fontIcon="person"></mat-icon>
+        Manager mode
+      </p>
+      <ng-template #employeeMode>
+        <p class="role-tag employee">
+          <mat-icon matPrefix fontSet="material-icons-outlined" fontIcon="person"></mat-icon>
+          Employee mode
+        </p>
+      </ng-template>
+      <p *ngIf="isAdmin" class="role-tag admin">
+        <mat-icon matPrefix fontSet="material-icons-outlined" fontIcon="admin_panel_settings"></mat-icon>
+        Admin mode
+      </p>
+    </div>
   </header>
 
-  <div class="filters">
-    <mat-form-field appearance="fill" class="people-select">
-      <mat-label>People to display</mat-label>
-      <mat-select
-        multiple
-        [value]="selectedPeople"
-        (selectionChange)="onSelectedPeopleChange($event.value)">
-        <mat-option *ngFor="let member of team" [value]="member.name">
-          {{ member.name }}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
+  <div class="controls-bar">
+    <!-- People Filter -->
+    <div class="people-filter">
+      <mat-form-field appearance="fill" class="people-select">
+        <mat-label>People to display</mat-label>
+        <mat-select
+          multiple
+          [value]="selectedPeople"
+          (selectionChange)="onSelectedPeopleChange($event.value)"
+        >
+          <mat-option *ngFor="let member of team" [value]="member.name">
+            {{ member.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
   </div>
 
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <details class="filter-group">
+      <summary class="filter-title" (click)="toggleFilters()">
+        <mat-icon fontSet="material-icons-outlined" fontIcon="filter_list"></mat-icon>
+        Filters ({{ filterSummary }})
+      </summary>
+
+      <div class="filter-content">
+        <!-- Absence Types Filter -->
+        <div class="filter-subsection">
+          <h4>Absence Types</h4>
+          <div class="filter-options">
+            <mat-checkbox
+              *ngFor="let type of absenceTypeOptions"
+              [checked]="filterOptions.absenceTypes.has(type)"
+              (change)="toggleAbsenceType(type)"
+              class="filter-checkbox"
+            >
+              {{ type }}
+            </mat-checkbox>
+          </div>
+        </div>
+
+        <!-- Absence Status Filter (Manager only) -->
+        <div class="filter-subsection" *ngIf="isManager">
+          <h4>Absence Status</h4>
+          <div class="filter-options">
+            <mat-checkbox
+              *ngFor="let status of availableAbsenceStatuses"
+              [checked]="selectedAbsenceStatuses.has(status)"
+              (change)="toggleAbsenceStatus(status)"
+              class="filter-checkbox"
+            >
+              {{ status }}
+            </mat-checkbox>
+          </div>
+        </div>
+
+        <!-- Display Options -->
+        <div class="filter-subsection">
+          <h4>Display</h4>
+          <div class="filter-options">
+            <mat-checkbox
+              [(ngModel)]="filterOptions.showAbsences"
+              (change)="refreshEvents()"
+              class="filter-checkbox"
+            >
+              Show Absences
+            </mat-checkbox>
+            <mat-checkbox
+              [(ngModel)]="filterOptions.showMeetings"
+              (change)="refreshEvents()"
+              class="filter-checkbox"
+            >
+              Show Meetings
+            </mat-checkbox>
+          </div>
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- Calendar -->
   <div class="calendar-wrapper" *ngIf="!loading; else loadingTpl">
     <full-calendar [options]="calendarOptions"></full-calendar>
   </div>
 
   <ng-template #loadingTpl>
-    <div class="loading">Loading planning...</div>
+    <div class="loading">
+      <mat-icon fontSet="material-icons" fontIcon="schedule"></mat-icon>
+      <span>Loading planning...</span>
+    </div>
   </ng-template>
 </div>
 

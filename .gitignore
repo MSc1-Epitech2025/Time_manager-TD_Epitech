@@ -59,3 +59,6 @@ backend/.gradle/
 .scannerwork
 .vscode
 /frontend/.angular
+/frontend/dist/
+
+copilot_instruction.md
