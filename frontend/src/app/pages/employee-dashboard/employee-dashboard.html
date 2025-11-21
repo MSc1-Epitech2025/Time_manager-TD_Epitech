@@ -1,25 +1,25 @@
 <div class="employee-dashboard">
   <main class="main-content">
     <div class="header">
-      <h2>Dashboard - Employe</h2>
+      <h2>Employee Dashboard</h2>
     </div>
 
     <header class="content-grid profile-zone">
       <div class="profile-card">
-        <img src="assets/profile-placeholder.png" alt="Profil" class="profile-img" />
+        <img src="assets/profile-placeholder.png" alt="Profile" class="profile-img" />
         <div class="profile-info">
           <h3>{{ user.name }}</h3>
-          <p>{{ user.poste || 'Poste non renseigne' }}</p>
+          <p>{{ user.poste || 'Position not set' }}</p>
           <span class="email">{{ user.email }}</span>
         </div>
       </div>
 
       <div class="work-status">
         <p class="status-text">
-          Temps travaille aujourd'hui :
+          Hours worked today:
           <span>{{ todayHoursMinutes.hours }}h {{ todayHoursMinutes.minutes }}m</span>
         </p>
-        <p class="status-subtext" *ngIf="isWorking">Session en cours depuis {{ formattedTimer }}</p>
+        <p class="status-subtext" *ngIf="isWorking">Session ongoing since {{ formattedTimer }}</p>
         <button
           class="btn btn-primary"
           (click)="toggleWorkStatus()"
@@ -42,20 +42,20 @@
               chartType="pie"></canvas>
           </div>
           <ng-template #loading>
-            <div class="loading">Chargement des statistiques...</div>
+            <div class="loading">Loading statistics...</div>
           </ng-template>
         </mat-card>
       </div>
 
       <div class="card small manager-card">
-        <h3>Actions rapides</h3>
+        <h3>Quick Actions</h3>
         <button mat-raised-button color="primary" (click)="goToPlanning()">
           <mat-icon>calendar_month</mat-icon>
-          Consulter mon planning
+          View My Planning
         </button>
         <button mat-stroked-button color="accent" (click)="logout()">
           <mat-icon>logout</mat-icon>
-          Deconnexion
+          Logout
         </button>
       </div>
     </section>

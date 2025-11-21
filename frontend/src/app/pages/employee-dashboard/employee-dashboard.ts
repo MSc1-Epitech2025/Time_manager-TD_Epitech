@@ -172,11 +172,11 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
     this.actionPending = true;
     try {
       await this.sendClockMutation('IN');
-      this.notify.success('Pointage entree enregistre');
+      this.notify.success('Clock in recorded');
       await this.refreshDashboard();
     } catch (err) {
       console.error(err);
-      this.notify.error('Impossible de demarrer la session de travail');
+      this.notify.error('Unable to start work session');
     } finally {
       this.actionPending = false;
     }
@@ -186,11 +186,11 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
     this.actionPending = true;
     try {
       await this.sendClockMutation('OUT');
-      this.notify.success('Pointage sortie enregistre');
+      this.notify.success('Clock out recorded');
       await this.refreshDashboard();
     } catch (err) {
       console.error(err);
-      this.notify.error('Impossible de mettre en pause la session');
+      this.notify.error('Unable to pause the session');
     } finally {
       this.actionPending = false;
     }
@@ -214,7 +214,7 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
       this.computeMetrics();
     } catch (err) {
       console.error(err);
-      this.notify.error('Impossible de recuperer les donnees de travail');
+      this.notify.error('Unable to retrieve work data');
     } finally {
       this.loadingStats = false;
     }

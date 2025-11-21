@@ -1,6 +1,5 @@
-// src/app/pages/kpi-dashboard/components/kpi-assiduite/kpi-assiduite.component.ts
 import { Component, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
-import { Chart, registerables } from 'chart.js';
+import { Chart, registerables, ChartConfiguration } from 'chart.js';
 import { KpiService, KpiAssiduite } from '../../core/services/kpi';
 
 Chart.register(...registerables);
@@ -13,12 +12,12 @@ Chart.register(...registerables);
 export class KpiAssiduiteComponent implements AfterViewInit {
   @ViewChild('assiduiteChart', { static: false }) chartRef!: ElementRef<HTMLCanvasElement>;
   kpi?: KpiAssiduite;
-  chart?: Chart;
+
+  private chart?: Chart<'doughnut', number[], string>;
 
   constructor(private kpiService: KpiService) {}
 
   ngAfterViewInit() {
-    // On récupère les données APRÈS que le canvas soit chargé
     this.kpiService.getAssiduite().subscribe(data => {
       this.kpi = data;
       this.renderChart();
@@ -33,13 +32,12 @@ export class KpiAssiduiteComponent implements AfterViewInit {
 
     const taux = this.kpi.tauxAssiduite;
 
-    // Détruit le graphique existant avant de recréer
     if (this.chart) this.chart.destroy();
 
-    this.chart = new Chart(ctx, {
+    const config: ChartConfiguration<'doughnut', number[], string> = {
       type: 'doughnut',
       data: {
-        labels: ['Présence', 'Absence'],
+        labels: ['Presence', 'Absence'],
         datasets: [
           {
             data: [taux, 100 - taux],
@@ -57,12 +55,14 @@ export class KpiAssiduiteComponent implements AfterViewInit {
           tooltip: { enabled: false },
           title: {
             display: true,
-            text: `Taux d’assiduité ${taux.toFixed(1)}%`,
+            text: `Attendance Rate ${taux.toFixed(1)}%`,
             color: '#333',
             font: { size: 18, weight: 'bold' }
           }
         }
       }
-    });
+    };
+
+    this.chart = new Chart(ctx, config);
   }
 }

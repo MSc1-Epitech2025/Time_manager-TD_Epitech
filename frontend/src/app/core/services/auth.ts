@@ -83,7 +83,7 @@ export class AuthService {
       const normalized = this.normalizeSession(parsed);
       this.session$.next(normalized);
     } catch (err) {
-      console.warn('Session stockée invalide', err);
+      console.warn('Invalid stored session', err);
       this.clearStorage();
     }
   }
@@ -117,13 +117,13 @@ export class AuthService {
     });
 
     if (!response.ok) {
-      throw new Error('Erreur de connexion au serveur GraphQL');
+      throw new Error('Error connecting to GraphQL server');
     }
 
     const result = await response.json();
     const ok = result.data?.login?.ok;
 
-    if (!ok) throw new Error("Le serveur n'a pas confirme la connexion");
+    if (!ok) throw new Error("Server did not confirm the connection");
 
     const profile = await this.loadUserByEmail(email).catch(() => null);
 
@@ -172,7 +172,7 @@ export class AuthService {
       this.persistSession(updated, this.shouldRemember());
       return updated.user;
     } catch (err) {
-      console.warn('Echec du rafraichissement du profil', err);
+      console.warn('Failed to refresh profile', err);
       return null;
     }
   }
@@ -288,7 +288,7 @@ export class AuthService {
     parse(input);
 
     if (!collected.size) {
-      console.warn('Aucun role trouve, attribution du role EMPLOYEE par defaut');
+      console.warn('No role found, assigning EMPLOYEE role by default');
       return ['EMPLOYEE'];}
     return Array.from(collected);
   }
@@ -313,7 +313,7 @@ export class AuthService {
           return this.userFromResponse(resp.data?.userByEmail ?? null);
         }),
         catchError((err) => {
-          console.warn('Impossible de recuperer le profil', err);
+          console.warn('Unable to retrieve profile', err);
           return of(null);
         })
       )

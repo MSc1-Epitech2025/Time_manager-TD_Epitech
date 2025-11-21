@@ -101,7 +101,7 @@ export class ManagerService {
         const summaries = members.map((entry) =>
           this.buildEmployeeSummary(entry).pipe(
             catchError((err) => {
-              console.warn('Impossible de charger les donnees employe', err);
+              console.warn('Unable to load employee data', err);
               return of<EmployeeSummary | null>(null);
             })
           )
@@ -111,6 +111,43 @@ export class ManagerService {
             rows.filter((row): row is EmployeeSummary => !!row)
           )
         );
+      })
+    );
+  }
+
+  getTeamEmployeesByTeamId(teamId: string): Observable<EmployeeSummary[]> {
+    return this.requestGraphql<{ team: GraphqlTeam | null }>(TEAM_MEMBERS_BY_ID_QUERY, {
+      teamId,
+    }).pipe(
+      switchMap((payload) => {
+        const team = payload?.team;
+        if (!team || !team.members?.length) return of<EmployeeSummary[]>([]);
+
+        const members = team.members;
+        const teamName = team.name;
+        const entries: TeamMemberEntry[] = members.map((member) => ({
+          member,
+          teamName,
+        }));
+
+        const summaries = entries.map((entry) =>
+          this.buildEmployeeSummary(entry).pipe(
+            catchError((err) => {
+              console.warn('Unable to load employee data', err);
+              return of<EmployeeSummary | null>(null);
+            })
+          )
+        );
+
+        return forkJoin(summaries).pipe(
+          map((rows) =>
+            rows.filter((row): row is EmployeeSummary => !!row)
+          )
+        );
+      }),
+      catchError((err) => {
+        console.error('Error loading team members', err);
+        return of<EmployeeSummary[]>([]);
       })
     );
   }
@@ -262,7 +299,7 @@ export class ManagerService {
     }).pipe(
       map((payload) => payload?.clocksForUser ?? []),
       catchError((err) => {
-        console.warn('Erreur lors de la recuperation des pointages', err);
+        console.warn('Error retrieving clocks', err);
         return of<GraphqlClock[]>([]);
       })
     );
@@ -272,7 +309,7 @@ export class ManagerService {
     return this.requestGraphql<AbsenceQueryPayload>(ABSENCES_QUERY, { userId }).pipe(
       map((payload) => payload?.absencesByUser ?? []),
       catchError((err) => {
-        console.warn('Erreur lors de la recuperation des absences', err);
+        console.warn('Error retrieving absences', err);
         return of<GraphqlAbsence[]>([]);
       })
     );
@@ -349,6 +386,22 @@ const ABSENCES_QUERY = `
       days {
         absenceDate
         period
+      }
+    }
+  }
+`;
+
+const TEAM_MEMBERS_BY_ID_QUERY = `
+  query Team($teamId: ID!) {
+    team(id: $teamId) {
+      id
+      name
+      members {
+        id
+        firstName
+        lastName
+        email
+        poste
       }
     }
   }
@@ -523,10 +576,10 @@ function deriveStatus(input: {
   expectedSeconds: number;
 }): string {
   if (input.hasApprovedAbsenceToday) return 'Absent';
-  if (!input.expectedSeconds) return 'En suivi';
-  if (input.totalSeconds >= input.expectedSeconds * 1.1) return 'En depassement';
-  if (input.totalSeconds >= input.expectedSeconds * 0.8) return 'A jour';
-  return 'A surveiller';
+  if (!input.expectedSeconds) return 'Under Review';
+  if (input.totalSeconds >= input.expectedSeconds * 1.1) return 'Overtime';
+  if (input.totalSeconds >= input.expectedSeconds * 0.8) return 'On Track';
+  return 'Needs Attention';
 }
 
 function clampPct(value: number, min = 0, max = 100): number {

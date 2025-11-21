@@ -1,28 +1,28 @@
 <div class="manager-dashboard">
   <main class="content">
     <div class="header">
-      <h2>Tableau de bord - Manager</h2>
+      <h2>Manager Dashboard</h2>
     </div>
 
     <div class="main-grid">
       <mat-card class="team-card">
-        <h3>Mon equipe</h3>
+        <h3>My team</h3>
 
         <mat-form-field appearance="outline" class="search-field ">
           <mat-icon matPrefix>search</mat-icon>
           <input
             matInput
-            placeholder="Rechercher un employe"
+            placeholder="Search for an employee"
             [(ngModel)]="searchTerm"
             (input)="filterEmployees()" />
         </mat-form-field>
 
         <div class="empty-state" *ngIf="loadingEmployees">
-          Chargement en cours...
+          Loading...
         </div>
 
         <div class="empty-state" *ngIf="!loadingEmployees && !filteredEmployees.length">
-          Aucun collaborateur a afficher.
+          No collaborators to display.
         </div>
 
         <ul class="employee-list" *ngIf="filteredEmployees.length">
@@ -31,14 +31,14 @@
             (click)="selectEmployee(emp)"
             [class.selected]="selectedEmployee?.id === emp.id">
             <div class="name">{{ emp.name }}</div>
-            <div class="team">{{ emp.team || 'Equipe inconnue' }}</div>
+            <div class="team">{{ emp.team || 'Unknown team' }}</div>
           </li>
         </ul>
       </mat-card>
 
       <mat-card class="chart-card" *ngIf="selectedEmployee">
         <h3>{{ selectedEmployee.name }}</h3>
-        <p>Equipe : {{ selectedEmployee.team || 'Non renseignee' }}</p>
+        <p>Team: {{ selectedEmployee.team || 'Not set' }}</p>
 
         <div class="chart-container">
           <canvas
@@ -50,12 +50,12 @@
 
         <button mat-raised-button color="accent" class="export-btn" (click)="exportExcel()">
           <mat-icon>download</mat-icon>
-          Exporter Excel
+          Export Excel
         </button>
       </mat-card>
 
       <mat-card class="chart-card placeholder" *ngIf="!loadingEmployees && !selectedEmployee">
-        <p>Selectionnez un employe pour afficher ses indicateurs.</p>
+        <p>Select an employee to display their indicators.</p>
       </mat-card>
     </div>
   </main>

@@ -53,9 +53,9 @@ $shadow: 0 6px 18px rgba(16, 24, 40, 0.08);
         margin-left: .5rem;
 
         ::ng-deep .tm-weather {
-            background: transparent !important;
-            padding: 0 !important;
-            backdrop-filter: none !important;
+            background: transparent ;
+            padding: 0 ;
+            backdrop-filter: none ;
         }
     }
 

@@ -98,7 +98,7 @@ export class PlanningComponent implements OnInit, OnDestroy {
         this.applyPayload(payload);
       }
     } catch (err) {
-      console.error('Echec chargement planning', err);
+      console.error('Failed to load planning', err);
       this.team = [];
       this.absences = [];
       this.selectedPeople = [];

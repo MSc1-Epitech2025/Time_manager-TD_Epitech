@@ -73,7 +73,7 @@ export class PlanningService {
         return { people: [person], events };
       }),
       catchError((err) => {
-        console.warn('Impossible de charger le planning employe', err);
+        console.warn('Unable to load employee planning', err);
         const session = this.auth.session;
         const person: PlanningPerson = {
           id: session?.user.id ?? '',
@@ -91,14 +91,14 @@ export class PlanningService {
       teams: this.request<ManagedTeamsPayload>(MY_MANAGED_TEAMS_QUERY).pipe(
         map((payload) => payload?.myManagedTeams ?? []),
         catchError((err) => {
-          console.warn('Impossible de charger les equipes', err);
+          console.warn('Unable to load teams', err);
           return of<TeamResponse[]>([]);
         })
       ),
       absences: this.request<MyTeamAbsencesPayload>(MY_TEAM_ABSENCES_QUERY, variables).pipe(
         map((payload) => payload?.myTeamAbsences ?? []),
         catchError((err) => {
-          console.warn('Impossible de charger les absences equipe', err);
+          console.warn('Unable to load team absences', err);
           return of<AbsenceResponse[]>([]);
         })
       ),

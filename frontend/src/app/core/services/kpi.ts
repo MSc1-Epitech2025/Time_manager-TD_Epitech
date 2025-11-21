@@ -1,4 +1,3 @@
-// src/app/pages/kpi-dashboard/services/kpi.service.ts
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 
@@ -51,7 +50,7 @@ export class KpiService {
     return of({
       tauxGlobal: 7.5,
       parEquipe: [
-        { equipe: 'Développement', taux: 6.2 },
+        { equipe: 'Development', taux: 6.2 },
         { equipe: 'Marketing', taux: 8.5 },
         { equipe: 'Support', taux: 9.3 }
       ]
@@ -60,7 +59,7 @@ export class KpiService {
 
   getProductivite(): Observable<KpiProductivite> {
     return of({
-      periodes: ['Jan', 'Fév', 'Mars', 'Avr', 'Mai', 'Juin'],
+      periodes: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
       valeurs: [85, 88, 90, 84, 92, 95]
     });
   }
@@ -75,16 +74,16 @@ export class KpiService {
 
   getConges(): Observable<KpiConges[]> {
     return of([
-      { type: 'Congés payés', jours: 120 },
-      { type: 'RTT', jours: 45 },
-      { type: 'Maladie', jours: 30 }
+      { type: 'Paid Leave', jours: 120 },
+      { type: 'Compensatory Time', jours: 45 },
+      { type: 'Sick Leave', jours: 30 }
     ]);
   }
 
   getAlertes(): Observable<KpiAlerte[]> {
     return of([
-      { type: 'Absenteisme', message: 'Taux élevé (> 10%) dans l’équipe Support', niveau: 'danger' },
-      { type: 'Productivité', message: 'Baisse de 5% par rapport au mois précédent', niveau: 'warning' }
+      { type: 'Absenteeism', message: 'High rate (> 10%) in Support team', niveau: 'danger' },
+      { type: 'Productivity', message: 'Decreased by 5% compared to previous month', niveau: 'warning' }
     ]);
   }
 }
