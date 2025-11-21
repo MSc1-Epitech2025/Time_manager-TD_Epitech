@@ -115,6 +115,43 @@ export class ManagerService {
     );
   }
 
+  getTeamEmployeesByTeamId(teamId: string): Observable<EmployeeSummary[]> {
+    return this.requestGraphql<{ team: GraphqlTeam | null }>(TEAM_MEMBERS_BY_ID_QUERY, {
+      teamId,
+    }).pipe(
+      switchMap((payload) => {
+        const team = payload?.team;
+        if (!team || !team.members?.length) return of<EmployeeSummary[]>([]);
+
+        const members = team.members;
+        const teamName = team.name;
+        const entries: TeamMemberEntry[] = members.map((member) => ({
+          member,
+          teamName,
+        }));
+
+        const summaries = entries.map((entry) =>
+          this.buildEmployeeSummary(entry).pipe(
+            catchError((err) => {
+              console.warn('Impossible de charger les donnees employe', err);
+              return of<EmployeeSummary | null>(null);
+            })
+          )
+        );
+
+        return forkJoin(summaries).pipe(
+          map((rows) =>
+            rows.filter((row): row is EmployeeSummary => !!row)
+          )
+        );
+      }),
+      catchError((err) => {
+        console.error('Erreur lors de la recuperation de la team', err);
+        return of<EmployeeSummary[]>([]);
+      })
+    );
+  }
+
   getEmployeeKpi(userId: string): Observable<EmployeeKpi | null> {
     return this.findMemberEntry(userId).pipe(
       switchMap((entry) => {
@@ -349,6 +386,22 @@ const ABSENCES_QUERY = `
       days {
         absenceDate
         period
+      }
+    }
+  }
+`;
+
+const TEAM_MEMBERS_BY_ID_QUERY = `
+  query Team($teamId: ID!) {
+    team(id: $teamId) {
+      id
+      name
+      members {
+        id
+        firstName
+        lastName
+        email
+        poste
       }
     }
   }

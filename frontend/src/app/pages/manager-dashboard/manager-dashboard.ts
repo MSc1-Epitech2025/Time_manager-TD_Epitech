@@ -35,6 +35,7 @@ export class ManagerDashboard implements OnInit {
   searchTerm = '';
   selectedEmployee: EmployeeSummary | null = null;
   loadingEmployees = false;
+  private selectedTeamId: string | null = null;
   private selectedTeamName: string | null = null;
 
   pieChartData: ChartConfiguration<'pie'>['data'] = {
@@ -68,14 +69,13 @@ export class ManagerDashboard implements OnInit {
   ngOnInit() {
     // D'abord, extraire les paramètres de la route
     this.route.queryParamMap.subscribe((params) => {
+      const teamId = params.get('teamId');
       const teamName = params.get('teamName');
+      this.selectedTeamId = teamId ? teamId.trim() : null;
       this.selectedTeamName = teamName ? teamName.trim().toLowerCase() : null;
-      // Réappliquer les filtres chaque fois que les queryParams changent
-      this.applyFilters();
+      // Recharger les employés quand les paramètres changent
+      this.loadEmployees();
     });
-
-    // Ensuite charger les employés
-    this.loadEmployees();
   }
 
   filterEmployees() {
@@ -116,20 +116,40 @@ export class ManagerDashboard implements OnInit {
 
   private loadEmployees() {
     this.loadingEmployees = true;
-    this.managerService.getTeamEmployees().subscribe({
-      next: (data) => {
-        this.employees = data;
-        this.loadingEmployees = false;
-        this.applyFilters();
-      },
-      error: (err) => {
-        console.error('Echec du chargement des employes', err);
-        this.loadingEmployees = false;
-        this.employees = [];
-        this.filteredEmployees = [];
-        this.selectedEmployee = null;
-      },
-    });
+    
+    // Si un teamId est fourni, charger les employés de cette team spécifique
+    if (this.selectedTeamId) {
+      this.managerService.getTeamEmployeesByTeamId(this.selectedTeamId).subscribe({
+        next: (data) => {
+          this.employees = data;
+          this.loadingEmployees = false;
+          this.applyFilters();
+        },
+        error: (err) => {
+          console.error('Echec du chargement des employes de la team', err);
+          this.loadingEmployees = false;
+          this.employees = [];
+          this.filteredEmployees = [];
+          this.selectedEmployee = null;
+        },
+      });
+    } else {
+      // Sinon charger tous les employés des teams du manager
+      this.managerService.getTeamEmployees().subscribe({
+        next: (data) => {
+          this.employees = data;
+          this.loadingEmployees = false;
+          this.applyFilters();
+        },
+        error: (err) => {
+          console.error('Echec du chargement des employes', err);
+          this.loadingEmployees = false;
+          this.employees = [];
+          this.filteredEmployees = [];
+          this.selectedEmployee = null;
+        },
+      });
+    }
   }
 
   private applyFilters() {
