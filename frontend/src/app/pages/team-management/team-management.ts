@@ -147,7 +147,8 @@ export class TeamManagement implements OnInit {
     this.loadTeamContext(teamId).subscribe({
       next: (teamContext) => {
         const dialogRef = this.modal.open(EditTeamModalComponent, {
-          width: '500px',
+          width: '90%',
+          maxWidth: '450px',
           data: { team: teamContext },
         });
 
@@ -209,7 +210,8 @@ export class TeamManagement implements OnInit {
     this.loadTeamContext(teamId).subscribe({
       next: (teamContext) => {
         const dialogRef = this.modal.open(DeleteTeamModalComponent, {
-          width: '500px',
+          width: '90%',
+          maxWidth: '400px',
           data: { team: teamContext },
         });
 
@@ -235,7 +237,8 @@ export class TeamManagement implements OnInit {
     if (!this.isAdminUser) return;
 
     const dialogRef = this.modal.open(CreateTeamModal, {
-      width: '400px',
+      width: '90%',
+      maxWidth: '400px',
     });
 
     dialogRef
