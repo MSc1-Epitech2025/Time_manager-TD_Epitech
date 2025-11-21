@@ -1,4 +1,3 @@
-// frontend/src/app/core/services/enterprise.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import {
@@ -58,7 +57,6 @@ type GraphqlAbsence = {
   days?: GraphqlAbsenceDay[] | null;
 };
 
-// Payload types for GraphQL queries
 type UsersPayload = { users: GraphqlUser[] };
 type TeamsPayload = { teams: GraphqlTeam[] };
 type ClocksPayload = { clocksForUser: GraphqlClock[] };
@@ -71,8 +69,7 @@ export interface CompanySummary {
   lateToday: number;
   totalHoursThisWeek: number;
   averageHoursPerEmployee: number;
-  productivityRate: number; // en %
-  // dataset pour les graphiques
+  productivityRate: number;
   presencePct: number;
   absencePct: number;
   latePct: number;
@@ -103,7 +100,6 @@ export interface EmployeeDetail {
 export class EnterpriseService {
   constructor(private http: HttpClient, private auth: AuthService) {}
 
-  // ---------------- GraphQL wrapper (Observable) ----------------
   private requestGraphql<T>(query: string, variables?: Record<string, unknown>): Observable<T> {
     return this.http
       .post<GraphqlResponse<T>>(GRAPHQL_ENDPOINT, { query, variables }, { withCredentials: true })
@@ -118,7 +114,6 @@ export class EnterpriseService {
       );
   }
 
-  // ---------------- Queries de base ----------------
   private USERS_QUERY = `
     query AllUsers {
       users {
@@ -171,9 +166,7 @@ export class EnterpriseService {
     }
   `;
 
-  // ---------------- Méthodes publiques ----------------
-
-  /** Récupère la liste complète des users formatés */
+  
   getAllEmployees(): Observable<EmployeeSimple[]> {
     return forkJoin({
       users: this.requestGraphql<UsersPayload>(this.USERS_QUERY).pipe(map(p => p?.users ?? []), catchError(() => of<GraphqlUser[]>([]))),
@@ -201,10 +194,7 @@ export class EnterpriseService {
     );
   }
 
-  /**
-   * Résumé global entreprise (présence / absences / productivité)
-   * calcule les metrics pour la semaine courante par défaut.
-   */
+  
   getCompanySummary(): Observable<CompanySummary> {
     const { from, to } = currentWeekRange();
 
@@ -260,12 +250,10 @@ export class EnterpriseService {
             const lateToday = valid.filter(r => r.lateDaysThisWeek > 0 && r.presenceToday).length;
             const totalHoursThisWeek = valid.reduce((s, r) => s + (r.hoursThisWeek || 0), 0);
             const averageHoursPerEmployee = totalEmployees ? +(totalHoursThisWeek / totalEmployees).toFixed(2) : 0;
-            // productivité globale vs heures planifiées (8h * jours ouvrés de la semaine)
             const totalWeekDays = countWeekdays(from, to);
             const totalPlannedHours = totalEmployees * totalWeekDays * 8;
             const productivityRate = totalPlannedHours ? Math.round((totalHoursThisWeek / totalPlannedHours) * 100) : 0;
 
-            // proportions pour camembert
             const presencePct = totalEmployees ? Math.round((presentToday / totalEmployees) * 100) : 0;
             const absencePct = totalEmployees ? Math.round((absentToday / totalEmployees) * 100) : 0;
             const latePct = totalEmployees ? Math.round((lateToday / totalEmployees) * 100) : 0;
@@ -318,12 +306,8 @@ export class EnterpriseService {
     );
   }
 
-  /**
-   * Comparatif par équipe sur N mois
-   * kpi: 'absenteeism' | 'attendance' | 'productivity'
-   */
+  
   getTeamComparative(kpi: 'absenteeism' | 'attendance' | 'productivity', months = 12): Observable<{ months: string[]; teams: string[]; data: Record<string, number[]> }> {
-    // on récupère d'abord tous les users et teams en local
     return forkJoin({
       users: this.requestGraphql<UsersPayload>(this.USERS_QUERY).pipe(map(p => p?.users ?? []), catchError(() => of<GraphqlUser[]>([]))),
       teams: this.requestGraphql<TeamsPayload>(this.TEAMS_QUERY).pipe(map(p => p?.teams ?? []), catchError(() => of<GraphqlTeam[]>([]))),
@@ -332,7 +316,6 @@ export class EnterpriseService {
         const teamNames = [...new Set(teams.map(t => t.name))];
         const monthsLabels = buildLastNMonths(months);
         const data: Record<string, number[]> = {};
-        // prepare user -> team map
         const teamMap = new Map<string, string>();
         for (const t of teams) {
           (t.members ?? []).forEach(m => {
@@ -346,24 +329,18 @@ export class EnterpriseService {
             const teamUsers = users.filter(u => teamMap.get(u.id) === team);
 
             if (kpi === 'absenteeism') {
-              // count approved absence days in that month
               const totalAbsences = teamUsers.reduce((sum, u) => {
-                const userDays = (u as any).__historicPlaceholder ?? []; // fallback: if backend doesn't provide days, 0
-                // If you want real counts, you should call absences endpoint per user (costly).
+                const userDays = (u as any).__historicPlaceholder ?? []; 
                 return sum + 0;
               }, 0);
               return totalAbsences;
             }
 
-            if (kpi === 'attendance') {
-              // impossible d'avoir attendance % sans relancer clocks per user per month
-              return 0;
-            }
+            if (kpi === 'attendance') return 0;
+            
 
-            if (kpi === 'productivity') {
-              // idem, requires heures réelles -> 0 fallback
-              return 0;
-            }
+            if (kpi === 'productivity') return 0;
+            
 
             return 0;
           });
@@ -378,7 +355,6 @@ export class EnterpriseService {
     );
   }
 
-  /** Détail KPI d'un employé (wrap autour des mêmes helpers que ManagerService) */
   getEmployeeDetail(userId: string): Observable<EmployeeDetail | null> {
     const { from, to } = currentWeekRange();
 
@@ -451,7 +427,6 @@ export class EnterpriseService {
     );
   }
 
-  /** Charge pointages pour un user sur une fenêtre (Observable) */
   private loadClocks(userId: string, from: Date, to: Date): Observable<GraphqlClock[]> {
     return this.requestGraphql<ClocksPayload>(this.CLOCKS_QUERY, {
       userId,
@@ -466,7 +441,6 @@ export class EnterpriseService {
     );
   }
 
-  /** Charge absences pour un user (Observable) */
   private loadAbsences(userId: string): Observable<GraphqlAbsence[]> {
     return this.requestGraphql<AbsencesPayload>(this.ABSENCES_QUERY, { userId }).pipe(
       map((payload) => (payload?.absencesByUser ?? [])),
@@ -478,7 +452,6 @@ export class EnterpriseService {
   }
 }
 
-// -------------------- Helpers (copiés / adaptés depuis ManagerService) --------------------
 
 function buildDisplayName(user: GraphqlUser): string {
   const first = (user.firstName ?? '').trim();

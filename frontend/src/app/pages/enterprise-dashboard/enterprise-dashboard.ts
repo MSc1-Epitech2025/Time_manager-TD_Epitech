@@ -12,7 +12,7 @@ import { NgChartsModule } from 'ng2-charts';
 import { ChartOptions } from 'chart.js';
 import { Router } from '@angular/router';
 
-//Service (gardés mais non utilisés pour le mode fake)
+//Services
 import { ManagerService } from '../../core/services/manager';
 import { AuthService } from '../../core/services/auth';
 import { EnterpriseService } from '../../core/services/enterprise';
@@ -92,16 +92,12 @@ interface Utilisateur {
   styleUrls: ['./enterprise-dashboard.scss']
 })
 export class EnterpriseDashboard implements OnInit, OnDestroy {
-  // --- état
   isWorking = false;
   timer = 0;
   time: { hours: number; minutes: number } = { hours: 0, minutes: 0 };
   status = 'startWorking';
 
-  // ---------- Fake data local ----------
   users: Utilisateur[] = users;
-  // backend users (non utilisés en fake mode)
-  //user: User[] = [];
   loading = false;
 
   // KPI selection
@@ -330,16 +326,7 @@ private normalizeTime(t: string | undefined): string {
 
   ngOnInit(): void {
     console.log('Enterprise Dashboard initialized.');
-    /*
-    // Test d'appel service enterprise
-     this.enterpriseService.getCompanySummary().subscribe(data => {
-    console.log("Company Summary (TEST) :", data);
-  });
-
-  this.enterpriseService.getAllEmployees().subscribe(users => {
-    console.log("All Employees (TEST) :", users);
-  });
-    */
+    
   this.kpiService.loadFullData().subscribe(data => {
     console.log('KPI back data', data);
 
