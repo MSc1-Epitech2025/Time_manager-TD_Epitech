@@ -50,6 +50,7 @@ Thumbs.db
 .angular
 .env
 backend/build/
+backend/bin/
 /build/
 backend/.gradle/
 /out/
