@@ -6,7 +6,7 @@ Chart.register(...registerables);
 
 @Component({
   selector: 'app-kpi-comparatif',
-  template: `<div class="kpi-card"><h3>Comparatif entre équipes</h3><canvas #chart></canvas></div>`
+  template: `<div class="kpi-card"><h3>Team Comparison</h3><canvas #chart></canvas></div>`
 })
 export class KpiComparatifComponent implements AfterViewInit {
   @ViewChild('chart') chartRef!: ElementRef<HTMLCanvasElement>;
@@ -21,14 +21,14 @@ export class KpiComparatifComponent implements AfterViewInit {
           labels: kpi.equipes,
           datasets: [
             {
-              label: 'Productivité',
+              label: 'Productivity',
               data: kpi.productivite,
               borderColor: '#42a5f5',
               fill: true,
               backgroundColor: 'rgba(66,165,245,0.2)'
             },
             {
-              label: 'Assiduité',
+              label: 'Attendance',
               data: kpi.assiduite,
               borderColor: '#66bb6a',
               fill: true,

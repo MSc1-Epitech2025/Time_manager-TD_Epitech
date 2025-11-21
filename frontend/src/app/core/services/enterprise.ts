@@ -15,7 +15,7 @@ export class EnterpriseService {
       body: JSON.stringify({ query }),
     });
 
-    if (!response.ok) throw new Error('Erreur lors de la requête GraphQL');
+    if (!response.ok) throw new Error('Error during GraphQL request');
     const result = await response.json();
     if (result.errors) throw new Error(result.errors[0].message);
     return result.data;

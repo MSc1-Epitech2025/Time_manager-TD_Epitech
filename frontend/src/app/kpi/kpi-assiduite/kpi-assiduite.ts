@@ -37,7 +37,7 @@ export class KpiAssiduiteComponent implements AfterViewInit {
     const config: ChartConfiguration<'doughnut', number[], string> = {
       type: 'doughnut',
       data: {
-        labels: ['Présence', 'Absence'],
+        labels: ['Presence', 'Absence'],
         datasets: [
           {
             data: [taux, 100 - taux],
@@ -55,7 +55,7 @@ export class KpiAssiduiteComponent implements AfterViewInit {
           tooltip: { enabled: false },
           title: {
             display: true,
-            text: `Taux d’assiduité ${taux.toFixed(1)}%`,
+            text: `Attendance Rate ${taux.toFixed(1)}%`,
             color: '#333',
             font: { size: 18, weight: 'bold' }
           }

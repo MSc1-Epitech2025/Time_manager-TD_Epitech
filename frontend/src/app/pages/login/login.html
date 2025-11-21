@@ -32,7 +32,7 @@
                     <input matInput type="email" formControlName="email" placeholder="you@notyou.com">
                     <mat-icon matSuffix>mail</mat-icon>
                     <mat-error *ngIf="email?.hasError('required')">Email is required</mat-error>
-                    <mat-error *ngIf="email?.hasError('email')">Email invalide</mat-error>
+                    <mat-error *ngIf="email?.hasError('email')">Invalid email</mat-error>
                 </mat-form-field>
 
                 <mat-form-field appearance="outline" class="full">
@@ -43,7 +43,7 @@
                         <mat-icon>{{ hidePwd() ? 'visibility' : 'visibility_off' }}</mat-icon>
                     </button>
                     <mat-error *ngIf="password?.hasError('required')">Password is required</mat-error>
-                    <mat-error *ngIf="password?.hasError('minlength')">Min. 6 caractères</mat-error>
+                    <mat-error *ngIf="password?.hasError('minlength')">Min. 6 characters</mat-error>
                 </mat-form-field>
 
 
@@ -53,7 +53,7 @@
                 <ng-template #loadingTpl>
                     <span class="spinner">
                         <mat-progress-spinner diameter="18" mode="indeterminate"></mat-progress-spinner>
-                        <span>Connexion…</span>
+                        <span>Connecting…</span>
                     </span>
                 </ng-template>
             </form>

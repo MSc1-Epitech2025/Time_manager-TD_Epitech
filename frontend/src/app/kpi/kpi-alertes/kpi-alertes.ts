@@ -8,7 +8,7 @@ import { MatTabsModule } from '@angular/material/tabs';
   imports: [CommonModule, MatTabsModule],
   template: `
   <div class="kpi-card">
-    <h3>Alertes KPI</h3>
+    <h3>KPI Alerts</h3>
     <ul>
       <li *ngFor="let a of alertes" [class]="a.niveau">
         <strong>{{ a.type }}</strong> – {{ a.message }}

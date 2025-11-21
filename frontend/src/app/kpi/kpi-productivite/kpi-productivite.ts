@@ -6,7 +6,7 @@ Chart.register(...registerables);
 
 @Component({
   selector: 'app-kpi-productivite',
-  template: `<div class="kpi-card"><h3>Productivité horaire</h3><canvas #chart></canvas></div>`
+  template: `<div class="kpi-card"><h3>Hourly Productivity</h3><canvas #chart></canvas></div>`
 })
 export class KpiProductiviteComponent implements AfterViewInit {
   @ViewChild('chart') chartRef!: ElementRef<HTMLCanvasElement>;
@@ -20,7 +20,7 @@ export class KpiProductiviteComponent implements AfterViewInit {
         data: {
           labels: kpi.periodes,
           datasets: [{
-            label: 'Productivité (%)',
+            label: 'Productivity (%)',
             data: kpi.valeurs,
             borderColor: '#2196f3',
             tension: 0.3,

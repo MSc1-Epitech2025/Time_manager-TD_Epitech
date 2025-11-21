@@ -6,7 +6,7 @@ Chart.register(...registerables);
 
 @Component({
   selector: 'app-kpi-conges',
-  template: `<div class="kpi-card"><h3>Répartition des congés</h3><canvas #chart></canvas></div>`
+  template: `<div class="kpi-card"><h3>Leave Distribution</h3><canvas #chart></canvas></div>`
 })
 export class KpiCongesComponent implements AfterViewInit {
   @ViewChild('chart') chartRef!: ElementRef<HTMLCanvasElement>;

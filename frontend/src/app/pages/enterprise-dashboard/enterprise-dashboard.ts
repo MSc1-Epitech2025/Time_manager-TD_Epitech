@@ -64,7 +64,7 @@ export class EnterpriseDashboard implements OnDestroy {
   private sessionStartTimestamp?: number;
 
   pieChartData: ChartConfiguration<'pie'>['data'] = {
-    labels: ['Présence', 'Retards', 'Absences'],
+    labels: ['Presence', 'Late', 'Absences'],
     datasets: [
       {
         data: [0, 0, 0],
@@ -94,10 +94,10 @@ export class EnterpriseDashboard implements OnDestroy {
     new Chart(ctx, {
       type: 'line',
       data: {
-        labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sept', 'Oct'],
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
         datasets: [
           {
-            label: 'Performance globale',
+            label: 'Global Performance',
             data: [72, 75, 78, 80, 84, 83, 86, 88, 90, 92],
             borderColor: '#2563eb',
             backgroundColor: 'rgba(37,99,235,0.2)',
@@ -132,9 +132,9 @@ export class EnterpriseDashboard implements OnDestroy {
 
     this.enterpriseService.getEmployees().then(user => {
       this.user = user;
-      console.log('Informations des employés récupérées :', this.user);
+      console.log('Employee information retrieved:', this.user);
     }).catch(error => {
-      console.error('Erreur lors de la récupération des informations du manager :', error);
+      console.error('Error retrieving manager information:', error);
     });
   }
 

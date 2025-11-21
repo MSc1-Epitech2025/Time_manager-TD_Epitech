@@ -63,7 +63,7 @@ export class EmployeeDetailComponent implements OnInit {
         };
       },
       error: (err) => {
-        console.error('Impossible de charger les KPI employe', err);
+        console.error('Unable to load employee KPIs', err);
         this.loading = false;
         this.employeeData = null;
       }

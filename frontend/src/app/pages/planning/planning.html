@@ -2,18 +2,18 @@
   <header class="planning-header">
     <h2>
       <mat-icon fontSet="material-icons-outlined" fontIcon="calendar_month"></mat-icon>
-      Planning de {{ userName || 'mon equipe' }}
+      Planning of {{ userName || 'my team' }}
     </h2>
 
-    <p *ngIf="isManager; else employeeMode" class="role-tag manager">Mode manager</p>
+    <p *ngIf="isManager; else employeeMode" class="role-tag manager">Manager mode</p>
     <ng-template #employeeMode>
-      <p class="role-tag employee">Mode employe</p>
+      <p class="role-tag employee">Employee mode</p>
     </ng-template>
   </header>
 
   <div class="filters">
     <mat-form-field appearance="fill" class="people-select">
-      <mat-label>Personnes a afficher</mat-label>
+      <mat-label>People to display</mat-label>
       <mat-select
         multiple
         [value]="selectedPeople"
@@ -30,7 +30,7 @@
   </div>
 
   <ng-template #loadingTpl>
-    <div class="loading">Chargement du planning...</div>
+    <div class="loading">Loading planning...</div>
   </ng-template>
 </div>
 

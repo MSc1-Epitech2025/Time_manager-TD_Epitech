@@ -8,37 +8,37 @@
 
   <!-- Section export -->
   <section class="dashboard-export">
-    <button (click)="exportData()" class="export-btn">📊 Exporter le rapport</button>
+    <button (click)="exportData()" class="export-btn">📊 Export Report</button>
   </section>
 
   <!-- GRAPH GLOBAL -->
   <section class="kpi-global">
-    <h2>Évolution de la productivité globale</h2>
+    <h2>Global Productivity Evolution</h2>
   </section>
 
-  <!-- KPIs SYNTHÉTIQUES -->
+  <!-- SUMMARY KPIs -->
   <section class="dashboard-summary">
     <div class="summary-card">
       <div class="icon positive">💼</div>
-      <h3>Taux d’assiduité</h3>
+      <h3>Attendance Rate</h3>
       <p class="value">96%</p>
-      <small class="trend positive">+2.1% vs mois dernier</small>
+      <small class="trend positive">+2.1% vs last month</small>
     </div>
     <div class="summary-card">
       <div class="icon negative">🚫</div>
-      <h3>Taux d’absentéisme</h3>
+      <h3>Absenteeism Rate</h3>
       <p class="value">4%</p>
       <small class="trend negative">-0.5%</small>
     </div>
     <div class="summary-card">
       <div class="icon positive">⚙️</div>
-      <h3>Productivité horaire</h3>
+      <h3>Hourly Productivity</h3>
       <p class="value">7.8 h/jour</p>
       <small class="trend positive">+0.3 h</small>
     </div>
   </section>
 
-  <!-- KPIs DÉTAILLÉS -->
+  <!-- DETAILED KPIs -->
   <section class="dashboard-grid">
     <app-kpi-assiduite class="dashboard-card"></app-kpi-assiduite>
     <app-kpi-absenteisme class="dashboard-card"></app-kpi-absenteisme>

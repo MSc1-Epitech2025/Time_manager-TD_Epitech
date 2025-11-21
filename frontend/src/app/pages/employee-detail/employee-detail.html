@@ -1,7 +1,7 @@
 <div class="employee-detail">
   <mat-card *ngIf="!loading && employeeData; else state">
     <h2>{{ employeeData.name }}</h2>
-    <p>Equipe : {{ employeeData.team || 'Non renseignee' }}</p>
+    <p>Team: {{ employeeData.team || 'Not set' }}</p>
 
     <div class="chart-container">
       <canvas
@@ -14,17 +14,17 @@
 
     <button mat-raised-button color="accent" (click)="exportExcel()">
       <mat-icon>download</mat-icon>
-      Telecharger le rapport Excel
+      Download Excel Report
     </button>
   </mat-card>
 
   <ng-template #state>
     <mat-card class="placeholder">
       <ng-container *ngIf="loading; else noData">
-        Chargement des statistiques...
+        Loading statistics...
       </ng-container>
       <ng-template #noData>
-        Impossible de trouver les informations de cet employe.
+        Unable to find information for this employee.
       </ng-template>
     </mat-card>
   </ng-template>

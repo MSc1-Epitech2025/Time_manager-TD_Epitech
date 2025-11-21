@@ -67,13 +67,13 @@ export class ManagerDashboard implements OnInit {
   ) { }
 
   ngOnInit() {
-    // D'abord, extraire les paramètres de la route
+    // First, extract route parameters
     this.route.queryParamMap.subscribe((params) => {
       const teamId = params.get('teamId');
       const teamName = params.get('teamName');
       this.selectedTeamId = teamId ? teamId.trim() : null;
       this.selectedTeamName = teamName ? teamName.trim().toLowerCase() : null;
-      // Recharger les employés quand les paramètres changent
+      // Reload employees when parameters change
       this.loadEmployees();
     });
   }
@@ -117,7 +117,7 @@ export class ManagerDashboard implements OnInit {
   private loadEmployees() {
     this.loadingEmployees = true;
     
-    // Si un teamId est fourni, charger les employés de cette team spécifique
+    // If a teamId is provided, load employees from that specific team
     if (this.selectedTeamId) {
       this.managerService.getTeamEmployeesByTeamId(this.selectedTeamId).subscribe({
         next: (data) => {
@@ -126,7 +126,7 @@ export class ManagerDashboard implements OnInit {
           this.applyFilters();
         },
         error: (err) => {
-          console.error('Echec du chargement des employes de la team', err);
+          console.error('Failed to load team employees', err);
           this.loadingEmployees = false;
           this.employees = [];
           this.filteredEmployees = [];
@@ -134,7 +134,7 @@ export class ManagerDashboard implements OnInit {
         },
       });
     } else {
-      // Sinon charger tous les employés des teams du manager
+      // Otherwise load all employees from the manager's teams
       this.managerService.getTeamEmployees().subscribe({
         next: (data) => {
           this.employees = data;
@@ -142,7 +142,7 @@ export class ManagerDashboard implements OnInit {
           this.applyFilters();
         },
         error: (err) => {
-          console.error('Echec du chargement des employes', err);
+          console.error('Failed to load employees', err);
           this.loadingEmployees = false;
           this.employees = [];
           this.filteredEmployees = [];

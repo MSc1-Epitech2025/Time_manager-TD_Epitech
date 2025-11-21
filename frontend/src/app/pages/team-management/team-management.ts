@@ -71,7 +71,7 @@ export class TeamManagement implements OnInit {
       roles: this.auth.session?.user?.roles,
       isAdmin: this.isAdminUser,
       isManager: this.isManagerUser,
-    }); // DEBUG refreshTeams: état initial
+    }); // DEBUG refreshTeams: initial state
     this.loadTeamsForCurrentUser()
       .pipe(
         switchMap((teams) =>
@@ -85,7 +85,7 @@ export class TeamManagement implements OnInit {
       )
       .subscribe({
         next: (teams) => {
-          console.debug('[TeamManagement] refreshTeams success', { teams }); // DEBUG refreshTeams: succès
+          console.debug('[TeamManagement] refreshTeams success', { teams }); // DEBUG refreshTeams: success
           this.teams = teams;
           this.applyFilter();
           this.isLoading = false;
