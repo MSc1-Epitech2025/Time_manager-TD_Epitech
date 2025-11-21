@@ -52,7 +52,7 @@ $theme-dark: mat.define-theme((color: (theme-type: dark, primary: mat.$magenta-p
 
 button[mat-stroked-button],
 button[mat-flat-button] {
-  border-radius: 14px !important;
+  border-radius: 14px ;
   height: 44px;
   font-weight: 700;
 }
@@ -71,15 +71,15 @@ body {
 }
 
 .snack-success {
-  background: #16a34a !important;
+  background: #16a34a ;
 }
 
 .snack-warn {
-  background: #f59e0b !important;
+  background: #f59e0b ;
 }
 
 .snack-error {
-  background: #dc2626 !important;
+  background: #dc2626 ;
 }
 
 html,
