@@ -1,0 +1,23 @@
+enum ClockKind { IN OUT }
+
+type Clock {
+  id: ID!
+  kind: ClockKind!
+  at: String!
+  userId: ID!
+}
+
+extend type Query {
+  myClocks(from: String, to: String): [Clock!]!
+  clocksForUser(userId: ID!, from: String, to: String): [Clock!]!
+}
+
+input ClockCreateInput {
+  kind: ClockKind!
+  at: String
+}
+
+extend type Mutation {
+  createClockForMe(input: ClockCreateInput!): Clock!
+  createClockForUser(userId: ID!, input: ClockCreateInput!): Clock!
+}

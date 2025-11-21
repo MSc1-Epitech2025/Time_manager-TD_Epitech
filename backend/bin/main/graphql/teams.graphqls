@@ -1,0 +1,46 @@
+type Team {
+  id: ID!
+  name: String!
+  description: String
+  members: [User!]!
+}
+
+input TeamInput {
+  name: String!
+  description: String
+}
+
+input TeamUpdateInput {
+  id: ID!
+  name: String
+  description: String
+}
+
+type TeamMembersGroup {
+  teamId: ID!
+  teamName: String!
+  members: [User!]!
+}
+
+input MemberChangeInput {
+  userId: ID!
+}
+
+extend type Query {
+  teams: [Team!]!
+  team(id: ID!): Team
+  teamMembers(teamId: ID!): [User!]!
+  allTeams: [Team!]!
+  myTeams: [Team!]!
+  myManagedTeams: [Team!]!
+  myTeamMembers: [TeamMembersGroup!]!
+  teamManagers(teamId: ID!): [User!]!
+}
+
+extend type Mutation {
+  createTeam(input: TeamInput!): Team!
+  updateTeam(input: TeamUpdateInput!): Team!
+  deleteTeam(id: ID!): Boolean!
+  addTeamMember(teamId: ID!, input: MemberChangeInput!): Boolean!
+  removeTeamMember(teamId: ID!, input: MemberChangeInput!): Boolean!
+}
