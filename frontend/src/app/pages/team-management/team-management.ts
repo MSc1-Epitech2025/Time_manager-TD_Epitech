@@ -95,7 +95,7 @@ export class TeamManagement implements OnInit {
           this.teams = [];
           this.filteredTeams = [];
           this.isLoading = false;
-          this.lastError = error?.message ?? 'Impossible de recuperer les equipes pour le moment.';
+          this.lastError = error?.message ?? 'Unable to retrieve teams at this time.';
         },
       });
   }
@@ -291,9 +291,9 @@ export class TeamManagement implements OnInit {
       );
     }
     if (this.isManagerUser) {
-      console.debug('[TeamManagement] Manager detected, loading managed teams'); // DEBUG manager branch
-      return this.teamService.listManagedTeams().pipe(
-        tap((result) => console.debug('[TeamManagement] manager result', { count: result.length, result })) // DEBUG manager result
+      console.debug('[TeamManagement] Manager detected, loading my team members'); // DEBUG manager branch
+      return this.teamService.listMyTeamMembers().pipe(
+        tap((result) => console.debug('[TeamManagement] myTeamMembers result', { count: result.length, result })) // DEBUG manager result
       );
     }
     console.debug('[TeamManagement] Default branch (myTeams)'); // DEBUG default branch

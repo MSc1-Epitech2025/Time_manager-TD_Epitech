@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -29,7 +29,7 @@ import { AuthService } from '../../core/services/auth';
   templateUrl: './manager-dashboard.html',
   styleUrls: ['./manager-dashboard.scss'],
 })
-export class ManagerDashboard {
+export class ManagerDashboard implements OnInit {
   employees: EmployeeSummary[] = [];
   filteredEmployees: EmployeeSummary[] = [];
   searchTerm = '';
@@ -58,20 +58,23 @@ export class ManagerDashboard {
   };
 
   constructor(
-    private router: Router,
-    private route: ActivatedRoute,
-    private managerService: ManagerService,
-    private reportService: ReportService,
-    private auth: AuthService,
+    private readonly router: Router,
+    private readonly route: ActivatedRoute,
+    private readonly managerService: ManagerService,
+    private readonly reportService: ReportService,
+    private readonly auth: AuthService,
   ) { }
 
   ngOnInit() {
+    // D'abord, extraire les paramètres de la route
     this.route.queryParamMap.subscribe((params) => {
       const teamName = params.get('teamName');
       this.selectedTeamName = teamName ? teamName.trim().toLowerCase() : null;
+      // Réappliquer les filtres chaque fois que les queryParams changent
       this.applyFilters();
     });
 
+    // Ensuite charger les employés
     this.loadEmployees();
   }
 

@@ -13,7 +13,7 @@
         <input
           type="text"
           class="search-bar"
-          placeholder="Rechercher une equipe..."
+          placeholder="Search for a team..."
           [(ngModel)]="searchTerm"
           (ngModelChange)="searchTeams()"
         />
@@ -26,7 +26,7 @@
     </section>
 
     <section *ngIf="isLoading || lastError" class="status-section">
-      <div *ngIf="isLoading">Chargement des equipes...</div>
+      <div *ngIf="isLoading">Loading teams...</div>
       <div *ngIf="!isLoading && lastError">{{ lastError }}</div>
     </section>
 
@@ -47,9 +47,9 @@
               {{ team.name }}
             </button>
             <p class="team-description">
-              {{ team.description || 'Pas de description' }}
+              {{ team.description || 'No description' }}
             </p>
-            <span>{{ team.members.length }} membres</span>
+            <span>{{ team.members.length }} members</span>
           </div>
         </div>
 
@@ -80,15 +80,15 @@
     </section>
 
     <section *ngIf="isManagerUser && !isAdminUser" class="hint-section">
-      <p>Vous pouvez voir les equipes dont vous faites partie. Cliquez sur le titre de l'equipe pour voir les details.</p>
+      <p>You can see the teams you are part of. Click on the team name to see details.</p>
     </section>
 
     <section *ngIf="isAdminUser" class="hint-section">
-      <p>Vous pouvez creer, modifier ou supprimer des equipes.</p>
+      <p>You can create, edit, or delete teams.</p>
     </section>
 
     <section *ngIf="!isLoading && !lastError && !filteredTeams.length" class="status-section">
-      Aucune equipe a afficher.
+      No teams to display.
     </section>
 
     <button

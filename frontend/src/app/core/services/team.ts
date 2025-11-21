@@ -103,6 +103,14 @@ type MyManagedTeamsPayload = { myManagedTeams: GraphqlTeam[] };
 type MyTeamsPayload = { myTeams: GraphqlTeam[] };
 type AllUsersPayload = { users: GraphqlUser[] };
 
+type TeamMembersGroup = {
+  teamId: string | number;
+  teamName: string;
+  members: GraphqlUser[];
+};
+
+type MyTeamMembersPayload = { myTeamMembers: TeamMembersGroup[] };
+
 export interface TeamMember {
   id: string;
   name: string;
@@ -339,6 +347,27 @@ export class TeamService {
     );
   }
 
+  listMyTeamMembers(): Observable<Team[]> {
+    return this.requestGraphql<MyTeamMembersPayload>(MY_TEAM_MEMBERS_QUERY, undefined, 'MyTeamMembers').pipe(
+      tap((payload) => {
+        console.debug('[TeamService] myTeamMembers payload', payload);
+      }),
+      map((payload) => {
+        const groups = payload?.myTeamMembers ?? [];
+        return groups.map((group) => ({
+          id: String(group.teamId),
+          name: group.teamName,
+          description: undefined,
+          members: (group.members || []).map((member) => ({
+            id: String(member.id),
+            name: this.buildMemberName(member),
+            email: member.email ?? undefined,
+          })),
+        }));
+      })
+    );
+  }
+
   private requestGraphql<T>(
     query: string,
     variables?: Record<string, unknown>,
@@ -552,6 +581,21 @@ const ALL_USERS_QUERY = `
       firstName
       lastName
       email
+    }
+  }
+`;
+
+const MY_TEAM_MEMBERS_QUERY = `
+  query MyTeamMembers {
+    myTeamMembers {
+      teamId
+      teamName
+      members {
+        id
+        firstName
+        lastName
+        email
+      }
     }
   }
 `;

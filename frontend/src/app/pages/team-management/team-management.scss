@@ -1,7 +1,7 @@
 /* === Variables === */
 $sidebar-width: 260px;
 $radius: 12px;
-$shadow: 0 6px 18px rgba(16, 24, 40, 0.08);
+$shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
 /* === Couleurs principales === */
 :root {
@@ -9,9 +9,23 @@ $shadow: 0 6px 18px rgba(16, 24, 40, 0.08);
   --c-text: #1e1e2b;
   --c-card: #ffffff;
   --c-border: #e4e4e7;
-  --c-primary: #7c3aed;
+  --c-primary: #a78bfa;
   --c-accent: #f472b6;
+  --c-secondary: #c084fc;
   --c-muted: #6b7280;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --c-bg: #0f172a;
+    --c-text: #f1f5f9;
+    --c-card: #1e293b;
+    --c-border: #334155;
+    --c-primary: #a78bfa;
+    --c-accent: #f472b6;
+    --c-secondary: #c084fc;
+    --c-muted: #94a3b8;
+  }
 }
 
 /* === Structure principale === */
@@ -109,18 +123,19 @@ $shadow: 0 6px 18px rgba(16, 24, 40, 0.08);
 
 /* === HEADER === */
 .header {
-  background: linear-gradient(90deg, #a78bfa, #f472b6);
-  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #a78bfa 0%, #f472b6 50%, #c084fc 100%);
+  padding: 1.5rem 2rem;
   border-radius: $radius;
   display: flex;
   align-items: center;
   justify-content: space-between;
   color: #fff;
-  margin-bottom: 1.2rem;
+  margin-bottom: 1.5rem;
+  box-shadow: $shadow;
 
   h2 {
     margin: 0;
-    font-size: 1.4rem;
+    font-size: 1.6rem;
     font-weight: 700;
   }
 }
@@ -204,43 +219,56 @@ $shadow: 0 6px 18px rgba(16, 24, 40, 0.08);
   .search-btn {
     display: flex;
     align-items: center;
-    background: var(--c-primary);
-    background-color: #7c3aed;
+    background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
     color: #fff;
     border: none;
     border-radius: 10px;
-    padding: 0.7rem 1.4rem;
+    padding: 0.75rem 1.6rem;
     font-weight: 600;
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    transition: 0.25s ease;
+    transition: all 0.25s ease;
+
+    &:hover {
+      opacity: 0.9;
+    }
+
+    &:active {
+      opacity: 0.8;
+    }
 
     mat-icon {
-      font-size: 26px;
+      font-size: 20px;
       color: #fff;
     }
   }
 
 
   .add-team-btn {
-    background: var(--c-primary);
-    background-color: #7c3aed;
+    background: linear-gradient(135deg, var(--c-primary), var(--c-secondary));
     color: #fff;
     border: none;
     border-radius: 10px;
-    padding: 0.7rem 1.4rem;
+    padding: 0.75rem 1.6rem;
     font-weight: 600;
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    transition: 0.25s ease;
-    width: 100px;
+    transition: all 0.25s ease;
+
+    &:hover {
+      opacity: 0.9;
+    }
+
+    &:active {
+      opacity: 0.8;
+    }
 
     mat-icon {
-      font-size: 18px;
+      font-size: 20px;
       color: #fff;
     }
   }
@@ -258,32 +286,36 @@ $shadow: 0 6px 18px rgba(16, 24, 40, 0.08);
 .team-card {
   background: var(--c-card);
   border: 1px solid var(--c-border);
-  border-radius: 10px;
-  padding: 1.2rem 1.4rem;
+  border-radius: 16px;
+  padding: 1.5rem 1.6rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition: 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 
- 
+  &:hover {
+    box-shadow: $shadow;
+    transform: translateY(-2px);
+  }
 
   .team-header {
     display: flex;
     align-items: center;
     gap: 1rem;
-    margin-bottom: 0.8rem;
+    margin-bottom: 1rem;
 
     .team-avatar {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #7c3aed, #a78bfa);
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #a78bfa, #c084fc);
       color: #fff;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 700;
-      font-size: 1.2rem;
+      font-size: 1.3rem;
       text-transform: uppercase;
     }
 
@@ -297,17 +329,17 @@ $shadow: 0 6px 18px rgba(16, 24, 40, 0.08);
         border: none;
         margin: 0;
         padding: 0;
-        font-size: 1.1rem;
+        font-size: 1.15rem;
         font-weight: 700;
         color: var(--c-text);
         cursor: pointer;
         transition: color 0.2s ease;
         text-align: start;
         text-decoration: underline;
-        text-decoration-color: #3b82f6;
+        text-decoration-color: var(--c-primary);
 
         &:hover {
-          color: #3b82f6;
+          color: var(--c-primary);
         }
 
         &:focus {
@@ -325,6 +357,7 @@ $shadow: 0 6px 18px rgba(16, 24, 40, 0.08);
       span {
         font-size: 0.85rem;
         color: var(--c-muted);
+        font-weight: 500;
       }
     }
   }
@@ -332,22 +365,17 @@ $shadow: 0 6px 18px rgba(16, 24, 40, 0.08);
   .team-members {
     display: flex;
     align-items: center;
-    gap: 0.3rem;
-    margin-top: 0.6rem;
+    gap: 0.4rem;
+    margin-top: 1rem;
     overflow: auto;
 
-    bar::-webkit-scrollbar {
-      height: 6px;
-      background-color: #7c3aed;
-    }
-
     img {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
       border: 2px solid #fff;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-      transition: 0.2s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: all 0.2s ease;
 
       &:hover {
         transform: scale(1.1);
@@ -357,21 +385,30 @@ $shadow: 0 6px 18px rgba(16, 24, 40, 0.08);
   }
 
   .team-actions {
-    margin-top: 1.2rem;
+    margin-top: 1.4rem;
     display: flex;
     color: #ffffff;
     justify-content: flex-end;
-    gap: 0.5rem;
+    gap: 0.6rem;
 
     button {
-      background: transparent;
-      border: 1px solid var(--c-border);
-      padding: 0.4rem 0.8rem;
+      background: linear-gradient(135deg, var(--c-primary), var(--c-secondary));
+      border: none;
+      padding: 0.5rem 1rem;
       cursor: pointer;
       color: #fff;
       font-size: 0.9rem;
-      transition: 0.2s ease;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      font-weight: 500;
 
+      &:hover {
+        opacity: 0.9;
+      }
+
+      &:active {
+        opacity: 0.8;
+      }
     }
   }
 }
