@@ -38,9 +38,14 @@
             {{ team.name.charAt(0).toUpperCase() }}
           </div>
           <div class="team-info">
-            <h4 class="team-name" (click)="viewTeamDetails(team)" role="button">
+            <button
+              class="team-name-btn"
+              (click)="viewTeamDetails(team)"
+              (keydown.enter)="viewTeamDetails(team)"
+              (keydown.space)="viewTeamDetails(team)"
+            >
               {{ team.name }}
-            </h4>
+            </button>
             <p class="team-description">
               {{ team.description || 'Pas de description' }}
             </p>
@@ -74,8 +79,12 @@
       </div>
     </section>
 
-    <section *ngIf="!isAdminUser" class="hint-section">
-      <p>Seuls les administrateurs peuvent creer, modifier ou supprimer des equipes.</p>
+    <section *ngIf="isManagerUser && !isAdminUser" class="hint-section">
+      <p>Vous pouvez voir les equipes dont vous faites partie. Cliquez sur le titre de l'equipe pour voir les details.</p>
+    </section>
+
+    <section *ngIf="isAdminUser" class="hint-section">
+      <p>Vous pouvez creer, modifier ou supprimer des equipes.</p>
     </section>
 
     <section *ngIf="!isLoading && !lastError && !filteredTeams.length" class="status-section">

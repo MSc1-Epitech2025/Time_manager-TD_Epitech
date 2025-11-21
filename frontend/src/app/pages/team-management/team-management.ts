@@ -54,10 +54,10 @@ export class TeamManagement implements OnInit {
   lastError: string | null = null;
 
   constructor(
-    private modal: MatDialog,
-    private teamService: TeamService,
-    private auth: AuthService,
-    private router: Router
+    private readonly modal: MatDialog,
+    private readonly teamService: TeamService,
+    private readonly auth: AuthService,
+    private readonly router: Router
   ) {}
 
   ngOnInit(): void {
@@ -160,7 +160,7 @@ export class TeamManagement implements OnInit {
                 typeof updatedTeam.description === 'string'
                   ? updatedTeam.description.trim()
                   : '';
-              const nextDescription = rawDescription ? rawDescription : null;
+              const nextDescription = rawDescription || null;
               const operations: Observable<unknown>[] = [];
 
               const nameChanged =
@@ -309,7 +309,7 @@ export class TeamManagement implements OnInit {
 
     for (const entry of input) {
       if (!entry || typeof entry !== 'object') continue;
-      const member = entry as DialogTeamMemberLike;
+      const member = entry;
 
       const id = this.extractMemberId(member);
       if (!id) continue;

@@ -101,6 +101,7 @@ type AddMemberPayload = { addTeamMember: boolean };
 type RemoveMemberPayload = { removeTeamMember: boolean };
 type MyManagedTeamsPayload = { myManagedTeams: GraphqlTeam[] };
 type MyTeamsPayload = { myTeams: GraphqlTeam[] };
+type AllUsersPayload = { users: GraphqlUser[] };
 
 export interface TeamMember {
   id: string;
@@ -127,7 +128,7 @@ export interface UpdateTeamInput {
 
 @Injectable({ providedIn: 'root' })
 export class TeamService {
-  constructor(private http: HttpClient) {}
+  constructor(private readonly http: HttpClient) {}
 
   listAllTeams(): Observable<Team[]> {
     return this.requestGraphql<AllTeamsQueryPayload>(ALL_TEAMS_QUERY, undefined, 'AllTeams').pipe(
@@ -319,6 +320,22 @@ export class TeamService {
         console.debug('[TeamService] removeTeamMember payload', payload);
       }),
       map((payload) => payload?.removeTeamMember ?? false)
+    );
+  }
+
+  getAllUsers(): Observable<TeamMember[]> {
+    return this.requestGraphql<AllUsersPayload>(ALL_USERS_QUERY, undefined, 'AllUsers').pipe(
+      tap((payload) => {
+        console.debug('[TeamService] allUsers payload', payload);
+      }),
+      map((payload) => {
+        const users = payload?.users ?? [];
+        return users.map((user) => ({
+          id: String(user.id),
+          name: this.buildMemberName(user),
+          email: user.email ?? undefined,
+        }));
+      })
     );
   }
 
@@ -525,5 +542,16 @@ const ADD_TEAM_MEMBER_MUTATION = `
 const REMOVE_TEAM_MEMBER_MUTATION = `
   mutation RemoveTeamMember($teamId: ID!, $input: MemberChangeInput!) {
     removeTeamMember(teamId: $teamId, input: $input)
+  }
+`;
+
+const ALL_USERS_QUERY = `
+  query AllUsers {
+    users {
+      id
+      firstName
+      lastName
+      email
+    }
   }
 `;

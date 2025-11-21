@@ -292,16 +292,27 @@ $shadow: 0 6px 18px rgba(16, 24, 40, 0.08);
       flex-direction: column;
       gap: 0.3rem;
 
-      .team-name {
+      .team-name-btn {
+        background: transparent;
+        border: none;
         margin: 0;
+        padding: 0;
         font-size: 1.1rem;
         font-weight: 700;
         color: var(--c-text);
         cursor: pointer;
         transition: color 0.2s ease;
+        text-align: start;
+        text-decoration: underline;
+        text-decoration-color: #3b82f6;
 
         &:hover {
-          color: var(--c-accent);
+          color: #3b82f6;
+        }
+
+        &:focus {
+          outline: 2px solid var(--c-primary);
+          outline-offset: 2px;
         }
       }
 
