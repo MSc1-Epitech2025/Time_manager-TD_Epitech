@@ -104,7 +104,7 @@ public class KpiService {
 <span class="fc" id="L104">                Number.class, start, end.plusDays(1));</span>
 
 <span class="fc" id="L106">        BigDecimal avgHours = (nz(totalMinutes)</span>
-<span class="pc bpc" id="L107" title="1 of 2 branches missed.">                .divide(new BigDecimal(dayCount == null ? 1 : dayCount.longValue()), 2, java.math.RoundingMode.HALF_UP))</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">                .divide(new BigDecimal(dayCount == null ? 1 : dayCount.longValue()), 2, java.math.RoundingMode.HALF_UP))</span>
 <span class="fc" id="L108">                .divide(BigDecimal.valueOf(60), 2, java.math.RoundingMode.HALF_UP);</span>
 <span class="fc" id="L109">        k.setAvgHoursPerDay(avgHours);</span>
 
@@ -196,7 +196,7 @@ public class KpiService {
 <span class="fc" id="L196">                Number.class, teamId, start, end.plusDays(1));</span>
 
 <span class="fc" id="L198">        BigDecimal avgHours = (nz(totalMinutes)</span>
-<span class="pc bpc" id="L199" title="1 of 2 branches missed.">                .divide(new BigDecimal(dayCount == null ? 1 : dayCount.longValue()), 2, java.math.RoundingMode.HALF_UP))</span>
+<span class="fc bfc" id="L199" title="All 2 branches covered.">                .divide(new BigDecimal(dayCount == null ? 1 : dayCount.longValue()), 2, java.math.RoundingMode.HALF_UP))</span>
 <span class="fc" id="L200">                .divide(BigDecimal.valueOf(60), 2, java.math.RoundingMode.HALF_UP);</span>
 <span class="fc" id="L201">        k.setAvgHoursPerDay(avgHours);</span>
 
