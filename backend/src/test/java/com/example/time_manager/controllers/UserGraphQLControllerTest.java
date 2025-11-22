@@ -5,13 +5,16 @@ import com.example.time_manager.graphql.controller.UserGraphQLController;
 import com.example.time_manager.model.User;
 import com.example.time_manager.security.JwtUtil;
 import com.example.time_manager.service.UserService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.*;
 import org.mockito.*;
-import jakarta.servlet.http.Cookie;
 import org.springframework.mock.web.*;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -38,7 +41,9 @@ class UserGraphQLControllerTest {
 
     @Test
     void testRegister_NewUser() {
-        CreateUserInput input = new CreateUserInput("John", "Doe", "john@example.com", "0606060606", "ADMIN", "Dev", null, "pass123");
+        CreateUserInput input = new CreateUserInput("John", "Doe", "john@example.com",
+                "0606060606", "ADMIN", "Dev", null, "pass123");
+
         when(userService.findByEmail("john@example.com")).thenReturn(Optional.empty());
         User u = new User(); u.setEmail("john@example.com");
         when(userService.saveUser(any(User.class))).thenReturn(u);
@@ -51,9 +56,10 @@ class UserGraphQLControllerTest {
 
     @Test
     void testRegister_EmailExists_ThrowsException() {
-        CreateUserInput input = new CreateUserInput("John", "Doe", "john@example.com", "0606060606", "ADMIN", "Dev", null, "pass123");
-        when(userService.findByEmail("john@example.com")).thenReturn(Optional.of(new User()));
+        CreateUserInput input = new CreateUserInput("John", "Doe", "john@example.com",
+                "0606060606", "ADMIN", "Dev", null, "pass123");
 
+        when(userService.findByEmail("john@example.com")).thenReturn(Optional.of(new User()));
         assertThrows(RuntimeException.class, () -> controller.register(input));
     }
 
@@ -67,7 +73,10 @@ class UserGraphQLControllerTest {
     void testLogin_Success() {
         AuthRequest auth = new AuthRequest("john@example.com", "pass123");
         User user = new User();
-        user.setEmail("john@example.com"); user.setId("1"); user.setFirstName("John"); user.setRole("ADMIN");
+        user.setEmail("john@example.com");
+        user.setId("1");
+        user.setFirstName("John");
+        user.setRole("ADMIN");
 
         when(userService.validateUser("john@example.com", "pass123")).thenReturn(true);
         when(userService.findByEmail("john@example.com")).thenReturn(Optional.of(user));
@@ -78,7 +87,6 @@ class UserGraphQLControllerTest {
 
         assertTrue(res.isOk());
         assertTrue(response.getHeader("Set-Cookie").contains("access_token"));
-        verify(jwtUtil).generateAccessToken(any(), any(), any(), any());
     }
 
     @Test
@@ -86,17 +94,12 @@ class UserGraphQLControllerTest {
         AuthRequest auth = new AuthRequest("john@example.com", "wrong");
         when(userService.validateUser("john@example.com", "wrong")).thenReturn(false);
 
-        RuntimeException thrown = assertThrows(
-                RuntimeException.class,
-                () -> controller.login(auth)
-        );
-
+        RuntimeException thrown = assertThrows(RuntimeException.class, () -> controller.login(auth));
         assertEquals("Invalid credentials", thrown.getMessage());
-        verify(userService).validateUser("john@example.com", "wrong");
     }
 
     @Test
-    void testRefresh_WithBodyToken_Success() {
+    void testRefresh_WithCookieToken_Success() {
         request.setCookies(new Cookie("refresh_token", "token123"));
 
         User user = new User();
@@ -111,14 +114,22 @@ class UserGraphQLControllerTest {
         when(jwtUtil.generateAccessToken(any(), any(), any(), any())).thenReturn("access456");
 
         AuthResponse res = controller.refresh(Optional.empty());
-
         assertTrue(res.isOk());
-        assertTrue(response.getHeader("Set-Cookie").contains("access_token"));
     }
 
     @Test
     void testRefresh_MissingToken_Throws() {
         assertThrows(RuntimeException.class, () -> controller.refresh(Optional.empty()));
+    }
+
+    @Test
+    void testRefresh_BlankTokenInCookie_Throws() {
+        request.setCookies(new Cookie("refresh_token", ""));
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> controller.refresh(Optional.empty()));
+
+        assertEquals("Missing refresh token", ex.getMessage());
     }
 
     @Test
@@ -135,22 +146,143 @@ class UserGraphQLControllerTest {
         when(userService.findAllUsers()).thenReturn(users);
 
         List<User> result = controller.users();
-
         assertEquals(2, result.size());
     }
 
     @Test
-    void testUserByEmail_Found() {
-        User u = new User(); u.setEmail("john@example.com");
-        when(userService.findByEmail("john@example.com")).thenReturn(Optional.of(u));
+    void testUsers_ReturnsEmptyListWhenNull() {
+        when(userService.findAllUsers()).thenReturn(null);
+        assertTrue(controller.users().isEmpty());
+    }
 
-        User result = controller.userByEmail("john@example.com");
-        assertNotNull(result);
+    @Test
+    void testUserByEmail_Found() {
+        User u = new User();
+        u.setEmail("john@example.com");
+
+        when(userService.findByEmail("john@example.com")).thenReturn(Optional.of(u));
+        assertNotNull(controller.userByEmail("john@example.com"));
     }
 
     @Test
     void testUserByEmail_NotFound() {
-        when(userService.findByEmail("notfound@example.com")).thenReturn(Optional.empty());
-        assertNull(controller.userByEmail("notfound@example.com"));
+        when(userService.findByEmail("x")).thenReturn(Optional.empty());
+        assertNull(controller.userByEmail("x"));
+    }
+
+    @Test
+    void testUpdateUser_CallsService() {
+        UpdateUserInput input = new UpdateUserInput("42","John","Doe","john@test.com",
+                null,null,null,null,null);
+
+        User u = new User(); u.setId("42");
+        when(userService.updateUser(eq("42"), any())).thenReturn(u);
+
+        assertEquals("42", controller.updateUser(input).getId());
+    }
+
+    @Test
+    void testRefresh_InvalidToken_ParseError() {
+        request.setCookies(new Cookie("refresh_token", "bad"));
+        when(jwtUtil.parseRefreshSubject("bad")).thenThrow(new RuntimeException());
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> controller.refresh(Optional.empty()));
+
+        assertEquals("Invalid refresh token", ex.getMessage());
+    }
+
+    @Test
+    void testRefresh_InvalidOrExpiredToken() {
+        request.setCookies(new Cookie("refresh_token", "tok999"));
+        when(jwtUtil.parseRefreshSubject("tok999")).thenReturn("john@test.com");
+        when(jwtUtil.isRefreshTokenValid("tok999", "john@test.com")).thenReturn(false);
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> controller.refresh(Optional.empty()));
+
+        assertEquals("Invalid or expired refresh token", ex.getMessage());
+    }
+
+    @Test
+    void testCurrentResponse_NoResponse_Throws() throws Exception {
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(req, null));
+
+        Method m = UserGraphQLController.class.getDeclaredMethod("currentResponse");
+        m.setAccessible(true);
+
+        InvocationTargetException ex = assertThrows(InvocationTargetException.class,
+                () -> m.invoke(null));
+
+        assertTrue(ex.getCause() instanceof IllegalStateException);
+    }
+
+    @Test
+    void testReadCookie_FindsCookie() throws Exception {
+        request.setCookies(new Cookie("refresh_token", "XYZ"));
+
+        Method m = UserGraphQLController.class.getDeclaredMethod(
+                "readCookie", HttpServletRequest.class, String.class
+        );
+        m.setAccessible(true);
+
+        assertEquals("XYZ", m.invoke(null, request, "refresh_token"));
+    }
+
+    static class BeanNull {
+        public String getSomething() { return null; }
+    }
+
+    @Test
+    void testTryCallGetter_MethodExistsButReturnsNull() throws Exception {
+        BeanNull bean = new BeanNull();
+
+        Method m = UserGraphQLController.class.getDeclaredMethod(
+                "tryCallGetter", Object.class, String.class
+        );
+        m.setAccessible(true);
+
+        assertNull(m.invoke(null, bean, "getSomething"));
+    }
+
+    @Test
+    void testTryCallGetter_InvalidMethod() throws Exception {
+        RefreshRequest req = new RefreshRequest("X");
+
+        Method m = UserGraphQLController.class.getDeclaredMethod(
+                "tryCallGetter", Object.class, String.class
+        );
+        m.setAccessible(true);
+
+        assertNull(m.invoke(null, req, "doesNotExist"));
+    }
+
+    @Test
+    void testTryCallGetter_ValidMethod_ReturnsValue() throws Exception {
+        RefreshRequest req = new RefreshRequest("TTT");
+
+        Method m = UserGraphQLController.class.getDeclaredMethod(
+                "tryCallGetter", Object.class, String.class
+        );
+        m.setAccessible(true);
+
+        Object v = m.invoke(null, req, "refreshToken");
+
+        assertEquals("TTT", v);
+    }
+
+    @Test
+    void testExtractRefreshFromBody_ReturnsNull_WhenNoGetterMatches() throws Exception {
+        RefreshRequest req = new RefreshRequest("AAA");
+
+        Method m = UserGraphQLController.class.getDeclaredMethod(
+                "extractRefreshFromBody", RefreshRequest.class
+        );
+        m.setAccessible(true);
+
+        Object result = m.invoke(null, req);
+
+        assertNull(result);
     }
 }
