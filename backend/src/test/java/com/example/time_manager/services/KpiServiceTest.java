@@ -487,4 +487,80 @@ class KpiServiceTest {
 
         assertEquals(new BigDecimal("5.00"), k.getOvertimeHours());
     }
+
+    @Test
+    void testGetGlobal_dayCountNull_usesDivisorOne() {
+
+        LocalDate start = LocalDate.of(2024, 1, 1);
+        LocalDate end   = LocalDate.of(2024, 1, 31);
+
+        when(jdbc.queryForObject(contains("SELECT COUNT(*) FROM users"), eq(Integer.class)))
+                .thenReturn(10);
+
+        when(jdbc.queryForObject(contains("manager"), eq(Integer.class)))
+                .thenReturn(2);
+
+        when(jdbc.queryForObject(contains("admin"), eq(Integer.class)))
+                .thenReturn(1);
+
+        when(jdbc.queryForObject(contains("DISTINCT CONCAT"), eq(Number.class), any(), any()))
+                .thenReturn(50);
+
+        when(jdbc.queryForObject(contains("WITH RECURSIVE d"), eq(Number.class), any(), any()))
+                .thenReturn(100);
+
+        when(jdbc.queryForObject(contains("SUM(TIMESTAMPDIFF"), eq(Number.class), any(), any()))
+                .thenReturn(3000);
+
+        when(jdbc.queryForObject(startsWith("SELECT COUNT(*) FROM ("), eq(Number.class), any(), any()))
+                .thenReturn(null);
+
+        when(jdbc.queryForObject(contains("absence_days"), eq(Number.class), any(), any()))
+                .thenReturn(20);
+
+        when(jdbc.queryForObject(contains("approved_at"), eq(Number.class), any(), any()))
+                .thenReturn(12);
+
+        when(jdbc.queryForObject(contains("FROM reports"), eq(Integer.class), any(), any()))
+                .thenReturn(8);
+
+        GlobalKpiSummary k = service.getGlobal(start, end);
+
+        assertEquals(new BigDecimal("50.00"), k.getAvgHoursPerDay());
+    }
+
+    @Test
+    void testGetTeam_dayCountNull_usesDivisorOne() {
+
+        LocalDate start = LocalDate.of(2024, 1, 1);
+        LocalDate end   = LocalDate.of(2024, 1, 31);
+
+        when(jdbc.queryForMap(contains("FROM teams"), any()))
+                .thenReturn(Map.of("name", "DevTeam"));
+
+        when(jdbc.queryForObject(contains("team_members"), eq(Integer.class), any()))
+                .thenReturn(5);
+
+        when(jdbc.queryForObject(contains("DISTINCT CONCAT"), eq(Number.class), any(), any(), any()))
+                .thenReturn(10);
+
+        when(jdbc.queryForObject(contains("WITH RECURSIVE d"), eq(Number.class), any(), any(), any()))
+                .thenReturn(20);
+
+        when(jdbc.queryForObject(contains("SUM(TIMESTAMPDIFF"), eq(Number.class), any(), any(), any()))
+                .thenReturn(600);
+
+        when(jdbc.queryForObject(startsWith("SELECT COUNT(*) FROM ("), eq(Number.class), any(), any(), any()))
+                .thenReturn(null);
+
+        when(jdbc.queryForObject(contains("absence_days"), eq(Number.class), any(), any(), any()))
+                .thenReturn(5);
+
+        when(jdbc.queryForObject(startsWith("SELECT COUNT(*) FROM reports"), eq(Integer.class), any(), any(), any()))
+                .thenReturn(3);
+
+        TeamKpiSummary k = service.getTeam(7, start, end);
+
+        assertEquals(new BigDecimal("10.00"), k.getAvgHoursPerDay());
+    }
 }
