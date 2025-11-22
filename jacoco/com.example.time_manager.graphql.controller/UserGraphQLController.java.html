@@ -104,7 +104,7 @@ public class UserGraphQLController {
     @PreAuthorize(&quot;hasAuthority('ADMIN')&quot;)
     @MutationMapping
     public User updateUser(@Argument(&quot;input&quot;) com.example.time_manager.dto.auth.UpdateUserInput input) {
-<span class="nc" id="L107">        return userService.updateUser(input.id(), input);</span>
+<span class="fc" id="L107">        return userService.updateUser(input.id(), input);</span>
     }
 
     @PreAuthorize(&quot;permitAll()&quot;)
@@ -117,18 +117,18 @@ public class UserGraphQLController {
 <span class="pc bpc" id="L117" title="3 of 4 branches missed.">        if (refreshToken == null || refreshToken.isBlank()) {</span>
 <span class="fc" id="L118">            refreshToken = readCookie(httpReq, &quot;refresh_token&quot;);</span>
         }
-<span class="pc bpc" id="L120" title="1 of 4 branches missed.">        if (refreshToken == null || refreshToken.isBlank()) {</span>
+<span class="fc bfc" id="L120" title="All 4 branches covered.">        if (refreshToken == null || refreshToken.isBlank()) {</span>
 <span class="fc" id="L121">            throw new RuntimeException(&quot;Missing refresh token&quot;);</span>
         }
 
         String username;
         try {
 <span class="fc" id="L126">            username = jwtUtil.parseRefreshSubject(refreshToken);</span>
-<span class="nc" id="L127">        } catch (Exception e) {</span>
-<span class="nc" id="L128">            throw new RuntimeException(&quot;Invalid refresh token&quot;);</span>
+<span class="fc" id="L127">        } catch (Exception e) {</span>
+<span class="fc" id="L128">            throw new RuntimeException(&quot;Invalid refresh token&quot;);</span>
 <span class="fc" id="L129">        }</span>
-<span class="pc bpc" id="L130" title="1 of 2 branches missed.">        if (!jwtUtil.isRefreshTokenValid(refreshToken, username)) {</span>
-<span class="nc" id="L131">            throw new RuntimeException(&quot;Invalid or expired refresh token&quot;);</span>
+<span class="fc bfc" id="L130" title="All 2 branches covered.">        if (!jwtUtil.isRefreshTokenValid(refreshToken, username)) {</span>
+<span class="fc" id="L131">            throw new RuntimeException(&quot;Invalid or expired refresh token&quot;);</span>
         }
 
 <span class="fc" id="L134">        var user = userService.findByEmail(username)</span>
@@ -160,7 +160,7 @@ public class UserGraphQLController {
     @QueryMapping
     public java.util.List&lt;com.example.time_manager.model.User&gt; users() {
 <span class="fc" id="L162">        var list = userService.findAllUsers();</span>
-<span class="pc bpc" id="L163" title="1 of 2 branches missed.">        return (list != null) ? list : java.util.Collections.emptyList();</span>
+<span class="fc bfc" id="L163" title="All 2 branches covered.">        return (list != null) ? list : java.util.Collections.emptyList();</span>
     }
 
     @PreAuthorize(&quot;isAuthenticated()&quot;)
@@ -178,8 +178,8 @@ public class UserGraphQLController {
     private static HttpServletResponse currentResponse() {
 <span class="fc" id="L179">        var attrs = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();</span>
 <span class="fc" id="L180">        HttpServletResponse resp = attrs.getResponse();</span>
-<span class="pc bpc" id="L181" title="1 of 2 branches missed.">        if (resp == null) {</span>
-<span class="nc" id="L182">            throw new IllegalStateException(&quot;No HttpServletResponse available&quot;);</span>
+<span class="fc bfc" id="L181" title="All 2 branches covered.">        if (resp == null) {</span>
+<span class="fc" id="L182">            throw new IllegalStateException(&quot;No HttpServletResponse available&quot;);</span>
         }
 <span class="fc" id="L184">        return resp;</span>
     }
@@ -225,28 +225,28 @@ public class UserGraphQLController {
     }
 
     private static String extractRefreshFromBody(RefreshRequest req) {
-<span class="nc" id="L228">        String v = tryCallGetter(req, &quot;getRefreshToken&quot;);</span>
-<span class="nc bnc" id="L229" title="All 4 branches missed.">        if (v != null &amp;&amp; !v.isBlank()) {</span>
+<span class="fc" id="L228">        String v = tryCallGetter(req, &quot;getRefreshToken&quot;);</span>
+<span class="pc bpc" id="L229" title="3 of 4 branches missed.">        if (v != null &amp;&amp; !v.isBlank()) {</span>
 <span class="nc" id="L230">            return v;</span>
         }
-<span class="nc" id="L232">        v = tryCallGetter(req, &quot;getToken&quot;);</span>
-<span class="nc bnc" id="L233" title="All 4 branches missed.">        if (v != null &amp;&amp; !v.isBlank()) {</span>
+<span class="fc" id="L232">        v = tryCallGetter(req, &quot;getToken&quot;);</span>
+<span class="pc bpc" id="L233" title="3 of 4 branches missed.">        if (v != null &amp;&amp; !v.isBlank()) {</span>
 <span class="nc" id="L234">            return v;</span>
         }
-<span class="nc" id="L236">        v = tryCallGetter(req, &quot;getRefresh&quot;);</span>
-<span class="nc bnc" id="L237" title="All 4 branches missed.">        if (v != null &amp;&amp; !v.isBlank()) {</span>
+<span class="fc" id="L236">        v = tryCallGetter(req, &quot;getRefresh&quot;);</span>
+<span class="pc bpc" id="L237" title="3 of 4 branches missed.">        if (v != null &amp;&amp; !v.isBlank()) {</span>
 <span class="nc" id="L238">            return v;</span>
         }
-<span class="nc" id="L240">        return null;</span>
+<span class="fc" id="L240">        return null;</span>
     }
 
     private static String tryCallGetter(Object bean, String getter) {
         try {
-<span class="nc" id="L245">            Method m = bean.getClass().getMethod(getter);</span>
-<span class="nc" id="L246">            Object val = m.invoke(bean);</span>
-<span class="nc bnc" id="L247" title="All 2 branches missed.">            return val != null ? val.toString() : null;</span>
-<span class="nc" id="L248">        } catch (Exception ignored) {</span>
-<span class="nc" id="L249">            return null;</span>
+<span class="fc" id="L245">            Method m = bean.getClass().getMethod(getter);</span>
+<span class="fc" id="L246">            Object val = m.invoke(bean);</span>
+<span class="pc bpc" id="L247" title="1 of 2 branches missed.">            return val != null ? val.toString() : null;</span>
+<span class="fc" id="L248">        } catch (Exception ignored) {</span>
+<span class="fc" id="L249">            return null;</span>
         }
     }
 }

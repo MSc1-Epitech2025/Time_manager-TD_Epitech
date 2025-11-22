@@ -292,7 +292,7 @@ private void assertCanViewTeamMembers(Long teamId) {
 private void assertCanManageTeamMembers(Long teamId) {
 <span class="fc" id="L293">    String me = currentUserId();</span>
 <span class="fc bfc" id="L294" title="All 2 branches covered.">    if (isAdmin()) return;</span>
-<span class="pc bpc" id="L295" title="1 of 4 branches missed.">    if (isManager() &amp;&amp; isMemberOf(teamId, me)) return;</span>
+<span class="fc bfc" id="L295" title="All 4 branches covered.">    if (isManager() &amp;&amp; isMemberOf(teamId, me)) return;</span>
 <span class="fc" id="L296">    throw new AccessDeniedException(&quot;Forbidden: only ADMIN or MANAGER member of the team can modify members&quot;);</span>
 }
     private static boolean hasAnyAuthority(Authentication auth, String... values) {
