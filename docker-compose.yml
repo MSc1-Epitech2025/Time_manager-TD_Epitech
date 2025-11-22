@@ -85,18 +85,19 @@ services:
       - ./sonarqube/sonar_logs:/opt/sonarqube/logs
 
   sonar-scan-backend:
-    build:
-      context: .
-      dockerfile: sonarqube/backend/Dockerfile.sonar
+    image: sonarsource/sonar-scanner-cli:latest
+    container_name: sonar-scan-backend
     environment:
       - SONAR_HOST_URL=${SONAR_HOST_URL}
       - SONAR_TOKEN=${SONAR_TOKEN}
     volumes:
+      - ./backend:/usr/src/app/backend
       - ./sonarqube/backend/sonar-project.properties:/usr/src/app/sonar-project.properties
+      - ./backend/build:/usr/src/app/backend/build
+    working_dir: /usr/src/app
     command: >
-      -Dsonar.host.url=${SONAR_HOST_URL}
-      -Dsonar.token=${SONAR_TOKEN}
-
+      sonar-scanner
+        -Dsonar.projectBaseDir=/usr/src/app
 # Setup when units test are ready on frontend
 #  sonar-scan-frontend:
 #    build:

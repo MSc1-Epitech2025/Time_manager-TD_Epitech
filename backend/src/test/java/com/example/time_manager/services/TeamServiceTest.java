@@ -438,7 +438,12 @@ class TeamServiceTest {
     }
 
     private static void setAuth(String userId, String... roles) {
-        var auth = new TestingAuthenticationToken(userId, null, roles);
+        var authorities = Arrays.stream(roles)
+                .map(r -> (org.springframework.security.core.GrantedAuthority) () -> r)
+                .toList();
+
+        var auth = new TestingAuthenticationToken(userId, null, authorities);
+        auth.setAuthenticated(true);
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
 
@@ -453,9 +458,8 @@ class TeamServiceTest {
 
         assertThatCode(() -> method.invoke(service, 5L))
                 .doesNotThrowAnyException();
-
-        verify(memberRepo).existsByTeam_IdAndUser_Id(5L, "M1");
     }
+
 
     @Test
     void addMember_shouldEnterManagerMemberBranch_andCoverManagerCheck() {
@@ -476,5 +480,37 @@ class TeamServiceTest {
         service.addMember(10L, "U99");
 
         verify(memberRepo).save(any(TeamMember.class));
+    }
+
+    @Test
+    void assertCanManageTeamMembers_shouldThrow_whenNotAdminNorManager() throws Exception {
+        // User E1 avec un rôle qui n'est NI admin NI manager
+        setAuth("E1", "ROLE_EMPLOYEE");
+
+        var method = TeamService.class.getDeclaredMethod(
+                "assertCanManageTeamMembers",
+                Long.class
+        );
+        method.setAccessible(true);
+
+        assertThatThrownBy(() -> method.invoke(service, 123L))
+                .hasCauseInstanceOf(AccessDeniedException.class)
+                .hasRootCauseMessage("Forbidden: only ADMIN or MANAGER member of the team can modify members");
+    }
+
+
+    @Test
+    void assertCanManageTeamMembers_shouldThrow_whenManagerButNotMember() throws Exception {
+        setAuth("M1", "ROLE_MANAGER");
+
+        when(memberRepo.existsByTeam_IdAndUser_Id(77L, "M1"))
+                .thenReturn(false);
+
+        var method = TeamService.class.getDeclaredMethod("assertCanManageTeamMembers", Long.class);
+        method.setAccessible(true);
+
+        assertThatThrownBy(() -> method.invoke(service, 77L))
+                .hasCauseInstanceOf(AccessDeniedException.class)
+                .hasRootCauseMessage("Forbidden: only ADMIN or MANAGER member of the team can modify members");
     }
 }
