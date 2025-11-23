@@ -201,109 +201,295 @@ You can enable it later by uncommenting the *production build* section and creat
 
 ---
 
-# 🔐 API (JWT) & Routes
+# 🔐 API (JWT) & GraphQL Routes
 
-## Auth flow (TL;DR)
-1. **Register** a user → password is hashed (BCrypt) and default role is `["employee"]`.
-2. **Login** → receive a **JWT** (Bearer) to put in the `Authorization` header.
-3. Call **protected routes** with `Authorization: Bearer <token>`.
+## Overview
+The backend uses **GraphQL** for all operations. Authentication is handled via **JWT tokens** stored in cookies after login.
 
-> Available roles: `employee`, `manager`, `admin` (mapped to `ROLE_EMPLOYEE`, `ROLE_MANAGER`, `ROLE_ADMIN`).
+### Auth flow (TL;DR)
+1. **Register** a user via GraphQL mutation → password is hashed (BCrypt) with default role `ADMIN` (created by admin).
+2. **Login** → JWT tokens are set in secure HTTP-only cookies.
+3. Call **protected queries/mutations** with authentication (cookie-based or Bearer token).
 
----
-
-## Endpoints
-
-### Auth
-| Method | Path                 | Body (JSON)   | Auth | Role | Description |
-|:------:|----------------------|-----------------------------------------|:----:|:----:|-------------|
-| POST   | `/api/auth/register` | `{ firstName, lastName, email, password }` | ❌   | –    | Create a user (default role `["employee"]`) |
-| POST   | `/api/auth/login`    | `{ email, password }`                   | ❌   | –    | Returns `{ "accessToken": "…", "reverseToken": "…" }` |
-
-**Example**
-```bash
-curl -X POST http://localhost:8080/api/auth/login   -H "Content-Type: application/json"   -d '{"email":"john@acme.io","password":"Str0ngP@ss"}'
-```
-
-### Users
-| Method | Path                      | Body (JSON)                        | Auth | Role                         | Description |
-|:------:|---------------------------|------------------------------------|:----:|:-----------------------------|-------------|
-| GET    | `/api/users/me`           | –                                  | ✅   | any                          | Current user profile |
-| GET    | `/api/users`              | –                                  | ✅   | `manager` or `admin`         | List users |
-| GET    | `/api/users/{id}`         | –                                  | ✅   | `manager`/`admin` or **self**| Get a user |
-| POST   | `/api/users`              | `UserCreateRequest`                | ✅   | `admin`                      | Create a user |
-| PUT    | `/api/users/{id}`         | `UserUpdateRequest`                | ✅   | `manager`/`admin` or **self**| Update a user (role editable by manager/admin) |
-| PATCH  | `/api/users/me/password`  | `{ currentPassword, newPassword }` | ✅   | any                          | Change own password |
-| DELETE | `/api/users/{id}`         | –                                  | ✅   | `admin`                      | Delete a user |
-
-### Teams
-| Method | Path                            | Body (JSON)             | Auth | Role                | Description |
-|:------:|---------------------------------|-------------------------|:----:|:--------------------|-------------|
-| GET    | `/api/teams`                    | –                       | ✅   | any                 | List teams |
-| GET    | `/api/teams/{id}`               | –                       | ✅   | any                 | Team details |
-| GET    | `/api/teams/{id}/members`       | –                       | ✅   | any                 | Team members |
-| POST   | `/api/teams`                    | `{ name, description }` | ✅   | `manager`/`admin`   | Create a team |
-| PUT    | `/api/teams/{id}`               | `{ name?, description? }` | ✅ | `manager`/`admin`   | Update a team |
-| DELETE | `/api/teams/{id}`               | –                       | ✅   | `manager`/`admin`   | Delete a team |
-| POST   | `/api/teams/{id}/members`       | `{ userId }`            | ✅   | `manager`/`admin`   | Add a member |
-| DELETE | `/api/teams/{id}/members/{uid}` | –                       | ✅   | `manager`/`admin`   | Remove a member |
-
-**Example**
-```bash
-TOKEN="<JWT>"
-curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/teams
-```
-### Clocks
-| Method | Path                            | Body (JSON)              | Auth | Role                | Description |
-|:------:|---------------------------------|--------------------------|:----:|:--------------------|-------------|
-| POST   | `/api/clocks`                   |`{ kind: "IN" | "OUT", at?}`| ✅   | any                 | Create a clock entry for the current user |
-| GET    | `/api/clocks/me`                | –                        | ✅   | any                 | List clock entries for the current user|
-| GET    | `/api/clocks/users/{userId}`    | –                        | ✅   | `manager`/`admin`   | List clock entries for a specific user |
-| POST   | `/api/clocks/users/{userId}`    | `{ kind: "IN" | "OUT", at? }`  | ✅   | `manager`/`admin`   | Create a clock entry for a specific user |
-
-### Report
-
-| Method | Path                       | Body (JSON)                                   | Auth | Role                   | Description |
-|:-----:|----------------------------|-----------------------------------------------|:---:|:-----------------------|-------------|
-| GET   | `/api/reports`             | –                                             | ✅  | `admin`       | List all reports. |
-| GET   | `/api/reports/me/authored` | –                                             | ✅  | any           | List reports authored by me. |
-| GET   | `/api/reports/me/received` | –                                             | ✅  | any           | List reports addressed to me. |
-| GET   | `/api/reports/{id}`        | –                                             | ✅  | any           | Get a report if I’m admin or the author or the target. |
-| POST  | `/api/reports`             | `{ targetUserId: string, title: string, body?: string }` | ✅ | any   | Create a report as current user (employee→manager or manager→employee). |
-| PUT   | `/api/reports/{id}`        | `{ title?: string, body?: string, targetUserId?: string }` | ✅ | author or `admin` | Update a report (author or admin). |
-| DELETE| `/api/reports/{id}`        | –                                             | ✅  | author or `admin`      | Delete a report (author or admin). |
-
-### Work_Shedule
-
-| Method | Path                                           | Body (JSON)                                                                                  | Auth | Role                | Description |
-|:-----:|------------------------------------------------|----------------------------------------------------------------------------------------------|:---:|:--------------------|-------------|
-| GET   | `/api/work-schedules/me`                       | –                                                                                            | ✅  | any                 | Get **my** weekly schedule (AM/PM slots). |
-| GET   | `/api/work-schedules/users/{userId}`           | –                                                                                            | ✅  | `manager` / `admin` | Get a user's weekly schedule. |
-| POST  | `/api/work-schedules/users/{userId}`           | `{ dayOfWeek: "MON"|"TUE"|...|"SUN", period: "AM"|"PM", startTime: "HH:mm[:ss]", endTime: "HH:mm[:ss]" }` | ✅  | `manager` / `admin` | **Upsert** a single slot (unique on `user + dayOfWeek + period`). |
-| PUT   | `/api/work-schedules/users/{userId}/batch`     | `{ replaceAll?: true, entries: [ { dayOfWeek, period, startTime, endTime }, ... ] }`        | ✅  | `manager` / `admin` | Replace all slots (if `replaceAll=true`) or upsert multiple entries. |
-| DELETE| `/api/work-schedules/users/{userId}`           | – (query: `day=MON..SUN`, `period=AM|PM`)                                                    | ✅  | `manager` / `admin` | Delete a single slot for a user. |
-
-### abscences
-
-| Method | Path      | Body (JSON)|Auth | Role                         | Description |
-|:-----:|------------|------------|:---:|:-----------------------------|-------------|
-| POST  | `/api/absences`                       | `{ startDate, endDate, type, reason?, supportingDocumentUrl?, periodByDate?: { "YYYY-MM-DD": "AM|PM|FULL_DAY" } }` | ✅  | any | Create an absence for the authenticated user Generates `absence_days`. |
-| GET   | `/api/absences/me`| – | ✅  | any| List **my** absences (with generated days). |
-| GET   | `/api/absences/users/{userId}`        | –| ✅  | `manager` / `admin`          | List absences for a specific user. |
-| GET   | `/api/absences`                       | –| ✅  | `admin`                      | List **all** absences. |
-| GET   | `/api/absences/{id}`                  | –| ✅  | visible to owner/manager/admin | Get one absence if requester is **owner**, **manager**, or **admin**. |
-| PUT   | `/api/absences/{id}`                  | `{ startDate?, endDate?, type?, reason?, supportingDocumentUrl?, periodByDate? }`                        | ✅  | owner (if `PENDING`) or admin | Update an absence. If `periodByDate` is provided, `absence_days` are regenerated. |
-| PATCH | `/api/absences/{id}/status`           | `{ status: "APPROVED" | "REJECTED" }`               | ✅  | `manager` / `admin`          | Approve or reject an absence (records `approvedBy`, `approvedAt`). |
-| DELETE| `/api/absences/{id}`                  | –| ✅  | owner (if `PENDING`) or admin | Delete an absence and its generated days. |
-
+> Available roles: `EMPLOYEE`, `MANAGER`, `ADMIN`
 
 ---
 
-## Security & Roles
-- Auth: JWT Bearer (`Authorization: Bearer <token>`).
-- RBAC: write operations on Teams/Users are protected via `@PreAuthorize`.
-- Default role at register: `["employee"]` (promote via Users endpoints).
+### GraphQL Endpoint
+- **URL**: `http://localhost:8080/graphql`
+- **Method**: `POST`
+- **Content-Type**: `application/json`
 
-## Postman tips
-- Variables: `base_url = http://localhost:8080/api`, `token = <JWT>`
-- Example: `GET {{base_url}}/teams` with `Authorization: Bearer {{token}}`.
+---
+
+## Query & Mutation Reference
+
+All available GraphQL queries and mutations are documented in the [GraphQL Schema](backend/src/main/resources/graphql/).
+
+### Quick Examples
+
+**Login:**
+```graphql
+mutation {
+  login(input: { email: "user@example.com", password: "password123" }) {
+    ok
+  }
+}
+```
+
+**List Teams:**
+```graphql
+query {
+  myTeams { id name description }
+}
+```
+
+**Create a Clock Entry:**
+```graphql
+mutation {
+  createClockForMe(input: { kind: IN, at: "2025-11-23T09:00:00Z" }) {
+    id kind at
+  }
+}
+```
+
+---
+
+## Complete GraphQL Routes
+
+### 🔑 Authentication & Users
+
+#### Mutations
+| Mutation | Input | Auth | Role | Description |
+|----------|-------|------|------|-------------|
+| `login` | `{ email, password }` | ❌ | - | Authenticate and receive JWT cookies |
+| `refresh` | `{ token? }` | ❌ | - | Refresh access token using refresh token |
+| `logout` | - | ✅ | any | Clear authentication cookies |
+| `register` | `{ firstName, lastName, email, phone?, role?, poste?, password, avatarUrl? }` | ✅ | `ADMIN` | Create a new user |
+| `updateUser` | `{ id, firstName?, lastName?, email?, phone?, role?, poste?, avatarUrl?, password? }` | ✅ | `ADMIN` | Update user information |
+| `deleteUser` | `{ id }` | ✅ | `ADMIN` | Delete a user |
+
+#### Queries
+| Query | Parameters | Auth | Role | Description |
+|-------|------------|------|------|-------------|
+| `users` | - | ✅ | `ADMIN` | List all users |
+| `userByEmail` | `email: String!` | ✅ | any | Get user by email |
+
+---
+
+### 👫 Teams
+
+#### Queries
+| Query | Parameters | Auth | Role | Description |
+|-------|------------|------|------|-------------|
+| `teams` | - | ✅ | any | List all teams |
+| `team` | `id: ID!` | ✅ | any | Get team by ID |
+| `teamMembers` | `teamId: ID!` | ✅ | any | List members of a team |
+| `allTeams` | - | ✅ | `ADMIN` | List all teams (admin) |
+| `myTeams` | - | ✅ | any | Teams where current user is a member |
+| `myManagedTeams` | - | ✅ | any | Teams managed by current user |
+| `myTeamMembers` | - | ✅ | any | Members of all user's teams grouped by team |
+| `teamManagers` | `teamId: ID!` | ✅ | any | Managers in a specific team |
+
+#### Mutations
+| Mutation | Input | Auth | Role | Description |
+|----------|-------|------|------|-------------|
+| `createTeam` | `{ name, description? }` | ✅ | `ADMIN` | Create a new team |
+| `updateTeam` | `{ id, name?, description? }` | ✅ | `ADMIN` | Update team information |
+| `deleteTeam` | `id: ID!` | ✅ | `ADMIN` | Delete a team |
+| `addTeamMember` | `teamId: ID!, { userId }` | ✅ | `ADMIN` or `MANAGER` (if member) | Add user to team |
+| `removeTeamMember` | `teamId: ID!, { userId }` | ✅ | `ADMIN` or `MANAGER` (if member) | Remove user from team |
+
+---
+
+### ⏱️ Clocks
+
+#### Queries
+| Query | Parameters | Auth | Role | Description |
+|-------|------------|------|------|-------------|
+| `myClocks` | `from?: String, to?: String` | ✅ | any | Current user's clock entries with optional date range |
+| `clocksForUser` | `userId: ID!, from?: String, to?: String` | ✅ | `MANAGER` or `ADMIN` | Clock entries for specific user |
+
+#### Mutations
+| Mutation | Input | Auth | Role | Description |
+|----------|-------|------|------|-------------|
+| `createClockForMe` | `{ kind: IN\|OUT, at?: String }` | ✅ | any | Create clock entry for current user |
+| `createClockForUser` | `userId: ID!, { kind: IN\|OUT, at?: String }` | ✅ | `MANAGER` or `ADMIN` | Create clock entry for specific user |
+
+---
+
+### 📋 Work Schedules
+
+#### Queries
+| Query | Parameters | Auth | Role | Description |
+|-------|------------|------|------|-------------|
+| `myWorkSchedules` | - | ✅ | any | Current user's weekly work schedule |
+| `workSchedulesByUser` | `userId: ID!` | ✅ | `MANAGER` or `ADMIN` | Work schedule for specific user |
+
+#### Mutations
+| Mutation | Input | Auth | Role | Description |
+|----------|-------|------|------|-------------|
+| `upsertMyWorkSchedule` | `{ dayOfWeek: MON\|TUE\|..., period: AM\|PM, startTime, endTime }` | ✅ | any | Create/update own schedule slot |
+| `upsertWorkSchedule` | `userId: ID!, { dayOfWeek, period, startTime, endTime }` | ✅ | `MANAGER` or `ADMIN` | Create/update schedule slot for user |
+| `upsertWorkScheduleBatch` | `userId: ID!, { replaceAll?, entries: [...] }` | ✅ | `MANAGER` or `ADMIN` | Batch upsert schedule slots |
+| `deleteMyWorkScheduleSlot` | `day: WorkDay!, period: WorkPeriod!` | ✅ | any | Delete own schedule slot |
+| `deleteWorkScheduleSlot` | `userId: ID!, day: WorkDay!, period: WorkPeriod!` | ✅ | `MANAGER` or `ADMIN` | Delete schedule slot for user |
+
+---
+
+### 📝 Absences
+
+#### Queries
+| Query | Parameters | Auth | Role | Description |
+|-------|------------|------|------|-------------|
+| `myAbsences` | - | ✅ | any | Current user's absences |
+| `absence` | `id: ID!` | ✅ | any | Get specific absence (if authorized) |
+| `absencesByUser` | `userId: ID!` | ✅ | `MANAGER` or `ADMIN` | Absences for specific user |
+| `allAbsences` | - | ✅ | `ADMIN` | All absences (admin only) |
+| `myTeamAbsences` | `teamId?: ID` | ✅ | any | Absences for team members |
+| `teamAbsences` | `teamId: ID!` | ✅ | `ADMIN` | All absences for a team |
+
+#### Mutations
+| Mutation | Input | Auth | Role | Description |
+|----------|-------|------|------|-------------|
+| `createAbsence` | `{ startDate, endDate, type, reason?, supportingDocumentUrl?, periodByDate?: [...] }` | ✅ | any | Create absence request |
+| `updateAbsence` | `id: ID!, { startDate?, endDate?, type?, reason?, supportingDocumentUrl?, periodByDate?: [...] }` | ✅ | owner (if PENDING) or `ADMIN` | Update absence |
+| `setAbsenceStatus` | `id: ID!, { status: APPROVED\|REJECTED }` | ✅ | `MANAGER` or `ADMIN` | Approve/reject absence |
+| `deleteAbsence` | `id: ID!` | ✅ | owner (if PENDING) or `ADMIN` | Delete absence |
+
+**Absence Types:** `SICK`, `VACATION`, `PERSONAL`, `FORMATION`, `RTT`, `OTHER`  
+**Absence Periods:** `AM`, `PM`, `FULL_DAY`  
+**Absence Status:** `PENDING`, `APPROVED`, `REJECTED`
+
+---
+
+### 📊 Reports
+
+#### Queries
+| Query | Parameters | Auth | Role | Description |
+|-------|------------|------|------|-------------|
+| `reports` | - | ✅ | `ADMIN` | All reports (admin only) |
+| `myReports` | - | ✅ | any | Reports authored by current user |
+| `reportsForMe` | - | ✅ | any | Reports addressed to current user |
+| `report` | `id: ID!` | ✅ | any | Get specific report (if authorized) |
+
+#### Mutations
+| Mutation | Input | Auth | Role | Description |
+|----------|-------|------|------|-------------|
+| `createReport` | `{ targetUserId, title, body? }` | ✅ | any | Create a new report |
+| `updateReport` | `id: ID!, { title?, body?, targetUserId? }` | ✅ | author or `ADMIN` | Update a report |
+| `deleteReport` | `id: ID!` | ✅ | author or `ADMIN` | Delete a report |
+
+---
+
+### 💼 Leave Management
+
+#### Leave Types
+
+**Queries:**
+| Query | Parameters | Auth | Role | Description |
+|-------|------------|------|------|-------------|
+| `leaveTypes` | - | ✅ | any | List all leave types |
+| `leaveType` | `code: String!` | ✅ | any | Get specific leave type |
+
+**Mutations:**
+| Mutation | Input | Auth | Role | Description |
+|----------|-------|------|------|-------------|
+| `createLeaveType` | `{ code, label }` | ✅ | `ADMIN` | Create leave type |
+| `updateLeaveType` | `{ code, label? }` | ✅ | `ADMIN` | Update leave type |
+| `deleteLeaveType` | `code: String!` | ✅ | `ADMIN` | Delete leave type |
+
+#### Leave Accounts
+
+**Queries:**
+| Query | Parameters | Auth | Role | Description |
+|-------|------------|------|------|-------------|
+| `leaveAccount` | `id: ID!` | ✅ | any | Get specific leave account |
+| `leaveAccountsByUser` | `userId: ID!` | ✅ | any | Leave accounts for a user |
+
+**Mutations:**
+| Mutation | Input | Auth | Role | Description |
+|----------|-------|------|------|-------------|
+| `createLeaveAccount` | `{ userId, leaveTypeCode, openingBalance?, accrualPerMonth?, maxCarryover?, carryoverExpireOn? }` | ✅ | `ADMIN` | Create leave account |
+| `updateLeaveAccount` | `{ id, openingBalance?, accrualPerMonth?, maxCarryover?, carryoverExpireOn? }` | ✅ | `ADMIN` | Update leave account |
+| `deleteLeaveAccount` | `id: ID!` | ✅ | `ADMIN` | Delete leave account |
+
+#### Leave Ledger
+
+**Queries:**
+| Query | Parameters | Auth | Role | Description |
+|-------|------------|------|------|-------------|
+| `leaveLedgerByAccount` | `accountId: ID!, from?: String, to?: String` | ✅ | any | Ledger entries for an account |
+
+**Mutations:**
+| Mutation | Input | Auth | Role | Description |
+|----------|-------|------|------|-------------|
+| `addLeaveLedgerEntry` | `{ accountId, entryDate?, kind, amount, referenceAbsenceId?, note? }` | ✅ | `ADMIN` | Add ledger entry |
+| `updateLeaveLedgerEntry` | `{ id, entryDate?, amount?, note? }` | ✅ | `ADMIN` | Update ledger entry |
+| `deleteLeaveLedgerEntry` | `id: ID!` | ✅ | `ADMIN` | Delete ledger entry |
+
+**Ledger Kinds:** `ACCRUAL`, `DEBIT`, `ADJUSTMENT`, `CARRYOVER_EXPIRE`
+
+---
+
+### 📈 KPIs & Analytics
+
+#### Queries
+| Query | Parameters | Auth | Role | Description |
+|-------|------------|------|------|-------------|
+| `globalKpi` | `startDate: String!, endDate: String!` | ✅ | `ADMIN` | Global company KPIs |
+| `teamKpi` | `teamId: ID!, startDate: String!, endDate: String!` | ✅ | `MANAGER` or `ADMIN` | Team performance KPIs |
+| `userKpi` | `userId: ID!, startDate: String!, endDate: String!` | ✅ | any | Individual user KPIs |
+
+**KPI Metrics include:**
+- Headcount & role distribution
+- Presence rate & average hours per day
+- Absence rate & breakdown by type
+- Overtime hours & punctuality stats
+- Leave balances
+- Report counts
+
+---
+
+## GraphQL Schema Reference
+
+For complete type definitions and detailed field documentation, refer to the GraphQL schema files:
+- **Users & Auth:** `backend/src/main/resources/graphql/user.graphqls`
+- **Teams:** `backend/src/main/resources/graphql/teams.graphqls`
+- **Clocks:** `backend/src/main/resources/graphql/clock.graphqls`
+- **Work Schedules:** `backend/src/main/resources/graphql/work_shedule.graphqls`
+- **Absences:** `backend/src/main/resources/graphql/absence.graphqls`
+- **Reports:** `backend/src/main/resources/graphql/report.graphqls`
+- **Leave Types:** `backend/src/main/resources/graphql/leave_type.graphqls`
+- **Leave Accounts:** `backend/src/main/resources/graphql/leave_account.graphqls`
+- **Leave Ledger:** `backend/src/main/resources/graphql/leave_ledger.graphqls`
+- **KPIs:** `backend/src/main/resources/graphql/kpi.graphqls`
+
+---
+
+## Security & Authentication
+- **Auth Method**: JWT stored in HTTP-only cookies (`access_token`, `refresh_token`)
+- **RBAC**: Protected via `@PreAuthorize` annotations in Spring Security
+- **Roles**: `EMPLOYEE`, `MANAGER`, `ADMIN`
+- **Token Expiry**: 
+  - Access token: 15 minutes
+  - Refresh token: 7 days
+
+## Using GraphQL
+
+### With cURL
+```bash
+curl -X POST http://localhost:8080/graphql \
+  -H "Content-Type: application/json" \
+  -H "Cookie: access_token=<token>" \
+  -d '{"query":"query { myTeams { id name } }"}'
+```
+
+### With GraphQL IDE
+Visit `http://localhost:8080/graphiql` for an interactive GraphQL playground (if enabled) or use tools like:
+- **Apollo Studio**: https://studio.apollographql.com/
+- **Insomnia**: https://insomnia.rest/
+- **Postman**: https://www.postman.com/ (with GraphQL support)
+
+### With VS Code Extension
+Install the **GraphQL** extension by GraphQL Foundation for inline query validation and autocomplete.
