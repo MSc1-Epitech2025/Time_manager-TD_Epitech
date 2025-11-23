@@ -64,7 +64,7 @@ export class PlanningComponent implements OnInit {
     expandRows: true,
     height: 'auto',
     nowIndicator: true,
-    locale: 'fr',
+    locale: 'en',
     firstDay: 1,
     selectable: true,
     selectMirror: true,
@@ -172,7 +172,11 @@ export class PlanningComponent implements OnInit {
 
   private async enrichAbsencesWithUserNames() {
     try {
-      const userMap = await firstValueFrom(this.absenceService.getAllUsers());
+      // Use different method based on role: admins get all users, others get team members
+      const userMap = this.isAdmin
+        ? await firstValueFrom(this.absenceService.getAllUsersForAdmin())
+        : await firstValueFrom(this.absenceService.getAllUsers());
+      
       this.absences = this.absences.map((absence) => {
         const userInfo = userMap.get(absence.userId);
         if (userInfo) {
@@ -199,7 +203,7 @@ export class PlanningComponent implements OnInit {
     
     this.events = this.absences
       .filter((absence) => {
-        // Show own absences
+        // Always show own absences (including pending)
         if (absence.userId === userId) return true;
         
         // For employees, only show approved absences of team members
@@ -222,8 +226,8 @@ export class PlanningComponent implements OnInit {
     return absence.days.map((day) => {
       const color = this.getEventColor(absence, isOwnAbsence);
       const title = isOwnAbsence
-        ? `${this.getTypeLabel(absence.type)} - ${absence.status}`
-        : `${userName}`;
+        ? `${this.getTypeLabel(absence.type)}`
+        : userName;
 
       return {
         id: absence.id,
@@ -264,10 +268,13 @@ export class PlanningComponent implements OnInit {
 
   private getUserName(absence: Absence): string {
     const user = absence.user;
-    if (user) {
-      return [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email || absence.userId;
+    if (user && (user.firstName || user.lastName)) {
+      return [user.firstName, user.lastName].filter(Boolean).join(' ');
     }
-    return absence.userId;
+    if (user?.email) {
+      return user.email;
+    }
+    return 'Unknown User';
   }
 
   private getTypeLabel(type: string): string {

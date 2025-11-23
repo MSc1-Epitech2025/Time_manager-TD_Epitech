@@ -117,6 +117,25 @@
 full-calendar {
     /* Calendar event styling based on colors set in TypeScript */
     ::ng-deep {
+        /* Fix white background issues */
+        .fc,
+        .fc-view,
+        .fc-view-harness,
+        .fc-scrollgrid,
+        .fc-daygrid-body,
+        .fc-timegrid-body {
+            background-color: #2a2a3c !important;
+        }
+
+        .fc-daygrid-day,
+        .fc-timegrid-slot {
+            background-color: #2a2a3c !important;
+        }
+
+        .fc-col-header-cell {
+            background-color: #1e1e28 !important;
+        }
+
         .fc-event {
             cursor: pointer;
             border-radius: 4px;

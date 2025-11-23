@@ -249,6 +249,21 @@ const DELETE_ABSENCE_MUTATION = `
   }
 `;
 
+const MY_TEAM_MEMBERS_QUERY = `
+  query MyTeamMembers {
+    myTeamMembers {
+      teamId
+      teamName
+      members {
+        id
+        firstName
+        lastName
+        email
+      }
+    }
+  }
+`;
+
 const ALL_USERS_QUERY = `
   query AllUsers {
     users {
@@ -335,6 +350,46 @@ export class AbsenceService {
       return of(this.usersCache);
     }
 
+    type MyTeamMembersPayload = {
+      myTeamMembers: Array<{
+        teamId: string;
+        teamName: string;
+        members: Array<{
+          id: string;
+          firstName?: string;
+          lastName?: string;
+          email?: string;
+        }>;
+      }>;
+    };
+
+    return this.graphql<MyTeamMembersPayload>(MY_TEAM_MEMBERS_QUERY).pipe(
+      map((payload) => {
+        const groups = payload?.myTeamMembers ?? [];
+        const userMap = new Map<string, { firstName?: string; lastName?: string; email?: string }>();
+        
+        // Flatten all members from all teams
+        for (const group of groups) {
+          for (const user of group.members) {
+            userMap.set(user.id, {
+              firstName: user.firstName,
+              lastName: user.lastName,
+              email: user.email,
+            });
+          }
+        }
+        
+        this.usersCache = userMap;
+        return userMap;
+      })
+    );
+  }
+
+  getAllUsersForAdmin(): Observable<Map<string, { firstName?: string; lastName?: string; email?: string }>> {
+    if (this.usersCache) {
+      return of(this.usersCache);
+    }
+
     type AllUsersPayload = {
       users: Array<{
         id: string;
@@ -348,6 +403,7 @@ export class AbsenceService {
       map((payload) => {
         const users = payload?.users ?? [];
         const userMap = new Map<string, { firstName?: string; lastName?: string; email?: string }>();
+        
         for (const user of users) {
           userMap.set(user.id, {
             firstName: user.firstName,
@@ -355,6 +411,7 @@ export class AbsenceService {
             email: user.email,
           });
         }
+        
         this.usersCache = userMap;
         return userMap;
       })
