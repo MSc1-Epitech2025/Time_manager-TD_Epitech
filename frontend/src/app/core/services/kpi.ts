@@ -4,7 +4,19 @@ import { map, catchError, of } from 'rxjs';
 
 const GRAPHQL_ENDPOINT = 'http://localhost:8030/graphql';
 
-// ----------- Interfaces finales envoyées au dashboard -----------
+export type WorkDay = 'MON' | 'TUE' | 'WED' | 'THU' | 'FRI' | 'SAT' | 'SUN';
+export type WorkPeriod = 'AM' | 'PM';
+
+const DAYS_MAP: Record<WorkDay, number> = {
+  MON: 1,
+  TUE: 2,
+  WED: 3,
+  THU: 4,
+  FRI: 5,
+  SAT: 6,
+  SUN: 0
+};
+
 export interface PresenceDuJour {
   date: Date;
   presence: boolean;
@@ -20,7 +32,6 @@ export interface Utilisateur {
   historique: PresenceDuJour[];
 }
 
-// ----------- Interfaces brutes GraphQL -----------
 export interface KpiUser {
   id: string;
   firstName: string;
@@ -54,7 +65,10 @@ export interface KpiAbsence {
 
 export interface KpiSchedule {
   userId: string;
-  date: string;
+  dayOfWeek: WorkDay;
+  period: WorkPeriod;
+  startTime: string;
+  endTime: string;
 }
 
 export interface KpiFullData {
@@ -79,7 +93,13 @@ export class KpiService {
             id userId startDate endDate status type
             days { absenceDate period }
           }
-          schedules { userId date }
+          schedules { 
+            userId
+            dayOfWeek
+            period
+            startTime
+            endTime
+          }
         }
       }
     `;
@@ -93,6 +113,7 @@ export class KpiService {
       .pipe(
         map((res) => {
           const data = res.data.kpiFullData;
+          console.log('Data Brut', data);
 
           const usersMap: Record<string, Utilisateur> = {};
 
@@ -100,83 +121,76 @@ export class KpiService {
             usersMap[u.id] = {
               id: u.id,
               nom: `${u.firstName} ${u.lastName}`,
-              equipe: u.team ?? 'Non affectée',
+              equipe: u.team ?? 'Not affected',
               historique: []
             };
           });
 
-          // --- Map clocks
-          const clockMap: Record<string, Record<string, KpiClock[]>> = {};
-          data.clocks.forEach((c: KpiClock) => {
-            const dateStr = new Date(c.at).toDateString();
+          function toIsoDateString(dateStr: string | Date): string {
+            const d = new Date(dateStr);
+            return d.getFullYear() + '-' +
+                   (d.getMonth() + 1).toString().padStart(2, '0') + '-' +
+                   d.getDate().toString().padStart(2, '0');
+          }
 
-            if (!clockMap[c.userId]) clockMap[c.userId] = {};
-            if (!clockMap[c.userId][dateStr]) clockMap[c.userId][dateStr] = [];
-
-            clockMap[c.userId][dateStr].push(c);
-          });
-
-          // --- Map absences
           const absenceMap: Record<string, Record<string, KpiAbsenceDay>> = {};
           data.absences.forEach((a: KpiAbsence) => {
             if (!a.days) return;
             if (!absenceMap[a.userId]) absenceMap[a.userId] = {};
-
             a.days.forEach((d: KpiAbsenceDay) => {
-              const dateStr = new Date(d.absenceDate).toDateString();
+              const dateStr = toIsoDateString(d.absenceDate);
               absenceMap[a.userId][dateStr] = d;
             });
           });
 
-          data.schedules.forEach((s: KpiSchedule) => {
-            const user = usersMap[s.userId];
+          data.users.forEach((u: KpiUser) => {
+            const user = usersMap[u.id];
             if (!user) return;
 
-            const dateObj = new Date(s.date);
-            const dateStr = dateObj.toDateString();
+            const userClocks = data.clocks.filter(c => c.userId === u.id);
 
-            const day: PresenceDuJour = {
-              date: dateObj,
-              presence: true,
-              absences: 0,
-              pointage: null,
-              tempsTravail: '0h 0m'
-            };
+            const clocksByDate: Record<string, KpiClock[]> = {};
+            userClocks.forEach(c => {
+              const dateKey = toIsoDateString(c.at);
+              if (!clocksByDate[dateKey]) clocksByDate[dateKey] = [];
+              clocksByDate[dateKey].push(c);
+            });
 
-            // Clock -> pointage + temps de travail auto
-            const dayClocks = clockMap[s.userId]?.[dateStr] ?? [];
-            const clockIn = dayClocks.find((c) => c.kind === 'IN');
-            const clockOut = dayClocks.find((c) => c.kind === 'OUT');
+            Object.entries(clocksByDate).forEach(([dateKey, clocks]) => {
+              const clockIns = clocks.filter(c => c.kind === 'IN').sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime());
+              const clockOuts = clocks.filter(c => c.kind === 'OUT').sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime());
 
-            if (clockIn) {
-              day.pointage = new Date(clockIn.at).toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit'
-              });
-            }
+              if (clockIns.length === 0 || clockOuts.length === 0) return;
 
-            if (clockIn && clockOut) {
-              const diffMs =
-                new Date(clockOut.at).getTime() -
-                new Date(clockIn.at).getTime();
+              const firstIn = clockIns[0];
+              let totalMinutes = 0;
 
-              const minutes = Math.max(0, Math.floor(diffMs / 1000 / 60));
-              const h = Math.floor(minutes / 60);
-              const m = minutes % 60;
+              for (let i = 0; i < Math.min(clockIns.length, clockOuts.length); i++) {
+                const diffMs = new Date(clockOuts[i].at).getTime() - new Date(clockIns[i].at).getTime();
+                totalMinutes += Math.max(0, Math.floor(diffMs / 1000 / 60));
+              }
 
-              day.tempsTravail = `${h}h ${m}m`;
-            }
+              const h = Math.floor(totalMinutes / 60);
+              const m = totalMinutes % 60;
 
-            // Absences
-            const absence = absenceMap[s.userId]?.[dateStr];
-            if (absence) {
-              day.presence = false;
-              day.absences = 1;
-              day.pointage = null;
-              day.tempsTravail = '0h 0m';
-            }
+              const day: PresenceDuJour = {
+                date: new Date(dateKey),
+                presence: true,
+                absences: 0,
+                pointage: new Date(firstIn.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                tempsTravail: `${h}h ${m}m`
+              };
 
-            user.historique.push(day);
+              const absence = absenceMap[u.id]?.[dateKey];
+              if (absence) {
+                day.presence = false;
+                day.absences = 1;
+                day.pointage = null;
+                day.tempsTravail = '0h 0m';
+              }
+
+              user.historique.push(day);
+            });
           });
 
           return Object.values(usersMap);
