@@ -133,6 +133,46 @@ class UserGraphQLControllerTest {
     }
 
     @Test
+    void testRefresh_BlankTokenInBody_FallbackToCookie() {
+        RefreshRequest refreshReq = new RefreshRequest("");
+        request.setCookies(new Cookie("refresh_token", "cookieToken456"));
+
+        User user = new User();
+        user.setEmail("john@example.com");
+        user.setId("1");
+        user.setFirstName("John");
+        user.setRole("ADMIN");
+
+        when(jwtUtil.parseRefreshSubject("cookieToken456")).thenReturn("john@example.com");
+        when(jwtUtil.isRefreshTokenValid("cookieToken456", "john@example.com")).thenReturn(true);
+        when(userService.findByEmail("john@example.com")).thenReturn(Optional.of(user));
+        when(jwtUtil.generateAccessToken(any(), any(), any(), any())).thenReturn("access999");
+
+        AuthResponse res = controller.refresh(Optional.of(refreshReq));
+        assertTrue(res.isOk());
+    }
+
+    @Test
+    void testRefresh_NullTokenInBody_FallbackToCookie() {
+        RefreshRequest refreshReq = new RefreshRequest(null);
+        request.setCookies(new Cookie("refresh_token", "cookieToken789"));
+
+        User user = new User();
+        user.setEmail("john@example.com");
+        user.setId("1");
+        user.setFirstName("John");
+        user.setRole("ADMIN");
+
+        when(jwtUtil.parseRefreshSubject("cookieToken789")).thenReturn("john@example.com");
+        when(jwtUtil.isRefreshTokenValid("cookieToken789", "john@example.com")).thenReturn(true);
+        when(userService.findByEmail("john@example.com")).thenReturn(Optional.of(user));
+        when(jwtUtil.generateAccessToken(any(), any(), any(), any())).thenReturn("access111");
+
+        AuthResponse res = controller.refresh(Optional.of(refreshReq));
+        assertTrue(res.isOk());
+    }
+
+    @Test
     void testLogout_ShouldExpireCookies() {
         assertTrue(controller.logout());
         String header = response.getHeader("Set-Cookie");
@@ -228,6 +268,31 @@ class UserGraphQLControllerTest {
         m.setAccessible(true);
 
         assertEquals("XYZ", m.invoke(null, request, "refresh_token"));
+    }
+
+    @Test
+    void testReadCookie_NoCookies_ReturnsNull() throws Exception {
+        Method m = UserGraphQLController.class.getDeclaredMethod(
+                "readCookie", HttpServletRequest.class, String.class
+        );
+        m.setAccessible(true);
+
+        assertNull(m.invoke(null, request, "refresh_token"));
+    }
+
+    @Test
+    void testReadCookie_CookieNotFound_ReturnsNull() throws Exception {
+        request.setCookies(
+                new Cookie("other_cookie", "value1"),
+                new Cookie("another_cookie", "value2")
+        );
+
+        Method m = UserGraphQLController.class.getDeclaredMethod(
+                "readCookie", HttpServletRequest.class, String.class
+        );
+        m.setAccessible(true);
+
+        assertNull(m.invoke(null, request, "refresh_token"));
     }
 
     static class BeanNull {

@@ -1,13 +1,11 @@
 package com.example.time_manager.model;
 
-import com.example.time_manager.model.absence.Absence;
-import com.example.time_manager.model.absence.AbsenceDay;
-import com.example.time_manager.model.absence.AbsenceStatus;
-import com.example.time_manager.model.absence.AbsenceType;
+import com.example.time_manager.model.absence.*;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -15,7 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class AbsenceTest {
 
     @Test
-    void testGettersAndSetters() {
+    void testAbsenceGettersAndSetters() {
         Absence a = new Absence();
 
         a.setId(10L);
@@ -53,5 +51,31 @@ class AbsenceTest {
 
         assertThat(a.getDays()).hasSize(2);
         assertThat(a.getDays()).containsExactly(d1, d2);
+    }
+
+    @Test
+    void testGettersAndSetters() {
+        AbsenceDay day = new AbsenceDay();
+
+        Absence abs = new Absence();
+        abs.setId(99L);
+
+        LocalDate date = LocalDate.of(2024, 1, 1);
+        LocalTime start = LocalTime.of(9, 0);
+        LocalTime end = LocalTime.of(17, 0);
+
+        day.setId(1L);
+        day.setAbsence(abs);
+        day.setAbsenceDate(date);
+        day.setPeriod(AbsencePeriod.FULL_DAY);
+        day.setStartTime(start);
+        day.setEndTime(end);
+
+        assertThat(day.getId()).isEqualTo(1L);
+        assertThat(day.getAbsence()).isEqualTo(abs);
+        assertThat(day.getAbsenceDate()).isEqualTo(date);
+        assertThat(day.getPeriod()).isEqualTo(AbsencePeriod.FULL_DAY);
+        assertThat(day.getStartTime()).isEqualTo(start);
+        assertThat(day.getEndTime()).isEqualTo(end);
     }
 }

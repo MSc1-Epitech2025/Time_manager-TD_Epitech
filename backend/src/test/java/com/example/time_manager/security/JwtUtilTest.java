@@ -3,6 +3,7 @@ package com.example.time_manager.security;
 import io.jsonwebtoken.Claims;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.lang.reflect.Method;
@@ -218,5 +219,67 @@ class JwtUtilTest {
         boolean valid = jwtUtil.isRefreshTokenValid(token, "differentUser");
 
         assertFalse(valid);
+    }
+
+    @Test
+    void test_isAccessTokenStillValid_fullCoverage() throws Exception {
+        Claims mockClaims = Mockito.mock(Claims.class);
+        Date now = new Date();
+
+        Date mockFuture = Mockito.mock(Date.class);
+        Mockito.when(mockClaims.getSubject()).thenReturn(username);
+        Mockito.when(mockClaims.getExpiration()).thenReturn(mockFuture);
+        Mockito.when(mockFuture.after(now)).thenReturn(true);
+
+        Method m = JwtUtil.class.getDeclaredMethod(
+                "isAccessTokenStillValid",
+                Claims.class, String.class, Date.class);
+        m.setAccessible(true);
+
+        boolean resultTrue = (boolean) m.invoke(jwtUtil, mockClaims, username, now);
+        assertTrue(resultTrue);
+
+        Date mockPast = Mockito.mock(Date.class);
+        Mockito.when(mockClaims.getSubject()).thenReturn(username);
+        Mockito.when(mockClaims.getExpiration()).thenReturn(mockPast);
+        Mockito.when(mockPast.after(now)).thenReturn(false);
+
+        boolean resultFalse = (boolean) m.invoke(jwtUtil, mockClaims, username, now);
+        assertFalse(resultFalse);
+    }
+
+    @Test
+    void test_isRefreshTokenStillValid_fullCoverage() throws Exception {
+        Claims mockClaims = Mockito.mock(Claims.class);
+        Date now = new Date();
+
+        Method m = JwtUtil.class.getDeclaredMethod(
+                "isRefreshTokenStillValid",
+                Claims.class,
+                String.class,
+                Date.class
+        );
+        m.setAccessible(true);
+
+        Date mockFuture = Mockito.mock(Date.class);
+        Date mockPast = Mockito.mock(Date.class);
+
+        Mockito.when(mockClaims.getSubject()).thenReturn(username);
+        Mockito.when(mockClaims.getExpiration()).thenReturn(mockFuture);
+        Mockito.when(mockFuture.after(now)).thenReturn(true);
+        assertTrue((boolean) m.invoke(jwtUtil, mockClaims, username, now));
+
+        Mockito.when(mockClaims.getExpiration()).thenReturn(mockPast);
+        Mockito.when(mockPast.after(now)).thenReturn(false);
+        assertFalse((boolean) m.invoke(jwtUtil, mockClaims, username, now));
+
+        Mockito.when(mockClaims.getSubject()).thenReturn("wrongUser");
+        Mockito.when(mockClaims.getExpiration()).thenReturn(mockFuture);
+        Mockito.when(mockFuture.after(now)).thenReturn(true);
+        assertFalse((boolean) m.invoke(jwtUtil, mockClaims, username, now));
+
+        Mockito.when(mockClaims.getExpiration()).thenReturn(mockPast);
+        Mockito.when(mockPast.after(now)).thenReturn(false);
+        assertFalse((boolean) m.invoke(jwtUtil, mockClaims, username, now));
     }
 }

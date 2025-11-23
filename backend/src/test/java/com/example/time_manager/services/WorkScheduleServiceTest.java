@@ -187,6 +187,51 @@ class WorkScheduleServiceTest {
         assertThat(r.startTime()).contains("08:00");
     }
 
+    @Test
+    void batchUpsertForUser_shouldThrow_ifBatchNull() {
+        assertThatThrownBy(() -> service.batchUpsertForUser("U1", null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Batch entries cannot be empty");
+    }
+
+    @Test
+    void batchUpsertForUser_shouldThrow_ifEntriesNull() {
+        WorkScheduleBatchRequest batch = new WorkScheduleBatchRequest(null, false);
+
+        assertThatThrownBy(() -> service.batchUpsertForUser("U1", batch))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Batch entries cannot be empty");
+    }
+
+    @Test
+    void parseTime_shouldHandleHHmmss() throws Exception {
+        var method = WorkScheduleService.class.getDeclaredMethod("parseTime", String.class);
+        method.setAccessible(true);
+
+        LocalTime t = (LocalTime) method.invoke(service, "08:00:30");
+
+        assertThat(t).isEqualTo(LocalTime.of(8, 0, 30));
+    }
+
+    @Test
+    void toResponse_shouldHandleNullTimes() throws Exception {
+        var method = WorkScheduleService.class.getDeclaredMethod("toResponse", WorkSchedule.class);
+        method.setAccessible(true);
+
+        WorkSchedule ws = new WorkSchedule();
+        ws.setId(10L);
+        ws.setUserId("U1");
+        ws.setDayOfWeek(WorkDay.MON);
+        ws.setPeriod(WorkPeriod.AM);
+        ws.setStartTime(null);
+        ws.setEndTime(null);
+
+        WorkScheduleResponse r = (WorkScheduleResponse) method.invoke(service, ws);
+
+        assertThat(r.startTime()).isNull();
+        assertThat(r.endTime()).isNull();
+    }
+
     private static WorkSchedule makeSchedule(String userId, WorkDay day, WorkPeriod period, String start, String end) {
         WorkSchedule ws = new WorkSchedule();
         ws.setUserId(userId);
