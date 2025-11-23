@@ -161,10 +161,6 @@ public List<AbsenceResponse> listTeamAbsences(String managerEmail, Long teamId) 
   return mapWithDays((List<Absence>) rows);
 }
 
-    /**
-     * Absences d'une team spécifique, visibles par tout utilisateur authentifié
-     * (teamAbsences côté GraphQL)
-     */
     @Transactional(readOnly = true)
     public List<AbsenceResponse> listTeamAbsences(Long teamId) {
         if (teamId == null) {
@@ -403,6 +399,6 @@ private boolean hasRole(User u, String roleUpper) {
 }
 
     private boolean isManager(User u) {
-        return hasRole(u, "manager");
+        return hasRole(u, "MANAGER");
     }
 }

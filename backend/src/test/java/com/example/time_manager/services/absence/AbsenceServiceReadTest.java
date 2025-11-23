@@ -1050,6 +1050,56 @@ class AbsenceServiceReadTest {
                 .hasMessageContaining("owner can delete only while PENDING");
     }
 
+    @Test
+    void listTeamAbsences_simple_shouldThrowWhenTeamIdNull() {
+        assertThatThrownBy(() -> service.listTeamAbsences(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("teamId is required");
+    }
+
+    @Test
+    void listTeamAbsences_simple_shouldReturnEmptyWhenNoUsers() {
+        when(teamMemberRepo.findUsersByTeamId(5L)).thenReturn(List.of());
+
+        var res = service.listTeamAbsences(5L);
+
+        assertThat(res).isEmpty();
+    }
+
+    @Test
+    void listTeamAbsences_simple_shouldReturnMappedAbsences() {
+        User u1 = new User();
+        u1.setId("U1");
+
+        User u2 = new User();
+        u2.setId("U2");
+
+        when(teamMemberRepo.findUsersByTeamId(10L)).thenReturn(List.of(u1, u2));
+
+        Absence abs = new Absence();
+        abs.setId(50L);
+        abs.setUserId("U1");
+
+        when(absenceRepo.findByUserIdInOrderByStartDateDesc(List.of("U1", "U2")))
+                .thenReturn(List.of(abs));
+        when(dayRepo.findByAbsenceIdOrderByAbsenceDateAsc(50L))
+                .thenReturn(List.of());
+
+        var res = service.listTeamAbsences(10L);
+
+        assertThat(res).hasSize(1);
+        assertThat(res.get(0).getId()).isEqualTo(50L);
+    }
+
+    @Test
+    void listTeamAbsences_simple_shouldReturnEmptyWhenUsersIsNull() {
+        when(teamMemberRepo.findUsersByTeamId(42L)).thenReturn(null);
+
+        var res = service.listTeamAbsences(42L);
+
+        assertThat(res).isEmpty();
+    }
+
     private static User makeUser(String id) {
         User u = new User();
         u.setId(id);

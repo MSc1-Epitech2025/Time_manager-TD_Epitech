@@ -250,6 +250,17 @@ class AbsenceGraphqlControllerTest {
         assertEquals("Unauthenticated", ex.getMessage());
     }
 
+    @Test
+    void testTeamAbsences_Success() {
+        List<AbsenceResponse> expected = List.of(new AbsenceResponse());
+        when(absenceService.listTeamAbsences(99L)).thenReturn(expected);
+
+        List<AbsenceResponse> result = controller.teamAbsences(99L);
+
+        assertEquals(1, result.size());
+        verify(absenceService).listTeamAbsences(99L);
+    }
+
     private Map<LocalDate, AbsencePeriod> invokeToMap(List<PeriodByDateInput> input) throws Exception {
         var method = AbsenceGraphqlController.class.getDeclaredMethod("toMap", List.class);
         method.setAccessible(true);

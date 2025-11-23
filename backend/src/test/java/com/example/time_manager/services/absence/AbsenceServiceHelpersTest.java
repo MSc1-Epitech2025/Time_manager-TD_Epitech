@@ -346,4 +346,28 @@ class AbsenceServiceHelpersTest {
         assertThat(dto.getCreatedAt()).isEqualTo(LocalDateTime.of(2024, 1, 1, 10, 0));
         assertThat(dto.getUpdatedAt()).isEqualTo(LocalDateTime.of(2024, 1, 2, 11, 0));
     }
+
+    @Test
+    void isManager_shouldDelegateToHasRole() throws Exception {
+        User u = new User();
+        u.setRole("[\"MANAGER\"]");
+
+        Method m = AbsenceService.class.getDeclaredMethod("isManager", User.class);
+        m.setAccessible(true);
+
+        boolean result = (boolean) m.invoke(service, u);
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    void isManager_shouldReturnFalse_whenNoManagerRole() throws Exception {
+        User u = new User();
+        u.setRole("[\"EMPLOYEE\"]");
+
+        Method m = AbsenceService.class.getDeclaredMethod("isManager", User.class);
+        m.setAccessible(true);
+
+        boolean result = (boolean) m.invoke(service, u);
+        assertThat(result).isFalse();
+    }
 }
