@@ -328,11 +328,11 @@ private normalizeTime(t: string | undefined): string {
     console.log('Enterprise Dashboard initialized.');
     
   this.kpiService.loadFullData().subscribe(data => {
-    console.log('KPI back data', data);
+    console.log('KPI front data', data);
 
     // transformer les données ici
     // créer une structure "users" compatible avec ta fake data actuelle
-    //this.users = data;
+    this.users = data;
     //this.users = this.transformToLocalUsers(data);
     this.updateFilteredUsers();
     this.updateFilteredByPeriod();
