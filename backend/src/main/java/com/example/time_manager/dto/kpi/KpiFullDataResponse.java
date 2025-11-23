@@ -30,7 +30,8 @@ public class KpiFullDataResponse {
         private String lastName;
         private String email;
         private String poste;
-        private String team; 
+        private String team;
+        private String teamName; 
 
         public String getId() { return id; }
         public void setId(String id) { this.id = id; }
@@ -42,8 +43,13 @@ public class KpiFullDataResponse {
         public void setEmail(String email) { this.email = email; }
         public String getPoste() { return poste; }
         public void setPoste(String poste) { this.poste = poste; }
-        public String getTeam() { return team; }
-        public void setTeam(String team) { this.team = team; }
+        public String getTeam() { return teamName; }
+        public void setTeam(String teamName) { this.teamName = teamName; }
+        public String getTeamId() { return teamId; }
+        public void setTeamId(String teamId) { this.teamId = teamId; }
+        public String getTeamName() { return teamName; }
+        public void setTeamName(String teamName) { this.teamName = teamName; }
+
     }
 
     public static class KpiTeamsDto {
@@ -114,12 +120,21 @@ public class KpiFullDataResponse {
     }
 
     public static class KpiScheduleDto {
-        private String userId;
-        private String date;
+         private String userId;
+    private String dayOfWeek; 
+    private String period;    
+    private String startTime; 
+    private String endTime;   
 
-        public String getUserId() { return userId; }
-        public void setUserId(String userId) { this.userId = userId; }
-        public String getDate() { return date; }
-        public void setDate(String date) { this.date = date; }
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
+    public String getDayOfWeek() { return dayOfWeek; }
+    public void setDayOfWeek(String dayOfWeek) { this.dayOfWeek = dayOfWeek; }
+    public String getPeriod() { return period; }
+    public void setPeriod(String period) { this.period = period; }
+    public String getStartTime() { return startTime; }
+    public void setStartTime(String startTime) { this.startTime = startTime; }
+    public String getEndTime() { return endTime; }
+    public void setEndTime(String endTime) { this.endTime = endTime; }
     }
 }
