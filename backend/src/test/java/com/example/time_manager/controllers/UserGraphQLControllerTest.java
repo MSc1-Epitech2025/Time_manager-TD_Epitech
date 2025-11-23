@@ -1,20 +1,24 @@
 package com.example.time_manager.controllers;
 
-import com.example.time_manager.dto.auth.*;
+import com.example.time_manager.dto.auth.AuthResponse;
+import com.example.time_manager.dto.auth.CreateUserInput;
+import com.example.time_manager.dto.auth.UpdateUserInput;
 import com.example.time_manager.graphql.controller.UserGraphQLController;
 import com.example.time_manager.model.User;
 import com.example.time_manager.security.JwtUtil;
 import com.example.time_manager.service.UserService;
+
+import jakarta.security.auth.message.AuthException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import org.junit.jupiter.api.*;
 import org.mockito.*;
 import org.springframework.mock.web.*;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.context.request.*;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.*;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -40,13 +44,16 @@ class UserGraphQLControllerTest {
     }
 
     @Test
-    void testRegister_NewUser() {
-        CreateUserInput input = new CreateUserInput("John", "Doe", "john@example.com",
-                "0606060606", "ADMIN", "Dev", null, "pass123");
+    void testRegister_NewUser() throws Exception {
+        CreateUserInput input = new CreateUserInput(
+                "John", "Doe", "john@example.com",
+                "0606060606", "ADMIN", "Dev", null, "pass123"
+        );
 
         when(userService.findByEmail("john@example.com")).thenReturn(Optional.empty());
-        User u = new User(); u.setEmail("john@example.com");
-        when(userService.saveUser(any(User.class))).thenReturn(u);
+        User saved = new User();
+        saved.setEmail("john@example.com");
+        when(userService.saveUser(any(User.class))).thenReturn(saved);
 
         User result = controller.register(input);
 
@@ -55,142 +62,135 @@ class UserGraphQLControllerTest {
     }
 
     @Test
-    void testRegister_EmailExists_ThrowsException() {
-        CreateUserInput input = new CreateUserInput("John", "Doe", "john@example.com",
-                "0606060606", "ADMIN", "Dev", null, "pass123");
+    void testRegister_EmailExists_Throws() {
+        CreateUserInput input = new CreateUserInput(
+                "John", "Doe", "john@example.com",
+                "0606060606", "ADMIN", "Dev", null, "pass123"
+        );
 
-        when(userService.findByEmail("john@example.com")).thenReturn(Optional.of(new User()));
-        assertThrows(RuntimeException.class, () -> controller.register(input));
+        when(userService.findByEmail("john@example.com"))
+                .thenReturn(Optional.of(new User()));
+
+        AuthException ex = assertThrows(AuthException.class,
+                () -> controller.register(input));
+
+        assertTrue(ex.getMessage().contains("Email already exists"));
     }
 
     @Test
     void testDeleteUser() {
-        assertTrue(controller.deleteUser("1"));
-        verify(userService).deleteById("1");
+        assertTrue(controller.deleteUser("ID1"));
+        verify(userService).deleteById("ID1");
     }
 
     @Test
-    void testLogin_Success() {
-        AuthRequest auth = new AuthRequest("john@example.com", "pass123");
-        User user = new User();
-        user.setEmail("john@example.com");
-        user.setId("1");
-        user.setFirstName("John");
-        user.setRole("ADMIN");
+    void testRefresh_Success() throws Exception {
+        request.setCookies(new Cookie("refresh_token", "TOK123"));
 
-        when(userService.validateUser("john@example.com", "pass123")).thenReturn(true);
-        when(userService.findByEmail("john@example.com")).thenReturn(Optional.of(user));
-        when(jwtUtil.generateAccessToken(any(), any(), any(), any())).thenReturn("access123");
-        when(jwtUtil.generateRefreshToken(any(), any())).thenReturn("refresh123");
+        User u = new User();
+        u.setEmail("john@test.com");
+        u.setId("ID1");
+        u.setFirstName("John");
+        u.setRole("ADMIN");
 
-        AuthResponse res = controller.login(auth);
+        when(jwtUtil.parseRefreshSubject("TOK123")).thenReturn("john@test.com");
+        when(jwtUtil.isRefreshTokenValid("TOK123", "john@test.com")).thenReturn(true);
+        when(userService.findByEmail("john@test.com")).thenReturn(Optional.of(u));
+        when(jwtUtil.generateAccessToken(any(), any(), any(), any())).thenReturn("NEW_ACCESS");
 
-        assertTrue(res.isOk());
-        assertTrue(response.getHeader("Set-Cookie").contains("access_token"));
-    }
+        AuthResponse r = controller.refresh();
 
-    @Test
-    void testLogin_InvalidCredentials() {
-        AuthRequest auth = new AuthRequest("john@example.com", "wrong");
-        when(userService.validateUser("john@example.com", "wrong")).thenReturn(false);
-
-        RuntimeException thrown = assertThrows(RuntimeException.class, () -> controller.login(auth));
-        assertEquals("Invalid credentials", thrown.getMessage());
-    }
-
-    @Test
-    void testRefresh_WithCookieToken_Success() {
-        request.setCookies(new Cookie("refresh_token", "token123"));
-
-        User user = new User();
-        user.setEmail("john@example.com");
-        user.setId("1");
-        user.setFirstName("John");
-        user.setRole("ADMIN");
-
-        when(jwtUtil.parseRefreshSubject("token123")).thenReturn("john@example.com");
-        when(jwtUtil.isRefreshTokenValid("token123", "john@example.com")).thenReturn(true);
-        when(userService.findByEmail("john@example.com")).thenReturn(Optional.of(user));
-        when(jwtUtil.generateAccessToken(any(), any(), any(), any())).thenReturn("access456");
-
-        AuthResponse res = controller.refresh(Optional.empty());
-        assertTrue(res.isOk());
+        assertTrue(r.isOk());
+        assertNotNull(response.getHeader("Set-Cookie"));
     }
 
     @Test
     void testRefresh_MissingToken_Throws() {
-        assertThrows(RuntimeException.class, () -> controller.refresh(Optional.empty()));
-    }
-
-    @Test
-    void testRefresh_BlankTokenInCookie_Throws() {
-        request.setCookies(new Cookie("refresh_token", ""));
-
-        RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> controller.refresh(Optional.empty()));
+        AuthException ex = assertThrows(AuthException.class,
+                () -> controller.refresh());
 
         assertEquals("Missing refresh token", ex.getMessage());
     }
 
     @Test
-    void testRefresh_BlankTokenInBody_FallbackToCookie() {
-        RefreshRequest refreshReq = new RefreshRequest("");
-        request.setCookies(new Cookie("refresh_token", "cookieToken456"));
+    void testRefresh_ParseError_Throws() {
+        request.setCookies(new Cookie("refresh_token", "ERR"));
 
-        User user = new User();
-        user.setEmail("john@example.com");
-        user.setId("1");
-        user.setFirstName("John");
-        user.setRole("ADMIN");
+        when(jwtUtil.parseRefreshSubject("ERR"))
+                .thenThrow(new RuntimeException("parse!"));
 
-        when(jwtUtil.parseRefreshSubject("cookieToken456")).thenReturn("john@example.com");
-        when(jwtUtil.isRefreshTokenValid("cookieToken456", "john@example.com")).thenReturn(true);
-        when(userService.findByEmail("john@example.com")).thenReturn(Optional.of(user));
-        when(jwtUtil.generateAccessToken(any(), any(), any(), any())).thenReturn("access999");
-
-        AuthResponse res = controller.refresh(Optional.of(refreshReq));
-        assertTrue(res.isOk());
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> controller.refresh());
+        assertEquals("parse!", ex.getMessage());
     }
 
     @Test
-    void testRefresh_NullTokenInBody_FallbackToCookie() {
-        RefreshRequest refreshReq = new RefreshRequest(null);
-        request.setCookies(new Cookie("refresh_token", "cookieToken789"));
+    void testRefresh_InvalidToken_Throws() {
+        request.setCookies(new Cookie("refresh_token", "OLD"));
 
-        User user = new User();
-        user.setEmail("john@example.com");
-        user.setId("1");
-        user.setFirstName("John");
-        user.setRole("ADMIN");
+        when(jwtUtil.parseRefreshSubject("OLD")).thenReturn("john@test.com");
+        when(jwtUtil.isRefreshTokenValid("OLD", "john@test.com")).thenReturn(false);
 
-        when(jwtUtil.parseRefreshSubject("cookieToken789")).thenReturn("john@example.com");
-        when(jwtUtil.isRefreshTokenValid("cookieToken789", "john@example.com")).thenReturn(true);
-        when(userService.findByEmail("john@example.com")).thenReturn(Optional.of(user));
-        when(jwtUtil.generateAccessToken(any(), any(), any(), any())).thenReturn("access111");
+        AuthException ex = assertThrows(AuthException.class,
+                () -> controller.refresh());
 
-        AuthResponse res = controller.refresh(Optional.of(refreshReq));
-        assertTrue(res.isOk());
+        assertEquals("Invalid or expired refresh token", ex.getMessage());
     }
 
     @Test
-    void testLogout_ShouldExpireCookies() {
+    void testRefresh_UserNotFound_Throws() {
+        request.setCookies(new Cookie("refresh_token", "TOK"));
+
+        when(jwtUtil.parseRefreshSubject("TOK")).thenReturn("unknown@test.com");
+        when(jwtUtil.isRefreshTokenValid("TOK", "unknown@test.com")).thenReturn(true);
+        when(userService.findByEmail("unknown@test.com"))
+                .thenReturn(Optional.empty());
+
+        AuthException ex = assertThrows(AuthException.class,
+                () -> controller.refresh());
+
+        assertEquals("User not found", ex.getMessage());
+    }
+
+    @Test
+    void testRefresh_BlankToken_Throws() {
+        request.setCookies(new Cookie("refresh_token", " "));
+
+        AuthException ex = assertThrows(AuthException.class,
+                () -> controller.refresh());
+
+        assertEquals("Missing refresh token", ex.getMessage());
+    }
+
+    @Test
+    void testUpdateUser() {
+        UpdateUserInput input = new UpdateUserInput(
+                "42", "John", "Doe", "john@test.com",
+                null, null, null, null, null);
+
+        User u = new User();
+        u.setId("42");
+
+        when(userService.updateUser(eq("42"), any())).thenReturn(u);
+
+        User result = controller.updateUser(input);
+        assertEquals("42", result.getId());
+    }
+
+    @Test
+    void testLogout() {
         assertTrue(controller.logout());
-        String header = response.getHeader("Set-Cookie");
-        assertNotNull(header);
-        assertTrue(header.contains("access_token"));
+        List<String> cookies = response.getHeaders("Set-Cookie");
+        assertEquals(3, cookies.size());
     }
 
     @Test
-    void testUsers_ReturnsList() {
-        List<User> users = List.of(new User(), new User());
-        when(userService.findAllUsers()).thenReturn(users);
-
-        List<User> result = controller.users();
-        assertEquals(2, result.size());
+    void testUsers_NotEmpty() {
+        when(userService.findAllUsers()).thenReturn(List.of(new User(), new User()));
+        assertEquals(2, controller.users().size());
     }
 
     @Test
-    void testUsers_ReturnsEmptyListWhenNull() {
+    void testUsers_Null_ReturnsEmpty() {
         when(userService.findAllUsers()).thenReturn(null);
         assertTrue(controller.users().isEmpty());
     }
@@ -198,68 +198,38 @@ class UserGraphQLControllerTest {
     @Test
     void testUserByEmail_Found() {
         User u = new User();
-        u.setEmail("john@example.com");
+        u.setEmail("john@test.com");
 
-        when(userService.findByEmail("john@example.com")).thenReturn(Optional.of(u));
-        assertNotNull(controller.userByEmail("john@example.com"));
+        when(userService.findByEmail("john@test.com"))
+                .thenReturn(Optional.of(u));
+
+        assertNotNull(controller.userByEmail("john@test.com"));
     }
 
     @Test
     void testUserByEmail_NotFound() {
-        when(userService.findByEmail("x")).thenReturn(Optional.empty());
-        assertNull(controller.userByEmail("x"));
+        when(userService.findByEmail("xx")).thenReturn(Optional.empty());
+        assertNull(controller.userByEmail("xx"));
     }
 
     @Test
-    void testUpdateUser_CallsService() {
-        UpdateUserInput input = new UpdateUserInput("42","John","Doe","john@test.com",
-                null,null,null,null,null);
-
-        User u = new User(); u.setId("42");
-        when(userService.updateUser(eq("42"), any())).thenReturn(u);
-
-        assertEquals("42", controller.updateUser(input).getId());
-    }
-
-    @Test
-    void testRefresh_InvalidToken_ParseError() {
-        request.setCookies(new Cookie("refresh_token", "bad"));
-        when(jwtUtil.parseRefreshSubject("bad")).thenThrow(new RuntimeException());
-
-        RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> controller.refresh(Optional.empty()));
-
-        assertEquals("Invalid refresh token", ex.getMessage());
-    }
-
-    @Test
-    void testRefresh_InvalidOrExpiredToken() {
-        request.setCookies(new Cookie("refresh_token", "tok999"));
-        when(jwtUtil.parseRefreshSubject("tok999")).thenReturn("john@test.com");
-        when(jwtUtil.isRefreshTokenValid("tok999", "john@test.com")).thenReturn(false);
-
-        RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> controller.refresh(Optional.empty()));
-
-        assertEquals("Invalid or expired refresh token", ex.getMessage());
-    }
-
-    @Test
-    void testCurrentResponse_NoResponse_Throws() throws Exception {
-        MockHttpServletRequest req = new MockHttpServletRequest();
-        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(req, null));
+    void testCurrentResponse_NoResponse() throws Exception {
+        MockHttpServletRequest req2 = new MockHttpServletRequest();
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(req2, null));
 
         Method m = UserGraphQLController.class.getDeclaredMethod("currentResponse");
         m.setAccessible(true);
 
-        InvocationTargetException ex = assertThrows(InvocationTargetException.class,
-                () -> m.invoke(null));
+        InvocationTargetException ex = assertThrows(
+                InvocationTargetException.class,
+                () -> m.invoke(null)
+        );
 
         assertTrue(ex.getCause() instanceof IllegalStateException);
     }
 
     @Test
-    void testReadCookie_FindsCookie() throws Exception {
+    void testReadCookie_Found() throws Exception {
         request.setCookies(new Cookie("refresh_token", "XYZ"));
 
         Method m = UserGraphQLController.class.getDeclaredMethod(
@@ -271,7 +241,7 @@ class UserGraphQLControllerTest {
     }
 
     @Test
-    void testReadCookie_NoCookies_ReturnsNull() throws Exception {
+    void testReadCookie_NotFound() throws Exception {
         Method m = UserGraphQLController.class.getDeclaredMethod(
                 "readCookie", HttpServletRequest.class, String.class
         );
@@ -281,10 +251,10 @@ class UserGraphQLControllerTest {
     }
 
     @Test
-    void testReadCookie_CookieNotFound_ReturnsNull() throws Exception {
+    void testReadCookie_CookiesExistButNoMatch() throws Exception {
         request.setCookies(
-                new Cookie("other_cookie", "value1"),
-                new Cookie("another_cookie", "value2")
+                new Cookie("other", "123"),
+                new Cookie("another", "456")
         );
 
         Method m = UserGraphQLController.class.getDeclaredMethod(
@@ -295,59 +265,32 @@ class UserGraphQLControllerTest {
         assertNull(m.invoke(null, request, "refresh_token"));
     }
 
-    static class BeanNull {
-        public String getSomething() { return null; }
-    }
-
     @Test
-    void testTryCallGetter_MethodExistsButReturnsNull() throws Exception {
-        BeanNull bean = new BeanNull();
-
+    void testAddAccessCookie() throws Exception {
         Method m = UserGraphQLController.class.getDeclaredMethod(
-                "tryCallGetter", Object.class, String.class
+                "addAccessCookie", HttpServletResponse.class, String.class
         );
         m.setAccessible(true);
 
-        assertNull(m.invoke(null, bean, "getSomething"));
+        m.invoke(null, response, "TOKEN123");
+
+        String header = response.getHeader("Set-Cookie");
+        assertNotNull(header);
+        assertTrue(header.contains("access_token=TOKEN123"));
+        assertTrue(header.contains("HttpOnly"));
     }
 
     @Test
-    void testTryCallGetter_InvalidMethod() throws Exception {
-        RefreshRequest req = new RefreshRequest("X");
-
+    void testExpireCookie() throws Exception {
         Method m = UserGraphQLController.class.getDeclaredMethod(
-                "tryCallGetter", Object.class, String.class
+                "expireCookie", HttpServletResponse.class, String.class, String.class
         );
         m.setAccessible(true);
 
-        assertNull(m.invoke(null, req, "doesNotExist"));
-    }
+        m.invoke(null, response, "abc", "/x");
 
-    @Test
-    void testTryCallGetter_ValidMethod_ReturnsValue() throws Exception {
-        RefreshRequest req = new RefreshRequest("TTT");
-
-        Method m = UserGraphQLController.class.getDeclaredMethod(
-                "tryCallGetter", Object.class, String.class
-        );
-        m.setAccessible(true);
-
-        Object v = m.invoke(null, req, "refreshToken");
-
-        assertEquals("TTT", v);
-    }
-
-    @Test
-    void testExtractRefreshFromBody_ReturnsNull_WhenNoGetterMatches() throws Exception {
-        RefreshRequest req = new RefreshRequest("AAA");
-
-        Method m = UserGraphQLController.class.getDeclaredMethod(
-                "extractRefreshFromBody", RefreshRequest.class
-        );
-        m.setAccessible(true);
-
-        Object result = m.invoke(null, req);
-
-        assertNull(result);
+        String header = response.getHeader("Set-Cookie");
+        assertTrue(header.contains("abc="));
+        assertTrue(header.contains("Max-Age=0"));
     }
 }
