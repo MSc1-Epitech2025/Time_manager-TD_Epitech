@@ -37,19 +37,19 @@ public class AbsenceGraphqlController {
 
   private String currentEmail() {
 <span class="fc" id="L39">    var auth = SecurityContextHolder.getContext().getAuthentication();</span>
-<span class="pc bpc" id="L40" title="2 of 4 branches missed.">    if (auth == null || !auth.isAuthenticated()) {</span>
-<span class="nc" id="L41">      throw new SecurityException(&quot;Unauthenticated&quot;);</span>
+<span class="fc bfc" id="L40" title="All 4 branches covered.">    if (auth == null || !auth.isAuthenticated()) {</span>
+<span class="fc" id="L41">      throw new SecurityException(&quot;Unauthenticated&quot;);</span>
     }
 <span class="fc" id="L43">    Object principal = auth.getPrincipal();</span>
-<span class="pc bpc" id="L44" title="1 of 2 branches missed.">    if (principal instanceof UserDetails u) {</span>
-<span class="nc" id="L45">      return u.getUsername();</span>
+<span class="fc bfc" id="L44" title="All 2 branches covered.">    if (principal instanceof UserDetails u) {</span>
+<span class="fc" id="L45">      return u.getUsername();</span>
     }
 <span class="fc" id="L47">    return auth.getName();</span>
   }
 
   private static Map&lt;LocalDate, AbsencePeriod&gt; toMap(List&lt;PeriodByDateInput&gt; periodList) {
 <span class="fc" id="L51">    Map&lt;LocalDate, AbsencePeriod&gt; m = new HashMap&lt;&gt;();</span>
-<span class="pc bpc" id="L52" title="1 of 2 branches missed.">    if (periodList != null) {</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">    if (periodList != null) {</span>
 <span class="fc bfc" id="L53" title="All 2 branches covered.">      for (PeriodByDateInput p : periodList) {</span>
 <span class="fc" id="L54">        m.put(LocalDate.parse(p.getDate()), p.getPeriod());</span>
 <span class="fc" id="L55">      }</span>
@@ -104,8 +104,8 @@ public class AbsenceGraphqlController {
   @MutationMapping
   public AbsenceResponse updateAbsence(@Argument Long id, @Argument AbsenceUpdateInput input) {
 <span class="fc" id="L106">    AbsenceUpdateRequest req = new AbsenceUpdateRequest();</span>
-<span class="pc bpc" id="L107" title="1 of 2 branches missed.">    if (input.getStartDate() != null) req.setStartDate(LocalDate.parse(input.getStartDate()));</span>
-<span class="pc bpc" id="L108" title="1 of 2 branches missed.">    if (input.getEndDate() != null) req.setEndDate(LocalDate.parse(input.getEndDate()));</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">    if (input.getStartDate() != null) req.setStartDate(LocalDate.parse(input.getStartDate()));</span>
+<span class="fc bfc" id="L108" title="All 2 branches covered.">    if (input.getEndDate() != null) req.setEndDate(LocalDate.parse(input.getEndDate()));</span>
 <span class="fc" id="L109">    req.setType(input.getType());</span>
 <span class="fc" id="L110">    req.setReason(input.getReason());</span>
 <span class="fc" id="L111">    req.setSupportingDocumentUrl(input.getSupportingDocumentUrl());</span>

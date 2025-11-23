@@ -173,9 +173,9 @@ public List&lt;AbsenceResponse&gt; listTeamAbsences(String managerEmail, Long te
 <span class="fc bfc" id="L173" title="All 8 branches covered.">    if (!(isAdmin || isOwner || (isManager &amp;&amp; canManagerActOn(requester, a.getUserId())))) {</span>
 <span class="fc" id="L174">      throw new org.springframework.security.access.AccessDeniedException(&quot;Forbidden&quot;);</span>
     }
-<span class="pc bpc" id="L176" title="1 of 8 branches missed.">    if (!isAdmin &amp;&amp; !isManager &amp;&amp; !(isOwner &amp;&amp; a.getStatus() == AbsenceStatus.PENDING)) {</span>
-<span class="fc" id="L177">      throw new org.springframework.security.access.AccessDeniedException(&quot;Forbidden: owner can edit only while PENDING&quot;);</span>
-    }
+<span class="fc bfc" id="L176" title="All 6 branches covered.">      if (!isAdmin &amp;&amp; !isManager &amp;&amp; a.getStatus() != AbsenceStatus.PENDING) {</span>
+<span class="fc" id="L177">          throw new org.springframework.security.access.AccessDeniedException(&quot;Forbidden: owner can edit only while PENDING&quot;);</span>
+      }
 
 <span class="fc bfc" id="L180" title="All 2 branches covered.">    if (req.getStartDate() != null) a.setStartDate(req.getStartDate());</span>
 <span class="fc bfc" id="L181" title="All 2 branches covered.">    if (req.getEndDate()   != null) a.setEndDate(req.getEndDate());</span>
@@ -244,9 +244,9 @@ public List&lt;AbsenceResponse&gt; listTeamAbsences(String managerEmail, Long te
 <span class="fc bfc" id="L244" title="All 8 branches covered.">    if (!(isAdmin || isOwner || (isManager &amp;&amp; canManagerActOn(requester, a.getUserId())))) {</span>
 <span class="fc" id="L245">      throw new org.springframework.security.access.AccessDeniedException(&quot;Forbidden&quot;);</span>
     }
-<span class="pc bpc" id="L247" title="1 of 8 branches missed.">    if (!isAdmin &amp;&amp; !isManager &amp;&amp; !(isOwner &amp;&amp; a.getStatus() == AbsenceStatus.PENDING)) {</span>
-<span class="fc" id="L248">      throw new org.springframework.security.access.AccessDeniedException(&quot;Forbidden: owner can delete only while PENDING&quot;);</span>
-    }
+<span class="fc bfc" id="L247" title="All 6 branches covered.">      if (!isAdmin &amp;&amp; !isManager &amp;&amp; a.getStatus() != AbsenceStatus.PENDING) {</span>
+<span class="fc" id="L248">          throw new org.springframework.security.access.AccessDeniedException(&quot;Forbidden: owner can delete only while PENDING&quot;);</span>
+      }
 <span class="fc" id="L250">    leaveAccountingBridge.removeDebitForAbsence(id);</span>
 <span class="fc" id="L251">    dayRepo.deleteByAbsenceId(id);</span>
 <span class="fc" id="L252">    absenceRepo.deleteById(id);</span>
