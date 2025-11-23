@@ -200,9 +200,9 @@ public List<AbsenceResponse> listTeamAbsences(String managerEmail, Long teamId) 
     if (!(isAdmin || isOwner || (isManager && canManagerActOn(requester, a.getUserId())))) {
       throw new org.springframework.security.access.AccessDeniedException("Forbidden");
     }
-    if (!isAdmin && !isManager && !(isOwner && a.getStatus() == AbsenceStatus.PENDING)) {
-      throw new org.springframework.security.access.AccessDeniedException("Forbidden: owner can edit only while PENDING");
-    }
+      if (!isAdmin && !isManager && a.getStatus() != AbsenceStatus.PENDING) {
+          throw new org.springframework.security.access.AccessDeniedException("Forbidden: owner can edit only while PENDING");
+      }
 
     if (req.getStartDate() != null) a.setStartDate(req.getStartDate());
     if (req.getEndDate()   != null) a.setEndDate(req.getEndDate());
@@ -275,9 +275,9 @@ public List<AbsenceResponse> listTeamAbsences(String managerEmail, Long teamId) 
     if (!(isAdmin || isOwner || (isManager && canManagerActOn(requester, a.getUserId())))) {
       throw new org.springframework.security.access.AccessDeniedException("Forbidden");
     }
-    if (!isAdmin && !isManager && !(isOwner && a.getStatus() == AbsenceStatus.PENDING)) {
-      throw new org.springframework.security.access.AccessDeniedException("Forbidden: owner can delete only while PENDING");
-    }
+      if (!isAdmin && !isManager && a.getStatus() != AbsenceStatus.PENDING) {
+          throw new org.springframework.security.access.AccessDeniedException("Forbidden: owner can delete only while PENDING");
+      }
     leaveAccountingBridge.removeDebitForAbsence(id);
     dayRepo.deleteByAbsenceId(id);
     absenceRepo.deleteById(id);

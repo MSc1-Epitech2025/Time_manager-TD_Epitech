@@ -191,4 +191,125 @@ class AbsenceServiceUpdateTest {
         assertThat(res.getReason()).isEqualTo("new reason");
         assertThat(res.getSupportingDocumentUrl()).isEqualTo("newUrl");
     }
+
+    @Test
+    void updateVisibleTo_ownerRejected_shouldThrow() {
+        var auth = new TestingAuthenticationToken("U1", null, "ROLE_EMPLOYEE");
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        User u = new User();
+        u.setId("U1");
+        when(userRepo.findByEmail("u@test.com")).thenReturn(Optional.of(u));
+
+        Absence a = new Absence();
+        a.setId(2000L);
+        a.setUserId("U1");
+        a.setStatus(AbsenceStatus.REJECTED);
+
+        when(absenceRepo.findById(2000L)).thenReturn(Optional.of(a));
+
+        AbsenceUpdateRequest req = new AbsenceUpdateRequest();
+
+        assertThatThrownBy(() -> service.updateVisibleTo("u@test.com", 2000L, req))
+                .isInstanceOf(org.springframework.security.access.AccessDeniedException.class)
+                .hasMessageContaining("PENDING");
+    }
+
+    @Test
+    void updateVisibleTo_ownerNullStatus_shouldThrow() {
+        var auth = new TestingAuthenticationToken("U1", null, "ROLE_EMPLOYEE");
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        User u = new User();
+        u.setId("U1");
+        when(userRepo.findByEmail("u@test.com")).thenReturn(Optional.of(u));
+
+        Absence a = new Absence();
+        a.setId(2001L);
+        a.setUserId("U1");
+        a.setStatus(null);
+
+        when(absenceRepo.findById(2001L)).thenReturn(Optional.of(a));
+
+        AbsenceUpdateRequest req = new AbsenceUpdateRequest();
+
+        assertThatThrownBy(() -> service.updateVisibleTo("u@test.com", 2001L, req))
+                .isInstanceOf(org.springframework.security.access.AccessDeniedException.class)
+                .hasMessageContaining("PENDING");
+    }
+
+    @Test
+    void updateVisibleTo_managerAllowedButNotPending_shouldPass() {
+        var auth = new TestingAuthenticationToken("M1", null, "ROLE_MANAGER");
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        User manager = new User();
+        manager.setId("M1");
+        manager.setRole("[\"MANAGER\"]");
+        when(userRepo.findByEmail("m@test.com")).thenReturn(Optional.of(manager));
+
+        Absence a = new Absence();
+        a.setId(2002L);
+        a.setUserId("U2");
+        a.setStatus(AbsenceStatus.APPROVED);
+
+        a.setStartDate(LocalDate.of(2025, 1, 1));
+        a.setEndDate(LocalDate.of(2025, 1, 2));
+
+        when(absenceRepo.findById(2002L)).thenReturn(Optional.of(a));
+        when(teamMemberRepo.findTeamIdsByUserId("M1")).thenReturn(List.of(10L));
+        when(teamMemberRepo.existsByTeam_IdAndUser_Id(10L, "U2")).thenReturn(true);
+
+        when(absenceRepo.save(any())).thenReturn(a);
+        when(dayRepo.findByAbsenceIdOrderByAbsenceDateAsc(2002L)).thenReturn(List.of());
+
+        AbsenceUpdateRequest req = new AbsenceUpdateRequest();
+        req.setReason("new");
+
+        var res = service.updateVisibleTo("m@test.com", 2002L, req);
+
+        assertThat(res.getId()).isEqualTo(2002L);
+    }
+
+    @Test
+    void deleteVisibleTo_ownerRejected_shouldThrow() {
+        var auth = new TestingAuthenticationToken("U1", null, "ROLE_EMPLOYEE");
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        User u = new User();
+        u.setId("U1");
+        when(userRepo.findByEmail("u@test.com")).thenReturn(Optional.of(u));
+
+        Absence a = new Absence();
+        a.setId(3000L);
+        a.setUserId("U1");
+        a.setStatus(AbsenceStatus.REJECTED);
+
+        when(absenceRepo.findById(3000L)).thenReturn(Optional.of(a));
+
+        assertThatThrownBy(() -> service.deleteVisibleTo("u@test.com", 3000L))
+                .isInstanceOf(org.springframework.security.access.AccessDeniedException.class)
+                .hasMessageContaining("PENDING");
+    }
+
+    @Test
+    void deleteVisibleTo_ownerNullStatus_shouldThrow() {
+        var auth = new TestingAuthenticationToken("U1", null, "ROLE_EMPLOYEE");
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        User u = new User();
+        u.setId("U1");
+        when(userRepo.findByEmail("u@test.com")).thenReturn(Optional.of(u));
+
+        Absence a = new Absence();
+        a.setId(3001L);
+        a.setUserId("U1");
+        a.setStatus(null);
+
+        when(absenceRepo.findById(3001L)).thenReturn(Optional.of(a));
+
+        assertThatThrownBy(() -> service.deleteVisibleTo("u@test.com", 3001L))
+                .isInstanceOf(org.springframework.security.access.AccessDeniedException.class)
+                .hasMessageContaining("PENDING");
+    }
 }
