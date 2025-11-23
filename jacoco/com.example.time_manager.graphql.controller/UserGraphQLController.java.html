@@ -216,12 +216,12 @@ public class UserGraphQLController {
 <span class="fc bfc" id="L216" title="All 2 branches covered.">        if (cookies == null) {</span>
 <span class="fc" id="L217">            return null;</span>
         }
-<span class="pc bpc" id="L219" title="1 of 2 branches missed.">        for (Cookie c : cookies) {</span>
-<span class="pc bpc" id="L220" title="1 of 2 branches missed.">            if (name.equals(c.getName())) {</span>
+<span class="fc bfc" id="L219" title="All 2 branches covered.">        for (Cookie c : cookies) {</span>
+<span class="fc bfc" id="L220" title="All 2 branches covered.">            if (name.equals(c.getName())) {</span>
 <span class="fc" id="L221">                return c.getValue();</span>
             }
         }
-<span class="nc" id="L224">        return null;</span>
+<span class="fc" id="L224">        return null;</span>
     }
 
     private static String extractRefreshFromBody(RefreshRequest req) {

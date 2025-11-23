@@ -92,7 +92,7 @@ public class AbsenceService {
 <span class="fc" id="L92">    boolean isManager = hasRole(requester, &quot;MANAGER&quot;);</span>
 <span class="fc" id="L93">    boolean isOwner = requesterId.equals(targetUserId);</span>
 
-<span class="pc bpc" id="L95" title="3 of 8 branches missed.">    if (!(isAdmin || isOwner || (isManager &amp;&amp; canManagerActOn(requester, targetUserId)))) {</span>
+<span class="fc bfc" id="L95" title="All 8 branches covered.">    if (!(isAdmin || isOwner || (isManager &amp;&amp; canManagerActOn(requester, targetUserId)))) {</span>
 <span class="fc" id="L96">      throw new org.springframework.security.access.AccessDeniedException(&quot;Forbidden&quot;);</span>
     }
 
@@ -120,7 +120,7 @@ public class AbsenceService {
 <span class="fc" id="L120">    boolean isManager = hasRole(requester, &quot;MANAGER&quot;);</span>
 <span class="fc" id="L121">    boolean isOwner   = a.getUserId().equals(requester.getId());</span>
 
-<span class="pc bpc" id="L123" title="4 of 8 branches missed.">    if (isAdmin || isOwner || (isManager &amp;&amp; canManagerActOn(requester, a.getUserId()))) {</span>
+<span class="fc bfc" id="L123" title="All 8 branches covered.">    if (isAdmin || isOwner || (isManager &amp;&amp; canManagerActOn(requester, a.getUserId()))) {</span>
 <span class="fc" id="L124">      var days = dayRepo.findByAbsenceIdOrderByAbsenceDateAsc(a.getId());</span>
 <span class="fc" id="L125">      return toDto(a, days);</span>
     }
@@ -170,10 +170,10 @@ public List&lt;AbsenceResponse&gt; listTeamAbsences(String managerEmail, Long te
 <span class="fc" id="L170">    boolean isOwner = a.getUserId().equals(requester.getId());</span>
 <span class="fc" id="L171">    boolean isManager = hasRole(requester, &quot;MANAGER&quot;);</span>
 
-<span class="pc bpc" id="L173" title="5 of 8 branches missed.">    if (!(isAdmin || isOwner || (isManager &amp;&amp; canManagerActOn(requester, a.getUserId())))) {</span>
-<span class="nc" id="L174">      throw new org.springframework.security.access.AccessDeniedException(&quot;Forbidden&quot;);</span>
+<span class="fc bfc" id="L173" title="All 8 branches covered.">    if (!(isAdmin || isOwner || (isManager &amp;&amp; canManagerActOn(requester, a.getUserId())))) {</span>
+<span class="fc" id="L174">      throw new org.springframework.security.access.AccessDeniedException(&quot;Forbidden&quot;);</span>
     }
-<span class="pc bpc" id="L176" title="2 of 8 branches missed.">    if (!isAdmin &amp;&amp; !isManager &amp;&amp; !(isOwner &amp;&amp; a.getStatus() == AbsenceStatus.PENDING)) {</span>
+<span class="pc bpc" id="L176" title="1 of 8 branches missed.">    if (!isAdmin &amp;&amp; !isManager &amp;&amp; !(isOwner &amp;&amp; a.getStatus() == AbsenceStatus.PENDING)) {</span>
 <span class="fc" id="L177">      throw new org.springframework.security.access.AccessDeniedException(&quot;Forbidden: owner can edit only while PENDING&quot;);</span>
     }
 
@@ -209,8 +209,8 @@ public List&lt;AbsenceResponse&gt; listTeamAbsences(String managerEmail, Long te
 <span class="fc" id="L209">    boolean isAdmin   = hasRole(approver, &quot;ADMIN&quot;);</span>
 <span class="fc" id="L210">    boolean isManager = hasRole(approver, &quot;MANAGER&quot;);</span>
 
-<span class="pc bpc" id="L212" title="5 of 6 branches missed.">    if (!(isAdmin || (isManager &amp;&amp; canManagerActOn(approver, a.getUserId())))) {</span>
-<span class="nc" id="L213">      throw new org.springframework.security.access.AccessDeniedException(&quot;Forbidden&quot;);</span>
+<span class="fc bfc" id="L212" title="All 6 branches covered.">    if (!(isAdmin || (isManager &amp;&amp; canManagerActOn(approver, a.getUserId())))) {</span>
+<span class="fc" id="L213">      throw new org.springframework.security.access.AccessDeniedException(&quot;Forbidden&quot;);</span>
     }
 
 <span class="fc bfc" id="L216" title="All 2 branches covered.">    if (req.getStatus() == AbsenceStatus.PENDING) {</span>
@@ -221,7 +221,7 @@ public List&lt;AbsenceResponse&gt; listTeamAbsences(String managerEmail, Long te
 <span class="fc" id="L221">    a.setApprovedBy(approver.getId());</span>
 <span class="fc" id="L222">    a.setApprovedAt(LocalDateTime.now());</span>
 <span class="fc" id="L223">    a = absenceRepo.save(a);</span>
-<span class="pc bpc" id="L224" title="1 of 3 branches missed.">    switch (a.getStatus()) {</span>
+<span class="fc bfc" id="L224" title="All 3 branches covered.">    switch (a.getStatus()) {</span>
 <span class="fc" id="L225">      case APPROVED -&gt; leaveAccountingBridge.ensureDebitForApprovedAbsence(a);</span>
 <span class="fc" id="L226">      case REJECTED -&gt; leaveAccountingBridge.removeDebitForAbsence(a.getId());</span>
       default -&gt; { /* rien */ }
@@ -241,10 +241,10 @@ public List&lt;AbsenceResponse&gt; listTeamAbsences(String managerEmail, Long te
 <span class="fc" id="L241">    boolean isOwner = a.getUserId().equals(requester.getId());</span>
 <span class="fc" id="L242">    boolean isManager = hasRole(requester, &quot;MANAGER&quot;);</span>
 
-<span class="pc bpc" id="L244" title="3 of 8 branches missed.">    if (!(isAdmin || isOwner || (isManager &amp;&amp; canManagerActOn(requester, a.getUserId())))) {</span>
+<span class="fc bfc" id="L244" title="All 8 branches covered.">    if (!(isAdmin || isOwner || (isManager &amp;&amp; canManagerActOn(requester, a.getUserId())))) {</span>
 <span class="fc" id="L245">      throw new org.springframework.security.access.AccessDeniedException(&quot;Forbidden&quot;);</span>
     }
-<span class="pc bpc" id="L247" title="3 of 8 branches missed.">    if (!isAdmin &amp;&amp; !isManager &amp;&amp; !(isOwner &amp;&amp; a.getStatus() == AbsenceStatus.PENDING)) {</span>
+<span class="pc bpc" id="L247" title="1 of 8 branches missed.">    if (!isAdmin &amp;&amp; !isManager &amp;&amp; !(isOwner &amp;&amp; a.getStatus() == AbsenceStatus.PENDING)) {</span>
 <span class="fc" id="L248">      throw new org.springframework.security.access.AccessDeniedException(&quot;Forbidden: owner can delete only while PENDING&quot;);</span>
     }
 <span class="fc" id="L250">    leaveAccountingBridge.removeDebitForAbsence(id);</span>

@@ -58,74 +58,90 @@ public String generateAccessToken(String username, String userId, String firstNa
 <span class="fc" id="L58">        .signWith(accessKey(), SignatureAlgorithm.HS256)</span>
 <span class="fc" id="L59">        .compact();</span>
 }
-    public boolean isAccessTokenValid(String token, String username) {
-<span class="fc" id="L62">        Claims c = parseAccessClaims(token);</span>
-<span class="pc bpc" id="L63" title="1 of 4 branches missed.">        return username.equals(c.getSubject()) &amp;&amp; c.getExpiration().after(new Date());</span>
+
+    boolean isAccessTokenStillValid(Claims claims, String username, Date now) {
+<span class="fc" id="L63">        boolean subjectMatches = username.equals(claims.getSubject());</span>
+<span class="fc" id="L64">        boolean notExpired = claims.getExpiration().after(now);</span>
+<span class="fc bfc" id="L65" title="All 4 branches covered.">        return subjectMatches &amp;&amp; notExpired;</span>
     }
 
+    public boolean isAccessTokenValid(String token, String username) {
+<span class="fc" id="L69">        Claims c = parseAccessClaims(token);</span>
+<span class="fc" id="L70">        return isAccessTokenValidAt(c, username, new Date());</span>
+    }
+
+    boolean isAccessTokenValidAt(Claims claims, String username, Date now) {
+<span class="fc" id="L74">        return isAccessTokenStillValid(claims, username, now);</span>
+    }
+
+
     public String extractUsername(String accessToken) {
-<span class="fc" id="L67">        return parseAccessClaims(accessToken).getSubject();</span>
+<span class="fc" id="L79">        return parseAccessClaims(accessToken).getSubject();</span>
     }
 
     public String extractFirstName(String accessToken) {
-<span class="fc" id="L71">        return parseAccessClaims(accessToken).get(CLAIM_GIVEN_NAME, String.class);</span>
+<span class="fc" id="L83">        return parseAccessClaims(accessToken).get(CLAIM_GIVEN_NAME, String.class);</span>
     }
 
     public String extractRole(String accessToken) {
-<span class="fc" id="L75">        return parseAccessClaims(accessToken).get(CLAIM_ROLE, String.class);</span>
+<span class="fc" id="L87">        return parseAccessClaims(accessToken).get(CLAIM_ROLE, String.class);</span>
     }
 
     private Claims parseAccessClaims(String token) {
-<span class="fc" id="L79">        return Jwts.parserBuilder()</span>
-<span class="fc" id="L80">            .setSigningKey(accessKey())</span>
-<span class="fc" id="L81">            .build()</span>
-<span class="fc" id="L82">            .parseClaimsJws(token)</span>
-<span class="fc" id="L83">            .getBody();</span>
+<span class="fc" id="L91">        return Jwts.parserBuilder()</span>
+<span class="fc" id="L92">            .setSigningKey(accessKey())</span>
+<span class="fc" id="L93">            .build()</span>
+<span class="fc" id="L94">            .parseClaimsJws(token)</span>
+<span class="fc" id="L95">            .getBody();</span>
     }
 
     // ====== REFRESH TOKEN API ======
     public String generateRefreshToken(String username, String userId) {
-<span class="fc" id="L88">        Instant now = Instant.now();</span>
-<span class="fc" id="L89">        return Jwts.builder()</span>
-<span class="fc" id="L90">            .setIssuer(issuer)</span>
-<span class="fc" id="L91">            .setSubject(username)</span>
-<span class="fc" id="L92">            .claim(&quot;uid&quot;, userId)               </span>
-<span class="fc" id="L93">            .setIssuedAt(Date.from(now))</span>
-<span class="fc" id="L94">            .setExpiration(Date.from(now.plus(Duration.ofDays(refreshDays))))</span>
-<span class="fc" id="L95">            .setId(UUID.randomUUID().toString())</span>
-<span class="fc" id="L96">            .signWith(refreshKey(), SignatureAlgorithm.HS256)</span>
-<span class="fc" id="L97">            .compact();</span>
+<span class="fc" id="L100">        Instant now = Instant.now();</span>
+<span class="fc" id="L101">        return Jwts.builder()</span>
+<span class="fc" id="L102">            .setIssuer(issuer)</span>
+<span class="fc" id="L103">            .setSubject(username)</span>
+<span class="fc" id="L104">            .claim(&quot;uid&quot;, userId)               </span>
+<span class="fc" id="L105">            .setIssuedAt(Date.from(now))</span>
+<span class="fc" id="L106">            .setExpiration(Date.from(now.plus(Duration.ofDays(refreshDays))))</span>
+<span class="fc" id="L107">            .setId(UUID.randomUUID().toString())</span>
+<span class="fc" id="L108">            .signWith(refreshKey(), SignatureAlgorithm.HS256)</span>
+<span class="fc" id="L109">            .compact();</span>
     }
 
-
     public boolean isRefreshTokenValid(String token, String username) {
-<span class="fc" id="L102">        Claims c = parseRefreshClaims(token);</span>
-<span class="pc bpc" id="L103" title="1 of 4 branches missed.">        return username.equals(c.getSubject()) &amp;&amp; c.getExpiration().after(new Date());</span>
+<span class="fc" id="L113">        Claims c = parseRefreshClaims(token);</span>
+<span class="fc" id="L114">        return isRefreshTokenStillValid(c, username, new Date());</span>
+    }
+
+    boolean isRefreshTokenStillValid(Claims claims, String username, Date now) {
+<span class="fc bfc" id="L118" title="All 2 branches covered.">        return username.equals(claims.getSubject())</span>
+<span class="fc bfc" id="L119" title="All 2 branches covered.">                &amp;&amp; claims.getExpiration().after(now);</span>
     }
 
     public String parseRefreshSubject(String refreshToken) {
-<span class="fc" id="L107">        return parseRefreshClaims(refreshToken).getSubject();</span>
+<span class="fc" id="L123">        return parseRefreshClaims(refreshToken).getSubject();</span>
     }
 
     public String extractRefreshFirstName(String refreshToken) {
-<span class="fc" id="L111">        return parseRefreshClaims(refreshToken).get(CLAIM_GIVEN_NAME, String.class);</span>
+<span class="fc" id="L127">        return parseRefreshClaims(refreshToken).get(CLAIM_GIVEN_NAME, String.class);</span>
     }
 
     public String extractRefreshRole(String refreshToken) {
-<span class="fc" id="L115">        return parseRefreshClaims(refreshToken).get(CLAIM_ROLE, String.class);</span>
+<span class="fc" id="L131">        return parseRefreshClaims(refreshToken).get(CLAIM_ROLE, String.class);</span>
     }
 
     private Claims parseRefreshClaims(String token) {
-<span class="fc" id="L119">        return Jwts.parserBuilder()</span>
-<span class="fc" id="L120">            .setSigningKey(refreshKey())</span>
-<span class="fc" id="L121">            .build()</span>
-<span class="fc" id="L122">            .parseClaimsJws(token)</span>
-<span class="fc" id="L123">            .getBody();</span>
+<span class="fc" id="L135">        return Jwts.parserBuilder()</span>
+<span class="fc" id="L136">            .setSigningKey(refreshKey())</span>
+<span class="fc" id="L137">            .build()</span>
+<span class="fc" id="L138">            .parseClaimsJws(token)</span>
+<span class="fc" id="L139">            .getBody();</span>
     }
 
     // ====== GENERIC ======
     public &lt;T&gt; T extractAccessClaim(String token, Function&lt;Claims, T&gt; resolver) {
-<span class="fc" id="L128">        return resolver.apply(parseAccessClaims(token));</span>
+<span class="fc" id="L144">        return resolver.apply(parseAccessClaims(token));</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

@@ -35,19 +35,19 @@ public class SecurityConfig {
   SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 <span class="fc" id="L36">      http</span>
 <span class="pc" id="L37">          .cors(cors -&gt; cors.configurationSource(corsConfigurationSource()))</span>
-<span class="pc" id="L38">          .csrf(csrf -&gt; csrf.ignoringRequestMatchers(&quot;/graphql&quot;))</span>
-<span class="pc" id="L39">          .sessionManagement(sm -&gt; sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))</span>
-<span class="pc" id="L40">          .securityContext(sc -&gt; sc</span>
-<span class="nc" id="L41">              .requireExplicitSave(false)</span>
-<span class="nc" id="L42">              .securityContextRepository(new NullSecurityContextRepository())</span>
+<span class="fc" id="L38">          .csrf(csrf -&gt; csrf.ignoringRequestMatchers(&quot;/graphql&quot;))</span>
+<span class="fc" id="L39">          .sessionManagement(sm -&gt; sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))</span>
+<span class="fc" id="L40">          .securityContext(sc -&gt; sc</span>
+<span class="fc" id="L41">              .requireExplicitSave(false)</span>
+<span class="fc" id="L42">              .securityContextRepository(new NullSecurityContextRepository())</span>
           )
 <span class="fc" id="L44">          .authorizeHttpRequests(auth -&gt; auth</span>
-<span class="nc" id="L45">              .requestMatchers(&quot;/actuator/health&quot;).permitAll()</span>
-<span class="nc" id="L46">              .requestMatchers(HttpMethod.POST, &quot;/graphql&quot;).permitAll()</span>
-<span class="nc" id="L47">              .requestMatchers(&quot;/oauth2/**&quot;).permitAll()</span>
-<span class="nc" id="L48">              .anyRequest().authenticated()</span>
+<span class="fc" id="L45">              .requestMatchers(&quot;/actuator/health&quot;).permitAll()</span>
+<span class="fc" id="L46">              .requestMatchers(HttpMethod.POST, &quot;/graphql&quot;).permitAll()</span>
+<span class="fc" id="L47">              .requestMatchers(&quot;/oauth2/**&quot;).permitAll()</span>
+<span class="fc" id="L48">              .anyRequest().authenticated()</span>
           )
-<span class="pc" id="L50">          .oauth2Login(oauth -&gt; oauth.defaultSuccessUrl(&quot;/oauth2/success&quot;, true))</span>
+<span class="fc" id="L50">          .oauth2Login(oauth -&gt; oauth.defaultSuccessUrl(&quot;/oauth2/success&quot;, true))</span>
 <span class="fc" id="L51">          .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);</span>
 
 <span class="fc" id="L53">      return http.build();</span>

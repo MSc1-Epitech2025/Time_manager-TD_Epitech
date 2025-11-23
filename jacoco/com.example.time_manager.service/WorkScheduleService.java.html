@@ -56,7 +56,7 @@ public class WorkScheduleService {
     }
 
     public List&lt;WorkScheduleResponse&gt; batchUpsertForUser(String userId, WorkScheduleBatchRequest batch) {
-<span class="pc bpc" id="L59" title="2 of 6 branches missed.">        if (batch == null || batch.entries() == null || batch.entries().isEmpty()) {</span>
+<span class="fc bfc" id="L59" title="All 6 branches covered.">        if (batch == null || batch.entries() == null || batch.entries().isEmpty()) {</span>
 <span class="fc" id="L60">            throw new IllegalArgumentException(&quot;Batch entries cannot be empty&quot;);</span>
         }
 
@@ -107,15 +107,15 @@ public class WorkScheduleService {
 <span class="fc bfc" id="L107" title="All 2 branches covered.">        if (time == null) {</span>
 <span class="fc" id="L108">            throw new IllegalArgumentException(&quot;time cannot be null&quot;);</span>
         }
-<span class="pc bpc" id="L110" title="1 of 2 branches missed.">        if (time.length() == 5) {</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        if (time.length() == 5) {</span>
 <span class="fc" id="L111">            return LocalTime.parse(time + &quot;:00&quot;);</span>
         }
-<span class="nc" id="L113">        return LocalTime.parse(time);</span>
+<span class="fc" id="L113">        return LocalTime.parse(time);</span>
     }
 
     private WorkScheduleResponse toResponse(WorkSchedule ws) {
-<span class="pc bpc" id="L117" title="1 of 2 branches missed.">        String start = ws.getStartTime() != null ? ws.getStartTime().withSecond(0).toString() : null;</span>
-<span class="pc bpc" id="L118" title="1 of 2 branches missed.">        String end = ws.getEndTime() != null ? ws.getEndTime().withSecond(0).toString() : null;</span>
+<span class="fc bfc" id="L117" title="All 2 branches covered.">        String start = ws.getStartTime() != null ? ws.getStartTime().withSecond(0).toString() : null;</span>
+<span class="fc bfc" id="L118" title="All 2 branches covered.">        String end = ws.getEndTime() != null ? ws.getEndTime().withSecond(0).toString() : null;</span>
 
 <span class="fc" id="L120">        return new WorkScheduleResponse(</span>
 <span class="fc" id="L121">                String.valueOf(ws.getId()),</span>
