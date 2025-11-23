@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map, tap, catchError, throwError } from 'rxjs';
+import { Observable, map, tap, catchError, throwError, of } from 'rxjs';
 
 const GRAPHQL_ENDPOINT = 'http://localhost:8030/graphql';
 
@@ -249,8 +249,21 @@ const DELETE_ABSENCE_MUTATION = `
   }
 `;
 
+const ALL_USERS_QUERY = `
+  query AllUsers {
+    users {
+      id
+      firstName
+      lastName
+      email
+    }
+  }
+`;
+
 @Injectable({ providedIn: 'root' })
 export class AbsenceService {
+  private usersCache: Map<string, { firstName?: string; lastName?: string; email?: string }> | null = null;
+
   constructor(private readonly http: HttpClient) {}
 
   myAbsences(): Observable<Absence[]> {
@@ -314,6 +327,43 @@ export class AbsenceService {
     return this.graphql<DeleteAbsencePayload>(DELETE_ABSENCE_MUTATION, { id }).pipe(
       tap((payload) => console.debug('[AbsenceService] deleteAbsence payload', payload)),
       map((payload) => payload.deleteAbsence ?? false)
+    );
+  }
+
+  getAllUsers(): Observable<Map<string, { firstName?: string; lastName?: string; email?: string }>> {
+    if (this.usersCache) {
+      return of(this.usersCache);
+    }
+
+    type AllUsersPayload = {
+      users: Array<{
+        id: string;
+        firstName?: string;
+        lastName?: string;
+        email?: string;
+      }>;
+    };
+
+    return this.graphql<AllUsersPayload>(ALL_USERS_QUERY).pipe(
+      map((payload) => {
+        const users = payload?.users ?? [];
+        const userMap = new Map<string, { firstName?: string; lastName?: string; email?: string }>();
+        for (const user of users) {
+          userMap.set(user.id, {
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+          });
+        }
+        this.usersCache = userMap;
+        return userMap;
+      })
+    );
+  }
+
+  getUserById(userId: string): Observable<{ firstName?: string; lastName?: string; email?: string } | null> {
+    return this.getAllUsers().pipe(
+      map((userMap) => userMap.get(userId) ?? null)
     );
   }
 

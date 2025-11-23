@@ -132,6 +132,7 @@ export class PlanningComponent implements OnInit {
     this.loading = true;
     try {
       this.absences = await firstValueFrom(this.absenceService.teamAbsences(teamId));
+      await this.enrichAbsencesWithUserNames();
       this.refreshEvents();
     } catch (err) {
       console.error('Failed to load team absences', err);
@@ -146,7 +147,18 @@ export class PlanningComponent implements OnInit {
   async loadAbsences() {
     this.loading = true;
     try {
-      this.absences = await firstValueFrom(this.absenceService.myTeamAbsences());
+      let teamId: string | undefined = undefined;
+      
+      // For employees, get their team first to avoid FORBIDDEN error
+      if (this.isEmployee && !this.isManager && !this.isAdmin) {
+        const teams = await firstValueFrom(this.teamService.listMyTeams());
+        if (teams.length > 0) {
+          teamId = teams[0].id;
+        }
+      }
+      
+      this.absences = await firstValueFrom(this.absenceService.myTeamAbsences(teamId));
+      await this.enrichAbsencesWithUserNames();
       this.refreshEvents();
     } catch (err) {
       console.error('Failed to load absences', err);
@@ -155,6 +167,30 @@ export class PlanningComponent implements OnInit {
       this.refreshEvents();
     } finally {
       this.loading = false;
+    }
+  }
+
+  private async enrichAbsencesWithUserNames() {
+    try {
+      const userMap = await firstValueFrom(this.absenceService.getAllUsers());
+      this.absences = this.absences.map((absence) => {
+        const userInfo = userMap.get(absence.userId);
+        if (userInfo) {
+          return {
+            ...absence,
+            user: {
+              id: absence.userId,
+              firstName: userInfo.firstName,
+              lastName: userInfo.lastName,
+              email: userInfo.email,
+            },
+          };
+        }
+        return absence;
+      });
+    } catch (err) {
+      console.error('Failed to enrich absences with user names', err);
+      // Continue without user names
     }
   }
 
