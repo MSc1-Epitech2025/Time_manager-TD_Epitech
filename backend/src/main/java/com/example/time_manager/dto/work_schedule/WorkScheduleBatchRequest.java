@@ -4,6 +4,6 @@ import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
 
 public record WorkScheduleBatchRequest(
-Boolean replaceAll,
-@NotEmpty List<WorkScheduleRequest> entries
+        @NotEmpty List<WorkScheduleRequest> entries,
+        Boolean replaceAll
 ) {}

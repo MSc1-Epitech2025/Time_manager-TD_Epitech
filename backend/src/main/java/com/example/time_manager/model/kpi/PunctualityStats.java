@@ -4,11 +4,8 @@ import java.math.BigDecimal;
 
 
 public class PunctualityStats {
-private BigDecimal lateRate; // % of days with late IN
-private BigDecimal avgDelayMinutes; // average minutes late on late days
-
-
-public PunctualityStats() {}
+private BigDecimal lateRate;
+private BigDecimal avgDelayMinutes;
 
 
 public PunctualityStats(BigDecimal lateRate, BigDecimal avgDelayMinutes) {

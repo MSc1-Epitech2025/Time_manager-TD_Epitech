@@ -46,6 +46,7 @@ public class GraphQlExceptionResolver extends DataFetcherExceptionResolverAdapte
           .build();
     }
 
+    // Fallback: leaves Spring logger, but returns a generic message
     return GraphqlErrorBuilder.newError(env)
         .errorType(ErrorType.INTERNAL_ERROR)
         .message("Unexpected error")

@@ -55,7 +55,8 @@ backend/bin/
 backend/.gradle/
 /out/
 /bin/
-
+backend/out/
+.gradle
 .scannerwork
 .vscode
 /frontend/.angular

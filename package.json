@@ -2,7 +2,10 @@
   "scripts": {
     "docker:build": "docker compose up --build",
     "docker:down": "docker compose down -v",
-    "sonar:scan": "npx sonar-scanner"
+    "docker:purge": "docker system prune -f",
+    "sonar:backend": "docker compose exec backend gradle clean test jacocoTestReport && docker compose run --rm sonar-scan-backend",
+    "sonar:frontend": "docker compose run --rm sonar-scan-frontend",
+    "sonar:all": "npm run sonar:backend && npm run sonar:frontend"
   },
   "devDependencies": {
     "@angular/cli": "^20.3.5"

@@ -1,0 +1,110 @@
+name: Run backend tests & publish JaCoCo report
+
+on:
+  push:
+    branches: [ "dev", "main", "automatic-test" ]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  test-backend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: wrapper
+
+      - name: Run tests with coverage
+        working-directory: backend
+        run: ./gradlew clean test jacocoTestReport
+
+      - name: Debug JaCoCo report path
+        run: |
+          echo "=== Vérification du contenu du dossier JaCoCo ==="
+          ls -R backend/build/reports/jacoco/test || true
+
+      - name: Publish coverage summary
+        run: |
+          REPORT="backend/build/reports/jacoco/test/jacocoTestReport.xml"
+
+          echo "## 🧪 Résumé de la couverture JaCoCo" >> $GITHUB_STEP_SUMMARY
+
+          if [ ! -f "$REPORT" ]; then
+            echo "⚠️ Rapport JaCoCo introuvable ($REPORT)" >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+
+          INSTR=$(grep -o '<counter type="INSTRUCTION"[^>]*/>' "$REPORT" || true)
+          LINE=$(grep -o '<counter type="LINE"[^>]*/>' "$REPORT" || true)
+          BRANCH=$(grep -o '<counter type="BRANCH"[^>]*/>' "$REPORT" || true)
+
+          calc_cov() {
+            echo "$1" | awk -F'"' '/counter/{missed+=$4;covered+=$6}END{t=missed+covered;if(t==0){print 0}else{printf "%.2f",100*covered/t}}'
+          }
+
+          COV_INSTR=$(calc_cov "$INSTR")
+          COV_LINE=$(calc_cov "$LINE")
+          COV_BRANCH=$(calc_cov "$BRANCH")
+
+          if (( $(echo "$COV_INSTR < 50" | bc -l) )); then COLOR="🔴"
+          elif (( $(echo "$COV_INSTR < 80" | bc -l) )); then COLOR="🟠"
+          else COLOR="🟢"; fi
+
+          echo "**Couverture globale :** ${COLOR} ${COV_INSTR}% (instructions)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Type | Couverture |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|-------------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Instructions | ${COV_INSTR}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| Lignes | ${COV_LINE}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| Branches | ${COV_BRANCH}% |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload JaCoCo HTML report as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-html-report
+          path: backend/build/reports/jacoco/test/html
+
+  publish-coverage:
+    needs: test-backend
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download coverage artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: jacoco-html-report
+          path: jacoco-html-report
+
+      - name: Deploy JaCoCo report to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: jacoco-html-report
+          destination_dir: jacoco
+          keep_files: true
+
+      - name: Add link to report in summary
+        run: |
+          echo "## 📊 Rapport JaCoCo publié" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 [Ouvrir le rapport complet JaCoCo (HTML)](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/jacoco/index.html)" >> $GITHUB_STEP_SUMMARY

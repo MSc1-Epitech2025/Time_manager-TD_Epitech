@@ -58,10 +58,22 @@ public String generateAccessToken(String username, String userId, String firstNa
         .signWith(accessKey(), SignatureAlgorithm.HS256)
         .compact();
 }
+
+    boolean isAccessTokenStillValid(Claims claims, String username, Date now) {
+        boolean subjectMatches = username.equals(claims.getSubject());
+        boolean notExpired = claims.getExpiration().after(now);
+        return subjectMatches && notExpired;
+    }
+
     public boolean isAccessTokenValid(String token, String username) {
         Claims c = parseAccessClaims(token);
-        return username.equals(c.getSubject()) && c.getExpiration().after(new Date());
+        return isAccessTokenValidAt(c, username, new Date());
     }
+
+    boolean isAccessTokenValidAt(Claims claims, String username, Date now) {
+        return isAccessTokenStillValid(claims, username, now);
+    }
+
 
     public String extractUsername(String accessToken) {
         return parseAccessClaims(accessToken).getSubject();
@@ -97,10 +109,14 @@ public String generateAccessToken(String username, String userId, String firstNa
             .compact();
     }
 
-
     public boolean isRefreshTokenValid(String token, String username) {
         Claims c = parseRefreshClaims(token);
-        return username.equals(c.getSubject()) && c.getExpiration().after(new Date());
+        return isRefreshTokenStillValid(c, username, new Date());
+    }
+
+    boolean isRefreshTokenStillValid(Claims claims, String username, Date now) {
+        return username.equals(claims.getSubject())
+                && claims.getExpiration().after(now);
     }
 
     public String parseRefreshSubject(String refreshToken) {

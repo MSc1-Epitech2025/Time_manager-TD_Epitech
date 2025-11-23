@@ -1,5 +1,3 @@
-// src/main/java/com/example/time_manager/graphql/controller/WorkScheduleController.java
-
 package com.example.time_manager.graphql.controller;
 
 import com.example.time_manager.dto.work_schedule.WorkScheduleBatchRequest;
