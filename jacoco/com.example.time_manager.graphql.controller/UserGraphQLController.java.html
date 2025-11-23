@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserGraphQLController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">time-manager</a> &gt; <a href="index.source.html" class="el_package">com.example.time_manager.graphql.controller</a> &gt; <span class="el_source">UserGraphQLController.java</span></div><h1>UserGraphQLController.java</h1><pre class="source lang-java linenums">package com.example.time_manager.graphql.controller;
 
-import java.lang.reflect.Method;
 import java.time.Duration;
-import java.util.Optional;
 
-import org.springframework.security.core.Authentication;
+import jakarta.security.auth.message.AuthException;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
@@ -14,15 +12,13 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-import com.example.time_manager.model.User;
 
-import com.example.time_manager.dto.auth.AuthRequest;
 import com.example.time_manager.dto.auth.AuthResponse;
 import com.example.time_manager.dto.auth.CreateUserInput;
-import com.example.time_manager.dto.auth.RefreshRequest;
+import com.example.time_manager.dto.auth.UpdateUserInput;
+import com.example.time_manager.model.User;
 import com.example.time_manager.security.JwtUtil;
 import com.example.time_manager.service.UserService;
-import com.example.time_manager.model.User;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,218 +32,148 @@ public class UserGraphQLController {
 
     private static final boolean COOKIE_SECURE = true;
     private static final String COOKIE_SAMESITE = &quot;None&quot;;
-<span class="fc" id="L39">    private static final Duration ACCESS_MAX_AGE = Duration.ofMinutes(15);</span>
-<span class="fc" id="L40">    private static final Duration REFRESH_MAX_AGE = Duration.ofDays(7);</span>
+<span class="fc" id="L35">    private static final Duration ACCESS_MAX_AGE = Duration.ofMinutes(15);</span>
 
-<span class="fc" id="L42">    public UserGraphQLController(UserService userService, JwtUtil jwtUtil) {</span>
-<span class="fc" id="L43">        this.userService = userService;</span>
-<span class="fc" id="L44">        this.jwtUtil = jwtUtil;</span>
-<span class="fc" id="L45">    }</span>
+<span class="fc" id="L37">    public UserGraphQLController(UserService userService, JwtUtil jwtUtil) {</span>
+<span class="fc" id="L38">        this.userService = userService;</span>
+<span class="fc" id="L39">        this.jwtUtil = jwtUtil;</span>
+<span class="fc" id="L40">    }</span>
 
     @PreAuthorize(&quot;hasAuthority('ADMIN')&quot;)
     @MutationMapping
-    public User register(@Argument CreateUserInput input) {
-<span class="fc bfc" id="L50" title="All 2 branches covered.">        if (userService.findByEmail(input.email()).isPresent()) {</span>
-<span class="fc" id="L51">            throw new RuntimeException(&quot;Email already exists: &quot; + input.email());</span>
+    public User register(@Argument CreateUserInput input) throws AuthException {
+<span class="fc bfc" id="L45" title="All 2 branches covered.">        if (userService.findByEmail(input.email()).isPresent()) {</span>
+<span class="fc" id="L46">            throw new AuthException(&quot;Email already exists: &quot; + input.email());</span>
         }
 
-<span class="fc" id="L54">        User u = new User();</span>
-<span class="fc" id="L55">        u.setFirstName(input.firstName());</span>
-<span class="fc" id="L56">        u.setLastName(input.lastName());</span>
-<span class="fc" id="L57">        u.setEmail(input.email());</span>
-<span class="fc" id="L58">        u.setPhone(input.phone());</span>
-<span class="fc" id="L59">        u.setRole(input.role());</span>
-<span class="fc" id="L60">        u.setPoste(input.poste());</span>
-<span class="fc" id="L61">        u.setAvatarUrl(input.avatarUrl());</span>
-<span class="fc" id="L62">        u.setPassword(input.password()); </span>
+<span class="fc" id="L49">        User u = new User();</span>
+<span class="fc" id="L50">        u.setFirstName(input.firstName());</span>
+<span class="fc" id="L51">        u.setLastName(input.lastName());</span>
+<span class="fc" id="L52">        u.setEmail(input.email());</span>
+<span class="fc" id="L53">        u.setPhone(input.phone());</span>
+<span class="fc" id="L54">        u.setRole(input.role());</span>
+<span class="fc" id="L55">        u.setPoste(input.poste());</span>
+<span class="fc" id="L56">        u.setAvatarUrl(input.avatarUrl());</span>
+<span class="fc" id="L57">        u.setPassword(input.password());</span>
 
-<span class="fc" id="L64">        return userService.saveUser(u);</span>
+<span class="fc" id="L59">        return userService.saveUser(u);</span>
     }
 
     @PreAuthorize(&quot;hasAuthority('ADMIN')&quot;)
     @MutationMapping
     public Boolean deleteUser(@Argument(&quot;id&quot;) String id) {
-<span class="fc" id="L70">        userService.deleteById(id);</span>
-<span class="fc" id="L71">        return true;</span>
+<span class="fc" id="L65">        userService.deleteById(id);</span>
+<span class="fc" id="L66">        return true;</span>
     }
 
-    //          LOGIN
     @PreAuthorize(&quot;permitAll()&quot;)
     @MutationMapping
-    public AuthResponse login(@Argument AuthRequest input) {
-<span class="fc" id="L78">        HttpServletResponse httpResp = currentResponse();</span>
+    public AuthResponse refresh() throws AuthException {
+<span class="fc" id="L72">        HttpServletRequest httpReq = currentRequest();</span>
+<span class="fc" id="L73">        HttpServletResponse httpResp = currentResponse();</span>
 
-<span class="fc bfc" id="L80" title="All 2 branches covered.">        if (!userService.validateUser(input.getEmail(), input.getPassword())) {</span>
-<span class="fc" id="L81">            throw new RuntimeException(&quot;Invalid credentials&quot;);</span>
+<span class="fc" id="L75">        String refreshToken = readCookie(httpReq, &quot;refresh_token&quot;);</span>
+<span class="fc bfc" id="L76" title="All 4 branches covered.">        if (refreshToken == null || refreshToken.isBlank()) {</span>
+<span class="fc" id="L77">            throw new AuthException(&quot;Missing refresh token&quot;);</span>
         }
 
-<span class="fc" id="L84">        var user = userService.findByEmail(input.getEmail())</span>
-<span class="pc" id="L85">                .orElseThrow(() -&gt; new RuntimeException(&quot;User not found after validation&quot;));</span>
+<span class="fc" id="L80">        String username = jwtUtil.parseRefreshSubject(refreshToken);</span>
 
-<span class="fc" id="L87">        String accessToken = jwtUtil.generateAccessToken(</span>
-<span class="fc" id="L88">                user.getEmail(),</span>
-<span class="fc" id="L89">                user.getId(),</span>
-<span class="fc" id="L90">                user.getFirstName(),</span>
-<span class="fc" id="L91">                user.getRole()</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        if (!jwtUtil.isRefreshTokenValid(refreshToken, username)) {</span>
+<span class="fc" id="L83">            throw new AuthException(&quot;Invalid or expired refresh token&quot;);</span>
+        }
+
+<span class="fc" id="L86">        var user = userService.findByEmail(username)</span>
+<span class="fc" id="L87">                .orElseThrow(() -&gt; new AuthException(&quot;User not found&quot;));</span>
+
+<span class="fc" id="L89">        String newAccess = jwtUtil.generateAccessToken(</span>
+<span class="fc" id="L90">                user.getEmail(),</span>
+<span class="fc" id="L91">                user.getId(),</span>
+<span class="fc" id="L92">                user.getFirstName(),</span>
+<span class="fc" id="L93">                user.getRole()</span>
         );
 
-<span class="fc" id="L94">        String refreshToken = jwtUtil.generateRefreshToken(</span>
-<span class="fc" id="L95">                user.getEmail(),</span>
-<span class="fc" id="L96">                user.getId()</span>
-        );
+<span class="fc" id="L96">        addAccessCookie(httpResp, newAccess);</span>
 
-<span class="fc" id="L99">        addAccessCookie(httpResp, accessToken);</span>
-<span class="fc" id="L100">        addRefreshCookie(httpResp, refreshToken);</span>
-<span class="fc" id="L101">        return new AuthResponse(true);</span>
+<span class="fc" id="L98">        return new AuthResponse(true);</span>
     }
 
     @PreAuthorize(&quot;hasAuthority('ADMIN')&quot;)
     @MutationMapping
-    public User updateUser(@Argument(&quot;input&quot;) com.example.time_manager.dto.auth.UpdateUserInput input) {
-<span class="fc" id="L107">        return userService.updateUser(input.id(), input);</span>
+    public User updateUser(@Argument(&quot;input&quot;) UpdateUserInput input) {
+<span class="fc" id="L104">        return userService.updateUser(input.id(), input);</span>
     }
 
-    @PreAuthorize(&quot;permitAll()&quot;)
-    @MutationMapping
-    public AuthResponse refresh(@Argument Optional&lt;RefreshRequest&gt; input) {
-<span class="fc" id="L113">        HttpServletRequest httpReq = currentRequest();</span>
-<span class="fc" id="L114">        HttpServletResponse httpResp = currentResponse();</span>
-
-<span class="fc" id="L116">        String refreshToken = input.map(UserGraphQLController::extractRefreshFromBody).orElse(null);</span>
-<span class="pc bpc" id="L117" title="3 of 4 branches missed.">        if (refreshToken == null || refreshToken.isBlank()) {</span>
-<span class="fc" id="L118">            refreshToken = readCookie(httpReq, &quot;refresh_token&quot;);</span>
-        }
-<span class="fc bfc" id="L120" title="All 4 branches covered.">        if (refreshToken == null || refreshToken.isBlank()) {</span>
-<span class="fc" id="L121">            throw new RuntimeException(&quot;Missing refresh token&quot;);</span>
-        }
-
-        String username;
-        try {
-<span class="fc" id="L126">            username = jwtUtil.parseRefreshSubject(refreshToken);</span>
-<span class="fc" id="L127">        } catch (Exception e) {</span>
-<span class="fc" id="L128">            throw new RuntimeException(&quot;Invalid refresh token&quot;);</span>
-<span class="fc" id="L129">        }</span>
-<span class="fc bfc" id="L130" title="All 2 branches covered.">        if (!jwtUtil.isRefreshTokenValid(refreshToken, username)) {</span>
-<span class="fc" id="L131">            throw new RuntimeException(&quot;Invalid or expired refresh token&quot;);</span>
-        }
-
-<span class="fc" id="L134">        var user = userService.findByEmail(username)</span>
-<span class="pc" id="L135">            .orElseThrow(() -&gt; new RuntimeException(&quot;User not found&quot;));</span>
-
-<span class="fc" id="L137">        String newAccess = jwtUtil.generateAccessToken(</span>
-<span class="fc" id="L138">            user.getEmail(),</span>
-<span class="fc" id="L139">            user.getId(),  </span>
-<span class="fc" id="L140">            user.getFirstName(),</span>
-<span class="fc" id="L141">            user.getRole()</span>
-        );
-
-<span class="fc" id="L144">        addAccessCookie(httpResp, newAccess); </span>
-
-<span class="fc" id="L146">        return new AuthResponse(true);       </span>
-    }
-    
     @PreAuthorize(&quot;permitAll()&quot;)
     @MutationMapping
     public Boolean logout() {
-<span class="fc" id="L152">        HttpServletResponse httpResp = currentResponse();</span>
-<span class="fc" id="L153">        expireCookie(httpResp, &quot;access_token&quot;, &quot;/&quot;);</span>
-<span class="fc" id="L154">        expireCookie(httpResp, &quot;access_token&quot;, &quot;/graphql&quot;);</span>
-<span class="fc" id="L155">        expireCookie(httpResp, &quot;refresh_token&quot;, &quot;/graphql&quot;);</span>
-<span class="fc" id="L156">        return true;</span>
+<span class="fc" id="L110">        HttpServletResponse httpResp = currentResponse();</span>
+<span class="fc" id="L111">        expireCookie(httpResp, &quot;access_token&quot;, &quot;/&quot;);</span>
+<span class="fc" id="L112">        expireCookie(httpResp, &quot;access_token&quot;, &quot;/graphql&quot;);</span>
+<span class="fc" id="L113">        expireCookie(httpResp, &quot;refresh_token&quot;, &quot;/graphql&quot;);</span>
+<span class="fc" id="L114">        return true;</span>
     }
 
     @PreAuthorize(&quot;hasAuthority('ADMIN')&quot;)
     @QueryMapping
-    public java.util.List&lt;com.example.time_manager.model.User&gt; users() {
-<span class="fc" id="L162">        var list = userService.findAllUsers();</span>
-<span class="fc bfc" id="L163" title="All 2 branches covered.">        return (list != null) ? list : java.util.Collections.emptyList();</span>
+    public java.util.List&lt;User&gt; users() {
+<span class="fc" id="L120">        var list = userService.findAllUsers();</span>
+<span class="fc bfc" id="L121" title="All 2 branches covered.">        return (list != null) ? list : java.util.Collections.emptyList();</span>
     }
 
     @PreAuthorize(&quot;isAuthenticated()&quot;)
     @QueryMapping
-    public com.example.time_manager.model.User userByEmail(@Argument(&quot;email&quot;) String email) {
-<span class="fc" id="L169">        return userService.findByEmail(email).orElse(null);</span>
+    public User userByEmail(@Argument(&quot;email&quot;) String email) {
+<span class="fc" id="L127">        return userService.findByEmail(email).orElse(null);</span>
     }
 
-
     private static HttpServletRequest currentRequest() {
-<span class="fc" id="L174">        var attrs = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();</span>
-<span class="fc" id="L175">        return attrs.getRequest();</span>
+<span class="fc" id="L131">        var attrs = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();</span>
+<span class="fc" id="L132">        return attrs.getRequest();</span>
     }
 
     private static HttpServletResponse currentResponse() {
-<span class="fc" id="L179">        var attrs = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();</span>
-<span class="fc" id="L180">        HttpServletResponse resp = attrs.getResponse();</span>
-<span class="fc bfc" id="L181" title="All 2 branches covered.">        if (resp == null) {</span>
-<span class="fc" id="L182">            throw new IllegalStateException(&quot;No HttpServletResponse available&quot;);</span>
+<span class="fc" id="L136">        var attrs = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();</span>
+<span class="fc" id="L137">        HttpServletResponse resp = attrs.getResponse();</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">        if (resp == null) {</span>
+<span class="fc" id="L139">            throw new IllegalStateException(&quot;No HttpServletResponse available&quot;);</span>
         }
-<span class="fc" id="L184">        return resp;</span>
+<span class="fc" id="L141">        return resp;</span>
     }
 
     private static void addAccessCookie(HttpServletResponse response, String token) {
-<span class="fc" id="L188">        ResponseCookie cookie = ResponseCookie.from(&quot;access_token&quot;, token)</span>
-<span class="fc" id="L189">                .httpOnly(true).secure(COOKIE_SECURE).sameSite(COOKIE_SAMESITE)</span>
-<span class="fc" id="L190">                .path(&quot;/graphql&quot;)</span>
-<span class="fc" id="L191">                .maxAge(ACCESS_MAX_AGE).build();</span>
-<span class="fc" id="L192">        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());</span>
-<span class="fc" id="L193">    }</span>
-
-    private static void addRefreshCookie(HttpServletResponse response, String token) {
-<span class="fc" id="L196">        ResponseCookie cookie = ResponseCookie.from(&quot;refresh_token&quot;, token)</span>
-<span class="fc" id="L197">                .httpOnly(true).secure(COOKIE_SECURE).sameSite(COOKIE_SAMESITE)</span>
-<span class="fc" id="L198">                .path(&quot;/graphql&quot;)</span>
-<span class="fc" id="L199">                .maxAge(REFRESH_MAX_AGE).build();</span>
-<span class="fc" id="L200">        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());</span>
-<span class="fc" id="L201">    }</span>
+<span class="fc" id="L145">        ResponseCookie cookie = ResponseCookie.from(&quot;access_token&quot;, token)</span>
+<span class="fc" id="L146">                .httpOnly(true)</span>
+<span class="fc" id="L147">                .secure(COOKIE_SECURE)</span>
+<span class="fc" id="L148">                .sameSite(COOKIE_SAMESITE)</span>
+<span class="fc" id="L149">                .path(&quot;/graphql&quot;)</span>
+<span class="fc" id="L150">                .maxAge(ACCESS_MAX_AGE)</span>
+<span class="fc" id="L151">                .build();</span>
+<span class="fc" id="L152">        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());</span>
+<span class="fc" id="L153">    }</span>
 
     private static void expireCookie(HttpServletResponse response, String name, String path) {
-<span class="fc" id="L204">        ResponseCookie cookie = ResponseCookie.from(name, &quot;&quot;)</span>
-<span class="fc" id="L205">                .httpOnly(true)</span>
-<span class="fc" id="L206">                .secure(COOKIE_SECURE)</span>
-<span class="fc" id="L207">                .sameSite(COOKIE_SAMESITE)</span>
-<span class="fc" id="L208">                .path(path)</span>
-<span class="fc" id="L209">                .maxAge(Duration.ZERO)</span>
-<span class="fc" id="L210">                .build();</span>
-<span class="fc" id="L211">        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());</span>
-<span class="fc" id="L212">    }</span>
+<span class="fc" id="L156">        ResponseCookie cookie = ResponseCookie.from(name, &quot;&quot;)</span>
+<span class="fc" id="L157">                .httpOnly(true)</span>
+<span class="fc" id="L158">                .secure(COOKIE_SECURE)</span>
+<span class="fc" id="L159">                .sameSite(COOKIE_SAMESITE)</span>
+<span class="fc" id="L160">                .path(path)</span>
+<span class="fc" id="L161">                .maxAge(Duration.ZERO)</span>
+<span class="fc" id="L162">                .build();</span>
+<span class="fc" id="L163">        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());</span>
+<span class="fc" id="L164">    }</span>
 
     private static String readCookie(HttpServletRequest request, String name) {
-<span class="fc" id="L215">        Cookie[] cookies = request.getCookies();</span>
-<span class="fc bfc" id="L216" title="All 2 branches covered.">        if (cookies == null) {</span>
-<span class="fc" id="L217">            return null;</span>
+<span class="fc" id="L167">        Cookie[] cookies = request.getCookies();</span>
+<span class="fc bfc" id="L168" title="All 2 branches covered.">        if (cookies == null) {</span>
+<span class="fc" id="L169">            return null;</span>
         }
-<span class="fc bfc" id="L219" title="All 2 branches covered.">        for (Cookie c : cookies) {</span>
-<span class="fc bfc" id="L220" title="All 2 branches covered.">            if (name.equals(c.getName())) {</span>
-<span class="fc" id="L221">                return c.getValue();</span>
+<span class="fc bfc" id="L171" title="All 2 branches covered.">        for (Cookie c : cookies) {</span>
+<span class="fc bfc" id="L172" title="All 2 branches covered.">            if (name.equals(c.getName())) {</span>
+<span class="fc" id="L173">                return c.getValue();</span>
             }
         }
-<span class="fc" id="L224">        return null;</span>
-    }
-
-    private static String extractRefreshFromBody(RefreshRequest req) {
-<span class="fc" id="L228">        String v = tryCallGetter(req, &quot;getRefreshToken&quot;);</span>
-<span class="pc bpc" id="L229" title="3 of 4 branches missed.">        if (v != null &amp;&amp; !v.isBlank()) {</span>
-<span class="nc" id="L230">            return v;</span>
-        }
-<span class="fc" id="L232">        v = tryCallGetter(req, &quot;getToken&quot;);</span>
-<span class="pc bpc" id="L233" title="3 of 4 branches missed.">        if (v != null &amp;&amp; !v.isBlank()) {</span>
-<span class="nc" id="L234">            return v;</span>
-        }
-<span class="fc" id="L236">        v = tryCallGetter(req, &quot;getRefresh&quot;);</span>
-<span class="pc bpc" id="L237" title="3 of 4 branches missed.">        if (v != null &amp;&amp; !v.isBlank()) {</span>
-<span class="nc" id="L238">            return v;</span>
-        }
-<span class="fc" id="L240">        return null;</span>
-    }
-
-    private static String tryCallGetter(Object bean, String getter) {
-        try {
-<span class="fc" id="L245">            Method m = bean.getClass().getMethod(getter);</span>
-<span class="fc" id="L246">            Object val = m.invoke(bean);</span>
-<span class="pc bpc" id="L247" title="1 of 2 branches missed.">            return val != null ? val.toString() : null;</span>
-<span class="fc" id="L248">        } catch (Exception ignored) {</span>
-<span class="fc" id="L249">            return null;</span>
-        }
+<span class="fc" id="L176">        return null;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>
