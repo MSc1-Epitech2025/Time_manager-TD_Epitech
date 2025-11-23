@@ -1,5 +1,6 @@
 package com.example.time_manager.service;
 
+import com.example.time_manager.model.Team;
 import com.example.time_manager.dto.kpi.KpiFullDataResponse;
 import com.example.time_manager.dto.kpi.KpiFullDataResponse.*;
 import com.example.time_manager.repository.UserRepository;
@@ -57,16 +58,28 @@ private final TeamMemberRepository teamMemberRepository;
             dto.setLastName(u.getLastName());
             dto.setEmail(u.getEmail());
             dto.setPoste(u.getPoste());
+
+         List<Long> teamIds = teamMemberRepository.findTeamIdsByUserId(u.getId());
+        if (!teamIds.isEmpty()) {
+    Long teamId = teamIds.get(0);
+    String teamName = teamRepository.findById(teamId)
+                        .map(Team::getName)
+                        .orElse("Not affected");
+    dto.setTeam(teamName); // Assurez-vous que setTeam existe
+} else {
+    dto.setTeam("Not affected");
+}
+
             return dto;
         }).collect(Collectors.toList()));
 
-
+        /* 
         // Teams
         resp.setTeams(teamMemberRepository.findAll()
         .stream()
         .map(tm -> {
             KpiFullDataResponse.KpiTeamsDto dto = new KpiFullDataResponse.KpiTeamsDto();
-            dto.setId(tm.getTeam().getId());
+            //dto.setId(tm.getTeam().getId());
             dto.setName(tm.getTeam().getName());
 
             List<String> userIds = teamMemberRepository.findUserIdsByTeamId(tm.getTeam().getId());
@@ -76,7 +89,7 @@ private final TeamMemberRepository teamMemberRepository;
         })
         .collect(Collectors.toList()));
 
-
+        */
 // Clocks
 resp.setClocks(Optional.ofNullable(clockRepository.findAll())
         .orElse(Collections.emptyList())
@@ -115,7 +128,10 @@ resp.setSchedules(Optional.ofNullable(scheduleRepository.findAll())
         .stream().map(s -> {
             KpiScheduleDto dto = new KpiScheduleDto();
             dto.setUserId(s.getUserId());              
-            dto.setDate(s.getDayOfWeek().name());      
+            dto.setDayOfWeek(s.getDayOfWeek().name());
+dto.setPeriod(s.getPeriod().name());
+dto.setStartTime(s.getStartTime().toString());
+dto.setEndTime(s.getEndTime().toString());
             return dto;
         }).collect(Collectors.toList()));
 
