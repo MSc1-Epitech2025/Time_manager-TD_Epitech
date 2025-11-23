@@ -87,6 +87,12 @@ public class AbsenceGraphqlController {
     return absenceService.listTeamAbsences(currentEmail(), teamId);
   }
 
+  @QueryMapping
+  @PreAuthorize("hasAuthority('ADMIN')")
+  public List<AbsenceResponse> teamAbsences(@Argument Long teamId) {
+    return absenceService.listTeamAbsences(teamId);
+  }
+
   /* ======================= Mutations ===================== */
 
   @MutationMapping
