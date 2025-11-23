@@ -31,7 +31,10 @@ type KpiAbsence {
 
 type KpiSchedule {
   userId: ID!
-  date: String!
+  dayOfWeek: String!
+  period: String!
+  startTime: String!
+  endTime: String!
 }
 
 type KpiFullData {
