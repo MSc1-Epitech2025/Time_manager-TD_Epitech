@@ -76,19 +76,16 @@ public class AbsenceGraphqlController {
   }
 
   @QueryMapping
-  @PreAuthorize("hasAuthority('ADMIN')")
   public List<AbsenceResponse> allAbsences() {
     return absenceService.listAll();
   }
 
   @QueryMapping
-  @PreAuthorize("isAuthenticated()")
   public List<AbsenceResponse> myTeamAbsences(@Argument @Nullable Long teamId) {
     return absenceService.listTeamAbsences(currentEmail(), teamId);
   }
 
   @QueryMapping
-  @PreAuthorize("hasAuthority('ADMIN')")
   public List<AbsenceResponse> teamAbsences(@Argument Long teamId) {
     return absenceService.listTeamAbsences(teamId);
   }
