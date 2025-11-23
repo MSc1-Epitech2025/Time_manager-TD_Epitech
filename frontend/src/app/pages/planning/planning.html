@@ -2,24 +2,46 @@
   <header class="planning-header">
     <h2>
       <mat-icon fontSet="material-icons-outlined" fontIcon="calendar_month"></mat-icon>
-      Planning of {{ userName || 'my team' }}
+      Absence Calendar
     </h2>
 
-    <p *ngIf="isManager; else employeeMode" class="role-tag manager">Manager mode</p>
-    <ng-template #employeeMode>
-      <p class="role-tag employee">Employee mode</p>
-    </ng-template>
+    <div class="role-indicators">
+      <p *ngIf="isAdmin" class="role-tag admin">Admin</p>
+      <p *ngIf="isManager && !isAdmin" class="role-tag manager">Manager</p>
+      <p *ngIf="isEmployee && !isManager && !isAdmin" class="role-tag employee">Employee</p>
+    </div>
   </header>
 
-  <div class="filters">
-    <mat-form-field appearance="fill" class="people-select">
-      <mat-label>People to display</mat-label>
-      <mat-select
-        multiple
-        [value]="selectedPeople"
-        (selectionChange)="onSelectedPeopleChange($event.value)">
-        <mat-option *ngFor="let member of team" [value]="member.name">
-          {{ member.name }}
+  <div class="info-section">
+    <div class="legend">
+      <div class="legend-item">
+        <span class="legend-color" style="background-color: #10b981;"></span>
+        <span class="legend-label">My Approved</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-color" style="background-color: #f59e0b;"></span>
+        <span class="legend-label">Pending</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-color" style="background-color: #8b5cf6;"></span>
+        <span class="legend-label">Team Approved</span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <p class="instruction-text">
+        <mat-icon>info</mat-icon>
+        {{ isManager || isAdmin ? 'Click on dates to create absences, click on events to approve/reject' : 'Click on dates to request an absence' }}
+      </p>
+    </div>
+  </div>
+
+  <div class="filters" *ngIf="isAdmin && teams.length > 0">
+    <mat-form-field appearance="fill" class="team-select">
+      <mat-label>Select Team</mat-label>
+      <mat-select [(ngModel)]="selectedTeamId" (selectionChange)="onTeamChange()">
+        <mat-option *ngFor="let team of teams" [value]="team.id">
+          {{ team.name }}
         </mat-option>
       </mat-select>
     </mat-form-field>
@@ -30,7 +52,10 @@
   </div>
 
   <ng-template #loadingTpl>
-    <div class="loading">Loading planning...</div>
+    <div class="loading">
+      <mat-icon class="spinner">refresh</mat-icon>
+      Loading absences...
+    </div>
   </ng-template>
 </div>
 

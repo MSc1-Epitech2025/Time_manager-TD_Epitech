@@ -1,0 +1,71 @@
+<h2 mat-dialog-title>Absence Approval</h2>
+
+<mat-dialog-content class="dialog-content">
+  <div class="absence-details">
+    <div class="detail-row">
+      <mat-icon class="detail-icon">person</mat-icon>
+      <div class="detail-info">
+        <span class="detail-label">Employee</span>
+        <span class="detail-value">{{ userName }}</span>
+      </div>
+    </div>
+
+    <div class="detail-row">
+      <mat-icon class="detail-icon">calendar_today</mat-icon>
+      <div class="detail-info">
+        <span class="detail-label">Period</span>
+        <span class="detail-value">{{ dateRange }}</span>
+      </div>
+    </div>
+
+    <div class="detail-row">
+      <mat-icon class="detail-icon">label</mat-icon>
+      <div class="detail-info">
+        <span class="detail-label">Type</span>
+        <span class="detail-value">{{ typeLabel }}</span>
+      </div>
+    </div>
+
+    <div class="detail-row" *ngIf="absence.reason">
+      <mat-icon class="detail-icon">description</mat-icon>
+      <div class="detail-info">
+        <span class="detail-label">Reason</span>
+        <span class="detail-value">{{ absence.reason }}</span>
+      </div>
+    </div>
+
+    <div class="detail-row">
+      <mat-icon class="detail-icon">info</mat-icon>
+      <div class="detail-info">
+        <span class="detail-label">Status</span>
+        <span class="status-badge" [style.background-color]="statusColor">
+          {{ absence.status }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="action-section" *ngIf="absence.status === 'PENDING'">
+    <p class="action-prompt">What would you like to do with this absence request?</p>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Close</button>
+  <button
+    mat-flat-button
+    class="reject-button"
+    (click)="onReject()"
+    *ngIf="absence.status === 'PENDING'">
+    <mat-icon>close</mat-icon>
+    Reject
+  </button>
+  <button
+    mat-flat-button
+    class="approve-button"
+    (click)="onApprove()"
+    *ngIf="absence.status === 'PENDING'">
+    <mat-icon>check</mat-icon>
+    Approve
+  </button>
+</mat-dialog-actions>
