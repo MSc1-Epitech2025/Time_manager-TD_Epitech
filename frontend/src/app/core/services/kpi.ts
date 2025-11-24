@@ -28,7 +28,6 @@ export interface KpiAbsence {
 
 @Injectable({ providedIn: 'root' })
 export class KpiService {
-
   constructor(private http: HttpClient) {}
 
   // ───────────────────────────────────────────────
