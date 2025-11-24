@@ -70,7 +70,6 @@ public class AbsenceGraphqlController {
   }
 
   @QueryMapping
-  @PreAuthorize("hasAuthority('MANAGER') or hasAuthority('ADMIN')")
   public List<AbsenceResponse> absencesByUser(@Argument String userId) {
     return absenceService.listForUser(userId);
   }
@@ -117,7 +116,6 @@ public class AbsenceGraphqlController {
   }
 
   @MutationMapping
-  @PreAuthorize("hasAuthority('MANAGER') or hasAuthority('ADMIN')")
   public AbsenceResponse setAbsenceStatus(@Argument Long id, @Argument AbsenceStatusUpdateInput input) {
     AbsenceStatusUpdateRequest req = new AbsenceStatusUpdateRequest();
     req.setStatus(input.getStatus());
