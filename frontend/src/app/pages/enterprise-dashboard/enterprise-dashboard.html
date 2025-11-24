@@ -233,7 +233,7 @@
                 <td *ngIf="selectedPeriod === 'day'">
                   <span class="status-badge" [class.present]="getPresence(user.id)"
                     [class.absent]="getPresence(user.id) === false">
-                    {{ getPresence(user.id) ? 'Present' : 'Late' }}
+                    {{ getPresence(user.id) ? 'Present' : '-' }}
                   </span>
                 </td>
 
