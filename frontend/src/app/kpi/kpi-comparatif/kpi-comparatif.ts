@@ -96,8 +96,6 @@ export class KpiComparatifComponent implements AfterViewInit, OnDestroy, OnChang
             cornerRadius: 8,
             callbacks: {
               label: function (context) {
-                // context.dataset.label correspond au nom du dataset
-                // context.parsed.y correspond à la valeur de la barre
                 return context.dataset.label + ': ' + context.parsed.y;
               },
             }
