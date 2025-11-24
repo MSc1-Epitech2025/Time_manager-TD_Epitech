@@ -1,5 +1,5 @@
 import { Component, AfterViewInit, ViewChild, ElementRef, Input, OnChanges, SimpleChanges } from '@angular/core';
-import { Chart, registerables ,ChartConfiguration } from 'chart.js';
+import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
 
 @Component({
@@ -120,7 +120,7 @@ export class KpiAssiduiteComponent implements AfterViewInit, OnChanges {
       }
     };
 
-    const config: ChartConfiguration<'doughnut', number[], string> = {
+    this.chart = new Chart(ctx, {
       type: 'doughnut',
       data: {
         labels: this.getLabels(),
@@ -154,6 +154,6 @@ export class KpiAssiduiteComponent implements AfterViewInit, OnChanges {
 
       },
       plugins: [centerTextPlugin]
-    };
+    });
   }
 }
