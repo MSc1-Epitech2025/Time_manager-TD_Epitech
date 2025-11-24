@@ -9,32 +9,20 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { NgChartsModule } from 'ng2-charts';
 import { ChartOptions } from 'chart.js';
-import { Router } from '@angular/router';
 
-//Services
-import { KpiService } from '../../core/services/kpi';
+// Services
+import {
+  KpiService,
+  Utilisateur,
+  PresenceDuJour,
+} from '../../core/services/kpi';
 
 // Kpi Components
 import { KpiAssiduiteComponent } from '../../kpi/kpi-assiduite/kpi-assiduite';
 import { KpiComparatifComponent } from '../../kpi/kpi-comparatif/kpi-comparatif';
 
-// Data 
+// Fake data for testing
 import { users } from '../../core/data/registre_presence_oct_nov';
-
-interface PresenceDuJour {
-  date: Date;
-  presence: boolean;
-  absences: number;
-  pointage: string | null;
-  tempsTravail: string;
-}
-
-interface Utilisateur {
-  id: string;
-  nom: string;
-  equipe: string;
-  historique: PresenceDuJour[];
-}
 
 @Component({
   selector: 'app-enterprise-dashboard',
@@ -52,7 +40,7 @@ interface Utilisateur {
     KpiAssiduiteComponent,
     KpiComparatifComponent,
   ],
-  styleUrls: ['./enterprise-dashboard.scss']
+  styleUrls: ['./enterprise-dashboard.scss'],
 })
 export class EnterpriseDashboard implements OnInit, OnDestroy {
   isWorking = false;
@@ -94,12 +82,20 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
 
   filteredByPeriod: Array<{ user: Utilisateur; day: PresenceDuJour }> = [];
 
-  absenteeismStats: { totalAbsences: number; byName?: Record<string, number> } | null = null;
+  absenteeismStats: { totalAbsences: number; byName?: Record<string, number> } | null =
+    null;
   topAbsences: Array<{ name: string; count: number }> = [];
 
-  attendanceStats: { present: number; absent: number; late: number } | null = null;
+  attendanceStats: { present: number; absent: number; late: number } | null =
+    null;
   topAttendance: Array<{ name: string; count: number }> = [];
-  attendanceList: Array<{ name: string; in?: string; out?: string; present: boolean; late?: boolean }> = [];
+  attendanceList: Array<{
+    name: string;
+    in?: string;
+    out?: string;
+    present: boolean;
+    late?: boolean;
+  }> = [];
 
   productivityStats: {
     totalHours: number;
@@ -109,20 +105,18 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
   productivityList: Array<{ name: string; hours: number }> = [];
   topProductivity: Array<{ name: string; percent: number }> = [];
 
-
   pieChartData: {
     labels: string[];
     datasets: { data: number[]; backgroundColor: string[] }[];
   } = {
-      labels: ['Presence', 'Absences'],
-      datasets: [
-        {
-          data: [0, 0],
-          backgroundColor: ['#A78BFA', '#C084FC']
-        }
-      ]
-    };
-
+    labels: ['Presence', 'Absences'],
+    datasets: [
+      {
+        data: [0, 0],
+        backgroundColor: ['#A78BFA', '#C084FC'],
+      },
+    ],
+  };
 
   chartOptions: ChartOptions<'pie'> = {
     responsive: true,
@@ -140,17 +134,15 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
 
   filteredUsers: Utilisateur[] = [];
 
-  constructor(
-    private kpiService: KpiService
-  ) { }
+  constructor(private kpiService: KpiService) {}
 
   getPointage(userId: string): string {
-    const entry = this.filteredByPeriod.find(f => f.user.id === userId);
+    const entry = this.filteredByPeriod.find((f) => f.user.id === userId);
     return entry?.day?.pointage ? entry.day.pointage : '-';
   }
 
   getTempsTravail(userId: string): string {
-    const entries = this.filteredByPeriod.filter(f => f.user.id === userId);
+    const entries = this.filteredByPeriod.filter((f) => f.user.id === userId);
     if (entries.length === 0) return '-';
     if (this.selectedPeriod === 'day') {
       return this.normalizeTime(entries[0].day?.tempsTravail);
@@ -158,7 +150,7 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
 
     let totalMinutes = 0;
 
-    entries.forEach(e => {
+    entries.forEach((e) => {
       const t = e.day?.tempsTravail;
       const minutes = this.toMinutes(t);
       totalMinutes += minutes;
@@ -191,26 +183,29 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
     return this.fromMinutes(minutes);
   }
 
-
-  // Retourne true/false ou null si inconnu
   getPresence(userId: string): boolean | null {
-    const entry = this.filteredByPeriod.find(f => f.user.id === userId);
+    const entry = this.filteredByPeriod.find((f) => f.user.id === userId);
     return entry?.day?.presence ?? null;
   }
 
   getPresenceCount(userId: string): { present: number; total: number } {
-    const userEntries = this.filteredByPeriod.filter(f => f.user.id === userId);
-    const present = userEntries.filter(f => f.day.presence === true).length;
+    const userEntries = this.filteredByPeriod.filter(
+      (f) => f.user.id === userId
+    );
+    const present = userEntries.filter((f) => f.day.presence === true).length;
     const total = userEntries.length;
     return { present, total };
   }
 
   ngOnInit(): void {
     console.log('Enterprise Dashboard initialized.');
+    this.loading = true;
 
-    this.kpiService.loadFullData().subscribe(data => {
-      //console.log('KPI front data', data);
-      //this.users = data; // data from service instead of static import
+    this.kpiService.loadFullData().subscribe((data) => {
+      this.users = data;
+      this.loading = false;
+      console.log('KPI data loaded for enterprise dashboard.', data);
+
       this.updateFilteredUsers();
       this.updateFilteredByPeriod();
       this.loadKpiData();
@@ -224,38 +219,47 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
   }
 
   get teams(): string[] {
-    return [...new Set(this.users.map(u => u.equipe))];
+    return [...new Set(this.users.map((u) => u.equipe))];
   }
 
   get presentCount(): number {
     const today = new Date().toDateString();
-    return this.users.filter(u =>
-      u.historique.some(h => h.date.toDateString() === today && h.presence)
+    return this.users.filter((u) =>
+      u.historique.some(
+        (h) => h.date.toDateString() === today && h.presence
+      )
     ).length;
   }
 
   get absentCount(): number {
     const today = new Date().toDateString();
-    return this.users.filter(u =>
-      u.historique.some(h => h.date.toDateString() === today && !h.presence)
+    return this.users.filter((u) =>
+      u.historique.some(
+        (h) => h.date.toDateString() === today && !h.presence
+      )
     ).length;
   }
 
   updateFilteredUsers() {
     this.filteredUsers = this.selectedTeam
-      ? this.users.filter(u => u.equipe === this.selectedTeam)
-      : [...this.users]; 
+      ? this.users.filter((u) => u.equipe === this.selectedTeam)
+      : [...this.users];
   }
 
-  filterByPeriod(users: Utilisateur[]): Array<{ user: Utilisateur; day: PresenceDuJour }> {
+  filterByPeriod(
+    users: Utilisateur[]
+  ): Array<{ user: Utilisateur; day: PresenceDuJour }> {
     const now = new Date();
     const result: Array<{ user: Utilisateur; day: PresenceDuJour }> = [];
 
-    users.forEach(user => {
-      user.historique.forEach(day => {
+    users.forEach((user) => {
+      user.historique.forEach((day) => {
         if (this._selectedTeam && user.equipe !== this._selectedTeam) return;
 
-        if (this._selectedPeriod === 'day' && day.date.toDateString() === now.toDateString()) {
+        if (
+          this._selectedPeriod === 'day' &&
+          day.date.toDateString() === now.toDateString()
+        ) {
           result.push({ user, day });
         }
 
@@ -263,7 +267,7 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
           const today = new Date();
           today.setHours(0, 0, 0, 0);
           const dayOfWeek = today.getDay();
-          const diffToMonday = dayOfWeek === 0 ? -6 : (1 - dayOfWeek);
+          const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
 
           const weekStart = new Date(today);
           weekStart.setDate(today.getDate() + diffToMonday);
@@ -278,9 +282,11 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
           }
         }
 
-        if (this._selectedPeriod === 'month' &&
+        if (
+          this._selectedPeriod === 'month' &&
           day.date.getMonth() === now.getMonth() &&
-          day.date.getFullYear() === now.getFullYear()) {
+          day.date.getFullYear() === now.getFullYear()
+        ) {
           result.push({ user, day });
         }
       });
@@ -302,11 +308,15 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
     const filtered = this.filteredByPeriod;
 
     if (this.selectedKpi === 'absenteeism') this.loadAbsenteeismData(filtered);
-    else if (this.selectedKpi === 'attendance') this.loadAttendanceData(filtered);
-    else if (this.selectedKpi === 'productivity') this.loadProductivityData(filtered);
+    else if (this.selectedKpi === 'attendance')
+      this.loadAttendanceData(filtered);
+    else if (this.selectedKpi === 'productivity')
+      this.loadProductivityData(filtered);
   }
 
-  loadAbsenteeismData(filtered: Array<{ user: Utilisateur; day: PresenceDuJour }>) {
+  loadAbsenteeismData(
+    filtered: Array<{ user: Utilisateur; day: PresenceDuJour }>
+  ) {
     const byName: Record<string, number> = {};
     filtered.forEach(({ user, day }) => {
       byName[user.nom] = (byName[user.nom] || 0) + (day.absences || 0);
@@ -314,13 +324,13 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
 
     this.absenteeismStats = {
       totalAbsences: Object.values(byName).reduce((s, v) => s + v, 0),
-      byName
+      byName,
     };
 
     this.topAbsences = Object.entries(byName)
       .filter(([_, c]) => c > 0)
       .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count)
+      .sort((a, b) => b.count - a.count);
 
     const labels = Object.keys(byName);
     const data = Object.values(byName);
@@ -330,21 +340,23 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
       datasets: [
         {
           data,
-          backgroundColor: ['#D946EF','#fa8bedff','#C084FC','#F0ABFC']
-        }
-      ]
+          backgroundColor: ['#D946EF', '#fa8bedff', '#C084FC', '#F0ABFC'],
+        },
+      ],
     };
   }
 
-  loadAttendanceData(filtered: Array<{ user: Utilisateur; day: PresenceDuJour }>) {
+  loadAttendanceData(
+    filtered: Array<{ user: Utilisateur; day: PresenceDuJour }>
+  ) {
     const total = filtered.length || 1;
-    const present = filtered.filter(f => f.day.presence).length;
-    const late = filtered.filter(f => {
+    const present = filtered.filter((f) => f.day.presence).length;
+    const late = filtered.filter((f) => {
       if (!f.day.presence || !f.day.pointage) return false;
       const [hours, minutes] = f.day.pointage.split(':').map(Number);
       return hours > 9 || (hours === 9 && minutes > 15);
     }).length;
-    const absent = filtered.filter(f => !f.day.presence).length;
+    const absent = filtered.filter((f) => !f.day.presence).length;
     this.attendanceStats = { present, late, absent };
 
     const byName: Record<string, number> = {};
@@ -356,15 +368,17 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
 
     this.topAttendance = Object.entries(byName)
       .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count)
+      .sort((a, b) => b.count - a.count);
 
     this.pieChartData.datasets[0].data = [
       Math.round((present / total) * 100),
-      Math.round((absent / total) * 100)
+      Math.round((absent / total) * 100),
     ];
   }
 
-  loadProductivityData(filtered: Array<{ user: Utilisateur; day: PresenceDuJour }>) {
+  loadProductivityData(
+    filtered: Array<{ user: Utilisateur; day: PresenceDuJour }>
+  ) {
     const byName: Record<string, number> = {};
     filtered.forEach(({ user, day }) => {
       const m = day.tempsTravail?.match(/(?:(\d+)h)?\s*(?:(\d+)m)?/);
@@ -375,16 +389,22 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
       byName[user.nom] = (byName[user.nom] || 0) + hoursWorked;
     });
 
-    const totalHoursWorked = Object.values(byName).reduce((s, h) => s + h, 0);
+    const totalHoursWorked = Object.values(byName).reduce(
+      (s, h) => s + h,
+      0
+    );
     const totalHoursPlanned = filtered.length * 8;
     const productivityRate = totalHoursPlanned
-      ? Math.min(100, Math.round((totalHoursWorked / totalHoursPlanned) * 100))
+      ? Math.min(
+          100,
+          Math.round((totalHoursWorked / totalHoursPlanned) * 100)
+        )
       : 0;
 
     this.productivityStats = {
       totalHours: +totalHoursWorked.toFixed(2),
-      averageHours: +(totalHoursWorked / filtered.length).toFixed(2),
-      productivityRate
+      averageHours: +(totalHoursWorked / filtered.length || 0).toFixed(2),
+      productivityRate,
     };
 
     this.topProductivity = Object.entries(byName)
@@ -394,66 +414,107 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
           : 0;
         return { name, percent };
       })
-      .sort((a, b) => b.percent - a.percent)
-
+      .sort((a, b) => b.percent - a.percent);
 
     this.pieChartData.datasets[0].data = [
       productivityRate,
-      100 - productivityRate
+      100 - productivityRate,
     ];
   }
 
-  getComparativeMonthlyData(selectedKpi: 'absenteeism' | 'attendance' | 'productivity') {
-    const months = ['Jan', 'Fév', 'Mars', 'Avr', 'Mai', 'Juin', 'Juillet', 'Août', 'Sept', 'Oct', 'Nov', 'Déc'];
-    const teams = [...new Set(this.users.map(u => u.equipe))];
+  getComparativeMonthlyData(
+    selectedKpi: 'absenteeism' | 'attendance' | 'productivity'
+  ) {
+    const months = [
+      'Jan',
+      'Fév',
+      'Mars',
+      'Avr',
+      'Mai',
+      'Juin',
+      'Juillet',
+      'Août',
+      'Sept',
+      'Oct',
+      'Nov',
+      'Déc',
+    ];
+    const teams = [...new Set(this.users.map((u) => u.nom))];
 
     const data: { [team: string]: number[] } = {};
 
-    teams.forEach(team => {
-      data[team] = months.map((month, monthIndex) => {
-        const teamUsers = this.users.filter(u => u.equipe === team);
+    teams.forEach((team) => {
+      data[team] = months.map((_, monthIndex) => {
+        const teamUsers = this.users.filter((u) => u.equipe === team);
 
         if (selectedKpi === 'absenteeism') {
-          const totalAbsences = teamUsers.reduce((sum, u) =>
-            sum + u.historique
-              .filter(h => h.date.getMonth() === monthIndex)
-              .reduce((s, h) => s + h.absences, 0)
-            , 0);
+          const totalAbsences = teamUsers.reduce(
+            (sum, u) =>
+              sum +
+              u.historique
+                .filter((h) => h.date.getMonth() === monthIndex)
+                .reduce((s, h) => s + h.absences, 0),
+            0
+          );
           return totalAbsences;
         }
 
         if (selectedKpi === 'attendance') {
           const totalEmployees = teamUsers.length || 1;
-          const presentCount = teamUsers.reduce((sum, u) =>
-            sum + u.historique.filter(h => h.date.getMonth() === monthIndex && h.presence).length
-            , 0);
-          const uniqueDays = new Set(
-            teamUsers.flatMap(u =>
-              u.historique
-                .filter(h => h.date.getMonth() === monthIndex)
-                .map(h => h.date.toDateString())
-            )
-          ).size || 1;
+          const presentCount = teamUsers.reduce(
+            (sum, u) =>
+              sum +
+              u.historique.filter(
+                (h) =>
+                  h.date.getMonth() === monthIndex && h.presence
+              ).length,
+            0
+          );
+          const uniqueDays =
+            new Set(
+              teamUsers.flatMap((u) =>
+                u.historique
+                  .filter((h) => h.date.getMonth() === monthIndex)
+                  .map((h) => h.date.toDateString())
+              )
+            ).size || 1;
 
-          const percentage = (presentCount / (totalEmployees * uniqueDays)) * 100;
+          const percentage =
+            (presentCount / (totalEmployees * uniqueDays)) * 100;
           return Math.round(percentage);
         }
 
         if (selectedKpi === 'productivity') {
-          const daysInMonth = new Date(new Date().getFullYear(), monthIndex + 1, 0).getDate();
+          const daysInMonth = new Date(
+            new Date().getFullYear(),
+            monthIndex + 1,
+            0
+          ).getDate();
 
-          const totalHoursWorked = teamUsers.reduce((sum, u) =>
-            sum + u.historique
-              .filter(h => h.date.getMonth() === monthIndex)
-              .reduce((s, h) => {
-                const m = h.tempsTravail?.match(/(?:(\d+)h)?\s*(?:(\d+)m)?/);
-                const hh = m ? Number(m[1] || 0) : 0;
-                const mm = m ? Number(m[2] || 0) : 0;
-                return s + hh + mm / 60;
-              }, 0)
-            , 0);
-          const totalHoursPlanned = teamUsers.length * 8 * daysInMonth;
-          return totalHoursPlanned ? Math.min(100, Math.round((totalHoursWorked / totalHoursPlanned) * 100)) : 0;
+          const totalHoursWorked = teamUsers.reduce(
+            (sum, u) =>
+              sum +
+              u.historique
+                .filter((h) => h.date.getMonth() === monthIndex)
+                .reduce((s, h) => {
+                  const m = h.tempsTravail?.match(
+                    /(?:(\d+)h)?\s*(?:(\d+)m)?/
+                  );
+                  const hh = m ? Number(m[1] || 0) : 0;
+                  const mm = m ? Number(m[2] || 0) : 0;
+                  return s + hh + mm / 60;
+                }, 0),
+            0
+          );
+
+          const totalHoursPlanned =
+            teamUsers.length * 8 * daysInMonth;
+          return totalHoursPlanned
+            ? Math.min(
+                100,
+                Math.round((totalHoursWorked / totalHoursPlanned) * 100)
+              )
+            : 0;
         }
 
         return 0;
