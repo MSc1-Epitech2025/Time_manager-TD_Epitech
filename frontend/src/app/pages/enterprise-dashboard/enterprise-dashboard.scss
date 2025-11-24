@@ -13,7 +13,6 @@
 .dashboard-container {
   display: flex;
   background-color: rgb(28, 26, 26);
-  background-color: rgb(28, 26, 26);
   flex-direction: column;
   color: #fff;
   min-height: 100vh;
@@ -69,22 +68,15 @@
 
 //------------------ Summary Cards ------------------//
 /* ===== Layout ===== */
-//------------------ Summary Cards ------------------//
-/* ===== Layout ===== */
 .dashboard-summary {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 1.4rem;
   gap: 1.4rem;
   margin-bottom: 2rem;
 }
 
 /* ===== Cards ===== */
-/* ===== Cards ===== */
 .summary-card {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -93,15 +85,9 @@
   background: var(--c-card);
   box-shadow: 0 4px 14px rgba(0,0,0,0.06);
   transition: 0.25s ease;
-  border-radius: 18px;
-  background: var(--c-card);
-  box-shadow: 0 4px 14px rgba(0,0,0,0.06);
-  transition: 0.25s ease;
 }
 
 .summary-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 22px rgba(0,0,0,0.12);
   transform: translateY(-4px);
   box-shadow: 0 8px 22px rgba(0,0,0,0.12);
 }
@@ -129,20 +115,6 @@
   font-size: 23px;
 }
 
-.icon-mixed .not {
-  position: absolute;
-  right: 4px;
-  bottom: 2px;
-  font-size: 18px;
-  color: #dc2626;
-  opacity: 0.7;
-}
-
-/* ===== Text zone ===== */
-.card-info h3 {
-  margin: 3px 0 0;
-  font-size: 0.95rem;
-  font-weight: 600;
 .icon-mixed .not {
   position: absolute;
   right: 4px;
@@ -260,26 +232,8 @@
   width: 100%;
   background-color: var(--c-card);
 }
-.dashboard-board {
-  display: flex;
-  flex-direction: column;
-  border-radius: 20px;
-  padding: 0.6rem;
-  gap: 1.5rem;
-  height: 100%;
-  width: 100%;
-  background-color: var(--c-card);
-}
 
 .dashboard-card {
-  background: #fff;
-  border-radius: 16px;
-  padding: 1.2rem;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.08);
-  transition: all 0.25s ease;
-}
-
-.dashboard-card-litle {
   background: #fff;
   border-radius: 16px;
   padding: 1.2rem;
@@ -609,4 +563,4 @@ background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(244, 114, 182,
 
 .item-value {
   font-weight: bold;
-}}
+}
