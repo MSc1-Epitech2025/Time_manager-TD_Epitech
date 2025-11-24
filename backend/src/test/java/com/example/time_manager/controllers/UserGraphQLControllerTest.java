@@ -100,7 +100,7 @@ class UserGraphQLControllerTest {
 
         AuthResponse r = controller.refresh();
 
-        assertTrue(r.isOk());
+        assertTrue(r.ok);
         assertNotNull(response.getHeader("Set-Cookie"));
     }
 
@@ -292,5 +292,64 @@ class UserGraphQLControllerTest {
         String header = response.getHeader("Set-Cookie");
         assertTrue(header.contains("abc="));
         assertTrue(header.contains("Max-Age=0"));
+    }
+
+    @Test
+    void testAddRefreshCookie() throws Exception {
+        Method m = UserGraphQLController.class.getDeclaredMethod(
+                "addRefreshCookie", HttpServletResponse.class, String.class
+        );
+        m.setAccessible(true);
+
+        m.invoke(null, response, "REFRESH123");
+
+        String header = response.getHeader("Set-Cookie");
+        assertNotNull(header);
+        assertTrue(header.contains("refresh_token=REFRESH123"));
+        assertTrue(header.contains("HttpOnly"));
+        assertTrue(header.contains("Path=/graphql"));
+    }
+
+    @Test
+    void testLogin_Success() {
+        com.example.time_manager.dto.auth.AuthRequest req =
+                new com.example.time_manager.dto.auth.AuthRequest("john@test.com", "pwd");
+
+        User u = new User();
+        u.setEmail("john@test.com");
+        u.setId("ID1");
+        u.setFirstName("John");
+        u.setRole("ADMIN");
+
+        when(userService.validateUser("john@test.com", "pwd")).thenReturn(true);
+        when(userService.findByEmail("john@test.com")).thenReturn(Optional.of(u));
+        when(jwtUtil.generateAccessToken(any(), any(), any(), any()))
+                .thenReturn("ACCESS123");
+        when(jwtUtil.generateRefreshToken("john@test.com", "ID1"))
+                .thenReturn("REFRESH123");
+
+        AuthResponse resp = controller.login(req);
+
+        assertTrue(resp.ok);
+        List<String> cookies = response.getHeaders("Set-Cookie");
+
+        assertEquals(2, cookies.size());
+        assertTrue(cookies.get(0).contains("access_token=ACCESS123")
+                || cookies.get(1).contains("access_token=ACCESS123"));
+        assertTrue(cookies.get(0).contains("refresh_token=REFRESH123")
+                || cookies.get(1).contains("refresh_token=REFRESH123"));
+    }
+
+    @Test
+    void testLogin_InvalidCredentials_Throws() {
+        com.example.time_manager.dto.auth.AuthRequest req =
+                new com.example.time_manager.dto.auth.AuthRequest("john@test.com", "wrong");
+
+        when(userService.validateUser("john@test.com", "wrong")).thenReturn(false);
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> controller.login(req));
+
+        assertEquals("Invalid credentials", ex.getMessage());
     }
 }

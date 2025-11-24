@@ -2,6 +2,7 @@ package com.example.time_manager.graphql.controller;
 
 import java.time.Duration;
 
+import com.example.time_manager.dto.auth.AuthRequest;
 import jakarta.security.auth.message.AuthException;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
@@ -33,6 +34,7 @@ public class UserGraphQLController {
     private static final boolean COOKIE_SECURE = true;
     private static final String COOKIE_SAMESITE = "None";
     private static final Duration ACCESS_MAX_AGE = Duration.ofMinutes(15);
+    private static final Duration REFRESH_MAX_AGE = Duration.ofDays(7);
 
     public UserGraphQLController(UserService userService, JwtUtil jwtUtil) {
         this.userService = userService;
@@ -98,6 +100,35 @@ public class UserGraphQLController {
         return new AuthResponse(true);
     }
 
+    @PreAuthorize("permitAll()")
+    @MutationMapping
+    public AuthResponse login(@Argument AuthRequest input) {
+        HttpServletResponse httpResp = currentResponse();
+
+        if (!userService.validateUser(input.getEmail(), input.getPassword())) {
+            throw new RuntimeException("Invalid credentials");
+        }
+
+        var user = userService.findByEmail(input.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found after validation"));
+
+        String accessToken = jwtUtil.generateAccessToken(
+                user.getEmail(),
+                user.getId(),
+                user.getFirstName(),
+                user.getRole()
+        );
+
+        String refreshToken = jwtUtil.generateRefreshToken(
+                user.getEmail(),
+                user.getId()
+        );
+
+        addAccessCookie(httpResp, accessToken);
+        addRefreshCookie(httpResp, refreshToken);
+        return new AuthResponse(true);
+    }
+
     @PreAuthorize("hasAuthority('ADMIN')")
     @MutationMapping
     public User updateUser(@Argument("input") UpdateUserInput input) {
@@ -160,6 +191,14 @@ public class UserGraphQLController {
                 .path(path)
                 .maxAge(Duration.ZERO)
                 .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+    }
+
+    private static void addRefreshCookie(HttpServletResponse response, String token) {
+        ResponseCookie cookie = ResponseCookie.from("refresh_token", token)
+                .httpOnly(true).secure(COOKIE_SECURE).sameSite(COOKIE_SAMESITE)
+                .path("/graphql")
+                .maxAge(REFRESH_MAX_AGE).build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 
