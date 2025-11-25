@@ -72,6 +72,14 @@ export const routes: Routes = [
                     .then(m => m.LogHistory),
             },
 
+            // Users (Admin only)
+            {
+                path: 'users',
+
+                loadComponent: () => import('./pages/users/users')
+                    .then(m => m.UsersComponent),
+            },
+
 
             // Default
             { path: '', pathMatch: 'full', redirectTo: 'employee' },

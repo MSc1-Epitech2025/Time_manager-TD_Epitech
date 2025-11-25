@@ -71,13 +71,13 @@ export class TeamManagement implements OnInit {
       roles: this.auth.session?.user?.roles,
       isAdmin: this.isAdminUser,
       isManager: this.isManagerUser,
-    }); // DEBUG refreshTeams: initial state
+    });
     this.loadTeamsForCurrentUser()
       .pipe(
         switchMap((teams) =>
           this.teamService.populateTeamsWithMembers(teams).pipe(
             catchError((error) => {
-              console.warn('[TeamManagement] populateTeamsWithMembers failed, keeping bare teams', error); // DEBUG population failure
+              console.warn('[TeamManagement] populateTeamsWithMembers failed, keeping bare teams', error);
               return of(teams);
             })
           )
@@ -85,13 +85,13 @@ export class TeamManagement implements OnInit {
       )
       .subscribe({
         next: (teams) => {
-          console.debug('[TeamManagement] refreshTeams success', { teams }); // DEBUG refreshTeams: success
+          console.debug('[TeamManagement] refreshTeams success', { teams });
           this.teams = teams;
           this.applyFilter();
           this.isLoading = false;
         },
         error: (error) => {
-          console.error('[TeamManagement] Error fetching teams:', error); // DEBUG refreshTeams: erreur
+          console.error('[TeamManagement] Error fetching teams:', error);
           this.teams = [];
           this.filteredTeams = [];
           this.isLoading = false;
@@ -283,7 +283,7 @@ export class TeamManagement implements OnInit {
         ),
       }).pipe(
         map(({ fallback, admin }) => {
-          console.debug('[TeamManagement] merged results', { fallback, admin }); // DEBUG merged results
+          console.debug('[TeamManagement] merged results', { fallback, admin });
           if (!admin.length) return fallback;
           if (!fallback.length) return admin;
           const merged = new Map<string, Team>();
@@ -294,14 +294,14 @@ export class TeamManagement implements OnInit {
       );
     }
     if (this.isManagerUser) {
-      console.debug('[TeamManagement] Manager detected, loading my team members'); // DEBUG manager branch
+      console.debug('[TeamManagement] Manager detected, loading my team members');
       return this.teamService.listMyTeamMembers().pipe(
-        tap((result) => console.debug('[TeamManagement] myTeamMembers result', { count: result.length, result })) // DEBUG manager result
+        tap((result) => console.debug('[TeamManagement] myTeamMembers result', { count: result.length, result }))
       );
     }
-    console.debug('[TeamManagement] Default branch (myTeams)'); // DEBUG default branch
+    console.debug('[TeamManagement] Default branch (myTeams)');
     return this.teamService.listMyTeams().pipe(
-      tap((result) => console.debug('[TeamManagement] myTeams result', { count: result.length, result })) // DEBUG default result
+      tap((result) => console.debug('[TeamManagement] myTeams result', { count: result.length, result }))
     );
   }
 

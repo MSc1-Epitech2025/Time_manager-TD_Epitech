@@ -14,6 +14,11 @@
             Admin
         </button>
 
+        <button class="menu-btn" *ngIf="isAdmin()" [routerLink]="['/users']" routerLinkActive="active">
+            <mat-icon>perm_identity</mat-icon>
+            Users
+        </button>
+
         <!-- employee -->
         <button class="menu-btn" *ngIf="isEmployee()" [routerLink]="['/employee']" routerLinkActive="active">
             <mat-icon>dashboard</mat-icon>
