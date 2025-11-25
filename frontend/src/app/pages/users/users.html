@@ -1,0 +1,182 @@
+<div class="dashboard">
+  <!-- ===== Main Content ===== -->
+  <main class="main-content">
+    <!-- Header -->
+    <header class="header">
+      <h2>User Management</h2>
+    </header>
+
+    <div class="content-wrapper">
+      <!-- Left side: User List -->
+      <section class="user-list-section">
+        <!-- Search bar -->
+        <div class="search-section">
+          <div class="search-container">
+            <mat-icon>search</mat-icon>
+            <input
+              type="text"
+              class="search-bar"
+              placeholder="Search for a user..."
+              [(ngModel)]="searchTerm"
+              (ngModelChange)="searchUsers()"
+            />
+          </div>
+
+          <button class="create-btn" (click)="showCreateForm()">
+            <mat-icon>person_add</mat-icon>
+            Create a user
+          </button>
+        </div>
+
+        <!-- Loading or error status -->
+        <section *ngIf="isLoading || lastError" class="status-section">
+          <div *ngIf="isLoading">Loading users...</div>
+          <div *ngIf="!isLoading && lastError" class="error-message">{{ lastError }}</div>
+        </section>
+
+        <!-- User list -->
+        <div class="user-list" *ngIf="!isLoading && filteredUsers.length">
+          <div
+            class="user-item"
+            *ngFor="let user of filteredUsers"
+            [class.selected]="selectedUser?.id === user.id"
+            (click)="selectUser(user)"
+          >
+            <div class="user-avatar">
+              {{ user.firstName.charAt(0).toUpperCase() }}{{ user.lastName.charAt(0).toUpperCase() }}
+            </div>
+            <div class="user-info">
+              <div class="user-name">{{ user.firstName }} {{ user.lastName }}</div>
+              <div class="user-email">{{ user.email }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- No users message -->
+        <section *ngIf="!isLoading && !lastError && !filteredUsers.length" class="status-section">
+          No users to display.
+        </section>
+      </section>
+
+      <!-- Right side: User Form -->
+      <section class="user-form-section" *ngIf="showForm" #userFormSection>
+        <div class="form-header">
+          <h3>{{ isCreating ? 'Create User' : 'Edit User' }}</h3>
+          <button class="close-btn" (click)="cancelForm()">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+
+        <form class="user-form" #userForm="ngForm">
+          <mat-form-field appearance="outline">
+            <mat-label>First Name</mat-label>
+            <input
+              matInput
+              [(ngModel)]="formData.firstName"
+              name="firstName"
+              required
+            />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Last Name</mat-label>
+            <input
+              matInput
+              [(ngModel)]="formData.lastName"
+              name="lastName"
+              required
+            />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Email</mat-label>
+            <input
+              matInput
+              type="email"
+              [(ngModel)]="formData.email"
+              name="email"
+              required
+            />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" *ngIf="isCreating">
+            <mat-label>Password</mat-label>
+            <input
+              matInput
+              type="password"
+              [(ngModel)]="formData.password"
+              name="password"
+              [required]="isCreating"
+            />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Phone</mat-label>
+            <input
+              matInput
+              type="tel"
+              [(ngModel)]="formData.phone"
+              name="phone"
+            />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Role</mat-label>
+            <mat-select [(ngModel)]="formData.role" name="role">
+              <mat-option value="EMPLOYEE">Employee</mat-option>
+              <mat-option value="MANAGER">Manager</mat-option>
+              <mat-option value="ADMIN">Admin</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Position</mat-label>
+            <input
+              matInput
+              [(ngModel)]="formData.poste"
+              name="poste"
+            />
+          </mat-form-field>
+
+          <div class="form-actions">
+            <button
+              mat-raised-button
+              color="primary"
+              type="button"
+              *ngIf="isCreating"
+              [disabled]="!userForm.valid || isLoading"
+              (click)="createUser()"
+            >
+              <mat-icon>add</mat-icon>
+              Create
+            </button>
+
+            <button
+              mat-raised-button
+              color="primary"
+              type="button"
+              *ngIf="!isCreating"
+              [disabled]="!userForm.valid || isLoading"
+              (click)="updateUser()"
+            >
+              <mat-icon>save</mat-icon>
+              Update
+            </button>
+
+            <button
+              mat-raised-button
+              color="warn"
+              type="button"
+              *ngIf="!isCreating"
+              [disabled]="isLoading"
+              (click)="deleteUser()"
+            >
+              <mat-icon>delete</mat-icon>
+              Delete
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+  </main>
+</div>

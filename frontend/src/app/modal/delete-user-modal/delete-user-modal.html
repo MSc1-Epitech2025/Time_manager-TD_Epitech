@@ -1,0 +1,23 @@
+<h2 mat-dialog-title>Delete User</h2>
+
+<mat-dialog-content class="dialog-content">
+  <div class="scrollable-content">
+    <div class="user-info">
+      <div class="user-detail">
+        <span><strong>{{ user.firstName }} {{ user.lastName }}</strong></span>
+      </div>
+      <div class="user-detail">
+        <span>{{ user.email }}</span>
+      </div>
+    </div>
+    
+    <p class="confirmation-text">
+      Are you sure you want to delete this user?
+    </p>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-flat-button color="warn" (click)="onConfirm()">Delete</button>
+</mat-dialog-actions>
