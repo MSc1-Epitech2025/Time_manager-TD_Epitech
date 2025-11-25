@@ -1,0 +1,49 @@
+<h2 mat-dialog-title>Request Absence</h2>
+
+<mat-dialog-content class="dialog-content">
+  <div class="scrollable-content">
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Start Date</mat-label>
+      <input matInput [matDatepicker]="pickerStart" [(ngModel)]="startDate" placeholder="Select start date" />
+      <mat-datepicker-toggle matIconSuffix [for]="pickerStart"></mat-datepicker-toggle>
+      <mat-datepicker #pickerStart></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>End Date</mat-label>
+      <input matInput [matDatepicker]="pickerEnd" [(ngModel)]="endDate" placeholder="Select end date" />
+      <mat-datepicker-toggle matIconSuffix [for]="pickerEnd"></mat-datepicker-toggle>
+      <mat-datepicker #pickerEnd></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Absence Type</mat-label>
+      <mat-select [(ngModel)]="absenceType">
+        <mat-option *ngFor="let type of absenceTypes" [value]="type.value">
+          {{ type.label }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="w-full" *ngIf="isSingleDay">
+      <mat-label>Period</mat-label>
+      <mat-select [(ngModel)]="period">
+        <mat-option *ngFor="let p of periods" [value]="p.value">
+          {{ p.label }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Reason (optional)</mat-label>
+      <textarea matInput [(ngModel)]="reason" placeholder="Describe the reason for your absence" rows="3"></textarea>
+    </mat-form-field>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-flat-button color="primary" (click)="onSubmit()" [disabled]="!startDate || !endDate || !absenceType">
+    Submit Request
+  </button>
+</mat-dialog-actions>
