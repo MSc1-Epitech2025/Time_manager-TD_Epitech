@@ -54,12 +54,12 @@ export class PlanningComponent implements OnInit {
   events: EventInput[] = [];
 
   calendarOptions: CalendarOptions = {
-    plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
+    plugins: [dayGridPlugin, interactionPlugin],
     initialView: 'dayGridMonth',
     headerToolbar: {
       left: 'prev,next today',
       center: 'title',
-      right: 'dayGridMonth,timeGridWeek,timeGridDay',
+      right: '',
     },
     expandRows: true,
     height: 'auto',
@@ -73,6 +73,9 @@ export class PlanningComponent implements OnInit {
     events: [],
     select: this.handleDateSelect.bind(this),
     eventClick: this.handleEventClick.bind(this),
+    dayMaxEvents: false,
+    eventDisplay: 'block',
+    displayEventTime: false,
   };
 
   constructor(
@@ -149,7 +152,6 @@ export class PlanningComponent implements OnInit {
     try {
       let teamId: string | undefined = undefined;
       
-      // For employees, get their team first to avoid FORBIDDEN error
       if (this.isEmployee && !this.isManager && !this.isAdmin) {
         const teams = await firstValueFrom(this.teamService.listMyTeams());
         if (teams.length > 0) {
@@ -172,7 +174,6 @@ export class PlanningComponent implements OnInit {
 
   private async enrichAbsencesWithUserNames() {
     try {
-      // Use different method based on role: admins get all users, others get team members
       const userMap = this.isAdmin
         ? await firstValueFrom(this.absenceService.getAllUsersForAdmin())
         : await firstValueFrom(this.absenceService.getAllUsers());
@@ -194,7 +195,6 @@ export class PlanningComponent implements OnInit {
       });
     } catch (err) {
       console.error('Failed to enrich absences with user names', err);
-      // Continue without user names
     }
   }
 
@@ -203,15 +203,12 @@ export class PlanningComponent implements OnInit {
     
     this.events = this.absences
       .filter((absence) => {
-        // Always show own absences (including pending)
         if (absence.userId === userId) return true;
         
-        // For employees, only show approved absences of team members
         if (this.isEmployee && !this.isManager) {
           return absence.status === 'APPROVED';
         }
         
-        // For managers/admins, show all absences
         return true;
       })
       .flatMap((absence) => this.absenceToEvents(absence));
@@ -297,7 +294,7 @@ export class PlanningComponent implements OnInit {
       width: '500px',
       data: {
         startDate: selectInfo.start,
-        endDate: new Date(selectInfo.end.getTime() - 86400000), // Subtract 1 day
+        endDate: new Date(selectInfo.end.getTime() - 86400000),
       },
     });
 
@@ -312,7 +309,6 @@ export class PlanningComponent implements OnInit {
     const absence = clickInfo.event.extendedProps['absence'] as Absence;
     const isOwn = clickInfo.event.extendedProps['isOwn'] as boolean;
 
-    // Show details/approval for own absences, or if manager/admin
     if (isOwn || this.isManager || this.isAdmin) {
       this.openApprovalModal(absence);
     }

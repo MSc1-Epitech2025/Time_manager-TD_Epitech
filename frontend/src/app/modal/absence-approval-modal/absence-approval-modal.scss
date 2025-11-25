@@ -114,11 +114,11 @@
     }
 
     .approve-button {
-        background-color: #10b981 !important;
-        color: #fff !important;
+        background-color: #10b981 ;
+        color: #fff ;
 
         &:hover {
-            background-color: #059669 !important;
+            background-color: #059669 ;
         }
 
         mat-icon {
@@ -127,11 +127,11 @@
     }
 
     .reject-button {
-        background-color: #ef4444 !important;
-        color: #fff !important;
+        background-color: #ef4444 ;
+        color: #fff ;
 
         &:hover {
-            background-color: #dc2626 !important;
+            background-color: #dc2626 ;
         }
 
         mat-icon {

@@ -106,7 +106,6 @@ export class AbsenceRequestModal implements OnInit {
       reason: this.reason.trim() || undefined,
     };
 
-    // If single day and not full day, add period specification
     if (this.isSingleDay && this.period !== 'FULL_DAY') {
       result.periodByDate = [
         {

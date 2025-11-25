@@ -337,7 +337,6 @@ export class ManagerService {
   }
 }
 
-//  helpers
 
 const MY_TEAM_MEMBERS_QUERY = `
   query MyTeamMembers {

@@ -368,7 +368,6 @@ export class AbsenceService {
         const groups = payload?.myTeamMembers ?? [];
         const userMap = new Map<string, { firstName?: string; lastName?: string; email?: string }>();
         
-        // Flatten all members from all teams
         for (const group of groups) {
           for (const user of group.members) {
             userMap.set(user.id, {

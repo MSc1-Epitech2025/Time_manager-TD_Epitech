@@ -12,7 +12,7 @@ import { ChartConfiguration, ChartOptions } from 'chart.js';
 import { Chart } from 'chart.js/auto';
 import { Router } from '@angular/router';
 
-//Service
+// Service
 import { ManagerService } from '../../core/services/manager';
 import { AuthService } from '../../core/services/auth';
 import { EnterpriseService } from '../../core/services/enterprise';
@@ -48,7 +48,6 @@ export class EnterpriseDashboard implements OnDestroy {
   isWorking: boolean = false;
   timer: number = 0;
   time: { hours: number, minutes: number } = { hours: 0, minutes: 0 };
-  //dataSource: Array<{ start: string; end?: string; durationSeconds: number }> = [];
   user: any = null;
   status: string = 'startWorking';
 

@@ -124,16 +124,16 @@ full-calendar {
         .fc-scrollgrid,
         .fc-daygrid-body,
         .fc-timegrid-body {
-            background-color: #2a2a3c !important;
+            background-color: #2a2a3c ;
         }
 
         .fc-daygrid-day,
         .fc-timegrid-slot {
-            background-color: #2a2a3c !important;
+            background-color: #2a2a3c ;
         }
 
         .fc-col-header-cell {
-            background-color: #1e1e28 !important;
+            background-color: #1e1e28 ;
         }
 
         .fc-event {
@@ -160,20 +160,20 @@ full-calendar {
         }
 
         .fc-button {
-            background-color: #a78bfa !important;
-            border-color: #a78bfa !important;
+            background-color: #a78bfa ;
+            border-color: #a78bfa ;
 
             &:hover {
-                background-color: #9377d9 !important;
+                background-color: #9377d9 ;
             }
 
             &.fc-button-active {
-                background-color: #7c3aed !important;
+                background-color: #7c3aed ;
             }
         }
 
         .fc-day-today {
-            background-color: rgba(167, 139, 250, 0.1) !important;
+            background-color: rgba(167, 139, 250, 0.1) ;
         }
     }
 }

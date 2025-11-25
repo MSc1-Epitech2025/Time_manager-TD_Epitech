@@ -67,13 +67,11 @@ export class ManagerDashboard implements OnInit {
   ) { }
 
   ngOnInit() {
-    // First, extract route parameters
     this.route.queryParamMap.subscribe((params) => {
       const teamId = params.get('teamId');
       const teamName = params.get('teamName');
       this.selectedTeamId = teamId ? teamId.trim() : null;
       this.selectedTeamName = teamName ? teamName.trim().toLowerCase() : null;
-      // Reload employees when parameters change
       this.loadEmployees();
     });
   }
@@ -117,7 +115,6 @@ export class ManagerDashboard implements OnInit {
   private loadEmployees() {
     this.loadingEmployees = true;
     
-    // If a teamId is provided, load employees from that specific team
     if (this.selectedTeamId) {
       this.managerService.getTeamEmployeesByTeamId(this.selectedTeamId).subscribe({
         next: (data) => {
@@ -134,7 +131,6 @@ export class ManagerDashboard implements OnInit {
         },
       });
     } else {
-      // Otherwise load all employees from the manager's teams
       this.managerService.getTeamEmployees().subscribe({
         next: (data) => {
           this.employees = data;
