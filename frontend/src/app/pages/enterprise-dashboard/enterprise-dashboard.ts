@@ -35,8 +35,6 @@ import { users } from '../../core/data/registre_presence_oct_nov';
     MatIconModule,
     MatFormFieldModule,
     MatTabsModule,
-    MatFormFieldModule,
-    MatTabsModule,
     MatInputModule,
     NgChartsModule,
     KpiAssiduiteComponent,

@@ -19,7 +19,7 @@ export interface PresenceDuJour {
   tempsTravail: string;
 }
 
-export interface KpiAbsence {
+export interface Utilisateur {
   id: string;
   nom: string;
   equipe: string;

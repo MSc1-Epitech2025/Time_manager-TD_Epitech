@@ -1,5 +1,5 @@
 import { Component, AfterViewInit, ViewChild, ElementRef, Input, OnChanges, SimpleChanges } from '@angular/core';
-import { Chart, registerables ,ChartConfiguration } from 'chart.js';
+import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
 
 @Component({
@@ -117,8 +117,7 @@ export class KpiAssiduiteComponent implements AfterViewInit, OnChanges {
           ctx.fillText(mainValue + '%', x, y);
           ctx.restore();
         }
-      },
-      plugins: [centerTextPlugin]
+      }
     };
 
     this.chart = new Chart(ctx, {
