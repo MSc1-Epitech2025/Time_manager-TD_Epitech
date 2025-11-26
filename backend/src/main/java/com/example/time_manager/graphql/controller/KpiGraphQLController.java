@@ -47,7 +47,7 @@ public class KpiGraphQLController {
                                   @Argument String startDate,
                                   @Argument String endDate) {
         LocalDate start = LocalDate.parse(startDate);
-        LocalDate end   = LocalDate.parse(endDate);
+        LocalDate end = LocalDate.parse(endDate);
         return kpiService.getUser(userId, start, end);
     }
 }

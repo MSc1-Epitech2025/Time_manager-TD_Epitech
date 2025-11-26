@@ -134,10 +134,6 @@ public List<AbsenceResponse> listTeamAbsences(String managerEmail, Long teamId) 
   var manager = userRepo.findByEmail(managerEmail)
       .orElseThrow(() -> new EntityNotFoundException("User not found: " + managerEmail));
 
-  if (!hasRole(manager, "MANAGER")) {
-    throw new org.springframework.security.access.AccessDeniedException("Forbidden: manager only");
-  }
-
   List<String> teamUserIds = new ArrayList<>();
 
   if (teamId != null) {
