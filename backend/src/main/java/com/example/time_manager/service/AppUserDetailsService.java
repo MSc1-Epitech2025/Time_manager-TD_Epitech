@@ -35,33 +35,41 @@ public class AppUserDetailsService implements UserDetailsService {
                 u.getEmail(), u.getPassword(), authorities);
     }
 
-private Collection<? extends GrantedAuthority> mapAuthorities(User u) {
-    String raw = u.getRole();
-    if (raw == null || raw.isBlank()) {
-        return List.of(new SimpleGrantedAuthority("EMPLOYEE"));
-    }
-    try {
-        List<String> roles;
-        if (raw.startsWith("[")) {
-            roles = mapper.readValue(raw, new TypeReference<List<String>>() {});
-        } else {
-            roles = List.of(raw);
+    private Collection<? extends GrantedAuthority> mapAuthorities(User u) {
+        String raw = u.getRole();
+        if (raw == null || raw.isBlank()) {
+            return List.of(new SimpleGrantedAuthority("EMPLOYEE"));
         }
-        
-        var authorities = roles.stream()
-            .filter(s -> s != null)
-            .map(String::trim)
-            .filter(s -> !s.isEmpty())
-            .map(String::toUpperCase) 
-            .distinct()
-            .map(SimpleGrantedAuthority::new)
-            .collect(Collectors.toList());
-        
-        return authorities.isEmpty() 
-            ? List.of(new SimpleGrantedAuthority("EMPLOYEE"))
-            : authorities;
-    } catch (Exception e) {
-        return List.of(new SimpleGrantedAuthority(raw.toUpperCase()));
+
+        String trimmed = raw.trim();
+        try {
+            List<String> tokens;
+
+            if (trimmed.startsWith("[")) {
+                List<String> roles = mapper.readValue(trimmed, new TypeReference<List<String>>() {});
+                tokens = roles.stream()
+                        .filter(s -> s != null)
+                        .flatMap(s -> java.util.Arrays.stream(s.split("[\\s,;|]+")))
+                        .toList();
+            } else {
+                tokens = java.util.Arrays.stream(trimmed.split("[\\s,;|]+"))
+                        .toList();
+            }
+
+            var authorities = tokens.stream()
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .map(String::toUpperCase)        
+                    .distinct()
+                    .map(SimpleGrantedAuthority::new) 
+                    .collect(Collectors.toList());
+
+            return authorities.isEmpty()
+                    ? List.of(new SimpleGrantedAuthority("EMPLOYEE"))
+                    : authorities;
+
+        } catch (Exception e) {
+            return List.of(new SimpleGrantedAuthority("EMPLOYEE"));
+        }
     }
-}
 }
