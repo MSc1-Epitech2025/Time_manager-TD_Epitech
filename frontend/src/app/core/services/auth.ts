@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, catchError, firstValueFrom, map, of } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export type Role = 'EMPLOYEE' | 'MANAGER' | 'ADMIN';
 
@@ -39,8 +40,7 @@ type GraphqlResponse<T> = {
 
 const STORAGE_KEY = 'tm.session';
 const REMEMBER_KEY = 'tm.remember';
-const API_ROOT = 'http://localhost:8030';
-const GRAPHQL_ENDPOINT = `${API_ROOT}/graphql`;
+const GRAPHQL_ENDPOINT = environment.GRAPHQL_ENDPOINT;
 const USER_BY_EMAIL_QUERY = `
   query UserByEmail($email: String!) {
     userByEmail(email: $email) {

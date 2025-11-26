@@ -16,6 +16,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth';
 import { PlanningService, PlanningEvent } from '../../core/services/planning';
 import { NotificationService } from '../../core/services/notification';
+import { environment } from '../../../environments/environment';
 
 type ClockKind = 'IN' | 'OUT';
 
@@ -38,7 +39,7 @@ interface ClockMutationResponse {
   createClockForMe: ClockRecord;
 }
 
-const GRAPHQL_ENDPOINT = 'http://localhost:8030/graphql';
+const GRAPHQL_ENDPOINT = environment.GRAPHQL_ENDPOINT;
 
 const MY_CLOCKS_QUERY = `
   query MyClocks($from: String!, $to: String!) {

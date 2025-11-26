@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, tap } from 'rxjs';
-
-const GRAPHQL_ENDPOINT = 'http://localhost:8030/graphql';
+import { environment } from '../../../environments/environment';
 
 type GraphqlError = {
   message: string;
@@ -58,6 +57,8 @@ type DeleteUserPayload = { deleteUser: boolean };
 @Injectable({ providedIn: 'root' })
 export class UserService {
   constructor(private http: HttpClient) {}
+  
+  private readonly GRAPHQL_ENDPOINT = environment.GRAPHQL_ENDPOINT;
 
   getAllUsers(): Observable<User[]> {
     const query = `
@@ -76,7 +77,7 @@ export class UserService {
 
     return this.http
       .post<GraphqlResponse<AllUsersPayload>>(
-        GRAPHQL_ENDPOINT,
+        this.GRAPHQL_ENDPOINT,
         { query, operationName: 'AllUsers' },
         { withCredentials: true }
       )
@@ -110,7 +111,7 @@ export class UserService {
 
     return this.http
       .post<GraphqlResponse<RegisterPayload>>(
-        GRAPHQL_ENDPOINT,
+        this.GRAPHQL_ENDPOINT,
         {
           query: mutation,
           variables: { input },
@@ -151,7 +152,7 @@ export class UserService {
 
     return this.http
       .post<GraphqlResponse<UpdateUserPayload>>(
-        GRAPHQL_ENDPOINT,
+        this.GRAPHQL_ENDPOINT,
         {
           query: mutation,
           variables: { input },
@@ -184,7 +185,7 @@ export class UserService {
 
     return this.http
       .post<GraphqlResponse<DeleteUserPayload>>(
-        GRAPHQL_ENDPOINT,
+        this.GRAPHQL_ENDPOINT,
         {
           query: mutation,
           variables: { id: userId },

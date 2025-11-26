@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, tap, catchError, throwError, forkJoin, of } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
-const GRAPHQL_ENDPOINT = 'http://localhost:8030/graphql';
+const GRAPHQL_ENDPOINT = environment.GRAPHQL_ENDPOINT;
 
 type GraphqlError = {
   message: string;
