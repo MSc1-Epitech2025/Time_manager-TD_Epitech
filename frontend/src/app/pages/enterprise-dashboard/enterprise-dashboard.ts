@@ -46,7 +46,7 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
   time: { hours: number; minutes: number } = { hours: 0, minutes: 0 };
   status = 'startWorking';
 
-  users: Utilisateur[] = users;
+  users: Utilisateur[] = [];
   loading = false;
 
   selectedKpi: 'absenteeism' | 'attendance' | 'productivity' = 'absenteeism';
