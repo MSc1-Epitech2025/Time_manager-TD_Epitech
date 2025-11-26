@@ -92,7 +92,6 @@ export class AbsenceRequestModal implements OnInit {
       const end = new Date(this.endDate);
       start.setHours(0, 0, 0, 0);
       end.setHours(0, 0, 0, 0);
-      // If end date is before start date, adjust end date to match start date
       if (end < start) {
         this.endDate = new Date(this.startDate);
       }
@@ -107,7 +106,6 @@ export class AbsenceRequestModal implements OnInit {
       const end = new Date(this.endDate);
       start.setHours(0, 0, 0, 0);
       end.setHours(0, 0, 0, 0);
-      // If end date is before start date, adjust start date to match end date
       if (end < start) {
         this.startDate = new Date(this.endDate);
       }

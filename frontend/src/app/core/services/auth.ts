@@ -265,7 +265,6 @@ export class AuthService {
           parse(parsedJson);
           return;
         } catch {
-          // not JSON, fall through
         }
 
         const normalized = trimmed.replace(/[\[\]"']/g, ' ');

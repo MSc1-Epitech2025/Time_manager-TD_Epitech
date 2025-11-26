@@ -183,7 +183,7 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
     } else {
       await this.startWork();
     }
-    // Add 3 second cooldown to prevent spam
+    // 3 second cooldown to prevent spam
     setTimeout(() => {
       this.actionPending = false;
     }, 3000);
