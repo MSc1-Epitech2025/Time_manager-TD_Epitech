@@ -15,7 +15,7 @@ export class KpiAbsenteismeComponent implements AfterViewInit {
   constructor(private kpiService: KpiService) {}
 
   ngAfterViewInit() {
-    this.kpiService.getAbsenteisme().subscribe(kpi => {
+    /*this.kpiService.getAbsenteisme().subscribe(kpi => {
       const ctx = this.chartRef.nativeElement.getContext('2d');
       new Chart(ctx!, {
         type: 'bar',
@@ -32,6 +32,6 @@ export class KpiAbsenteismeComponent implements AfterViewInit {
           scales: { y: { beginAtZero: true, max: 15 } }
         }
       });
-    });
+    });*/
   }
 }

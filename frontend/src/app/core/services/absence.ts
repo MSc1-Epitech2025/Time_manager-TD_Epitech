@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, tap, catchError, throwError, of } from 'rxjs';
-
-const GRAPHQL_ENDPOINT = 'http://localhost:8030/graphql';
+import { environment } from '../../../environments/environment';
 
 type GraphqlError = {
   message: string;
@@ -26,6 +25,8 @@ export class GraphqlRequestError extends Error {
     super(GraphqlRequestError.composeMessage(operationName, errors));
     this.name = 'GraphqlRequestError';
   }
+
+  private readonly GRAPHQL_ENDPOINT = environment.GRAPHQL_ENDPOINT;
 
   private static composeMessage(operationName: string | undefined, errors: GraphqlError[]): string {
     const prefix = `[GraphQL:${operationName ?? 'unknown'}]`;
@@ -281,6 +282,8 @@ export class AbsenceService {
 
   constructor(private readonly http: HttpClient) {}
 
+  private readonly GRAPHQL_ENDPOINT = environment.GRAPHQL_ENDPOINT;
+  
   myAbsences(): Observable<Absence[]> {
     return this.graphql<MyAbsencesPayload>(MY_ABSENCES_QUERY).pipe(
       tap((payload) => console.debug('[AbsenceService] myAbsences payload', payload)),
@@ -426,7 +429,7 @@ export class AbsenceService {
   private graphql<T>(query: string, variables?: Record<string, unknown>): Observable<T> {
     return this.http
       .post<GraphqlResponse<T>>(
-        GRAPHQL_ENDPOINT,
+        this.GRAPHQL_ENDPOINT,
         { query, variables },
         { withCredentials: true }
       )

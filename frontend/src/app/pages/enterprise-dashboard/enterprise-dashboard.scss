@@ -12,8 +12,8 @@
 /* ===== Layout global ===== */
 .dashboard-container {
   display: flex;
+  background-color: rgb(28, 26, 26);
   flex-direction: column;
-  background-color: #1E1E28;
   color: #fff;
   min-height: 100vh;
   padding: 20px 40px;
@@ -66,68 +66,154 @@
   background: var(--c-accent);
 }
 
-/* ===== Résumé haut ===== */
+//------------------ Summary Cards ------------------//
+/* ===== Layout ===== */
 .dashboard-summary {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 1.2rem;
+  gap: 1.4rem;
   margin-bottom: 2rem;
 }
 
+/* ===== Cards ===== */
 .summary-card {
-  background: #fff;
-  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
   padding: 1.2rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  text-align: center;
-  transition: transform 0.2s ease, box-shadow 0.3s ease;
-  background-color: var(--c-accent);
+  border-radius: 18px;
+  background: var(--c-card);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+  transition: 0.25s ease;
 }
 
 .summary-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.12);
 }
 
-.summary-card .icon {
-  font-size: 1.6rem;
-  margin-bottom: 0.5rem;
-}
-
-.summary-card h3 {
-  margin: 0;
-  font-size: 1rem;
-  color: #444;
-}
-
-.summary-card .value {
-  font-size: 1.8rem;
-  font-weight: 700;
-  margin: 0.3rem 0;
-}
-
-.summary-card small {
-  font-size: 0.85rem;
-  color: #666;
-}
-
+/* stats impact */
 .summary-card.positive { border-top: 4px solid #16a34a; }
 .summary-card.negative { border-top: 4px solid #dc2626; }
-.summary-card.neutral { border-top: 4px solid #3b82f6; }
+.summary-card.neutral  { border-top: 4px solid #3b82f6; }
 
-/* ===== Graphique global ===== */
-.chart-section {
-  background: #fff;
-  border-radius: 16px;
-  padding: 1.5rem;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.06);
-  margin-bottom: 2rem;
+/* ===== Icon Circle ===== */
+.card-icon {
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.7rem;
+  background: linear-gradient(135deg, rgba(22, 163, 74, 0.2), rgba(22, 163, 74, 0.05));
+  color: #166534;
+  position: relative;
 }
 
-.chart-section h2 {
-  font-size: 1.2rem;
-  margin-bottom: 1rem;
-  color: #333;
+.icon-mixed mat-icon {
+  font-size: 23px;
+}
+
+.icon-mixed .not {
+  position: absolute;
+  right: 4px;
+  bottom: 2px;
+  font-size: 18px;
+  color: #dc2626;
+  opacity: 0.7;
+}
+
+/* ===== Text zone ===== */
+.card-info h3 {
+  margin: 3px 0 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* ===== Stats row ===== */
+.stats-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.value {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+//----------------------------------------------------
+/* ===== Navigation Tabs ===== */
+.navigation-tabs {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px;
+  width: 100%;
+}
+
+.left-nav{
+  display: flex;
+  font-size: 1.1rem;
+  font-weight: 600;
+  gap: 5px;
+}
+
+.right-nav{
+  display: flex;
+  align-items: center;
+  font-size: 1.1rem;
+  font-weight: 600;
+  gap: 5px;
+}
+
+.filter-date{
+  display: flex;
+  align-items: center;
+}
+
+.nav-btn {
+            display: flex;
+            align-items: center;
+            background: transparent;
+            border: none;
+            color: #f9fafb;
+            padding: 0.6rem 0.75rem;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: left;
+
+            &:hover,
+            &.active {
+                background: #2a2a3c;
+                color: var(--c-accent);
+            }
+
+            mat-icon {
+                font-size: 20px;
+            }
+        }
+
+.first-row{
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.kpi-camenbert{
+  display: flex;
+  width: 50%;
+  justify-content: center;
+  align-items: center;
+}
+.kpi-comparatif{
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 /* ===== Grille KPI ===== */
@@ -135,6 +221,16 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
   gap: 1.5rem;
+}
+.dashboard-board {
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px;
+  padding: 0.6rem;
+  gap: 1.5rem;
+  height: 100%;
+  width: 100%;
+  background-color: var(--c-card);
 }
 
 .dashboard-card {
@@ -145,7 +241,326 @@
   transition: all 0.25s ease;
 }
 
+.dashboard-card-litle {
+  background: #fff;
+  border-radius: 16px;
+  padding: 1.2rem;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+  transition: all 0.25s ease;
+}
+
 .dashboard-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+}
+
+.hidden{
+  display: none;
+}
+
+.second-element{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  height: 100%;
+}
+
+//-------- Liste des employés --------//
+/* ----- CARD ----- */
+.presence-card {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(244, 114, 182, 0.15));
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--c-border);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+  color: white;
+  width: 100%;
+  height: 50%;
+  position: relative;
+}
+
+/* ----- Filter ----- */
+.filter-container {
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.filter-container select {
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.5rem;
+  background: rgba(255,255,255,0.15);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.filter-container option {
+  color: black;
+}
+
+/* ----- Stats zone ----- */
+.stats {
+  position: absolute;
+  top: 0;
+  right: 20px;
+  display: flex;
+  justify-content: space-between;
+  margin: 1rem 0 1.5rem 0;
+  padding: 0.8rem;
+  border-radius: 0.75rem;
+  background: rgba(0,0,0,0.1);
+  gap: 10px;
+}
+
+.stat-item {
+  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.stat-item .value {
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.stat-item .value.red {
+  color: #ef4444;
+}
+
+.stat-item .label {
+  font-size: 0.85rem;
+  color: #d1d5db;
+}
+
+/* ----- Table ----- */
+.presence-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1rem;
+  overflow: auto;
+}
+
+.presence-table th,
+.presence-table td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  text-align: center;
+  vertical-align: middle; 
+}
+
+.presence-table th {
+  color: #cbd5e1;
+  font-weight: 600;
+}
+
+/* ----- Status Badges ----- */
+.status-badge {
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.6rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.status-badge.present {
+  background: rgba(34, 197, 94, 0.25);
+  color: #22c55e;
+}
+
+.status-badge.absent {
+  background: rgba(239, 68, 68, 0.25);
+  color: #ef4444;
+}
+/* --------Presence badge-------- */
+.status-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background-color: var(--c-accent);
+  color: white;
+}
+
+.status-badge[data-percent] {
+  background-color: green;
+}
+
+.status-badge[data-percent-low] {
+  background-color: red;
+}
+
+
+//---------------------- Tab suivi absences -----------------//
+.podium-card {
+background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(244, 114, 182, 0.15));
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--c-border);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  width: 280px;
+  color: white;
+  width: 100%;
+}
+.podium-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.podium-card h4 {
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.podium-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  height: 130px;
+}
+
+/* Si aucune data */
+.none {
+  text-align: center;
+  color: #d1d5db;
+  font-style: italic;
+  font-size: 0.85rem;
+}
+
+//-------- Liste des employés avec pointeuse --------//
+/* ----- Carte générale ----- */
+.clock-card {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(244, 114, 182, 0.15));
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--c-border);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+  color: white;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.clock-card h3 {
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+/* ----- Tableau ----- */
+.clock-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1rem;
+}
+
+.clock-table th,
+.clock-table td {
+  text-align: center;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.clock-table th {
+  color: #cbd5e1;
+  font-weight: 600;
+}
+
+/* ----- Badge horaire ----- */
+.clock-badge {
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.6rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  background: rgba(124, 58, 237, 0.25);
+  color: #c084fc;
+}
+
+/* ----- Badge temps de travail ----- */
+.worktime-badge {
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.6rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  background: rgba(52, 211, 153, 0.25);
+  color: #34d399;
+}
+
+//---------------- Filter date KPI ----------------//
+.filter-container.date-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1rem;
+}
+
+/* Label */
+.filter-container.date-filter label {
+  color: #f9fafb;
+  font-weight: 600;
+}
+
+.filter-container.date-filter select {
+  display: flex;
+  align-items: center;
+  background: transparent;
+  border: none;
+  color: #f9fafb;
+  padding: 0.6rem 0.75rem;
+  border-radius: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+  text-align: left;
+  appearance: none; 
+}
+
+.filter-container.date-filter select {
+  background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><polygon points="0,0 10,0 5,5" style="fill:%23f9fafb;"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 10px;
+  padding-right: 2rem; 
+}
+
+/* Hover & Focus */
+.filter-container.date-filter select:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.filter-container.date-filter select:focus {
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+//---------------- KPI Camenbert ----------------//
+.kpi-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+}
+
+.kpi-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background-color: var(--c-card);
+  transition: background 0.2s;
+}
+
+.item-name {
+  font-weight: 500;
+}
+
+.item-value {
+  font-weight: bold;
 }

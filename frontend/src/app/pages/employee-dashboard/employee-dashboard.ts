@@ -16,6 +16,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth';
 import { PlanningService, PlanningEvent } from '../../core/services/planning';
 import { NotificationService } from '../../core/services/notification';
+import { environment } from '../../../environments/environment';
 
 type ClockKind = 'IN' | 'OUT';
 
@@ -38,7 +39,7 @@ interface ClockMutationResponse {
   createClockForMe: ClockRecord;
 }
 
-const GRAPHQL_ENDPOINT = 'http://localhost:8030/graphql';
+const GRAPHQL_ENDPOINT = environment.GRAPHQL_ENDPOINT;
 
 const MY_CLOCKS_QUERY = `
   query MyClocks($from: String!, $to: String!) {
@@ -97,7 +98,7 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
   loadingStats = false;
 
   pieChartData: ChartConfiguration<'pie'>['data'] = {
-    labels: ['Presence', 'Retards', 'Absence'],
+    labels: ['Presence', 'Delays', 'Absence'],
     datasets: [
       {
         data: [0, 0, 0],
@@ -172,11 +173,11 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
     this.actionPending = true;
     try {
       await this.sendClockMutation('IN');
-      this.notify.success('Clock in recorded');
+      this.notify.success('Clock in saved');
       await this.refreshDashboard();
     } catch (err) {
       console.error(err);
-      this.notify.error('Unable to start work session');
+      this.notify.error('Impossible to start your work session');
     } finally {
       this.actionPending = false;
     }
@@ -186,11 +187,11 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
     this.actionPending = true;
     try {
       await this.sendClockMutation('OUT');
-      this.notify.success('Clock out recorded');
+      this.notify.success('Cloak out saved');
       await this.refreshDashboard();
     } catch (err) {
       console.error(err);
-      this.notify.error('Unable to pause the session');
+      this.notify.error('Impossible to pause your worked session');
     } finally {
       this.actionPending = false;
     }
@@ -214,7 +215,7 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
       this.computeMetrics();
     } catch (err) {
       console.error(err);
-      this.notify.error('Unable to retrieve work data');
+      this.notify.error('Impossible to get your work data');
     } finally {
       this.loadingStats = false;
     }
@@ -345,6 +346,9 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
   }
 
   goToPlanning() {
+    this.router.navigate(['/planning']);
+  }
+  goToTeams(){
     this.router.navigate(['/planning']);
   }
 

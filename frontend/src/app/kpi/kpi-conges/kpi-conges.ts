@@ -13,7 +13,7 @@ export class KpiCongesComponent implements AfterViewInit {
   constructor(private kpiService: KpiService) {}
 
   ngAfterViewInit() {
-    this.kpiService.getConges().subscribe(data => {
+    /*this.kpiService.getConges().subscribe(data => {
       const ctx = this.chartRef.nativeElement.getContext('2d');
       new Chart(ctx!, {
         type: 'doughnut',
@@ -26,6 +26,6 @@ export class KpiCongesComponent implements AfterViewInit {
         },
         options: { cutout: '60%' }
       });
-    });
+    });*/
   }
 }
