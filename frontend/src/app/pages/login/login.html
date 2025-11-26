@@ -19,10 +19,6 @@
                 <h3 class="accent">Good Morning</h3>
                 <p><strong>Login</strong> your account</p>
             </div>
-
-            <button mat-stroked-button type="button" class="theme-toggle" (click)="toggleTheme()">
-                <mat-icon>{{ theme() === 'dark' ? 'light_mode' : 'dark_mode' }}</mat-icon>
-            </button>
         </div>
 
         <mat-card class="auth-card mat-elevation-z8">
@@ -56,6 +52,20 @@
                         <span>Connecting…</span>
                     </span>
                 </ng-template>
+
+                <div class="divider">
+                    <span>OR</span>
+                </div>
+
+                <button class="microsoft-btn full" mat-stroked-button type="button" (click)="loginWithMicrosoft()">
+                    <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="10" height="10" fill="#F25022"/>
+                        <rect x="11" width="10" height="10" fill="#7FBA00"/>
+                        <rect y="11" width="10" height="10" fill="#00A4EF"/>
+                        <rect x="11" y="11" width="10" height="10" fill="#FFB900"/>
+                    </svg>
+                    Sign in with Microsoft
+                </button>
             </form>
         </mat-card>
     </section>
