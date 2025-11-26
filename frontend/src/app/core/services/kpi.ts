@@ -8,8 +8,8 @@ import {
   switchMap,
   Observable,
 } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
-const GRAPHQL_ENDPOINT = 'http://localhost:8030/graphql';
 
 export interface PresenceDuJour {
   date: Date;
@@ -30,13 +30,14 @@ export interface Utilisateur {
 export class KpiService {
   constructor(private http: HttpClient) {}
 
+  private readonly GRAPHQL_ENDPOINT = environment.GRAPHQL_ENDPOINT;
   // ───────────────────────────────────────────────
   //   GENERIC GRAPHQL WRAPPER
   // ───────────────────────────────────────────────
   private query<T>(query: string, variables: any = {}): Observable<T | null> {
     return this.http
       .post<{ data: T }>(
-        GRAPHQL_ENDPOINT,
+        this.GRAPHQL_ENDPOINT,
         { query, variables },
         { withCredentials: true }
       )
