@@ -21,8 +21,6 @@ import {
 import { KpiAssiduiteComponent } from '../../kpi/kpi-assiduite/kpi-assiduite';
 import { KpiComparatifComponent } from '../../kpi/kpi-comparatif/kpi-comparatif';
 
-// Fake data for testing
-import { users } from '../../core/data/registre_presence_oct_nov';
 
 @Component({
   selector: 'app-enterprise-dashboard',
