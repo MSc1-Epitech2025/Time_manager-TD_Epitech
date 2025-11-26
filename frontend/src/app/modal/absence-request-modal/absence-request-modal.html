@@ -4,14 +4,14 @@
   <div class="scrollable-content">
     <mat-form-field appearance="outline" class="w-full">
       <mat-label>Start Date</mat-label>
-      <input matInput [matDatepicker]="pickerStart" [(ngModel)]="startDate" placeholder="Select start date" />
+      <input matInput [matDatepicker]="pickerStart" [(ngModel)]="startDate" (ngModelChange)="onStartDateChange()" placeholder="Select start date" />
       <mat-datepicker-toggle matIconSuffix [for]="pickerStart"></mat-datepicker-toggle>
       <mat-datepicker #pickerStart></mat-datepicker>
     </mat-form-field>
 
     <mat-form-field appearance="outline" class="w-full">
       <mat-label>End Date</mat-label>
-      <input matInput [matDatepicker]="pickerEnd" [(ngModel)]="endDate" placeholder="Select end date" />
+      <input matInput [matDatepicker]="pickerEnd" [(ngModel)]="endDate" (ngModelChange)="onEndDateChange()" placeholder="Select end date" />
       <mat-datepicker-toggle matIconSuffix [for]="pickerEnd"></mat-datepicker-toggle>
       <mat-datepicker #pickerEnd></mat-datepicker>
     </mat-form-field>

@@ -183,6 +183,10 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
     } else {
       await this.startWork();
     }
+    // Add 3 second cooldown to prevent spam
+    setTimeout(() => {
+      this.actionPending = false;
+    }, 3000);
   }
 
   private async startWork() {
@@ -195,7 +199,6 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
     } catch (err: any) {
       console.error('Start work error:', err);
       this.notify.error(err.message || 'Unable to start work session');
-    } finally {
       this.actionPending = false;
     }
   }
@@ -210,7 +213,6 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
     } catch (err: any) {
       console.error('Stop work error:', err);
       this.notify.error(err.message || 'Unable to pause the session');
-    } finally {
       this.actionPending = false;
     }
   }

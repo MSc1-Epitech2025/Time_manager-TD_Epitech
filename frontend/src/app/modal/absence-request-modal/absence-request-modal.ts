@@ -86,6 +86,34 @@ export class AbsenceRequestModal implements OnInit {
     }
   }
 
+  onStartDateChange(): void {
+    if (this.startDate && this.endDate) {
+      const start = new Date(this.startDate);
+      const end = new Date(this.endDate);
+      start.setHours(0, 0, 0, 0);
+      end.setHours(0, 0, 0, 0);
+      // If end date is before start date, adjust end date to match start date
+      if (end < start) {
+        this.endDate = new Date(this.startDate);
+      }
+    } else if (this.startDate && !this.endDate) {
+      this.endDate = new Date(this.startDate);
+    }
+  }
+
+  onEndDateChange(): void {
+    if (this.startDate && this.endDate) {
+      const start = new Date(this.startDate);
+      const end = new Date(this.endDate);
+      start.setHours(0, 0, 0, 0);
+      end.setHours(0, 0, 0, 0);
+      // If end date is before start date, adjust start date to match end date
+      if (end < start) {
+        this.startDate = new Date(this.endDate);
+      }
+    }
+  }
+
   get isSingleDay(): boolean {
     if (!this.startDate || !this.endDate) return true;
     const start = new Date(this.startDate);
