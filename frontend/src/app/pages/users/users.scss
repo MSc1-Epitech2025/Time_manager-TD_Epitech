@@ -1,8 +1,6 @@
-/* === Variables === */
+// Variables
 $radius: 12px;
 $shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-
-/* === Couleurs principales === */
 :root {
   --c-bg: #f9fafb;
   --c-text: #1e1e2b;
@@ -29,7 +27,7 @@ $shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 }
 
-/* === Structure principale === */
+// Main structure
 .dashboard {
   display: flex;
   height: 100vh;
@@ -40,7 +38,7 @@ $shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
-/* === Main Content === */
+// Main content
 .main-content {
   flex: 1;
   padding: 1rem 2rem 2rem 2rem;
@@ -49,7 +47,7 @@ $shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   flex-direction: column;
 }
 
-/* === Header === */
+// Header
 .header {
   margin-bottom: 1.5rem;
 
@@ -63,7 +61,7 @@ $shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 }
 
-/* === Content Wrapper === */
+// Content wrapper
 .content-wrapper {
   display: grid;
   grid-template-columns: 400px 1fr;
@@ -72,7 +70,7 @@ $shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
-/* === User List Section === */
+// User list section
 .user-list-section {
   display: flex;
   flex-direction: column;
@@ -80,7 +78,7 @@ $shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
-/* === Search Section === */
+// Search section
 .search-section {
   display: flex;
   gap: 1rem;
@@ -141,7 +139,7 @@ $shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 }
 
-/* === User List === */
+// User list
 .user-list {
   display: flex;
   flex-direction: column;
@@ -220,7 +218,7 @@ $shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   text-overflow: ellipsis;
 }
 
-/* === User Form Section === */
+// User form section
 .user-form-section {
   background: var(--c-card);
   border: 1px solid var(--c-border);
@@ -317,7 +315,7 @@ $shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 }
 
-/* === Status Section === */
+// Status section
 .status-section {
   padding: 2rem;
   text-align: center;
@@ -333,7 +331,7 @@ $shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   font-weight: 500;
 }
 
-/* === Responsive === */
+// Responsive
 @media (max-width: 1200px) {
   .content-wrapper {
     grid-template-columns: 350px 1fr;

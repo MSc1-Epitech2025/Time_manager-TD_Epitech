@@ -266,7 +266,7 @@
   height: 100%;
 }
 
-// Card
+// Presence card
 .presence-card {
   background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(244, 114, 182, 0.15));
   backdrop-filter: blur(12px);
@@ -280,7 +280,7 @@
   position: relative;
 }
 
-// filter
+// Filter container
 .filter-container {
   margin-bottom: 1rem;
   display: flex;
@@ -300,7 +300,7 @@
   color: black;
 }
 
-// Stats
+// Statistics
 .stats {
   position: absolute;
   top: 0;
@@ -335,7 +335,7 @@
   color: #d1d5db;
 }
 
-// Table
+// Presence table
 .presence-table {
   width: 100%;
   border-collapse: collapse;
@@ -373,15 +373,8 @@
   background: rgba(239, 68, 68, 0.25);
   color: #ef4444;
 }
-// Presence badge
-.status-badge {
-  display: inline-block;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background-color: var(--c-accent);
-  color: white;
-}
 
+// Presence badge variations
 .status-badge[data-percent] {
   background-color: green;
 }
@@ -428,7 +421,7 @@ background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(244, 114, 182,
   font-size: 0.85rem;
 }
 
-// Card
+// Clock card
 .clock-card {
   background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(244, 114, 182, 0.15));
   backdrop-filter: blur(12px);
@@ -447,7 +440,7 @@ background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(244, 114, 182,
   font-weight: 600;
 }
 
-// Table
+// Clock table
 .clock-table {
   width: 100%;
   border-collapse: collapse;
@@ -492,7 +485,7 @@ background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(244, 114, 182,
   margin-bottom: 1rem;
 }
 
-/* Label */
+// Label styling
 .filter-container.date-filter label {
   color: #f9fafb;
   font-weight: 600;
@@ -521,7 +514,7 @@ background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(244, 114, 182,
   padding-right: 2rem; 
 }
 
-// Hover & Focus
+// Hover and focus states
 .filter-container.date-filter select:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
@@ -531,7 +524,7 @@ background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(244, 114, 182,
   background-color: rgba(255, 255, 255, 0.15);
 }
 
-// KPI Camenbert
+// KPI pie chart list
 .kpi-list {
   display: flex;
   flex-direction: column;

@@ -115,9 +115,7 @@
 }
 
 full-calendar {
-    /* Calendar event styling based on colors set in TypeScript */
     ::ng-deep {
-        /* Fix white background issues */
         .fc,
         .fc-view,
         .fc-view-harness,

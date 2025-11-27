@@ -1,4 +1,4 @@
-/* === Variables === */
+// colors variables
 :root {
   --c-bg: #1e1e28;
   --c-text: #f9fafb;
@@ -12,7 +12,7 @@
   --c-danger: #ef4444;
 }
 
-/* === Main Layout === */
+// main layout
 .employee-dashboard {
   display: flex;
   height: 100vh;
@@ -33,7 +33,7 @@
   gap: 1rem;
 }
 
-/* === Material Card Customization === */
+// material card customization
 ::ng-deep .employee-dashboard {
   mat-card {
     background: var(--c-card);
@@ -112,7 +112,7 @@
   }
 }
 
-/* === Header Card === */
+// header card
 .header-card {
   background: linear-gradient(135deg, #a78bfa 0%, #f472b6 100%);
   border: none !important;
@@ -157,14 +157,14 @@
   }
 }
 
-/* === Top Zone === */
+// top zone
 .top-zone {
   display: grid;
   grid-template-columns: 1.5fr 2fr;
   gap: 1rem;
 }
 
-/* === Work Status Card === */
+// work status card
 .work-status-card {
   mat-card-content {
     display: flex;
@@ -227,7 +227,7 @@
   }
 }
 
-/* === Leave Balance Card === */
+// leave balance card
 .leave-balance-card {
   .empty-state-small {
     color: var(--c-muted);
@@ -256,7 +256,7 @@
   }
 }
 
-/* === Metrics Zone === */
+// metrics zone
 .metrics-zone {
   display: grid;
   grid-template-columns: 1fr 2fr;
@@ -265,7 +265,7 @@
   overflow: hidden;
 }
 
-/* === KPI Card === */
+// kpi card
 .kpi-card {
   .kpi-wrapper {
     flex: 1;
@@ -313,7 +313,7 @@
   }
 }
 
-/* === Absences Card === */
+// absences card
 .absences-card {
   display: flex;
   flex-direction: column;
@@ -428,7 +428,7 @@
   }
 }
 
-/* === Loading & Empty States === */
+// loading & empty states
 .loading-spinner {
   display: flex;
   flex-direction: column;
@@ -479,7 +479,7 @@
   to { transform: rotate(360deg); }
 }
 
-/* === Responsive === */
+// responsive
 @media (max-width: 1200px) {
   .top-zone {
     grid-template-columns: 1fr 1fr;
