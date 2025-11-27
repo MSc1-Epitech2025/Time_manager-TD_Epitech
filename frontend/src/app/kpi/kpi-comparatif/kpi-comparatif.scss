@@ -1,4 +1,4 @@
-/* === Couleurs principales === */
+// colors variables
 :root {
   --c-bg: #f9fafb;
   --c-text: #1e1e2b;
@@ -55,6 +55,6 @@
 canvas {
   display: block;
   min-height: 300px;
-  width: 100% !important;
-  height: auto !important;
+  width: 100% ;
+  height: auto ;
 }

@@ -104,6 +104,12 @@ Time_manager-TD_Epitech/
 │   ├── Dockerfile
 │   ├── package.json
 │   └── src/
+│   └── Dependencies:
+│       ├── @angular/material (v20.2.8) - UI component library
+│       ├── @angular/cdk (v20.2.8) - Component Dev Kit
+│       ├── PrimeNG (v20.2.0) - UI component library
+│       ├── FullCalendar (v6.1.19) - Calendar integration
+│       └── Chart.js (v4.5.1) - Data visualization
 │
 ├── reverse-proxy/               # Reverse proxy (nginx)
 │   └── nginx.conf

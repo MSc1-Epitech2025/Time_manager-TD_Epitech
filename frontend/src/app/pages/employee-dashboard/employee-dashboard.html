@@ -1,131 +1,151 @@
 <div class="employee-dashboard">
   <main class="main-content">
-    <header class="header">
-      <div class="profile-section">
-        <div class="profile-info">
-          <h1 class="user-name">{{ user.name }}</h1>
-          <p class="user-role">{{ user.poste || 'Position not set' }}</p>
-          <span class="user-email">{{ user.email }}</span>
+    <!-- Header Card -->
+    <mat-card class="header-card" appearance="outlined">
+      <mat-card-content>
+        <div class="profile-section">
+          <div class="profile-info">
+            <h1 class="user-name">{{ user.name }}</h1>
+            <p class="user-role">{{ user.poste || 'Position not set' }}</p>
+            <span class="user-email">{{ user.email }}</span>
+          </div>
+          <img src="assets/profile-placeholder.png" alt="Profile" class="profile-img" />
         </div>
-        <img src="assets/profile-placeholder.png" alt="Profile" class="profile-img" />
-      </div>
-    </header>
+      </mat-card-content>
+    </mat-card>
 
+    <!-- Top Zone -->
     <section class="top-zone">
-      <div class="work-status">
-        <div class="status-info">
-          <div class="status-badge" [class.active]="isWorking">
-            <mat-icon>{{ isWorking ? 'schedule' : 'schedule' }}</mat-icon>
-            <span>{{ isWorking ? 'Working' : 'Not Working' }}</span>
+      <!-- Work Status Card -->
+      <mat-card class="work-status-card" appearance="outlined">
+        <mat-card-content>
+          <div class="status-info">
+            <mat-chip-set>
+              <mat-chip [highlighted]="isWorking" [class.active]="isWorking">
+                <mat-icon>{{ isWorking ? 'schedule' : 'schedule' }}</mat-icon>
+                {{ isWorking ? 'Working' : 'Not Working' }}
+              </mat-chip>
+            </mat-chip-set>
+            <p class="hours-today">
+              <span class="label">Today:</span>
+              <span class="value">{{ todayHoursMinutes.hours }}h {{ todayHoursMinutes.minutes }}m</span>
+            </p>
           </div>
-          <p class="hours-today">
-            <span class="label">Today:</span>
-            <span class="value">{{ todayHoursMinutes.hours }}h {{ todayHoursMinutes.minutes }}m</span>
-          </p>
-        </div>
-        <button
-          class="btn-clock"
-          [class.clock-in]="!isWorking"
-          [class.clock-out]="isWorking"
-          (click)="toggleWorkStatus()"
-          [disabled]="actionPending">
-          <mat-icon>{{ isWorking ? 'pause_circle_outline' : 'play_circle_outline' }}</mat-icon>
-          <span>{{ isWorking ? 'Clock Out' : 'Clock In' }}</span>
-        </button>
-      </div>
+          <button
+            mat-raised-button
+            class="btn-clock"
+            [class.clock-in]="!isWorking"
+            [class.clock-out]="isWorking"
+            (click)="toggleWorkStatus()"
+            [disabled]="actionPending">
+            <mat-icon>{{ isWorking ? 'pause_circle_outline' : 'play_circle_outline' }}</mat-icon>
+            <span>{{ isWorking ? 'Clock Out' : 'Clock In' }}</span>
+          </button>
+        </mat-card-content>
+      </mat-card>
 
-      <div class="leave-balance-card">
-        <h3>Leave Balance</h3>
-        <div *ngIf="loadingLeaveBalance" class="loading-spinner">
-          <mat-icon class="spin">refresh</mat-icon>
-        </div>
-        <div *ngIf="!loadingLeaveBalance && leaveAccounts.length === 0" class="empty-state-small">
-          No leave data
-        </div>
-        <div *ngIf="!loadingLeaveBalance && leaveAccounts.length > 0" class="leave-list-horizontal">
-          <div class="leave-item" *ngFor="let account of leaveAccounts">
-            <span class="leave-type">{{ account.leaveType }}</span>
-            <span class="leave-balance">{{ account.balance }} days</span>
+      <!-- Leave Balance Card -->
+      <mat-card class="leave-balance-card" appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>Leave Balance</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div *ngIf="loadingLeaveBalance" class="loading-spinner">
+            <mat-icon class="spin">refresh</mat-icon>
           </div>
-        </div>
-      </div>
+          <div *ngIf="!loadingLeaveBalance && leaveAccounts.length === 0" class="empty-state-small">
+            No leave data
+          </div>
+          <mat-list *ngIf="!loadingLeaveBalance && leaveAccounts.length > 0">
+            <mat-list-item *ngFor="let account of leaveAccounts; let last = last">
+              <div matListItemTitle class="leave-item-row">
+                <span class="leave-type">{{ account.leaveType }}</span>
+                <span class="leave-balance-value">{{ account.balance }} days</span>
+              </div>
+              <mat-divider *ngIf="!last"></mat-divider>
+            </mat-list-item>
+          </mat-list>
+        </mat-card-content>
+      </mat-card>
     </section>
 
+    <!-- Metrics Zone -->
     <section class="metrics-zone">
-      <div class="card kpi-card">
-        <h3>
-          <mat-icon>insights</mat-icon>
-          Weekly Statistics
-        </h3>
-        <div class="kpi-wrapper">
-          <div class="kpi-container" *ngIf="!loadingKpi && kpiData; else loadingKpiTemplate">
-            <div class="kpi-visual">
-              <div class="kpi-bar-item">
-                <div class="kpi-bar-header">
-                  <span class="kpi-bar-label">Presence Rate</span>
-                  <span class="kpi-bar-value">{{ kpiData.presenceRate | number:'1.1-1' }}%</span>
+      <!-- KPI Card -->
+      <mat-card class="kpi-card" appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>insights</mat-icon>
+            Weekly Statistics
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="kpi-wrapper">
+            <div class="kpi-container" *ngIf="!loadingKpi && kpiData; else loadingKpiTemplate">
+              <div class="kpi-visual">
+                <!-- Presence Rate -->
+                <div class="kpi-bar-item">
+                  <div class="kpi-bar-header">
+                    <span class="kpi-bar-label">Presence Rate</span>
+                    <span class="kpi-bar-value">{{ kpiData.presenceRate | number:'1.1-1' }}%</span>
+                  </div>
+                  <mat-progress-bar mode="determinate" [value]="kpiData.presenceRate"></mat-progress-bar>
                 </div>
-                <div class="kpi-bar-track">
-                  <div class="kpi-bar-fill" [style.width.%]="kpiData.presenceRate"></div>
-                </div>
-              </div>
 
-              <div class="kpi-bar-item">
-                <div class="kpi-bar-header">
-                  <span class="kpi-bar-label">Avg Hours/Day</span>
-                  <span class="kpi-bar-value">{{ kpiData.avgHoursPerDay | number:'1.1-1' }}h / 8h</span>
+                <!-- Avg Hours/Day -->
+                <div class="kpi-bar-item">
+                  <div class="kpi-bar-header">
+                    <span class="kpi-bar-label">Avg Hours/Day</span>
+                    <span class="kpi-bar-value">{{ kpiData.avgHoursPerDay | number:'1.1-1' }}h / 8h</span>
+                  </div>
+                  <mat-progress-bar mode="determinate" [value]="(kpiData.avgHoursPerDay / 8) * 100"></mat-progress-bar>
                 </div>
-                <div class="kpi-bar-track">
-                  <div class="kpi-bar-fill" [style.width.%]="(kpiData.avgHoursPerDay / 8) * 100"></div>
-                </div>
-              </div>
 
-              <div class="kpi-bar-item">
-                <div class="kpi-bar-header">
-                  <span class="kpi-bar-label">Overtime</span>
-                  <span class="kpi-bar-value">{{ kpiData.overtimeHours | number:'1.1-1' }}h</span>
+                <!-- Overtime -->
+                <div class="kpi-bar-item">
+                  <div class="kpi-bar-header">
+                    <span class="kpi-bar-label">Overtime</span>
+                    <span class="kpi-bar-value">{{ kpiData.overtimeHours | number:'1.1-1' }}h</span>
+                  </div>
+                  <mat-progress-bar class="overtime" mode="determinate" [value]="Math.min((kpiData.overtimeHours / 10) * 100, 100)"></mat-progress-bar>
                 </div>
-                <div class="kpi-bar-track">
-                  <div class="kpi-bar-fill overtime" [style.width.%]="Math.min((kpiData.overtimeHours / 10) * 100, 100)"></div>
-                </div>
-              </div>
 
-              <div class="kpi-bar-item">
-                <div class="kpi-bar-header">
-                  <span class="kpi-bar-label">Punctuality</span>
-                  <span class="kpi-bar-value">{{ 100 - kpiData.punctuality.lateRate | number:'1.1-1' }}%</span>
+                <!-- Punctuality -->
+                <div class="kpi-bar-item">
+                  <div class="kpi-bar-header">
+                    <span class="kpi-bar-label">Punctuality</span>
+                    <span class="kpi-bar-value">{{ 100 - kpiData.punctuality.lateRate | number:'1.1-1' }}%</span>
+                  </div>
+                  <mat-progress-bar mode="determinate" [value]="100 - kpiData.punctuality.lateRate"></mat-progress-bar>
                 </div>
-                <div class="kpi-bar-track">
-                  <div class="kpi-bar-fill" [style.width.%]="100 - kpiData.punctuality.lateRate"></div>
-                </div>
-              </div>
 
-              <div class="kpi-bar-item">
-                <div class="kpi-bar-header">
-                  <span class="kpi-bar-label">Avg Delay</span>
-                  <span class="kpi-bar-value">{{ kpiData.punctuality.avgDelayMinutes | number:'1.0-0' }}min</span>
-                </div>
-                <div class="kpi-bar-track">
-                  <div class="kpi-bar-fill warning" [style.width.%]="Math.min((kpiData.punctuality.avgDelayMinutes / 30) * 100, 100)"></div>
+                <!-- Avg Delay -->
+                <div class="kpi-bar-item">
+                  <div class="kpi-bar-header">
+                    <span class="kpi-bar-label">Avg Delay</span>
+                    <span class="kpi-bar-value">{{ kpiData.punctuality.avgDelayMinutes | number:'1.0-0' }}min</span>
+                  </div>
+                  <mat-progress-bar class="warning" mode="determinate" [value]="Math.min((kpiData.punctuality.avgDelayMinutes / 30) * 100, 100)"></mat-progress-bar>
                 </div>
               </div>
             </div>
+            <ng-template #loadingKpiTemplate>
+              <div class="loading-spinner">
+                <mat-icon class="spin">refresh</mat-icon>
+                <p>Loading statistics...</p>
+              </div>
+            </ng-template>
           </div>
-          <ng-template #loadingKpiTemplate>
-            <div class="loading-spinner">
-              <mat-icon class="spin">refresh</mat-icon>
-              <p>Loading statistics...</p>
-            </div>
-          </ng-template>
-        </div>
-      </div>
+        </mat-card-content>
+      </mat-card>
 
-      <div class="card absences-card">
-        <div class="absences-header">
-          <h3>
+      <!-- Absences Card -->
+      <mat-card class="absences-card" appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>
             <mat-icon>event_note</mat-icon>
             Recent Absences
-          </h3>
+          </mat-card-title>
           <div class="absences-actions">
             <button mat-raised-button class="action-btn-small absence" (click)="requestAbsence()">
               <mat-icon>event_busy</mat-icon>
@@ -136,31 +156,34 @@
               <span>My Calendar</span>
             </button>
           </div>
-        </div>
-        <div *ngIf="loadingAbsences" class="loading-spinner">
-          <mat-icon class="spin">refresh</mat-icon>
-        </div>
-        <div *ngIf="!loadingAbsences && recentAbsences.length === 0" class="empty-state">
-          <mat-icon>check_circle</mat-icon>
-          <p>No recent absences</p>
-        </div>
-        <div *ngIf="!loadingAbsences && recentAbsences.length > 0" class="absences-list">
-          <div class="absence-item" *ngFor="let absence of recentAbsences">
-            <div class="absence-header">
-              <span class="absence-type">{{ formatAbsenceType(absence.type) }}</span>
-              <span class="absence-status" [class]="absence.status.toLowerCase()">
-                {{ absence.status }}
-              </span>
-            </div>
-            <div class="absence-dates">
-              {{ formatDate(absence.startDate) }} - {{ formatDate(absence.endDate) }}
-            </div>
-            <div class="absence-reason" *ngIf="absence.reason">
-              {{ absence.reason }}
-            </div>
+        </mat-card-header>
+        <mat-card-content class="absences-card-content">
+          <div *ngIf="loadingAbsences" class="loading-spinner">
+            <mat-icon class="spin">refresh</mat-icon>
           </div>
-        </div>
-      </div>
+          <div *ngIf="!loadingAbsences && recentAbsences.length === 0" class="empty-state">
+            <mat-icon>check_circle</mat-icon>
+            <p>No recent absences</p>
+          </div>
+          <div *ngIf="!loadingAbsences && recentAbsences.length > 0" class="absences-list-wrapper">
+            <mat-list class="absences-list">
+              <mat-list-item *ngFor="let absence of recentAbsences; let last = last" class="absence-item">
+                <div matListItemTitle class="absence-content">
+                  <div class="absence-left">
+                    <span class="absence-type">{{ formatAbsenceType(absence.type) }}</span>
+                    <span class="absence-dates">{{ formatDate(absence.startDate) }} - {{ formatDate(absence.endDate) }}</span>
+                    <span class="absence-reason" *ngIf="absence.reason">{{ absence.reason }}</span>
+                  </div>
+                  <mat-chip [class]="absence.status.toLowerCase()">
+                    {{ absence.status }}
+                  </mat-chip>
+                </div>
+                <mat-divider *ngIf="!last"></mat-divider>
+              </mat-list-item>
+            </mat-list>
+          </div>
+        </mat-card-content>
+      </mat-card>
     </section>
   </main>
 </div>
