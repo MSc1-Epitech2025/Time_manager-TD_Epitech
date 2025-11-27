@@ -20,6 +20,7 @@ import { WeatherService, WeatherSnapshot } from '../../core/services/weather';
 import { AbsenceService, Absence } from '../../core/services/absence';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { AbsenceRequestModal } from '../../modal/absence-request-modal/absence-request-modal';
+import { environment } from '../../../environments/environment';
 
 type ClockKind = 'IN' | 'OUT';
 
