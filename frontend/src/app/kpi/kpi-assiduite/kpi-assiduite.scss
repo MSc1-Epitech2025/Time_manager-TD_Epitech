@@ -1,4 +1,4 @@
-/* === Couleurs principales === */
+// colors variables
 :root {
   --c-bg: #f9fafb;
   --c-text: #1e1e2b;
@@ -9,7 +9,7 @@
   --c-muted: #6b7280;
 }
 
-/* === Carte KPI === */
+// kpi card
 .kpi-card {
   background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(244, 114, 182, 0.15));
   backdrop-filter: blur(12px);
@@ -25,13 +25,13 @@
   width: 100%;
 }
 
-/* === Titre KPI === */
+// kpi title
 .kpi-header h3 {
   margin-bottom: 0.5rem;
   color: var(--c-text);
 }
 
-/* === Conteneur du graphique === */
+// chart container
 .chart-container {
   position: relative;
   width: 100%;
@@ -42,10 +42,10 @@
   align-items: center;
 }
 
-/* === Canvas du graphique === */
+// canvas
 canvas {
-  width: 100% !important;
-  height: 100% !important;
+  width: 100% ;
+  height: 100% ;
   max-width: 100%;
   color: #333;
 }

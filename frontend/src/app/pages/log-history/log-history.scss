@@ -1,9 +1,7 @@
-/* === Variables === */
+// Variables
 $sidebar-width: 260px;
 $radius: 12px;
 $shadow: 0 6px 18px rgba(16, 24, 40, 0.08);
-
-/* === Couleurs principales === */
 :root {
   --c-bg: #f9fafb;
   --c-text: #1e1e2b;
@@ -14,7 +12,7 @@ $shadow: 0 6px 18px rgba(16, 24, 40, 0.08);
   --c-muted: #6b7280;
 }
 
-/* === Structure principale === */
+// Main structure
 .dashboard {
   display: flex;
   height: 100vh;
@@ -25,7 +23,7 @@ $shadow: 0 6px 18px rgba(16, 24, 40, 0.08);
   overflow: hidden;
 }
 
-/* === SIDEBAR === */
+// Sidebar
 .sidebar {
   width: $sidebar-width;
   background: #1e1e2b;
@@ -96,7 +94,7 @@ $shadow: 0 6px 18px rgba(16, 24, 40, 0.08);
   }
 }
 
-/* === MAIN CONTENT === */
+// Main content
 .main-content {
   flex: 1;
   display: flex;
@@ -107,7 +105,7 @@ $shadow: 0 6px 18px rgba(16, 24, 40, 0.08);
     position: relative;
 }
 
-/* === HEADER === */
+// Header
 .header {
   background: linear-gradient(90deg, #a78bfa, #f472b6);
   padding: 1rem 2rem;
@@ -157,7 +155,7 @@ $shadow: 0 6px 18px rgba(16, 24, 40, 0.08);
     }
 }
 
-/* === SEARCH SECTION === */
+// Search section
 .search-section {
   display: flex;
   align-items: center;
@@ -223,7 +221,7 @@ $shadow: 0 6px 18px rgba(16, 24, 40, 0.08);
   }
 }
 
-/* === LOGS TABLE === */
+// Logs table
 .logs-table { 
     width: 100%;
     padding: 5px;
@@ -316,8 +314,7 @@ th, td {
     }
 }
 
-
-/* === RESPONSIVE === */
+// Responsive
 @media (max-width: 980px) {
   .dashboard {
     flex-direction: column;

@@ -1,4 +1,4 @@
-/* === Couleurs principales === */
+// colors variables
 :root {
   --c-bg: #f9fafb;
   --c-text: #1e1e2b;
@@ -9,7 +9,7 @@
   --c-muted: #6b7280;
 }
 
-/* ===== Layout global ===== */
+// main container
 .dashboard-container {
   display: flex;
   background-color: rgb(28, 26, 26);
@@ -20,7 +20,7 @@
   font-family: 'Inter', sans-serif;
 }
 
-/* ===== Header ===== */
+// header
 .dashboard-header {
   display: flex;
   justify-content: space-between;
@@ -66,8 +66,7 @@
   background: var(--c-accent);
 }
 
-//------------------ Summary Cards ------------------//
-/* ===== Layout ===== */
+// layout
 .dashboard-summary {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
@@ -75,7 +74,7 @@
   margin-bottom: 2rem;
 }
 
-/* ===== Cards ===== */
+// cards
 .summary-card {
   display: flex;
   align-items: center;
@@ -92,12 +91,12 @@
   box-shadow: 0 8px 22px rgba(0,0,0,0.12);
 }
 
-/* stats impact */
+// stats impact
 .summary-card.positive { border-top: 4px solid #16a34a; }
 .summary-card.negative { border-top: 4px solid #dc2626; }
 .summary-card.neutral  { border-top: 4px solid #3b82f6; }
 
-/* ===== Icon Circle ===== */
+// icon circle
 .card-icon {
   width: 55px;
   height: 55px;
@@ -124,14 +123,14 @@
   opacity: 0.7;
 }
 
-/* ===== Text zone ===== */
+// text zone
 .card-info h3 {
   margin: 3px 0 0;
   font-size: 0.95rem;
   font-weight: 600;
 }
 
-/* ===== Stats row ===== */
+// stats row
 .stats-row {
   display: flex;
   align-items: center;
@@ -143,8 +142,8 @@
   font-weight: 700;
 }
 
-//----------------------------------------------------
-/* ===== Navigation Tabs ===== */
+
+// navigation tabs
 .navigation-tabs {
   display: flex;
   justify-content: space-between;
@@ -216,7 +215,7 @@
   align-items: center;
 }
 
-/* ===== Grille KPI ===== */
+// grid KPI
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
@@ -267,8 +266,7 @@
   height: 100%;
 }
 
-//-------- Liste des employés --------//
-/* ----- CARD ----- */
+// Presence card
 .presence-card {
   background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(244, 114, 182, 0.15));
   backdrop-filter: blur(12px);
@@ -282,7 +280,7 @@
   position: relative;
 }
 
-/* ----- Filter ----- */
+// Filter container
 .filter-container {
   margin-bottom: 1rem;
   display: flex;
@@ -302,7 +300,7 @@
   color: black;
 }
 
-/* ----- Stats zone ----- */
+// Statistics
 .stats {
   position: absolute;
   top: 0;
@@ -337,7 +335,7 @@
   color: #d1d5db;
 }
 
-/* ----- Table ----- */
+// Presence table
 .presence-table {
   width: 100%;
   border-collapse: collapse;
@@ -358,7 +356,7 @@
   font-weight: 600;
 }
 
-/* ----- Status Badges ----- */
+// Status Badges
 .status-badge {
   padding: 0.35rem 0.75rem;
   border-radius: 0.6rem;
@@ -375,15 +373,8 @@
   background: rgba(239, 68, 68, 0.25);
   color: #ef4444;
 }
-/* --------Presence badge-------- */
-.status-badge {
-  display: inline-block;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background-color: var(--c-accent);
-  color: white;
-}
 
+// Presence badge variations
 .status-badge[data-percent] {
   background-color: green;
 }
@@ -393,7 +384,6 @@
 }
 
 
-//---------------------- Tab suivi absences -----------------//
 .podium-card {
 background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(244, 114, 182, 0.15));
   backdrop-filter: blur(12px);
@@ -423,7 +413,7 @@ background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(244, 114, 182,
   height: 130px;
 }
 
-/* Si aucune data */
+
 .none {
   text-align: center;
   color: #d1d5db;
@@ -431,8 +421,7 @@ background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(244, 114, 182,
   font-size: 0.85rem;
 }
 
-//-------- Liste des employés avec pointeuse --------//
-/* ----- Carte générale ----- */
+// Clock card
 .clock-card {
   background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(244, 114, 182, 0.15));
   backdrop-filter: blur(12px);
@@ -451,7 +440,7 @@ background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(244, 114, 182,
   font-weight: 600;
 }
 
-/* ----- Tableau ----- */
+// Clock table
 .clock-table {
   width: 100%;
   border-collapse: collapse;
@@ -470,7 +459,6 @@ background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(244, 114, 182,
   font-weight: 600;
 }
 
-/* ----- Badge horaire ----- */
 .clock-badge {
   padding: 0.35rem 0.75rem;
   border-radius: 0.6rem;
@@ -480,7 +468,7 @@ background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(244, 114, 182,
   color: #c084fc;
 }
 
-/* ----- Badge temps de travail ----- */
+// Worktime badge
 .worktime-badge {
   padding: 0.35rem 0.75rem;
   border-radius: 0.6rem;
@@ -490,7 +478,6 @@ background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(244, 114, 182,
   color: #34d399;
 }
 
-//---------------- Filter date KPI ----------------//
 .filter-container.date-filter {
   display: flex;
   align-items: center;
@@ -498,7 +485,7 @@ background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(244, 114, 182,
   margin-bottom: 1rem;
 }
 
-/* Label */
+// Label styling
 .filter-container.date-filter label {
   color: #f9fafb;
   font-weight: 600;
@@ -527,7 +514,7 @@ background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(244, 114, 182,
   padding-right: 2rem; 
 }
 
-/* Hover & Focus */
+// Hover and focus states
 .filter-container.date-filter select:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
@@ -537,7 +524,7 @@ background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(244, 114, 182,
   background-color: rgba(255, 255, 255, 0.15);
 }
 
-//---------------- KPI Camenbert ----------------//
+// KPI pie chart list
 .kpi-list {
   display: flex;
   flex-direction: column;

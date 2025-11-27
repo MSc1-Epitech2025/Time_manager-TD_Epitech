@@ -1,67 +1,189 @@
 <div class="employee-dashboard">
   <main class="main-content">
-    <div class="header">
-      <h2>Employee Dashboard</h2>
-    </div>
-
-    <header class="content-grid profile-zone">
-      <div class="profile-card">
-        <img src="img/userProfil.png" alt="Profil" class="profile-img" />
-        <div class="profile-info">
-          <h3>{{ user.name }} </h3>
-          <span class="email">{{ user.email }}</span>
-          <p>{{ user.poste || 'No information' }}</p>
-        </div>
-      </div>
-
-      <div class="work-status">
-        <p class="status-text">
-          Time worked today :
-          <span>{{ todayHoursMinutes.hours }}h {{ todayHoursMinutes.minutes }}m</span>
-        </p>
-        <p class="status-subtext" *ngIf="isWorking">Session en cours depuis <span class="timer-text">{{ formattedTimer }}</span></p>
-        <button
-          class="btn btn-primary"
-          (click)="toggleWorkStatus()"
-          [disabled]="actionPending">
-          <mat-icon>{{ isWorking ? 'pause_circle' : 'play_circle' }}</mat-icon>
-          {{ statusLabel === 'Demarrer' ? 'Start' : 'Pause' }}
-        </button>
-      </div>
-    </header>
-
-    <section class="content-grid metrics-zone">
-      <div class="card large">
-        <h3>Global view</h3>
-        <mat-card class="chart-card">
-          <div class="chart-container" *ngIf="!loadingStats; else loading">
-            <canvas
-              baseChart
-              [data]="pieChartData"
-              [options]="chartOptions"
-              chartType="pie"></canvas>
+    <!-- Header Card -->
+    <mat-card class="header-card" appearance="outlined">
+      <mat-card-content>
+        <div class="profile-section">
+          <div class="profile-info">
+            <h1 class="user-name">{{ user.name }}</h1>
+            <p class="user-role">{{ user.poste || 'Position not set' }}</p>
+            <span class="user-email">{{ user.email }}</span>
           </div>
-          <ng-template #loading>
-            <div class="loading">Loading your statistic...</div>
-          </ng-template>
-        </mat-card>
-      </div>
+          <img src="assets/profile-placeholder.png" alt="Profile" class="profile-img" />
+        </div>
+      </mat-card-content>
+    </mat-card>
 
-      <div class="card small manager-card">
-        <h3>Quick Actions</h3>
-        <button mat-raised-button color="primary" (click)="goToPlanning()">
-          <mat-icon>calendar_month</mat-icon>
-            View my schedule
-        </button>
-        <button mat-raised-button color="primary" (click)="goToPlanning()">
-          <mat-icon>groups</mat-icon>
-            View my Teams
-        </button>
-        <button mat-raised-button color="primary" (click)="goToPlanning()">
-          <mat-icon>calendar_month</mat-icon>
-            View time logs
-        </button>
-      </div>
+    <!-- Top Zone -->
+    <section class="top-zone">
+      <!-- Work Status Card -->
+      <mat-card class="work-status-card" appearance="outlined">
+        <mat-card-content>
+          <div class="status-info">
+            <mat-chip-set>
+              <mat-chip [highlighted]="isWorking" [class.active]="isWorking">
+                <mat-icon>{{ isWorking ? 'schedule' : 'schedule' }}</mat-icon>
+                {{ isWorking ? 'Working' : 'Not Working' }}
+              </mat-chip>
+            </mat-chip-set>
+            <p class="hours-today">
+              <span class="label">Today:</span>
+              <span class="value">{{ todayHoursMinutes.hours }}h {{ todayHoursMinutes.minutes }}m</span>
+            </p>
+          </div>
+          <button
+            mat-raised-button
+            class="btn-clock"
+            [class.clock-in]="!isWorking"
+            [class.clock-out]="isWorking"
+            (click)="toggleWorkStatus()"
+            [disabled]="actionPending">
+            <mat-icon>{{ isWorking ? 'pause_circle_outline' : 'play_circle_outline' }}</mat-icon>
+            <span>{{ isWorking ? 'Clock Out' : 'Clock In' }}</span>
+          </button>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Leave Balance Card -->
+      <mat-card class="leave-balance-card" appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>Leave Balance</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div *ngIf="loadingLeaveBalance" class="loading-spinner">
+            <mat-icon class="spin">refresh</mat-icon>
+          </div>
+          <div *ngIf="!loadingLeaveBalance && leaveAccounts.length === 0" class="empty-state-small">
+            No leave data
+          </div>
+          <mat-list *ngIf="!loadingLeaveBalance && leaveAccounts.length > 0">
+            <mat-list-item *ngFor="let account of leaveAccounts; let last = last">
+              <div matListItemTitle class="leave-item-row">
+                <span class="leave-type">{{ account.leaveType }}</span>
+                <span class="leave-balance-value">{{ account.balance }} days</span>
+              </div>
+              <mat-divider *ngIf="!last"></mat-divider>
+            </mat-list-item>
+          </mat-list>
+        </mat-card-content>
+      </mat-card>
+    </section>
+
+    <!-- Metrics Zone -->
+    <section class="metrics-zone">
+      <!-- KPI Card -->
+      <mat-card class="kpi-card" appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>insights</mat-icon>
+            Weekly Statistics
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="kpi-wrapper">
+            <div class="kpi-container" *ngIf="!loadingKpi && kpiData; else loadingKpiTemplate">
+              <div class="kpi-visual">
+                <!-- Presence Rate -->
+                <div class="kpi-bar-item">
+                  <div class="kpi-bar-header">
+                    <span class="kpi-bar-label">Presence Rate</span>
+                    <span class="kpi-bar-value">{{ kpiData.presenceRate | number:'1.1-1' }}%</span>
+                  </div>
+                  <mat-progress-bar mode="determinate" [value]="kpiData.presenceRate"></mat-progress-bar>
+                </div>
+
+                <!-- Avg Hours/Day -->
+                <div class="kpi-bar-item">
+                  <div class="kpi-bar-header">
+                    <span class="kpi-bar-label">Avg Hours/Day</span>
+                    <span class="kpi-bar-value">{{ kpiData.avgHoursPerDay | number:'1.1-1' }}h / 8h</span>
+                  </div>
+                  <mat-progress-bar mode="determinate" [value]="(kpiData.avgHoursPerDay / 8) * 100"></mat-progress-bar>
+                </div>
+
+                <!-- Overtime -->
+                <div class="kpi-bar-item">
+                  <div class="kpi-bar-header">
+                    <span class="kpi-bar-label">Overtime</span>
+                    <span class="kpi-bar-value">{{ kpiData.overtimeHours | number:'1.1-1' }}h</span>
+                  </div>
+                  <mat-progress-bar class="overtime" mode="determinate" [value]="Math.min((kpiData.overtimeHours / 10) * 100, 100)"></mat-progress-bar>
+                </div>
+
+                <!-- Punctuality -->
+                <div class="kpi-bar-item">
+                  <div class="kpi-bar-header">
+                    <span class="kpi-bar-label">Punctuality</span>
+                    <span class="kpi-bar-value">{{ 100 - kpiData.punctuality.lateRate | number:'1.1-1' }}%</span>
+                  </div>
+                  <mat-progress-bar mode="determinate" [value]="100 - kpiData.punctuality.lateRate"></mat-progress-bar>
+                </div>
+
+                <!-- Avg Delay -->
+                <div class="kpi-bar-item">
+                  <div class="kpi-bar-header">
+                    <span class="kpi-bar-label">Avg Delay</span>
+                    <span class="kpi-bar-value">{{ kpiData.punctuality.avgDelayMinutes | number:'1.0-0' }}min</span>
+                  </div>
+                  <mat-progress-bar class="warning" mode="determinate" [value]="Math.min((kpiData.punctuality.avgDelayMinutes / 30) * 100, 100)"></mat-progress-bar>
+                </div>
+              </div>
+            </div>
+            <ng-template #loadingKpiTemplate>
+              <div class="loading-spinner">
+                <mat-icon class="spin">refresh</mat-icon>
+                <p>Loading statistics...</p>
+              </div>
+            </ng-template>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Absences Card -->
+      <mat-card class="absences-card" appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>event_note</mat-icon>
+            Recent Absences
+          </mat-card-title>
+          <div class="absences-actions">
+            <button mat-raised-button class="action-btn-small absence" (click)="requestAbsence()">
+              <mat-icon>event_busy</mat-icon>
+              <span>Request Absence</span>
+            </button>
+            <button mat-raised-button class="action-btn-small planning" (click)="goToPlanning()">
+              <mat-icon>calendar_month</mat-icon>
+              <span>My Calendar</span>
+            </button>
+          </div>
+        </mat-card-header>
+        <mat-card-content class="absences-card-content">
+          <div *ngIf="loadingAbsences" class="loading-spinner">
+            <mat-icon class="spin">refresh</mat-icon>
+          </div>
+          <div *ngIf="!loadingAbsences && recentAbsences.length === 0" class="empty-state">
+            <mat-icon>check_circle</mat-icon>
+            <p>No recent absences</p>
+          </div>
+          <div *ngIf="!loadingAbsences && recentAbsences.length > 0" class="absences-list-wrapper">
+            <mat-list class="absences-list">
+              <mat-list-item *ngFor="let absence of recentAbsences; let last = last" class="absence-item">
+                <div matListItemTitle class="absence-content">
+                  <div class="absence-left">
+                    <span class="absence-type">{{ formatAbsenceType(absence.type) }}</span>
+                    <span class="absence-dates">{{ formatDate(absence.startDate) }} - {{ formatDate(absence.endDate) }}</span>
+                    <span class="absence-reason" *ngIf="absence.reason">{{ absence.reason }}</span>
+                  </div>
+                  <mat-chip [class]="absence.status.toLowerCase()">
+                    {{ absence.status }}
+                  </mat-chip>
+                </div>
+                <mat-divider *ngIf="!last"></mat-divider>
+              </mat-list-item>
+            </mat-list>
+          </div>
+        </mat-card-content>
+      </mat-card>
     </section>
   </main>
 </div>

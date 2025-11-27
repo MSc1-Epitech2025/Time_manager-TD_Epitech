@@ -1,9 +1,7 @@
-/* === Variables === */
+// Variables
 $sidebar-width: 260px;
 $radius: 12px;
 $shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-
-/* === Couleurs principales === */
 :root {
   --c-bg: #f9fafb;
   --c-text: #1e1e2b;
@@ -28,7 +26,7 @@ $shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 }
 
-/* === Structure principale === */
+// Main structure
 .dashboard {
   display: flex;
   height: 100vh;
@@ -39,7 +37,7 @@ $shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
-/* === SIDEBAR === */
+// Sidebar
 .sidebar {
   width: $sidebar-width;
   background: #1e1e2b;
@@ -110,7 +108,7 @@ $shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 }
 
-/* === MAIN CONTENT === */
+// Main content
 .main-content {
   flex: 1;
   display: flex;
@@ -121,7 +119,7 @@ $shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     position: relative;
 }
 
-/* === HEADER === */
+// Header
 .header {
   background: linear-gradient(135deg, #a78bfa 0%, #f472b6 50%, #c084fc 100%);
   padding: 1.5rem 2rem;
@@ -172,7 +170,7 @@ $shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 }
 
-/* === SEARCH SECTION === */
+// Search section
 .search-section {
   display: flex;
   align-items: center;
@@ -274,7 +272,7 @@ $shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 }
 
-/* === TEAM GRID === */
+// Team grid
 .team-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -282,7 +280,7 @@ $shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   margin-bottom:2rem ;
 }
 
-/* === TEAM CARD === */
+// Team card
 .team-card {
   background: var(--c-card);
   border: 1px solid var(--c-border);
@@ -428,7 +426,7 @@ $shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     color: var(--c-muted);
 }
 
-/* === RESPONSIVE === */
+// Responsive
 @media (max-width: 980px) {
   .dashboard {
     flex-direction: column;

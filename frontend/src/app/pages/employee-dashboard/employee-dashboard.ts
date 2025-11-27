@@ -6,6 +6,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatListModule } from '@angular/material/list';
+import { MatDividerModule } from '@angular/material/divider';
 import { NgChartsModule } from 'ng2-charts';
 import { ChartConfiguration, ChartOptions } from 'chart.js';
 import { HttpClient } from '@angular/common/http';
@@ -16,6 +20,10 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth';
 import { PlanningService, PlanningEvent } from '../../core/services/planning';
 import { NotificationService } from '../../core/services/notification';
+import { WeatherService, WeatherSnapshot } from '../../core/services/weather';
+import { AbsenceService, Absence } from '../../core/services/absence';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { AbsenceRequestModal } from '../../modal/absence-request-modal/absence-request-modal';
 import { environment } from '../../../environments/environment';
 
 type ClockKind = 'IN' | 'OUT';
@@ -39,10 +47,39 @@ interface ClockMutationResponse {
   createClockForMe: ClockRecord;
 }
 
+interface PunctualityStats {
+  lateRate: number;
+  avgDelayMinutes: number;
+}
+
+interface AbsenceBreakdown {
+  type: string;
+  days: number;
+}
+
+interface UserKpiSummary {
+  userId: string;
+  fullName: string;
+  presenceRate: number;
+  avgHoursPerDay: number;
+  overtimeHours: number;
+  punctuality: PunctualityStats;
+  absenceDays: number;
+  absenceByType: AbsenceBreakdown[];
+  reportsAuthored: number;
+  reportsReceived: number;
+  periodStart: string;
+  periodEnd: string;
+}
+
+interface MyKpiResponse {
+  myKpi: UserKpiSummary;
+}
+
 const GRAPHQL_ENDPOINT = environment.GRAPHQL_ENDPOINT;
 
 const MY_CLOCKS_QUERY = `
-  query MyClocks($from: String!, $to: String!) {
+  query MyClocks($from: String, $to: String) {
     myClocks(from: $from, to: $to) {
       id
       kind
@@ -52,7 +89,7 @@ const MY_CLOCKS_QUERY = `
 `;
 
 const CLOCK_MUTATION = `
-  mutation Punch($input: ClockCreateInput!) {
+  mutation CreateClockForMe($input: ClockCreateInput!) {
     createClockForMe(input: $input) {
       id
       kind
@@ -74,10 +111,16 @@ const CLOCK_MUTATION = `
     MatIconModule,
     MatFormFieldModule,
     MatInputModule,
+    MatChipsModule,
+    MatProgressBarModule,
+    MatListModule,
+    MatDividerModule,
     NgChartsModule,
+    MatDialogModule,
   ],
 })
 export class EmployeeDashboard implements OnInit, OnDestroy {
+  Math = Math;
   isWorking = false;
   statusLabel: 'Demarrer' | 'Pause' = 'Demarrer';
   private tickerId: number | null = null;
@@ -96,6 +139,14 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
   };
 
   loadingStats = false;
+  loadingAbsences = false;
+  loadingLeaveBalance = false;
+  loadingKpi = false;
+  weather: WeatherSnapshot | null = null;
+  recentAbsences: Absence[] = [];
+  leaveAccounts: Array<{ leaveType: string; balance: number }> = [];
+  expandedLeaveItems = new Set<number>();
+  kpiData: UserKpiSummary | null = null;
 
   pieChartData: ChartConfiguration<'pie'>['data'] = {
     labels: ['Presence', 'Delays', 'Absence'],
@@ -124,11 +175,18 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
     private http: HttpClient,
     private planningService: PlanningService,
     private notify: NotificationService,
+    private weatherService: WeatherService,
+    private absenceService: AbsenceService,
+    private dialog: MatDialog,
   ) {}
 
   ngOnInit() {
     this.populateUser();
     this.refreshDashboard();
+    this.initWeather();
+    this.loadRecentAbsences();
+    this.loadLeaveBalance();
+    this.loadMyKpi();
   }
 
   ngOnDestroy(): void {
@@ -167,18 +225,22 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
     } else {
       await this.startWork();
     }
+    // 3 second cooldown to prevent spam
+    setTimeout(() => {
+      this.actionPending = false;
+    }, 3000);
   }
 
   private async startWork() {
     this.actionPending = true;
     try {
-      await this.sendClockMutation('IN');
-      this.notify.success('Clock in saved');
+      const result = await this.sendClockMutation('IN');
+      console.log('Clock in result:', result);
+      this.notify.success('Clock in recorded');
       await this.refreshDashboard();
-    } catch (err) {
-      console.error(err);
-      this.notify.error('Impossible to start your work session');
-    } finally {
+    } catch (err: any) {
+      console.error('Start work error:', err);
+      this.notify.error(err.message || 'Unable to start work session');
       this.actionPending = false;
     }
   }
@@ -186,13 +248,13 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
   private async stopWork() {
     this.actionPending = true;
     try {
-      await this.sendClockMutation('OUT');
-      this.notify.success('Cloak out saved');
+      const result = await this.sendClockMutation('OUT');
+      console.log('Clock out result:', result);
+      this.notify.success('Clock out recorded');
       await this.refreshDashboard();
-    } catch (err) {
-      console.error(err);
-      this.notify.error('Impossible to pause your worked session');
-    } finally {
+    } catch (err: any) {
+      console.error('Stop work error:', err);
+      this.notify.error(err.message || 'Unable to pause the session');
       this.actionPending = false;
     }
   }
@@ -280,44 +342,69 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
   }
 
   private async fetchClocks(range: { from: Date; to: Date }): Promise<ClockRecord[]> {
-    const response = await firstValueFrom(
-      this.http.post<GraphqlPayload<MyClocksResponse>>(
-        GRAPHQL_ENDPOINT,
-        {
-          query: MY_CLOCKS_QUERY,
-          variables: {
-            from: range.from.toISOString(),
-            to: range.to.toISOString(),
+    try {
+      const response = await firstValueFrom(
+        this.http.post<GraphqlPayload<MyClocksResponse>>(
+          GRAPHQL_ENDPOINT,
+          {
+            query: MY_CLOCKS_QUERY,
+            variables: {
+              from: range.from.toISOString(),
+              to: range.to.toISOString(),
+            },
           },
-        },
-        { withCredentials: true }
-      )
-    );
+          { withCredentials: true }
+        )
+      );
 
-    if (response.errors?.length) {
-      throw new Error(response.errors.map((e) => e.message).join(', '));
+      if (response.errors?.length) {
+        throw new Error(response.errors.map((e) => e.message).join(', '));
+      }
+
+      return response.data?.myClocks ?? [];
+    } catch (error: any) {
+      console.error('Failed to fetch clocks:', error);
+      if (error.status === 0) {
+        throw new Error('Cannot connect to server. Please check if the backend is running.');
+      }
+      throw error;
     }
-
-    return response.data?.myClocks ?? [];
   }
 
   private async sendClockMutation(kind: ClockKind): Promise<ClockRecord> {
-    const response = await firstValueFrom(
-      this.http.post<GraphqlPayload<ClockMutationResponse>>(
-        GRAPHQL_ENDPOINT,
-        {
-          query: CLOCK_MUTATION,
-          variables: { input: { kind } },
-        },
-        { withCredentials: true }
-      )
-    );
+    try {
+      const response = await firstValueFrom(
+        this.http.post<GraphqlPayload<ClockMutationResponse>>(
+          GRAPHQL_ENDPOINT,
+          {
+            query: CLOCK_MUTATION,
+            variables: { input: { kind } },
+          },
+          { withCredentials: true }
+        )
+      );
 
-    if (response.errors?.length) {
-      throw new Error(response.errors.map((e) => e.message).join(', '));
+      console.log('Clock mutation response:', response);
+
+      if (response.errors?.length) {
+        const errorMsg = response.errors.map((e) => e.message).join(', ');
+        console.error('GraphQL errors:', response.errors);
+        throw new Error(errorMsg);
+      }
+
+      if (!response.data?.createClockForMe) {
+        console.error('No data in response:', response);
+        throw new Error('No data returned from clock mutation');
+      }
+
+      return response.data.createClockForMe;
+    } catch (error: any) {
+      console.error('Clock mutation failed:', error);
+      if (error.status === 0) {
+        throw new Error('Cannot connect to server. Please check if the backend is running.');
+      }
+      throw error;
     }
-
-    return response.data!.createClockForMe;
   }
 
   private startTicker(start: Date) {
@@ -355,6 +442,225 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
   logout() {
     this.auth.logout();
     this.router.navigate(['/login']);
+  }
+
+  private initWeather() {
+    this.weatherService.weather$().subscribe((weather) => {
+      this.weather = weather;
+    });
+    this.weatherService.startPolling();
+  }
+
+  private async loadRecentAbsences() {
+    this.loadingAbsences = true;
+    try {
+      const absences = await firstValueFrom(this.absenceService.myAbsences());
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      this.recentAbsences = absences
+        .filter(absence => {
+          const endDate = new Date(absence.endDate);
+          endDate.setHours(0, 0, 0, 0);
+          return endDate >= today;
+        })
+        .sort((a, b) => new Date(a.endDate).getTime() - new Date(b.endDate).getTime())
+        .slice(0, 5);
+    } catch (err) {
+      console.error('Failed to load absences:', err);
+    } finally {
+      this.loadingAbsences = false;
+    }
+  }
+
+  private async loadLeaveBalance() {
+    this.loadingLeaveBalance = true;
+    try {
+      const session = this.auth.session;
+      if (!session?.user.id) return;
+
+      const response = await firstValueFrom(
+        this.http.post<GraphqlPayload<any>>(
+          GRAPHQL_ENDPOINT,
+          {
+            query: `
+              query LeaveAccountsByUser($userId: ID!) {
+                leaveAccountsByUser(userId: $userId) {
+                  id
+                  currentBalance
+                  leaveType {
+                    code
+                    label
+                  }
+                }
+              }
+            `,
+            variables: { userId: session.user.id },
+          },
+          { withCredentials: true }
+        )
+      );
+
+      if (response.errors?.length) {
+        throw new Error(response.errors.map((e) => e.message).join(', '));
+      }
+
+      if (response.data?.leaveAccountsByUser) {
+        this.leaveAccounts = response.data.leaveAccountsByUser.map((acc: any) => ({
+          leaveType: acc.leaveType?.label || acc.leaveType?.code || 'Unknown',
+          balance: acc.currentBalance || 0,
+        }));
+      }
+    } catch (err) {
+      console.error('Failed to load leave balance:', err);
+    } finally {
+      this.loadingLeaveBalance = false;
+    }
+  }
+
+  private async loadMyKpi() {
+    this.loadingKpi = true;
+    try {
+      const startDate = this.formatDateToYYYYMMDD(this.weekRange.from);
+      const endDate = this.formatDateToYYYYMMDD(this.weekRange.to);
+
+      const response = await firstValueFrom(
+        this.http.post<GraphqlPayload<MyKpiResponse>>(
+          GRAPHQL_ENDPOINT,
+          {
+            query: `
+              query MyKpi($startDate: String!, $endDate: String!) {
+                myKpi(startDate: $startDate, endDate: $endDate) {
+                  userId
+                  fullName
+                  presenceRate
+                  avgHoursPerDay
+                  overtimeHours
+                  punctuality {
+                    lateRate
+                    avgDelayMinutes
+                  }
+                  absenceDays
+                  absenceByType {
+                    type
+                    days
+                  }
+                  reportsAuthored
+                  reportsReceived
+                  periodStart
+                  periodEnd
+                }
+              }
+            `,
+            variables: {
+              startDate,
+              endDate,
+            },
+          },
+          { withCredentials: true }
+        )
+      );
+
+      if (response.errors?.length) {
+        throw new Error(response.errors.map((e) => e.message).join(', '));
+      }
+
+      if (response.data?.myKpi) {
+        this.kpiData = response.data.myKpi;
+      }
+    } catch (err) {
+      console.error('Failed to load KPI data:', err);
+    } finally {
+      this.loadingKpi = false;
+    }
+  }
+
+  private formatDateToYYYYMMDD(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  requestAbsence() {
+    const today = new Date();
+    const dialogRef = this.dialog.open(AbsenceRequestModal, {
+      width: '500px',
+      data: {
+        startDate: today,
+        endDate: today,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe(async (result) => {
+      if (result) {
+        await this.createAbsenceRequest(result);
+      }
+    });
+  }
+
+  private async createAbsenceRequest(data: any) {
+    try {
+      await firstValueFrom(this.absenceService.createAbsence(data));
+      this.notify.success('Absence request submitted successfully');
+      await this.loadRecentAbsences();
+      await this.loadLeaveBalance();
+      await this.refreshDashboard();
+    } catch (err) {
+      console.error('Failed to create absence', err);
+      this.notify.error('Failed to submit absence request');
+    }
+  }
+
+  toggleLeaveItem(index: number) {
+    if (this.expandedLeaveItems.has(index)) {
+      this.expandedLeaveItems.delete(index);
+    } else {
+      this.expandedLeaveItems.add(index);
+    }
+  }
+
+  isLeaveItemExpanded(index: number): boolean {
+    return this.expandedLeaveItems.has(index);
+  }
+
+  viewReports() {
+    this.router.navigate(['/log-history']);
+  }
+
+  viewProfile() {
+    this.notify.info('Profile page coming soon');
+  }
+
+  getWeatherIcon(): string {
+    if (!this.weather) return 'wb_sunny';
+    const code = this.weather.code;
+    const isDay = this.weather.isDay;
+
+    if (code === 0) return isDay ? 'wb_sunny' : 'nights_stay';
+    if (code <= 3) return isDay ? 'wb_cloudy' : 'cloud';
+    if (code <= 67) return 'grain';
+    if (code <= 77) return 'ac_unit';
+    if (code <= 82) return 'water_drop';
+    if (code <= 99) return 'thunderstorm';
+    return 'wb_sunny';
+  }
+
+  formatAbsenceType(type: string): string {
+    const typeMap: Record<string, string> = {
+      SICK: 'Sick Leave',
+      VACATION: 'Vacation',
+      PERSONAL: 'Personal Leave',
+      FORMATION: 'Training',
+      OTHER: 'Other',
+      RTT: 'RTT',
+    };
+    return typeMap[type] || type;
+  }
+
+  formatDate(dateStr: string): string {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 }
 
