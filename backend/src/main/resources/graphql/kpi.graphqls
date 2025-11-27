@@ -66,4 +66,5 @@ extend type Query {
   globalKpi(startDate: String!, endDate: String!): GlobalKpiSummary!
   teamKpi(teamId: ID!, startDate: String!, endDate: String!): TeamKpiSummary!
   userKpi(userId: ID!, startDate: String!, endDate: String!): UserKpiSummary!
+  myKpi(startDate: String!, endDate: String!): UserKpiSummary!   # <-- ajout
 }
