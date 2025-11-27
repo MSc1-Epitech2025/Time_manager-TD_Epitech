@@ -59,30 +59,55 @@
         </h3>
         <div class="kpi-wrapper">
           <div class="kpi-container" *ngIf="!loadingKpi && kpiData; else loadingKpiTemplate">
-            <div class="kpi-grid">
-              <div class="kpi-item">
-                <div class="kpi-label">Presence Rate</div>
-                <div class="kpi-value">{{ kpiData.presenceRate | number:'1.1-1' }}%</div>
+            <div class="kpi-visual">
+              <div class="kpi-bar-item">
+                <div class="kpi-bar-header">
+                  <span class="kpi-bar-label">Presence Rate</span>
+                  <span class="kpi-bar-value">{{ kpiData.presenceRate | number:'1.1-1' }}%</span>
+                </div>
+                <div class="kpi-bar-track">
+                  <div class="kpi-bar-fill" [style.width.%]="kpiData.presenceRate"></div>
+                </div>
               </div>
-              <div class="kpi-item">
-                <div class="kpi-label">Avg Hours/Day</div>
-                <div class="kpi-value">{{ kpiData.avgHoursPerDay | number:'1.1-1' }}h</div>
+
+              <div class="kpi-bar-item">
+                <div class="kpi-bar-header">
+                  <span class="kpi-bar-label">Avg Hours/Day</span>
+                  <span class="kpi-bar-value">{{ kpiData.avgHoursPerDay | number:'1.1-1' }}h / 8h</span>
+                </div>
+                <div class="kpi-bar-track">
+                  <div class="kpi-bar-fill" [style.width.%]="(kpiData.avgHoursPerDay / 8) * 100"></div>
+                </div>
               </div>
-              <div class="kpi-item">
-                <div class="kpi-label">Overtime</div>
-                <div class="kpi-value">{{ kpiData.overtimeHours | number:'1.1-1' }}h</div>
+
+              <div class="kpi-bar-item">
+                <div class="kpi-bar-header">
+                  <span class="kpi-bar-label">Overtime</span>
+                  <span class="kpi-bar-value">{{ kpiData.overtimeHours | number:'1.1-1' }}h</span>
+                </div>
+                <div class="kpi-bar-track">
+                  <div class="kpi-bar-fill overtime" [style.width.%]="Math.min((kpiData.overtimeHours / 10) * 100, 100)"></div>
+                </div>
               </div>
-              <div class="kpi-item">
-                <div class="kpi-label">Late Rate</div>
-                <div class="kpi-value">{{ kpiData.punctuality.lateRate | number:'1.1-1' }}%</div>
+
+              <div class="kpi-bar-item">
+                <div class="kpi-bar-header">
+                  <span class="kpi-bar-label">Punctuality</span>
+                  <span class="kpi-bar-value">{{ 100 - kpiData.punctuality.lateRate | number:'1.1-1' }}%</span>
+                </div>
+                <div class="kpi-bar-track">
+                  <div class="kpi-bar-fill" [style.width.%]="100 - kpiData.punctuality.lateRate"></div>
+                </div>
               </div>
-              <div class="kpi-item">
-                <div class="kpi-label">Avg Delay</div>
-                <div class="kpi-value">{{ kpiData.punctuality.avgDelayMinutes | number:'1.0-0' }}min</div>
-              </div>
-              <div class="kpi-item">
-                <div class="kpi-label">Absence Days</div>
-                <div class="kpi-value">{{ kpiData.absenceDays | number:'1.1-1' }}</div>
+
+              <div class="kpi-bar-item">
+                <div class="kpi-bar-header">
+                  <span class="kpi-bar-label">Avg Delay</span>
+                  <span class="kpi-bar-value">{{ kpiData.punctuality.avgDelayMinutes | number:'1.0-0' }}min</span>
+                </div>
+                <div class="kpi-bar-track">
+                  <div class="kpi-bar-fill warning" [style.width.%]="Math.min((kpiData.punctuality.avgDelayMinutes / 30) * 100, 100)"></div>
+                </div>
               </div>
             </div>
           </div>

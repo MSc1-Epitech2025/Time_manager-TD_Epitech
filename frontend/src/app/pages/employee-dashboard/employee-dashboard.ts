@@ -112,6 +112,7 @@ const CLOCK_MUTATION = `
   ],
 })
 export class EmployeeDashboard implements OnInit, OnDestroy {
+  Math = Math;
   isWorking = false;
   statusLabel: 'Demarrer' | 'Pause' = 'Demarrer';
   private tickerId: number | null = null;
