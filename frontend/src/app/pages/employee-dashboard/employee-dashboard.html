@@ -52,20 +52,41 @@
     </section>
 
     <section class="metrics-zone">
-      <div class="card chart-card">
+      <div class="card kpi-card">
         <h3>
-          <mat-icon>pie_chart</mat-icon>
-          Weekly Overview
+          <mat-icon>insights</mat-icon>
+          Weekly Statistics
         </h3>
-        <div class="chart-wrapper">
-          <div class="chart-container" *ngIf="!loadingStats; else loading">
-            <canvas
-              baseChart
-              [data]="pieChartData"
-              [options]="chartOptions"
-              chartType="pie"></canvas>
+        <div class="kpi-wrapper">
+          <div class="kpi-container" *ngIf="!loadingKpi && kpiData; else loadingKpiTemplate">
+            <div class="kpi-grid">
+              <div class="kpi-item">
+                <div class="kpi-label">Presence Rate</div>
+                <div class="kpi-value">{{ kpiData.presenceRate | number:'1.1-1' }}%</div>
+              </div>
+              <div class="kpi-item">
+                <div class="kpi-label">Avg Hours/Day</div>
+                <div class="kpi-value">{{ kpiData.avgHoursPerDay | number:'1.1-1' }}h</div>
+              </div>
+              <div class="kpi-item">
+                <div class="kpi-label">Overtime</div>
+                <div class="kpi-value">{{ kpiData.overtimeHours | number:'1.1-1' }}h</div>
+              </div>
+              <div class="kpi-item">
+                <div class="kpi-label">Late Rate</div>
+                <div class="kpi-value">{{ kpiData.punctuality.lateRate | number:'1.1-1' }}%</div>
+              </div>
+              <div class="kpi-item">
+                <div class="kpi-label">Avg Delay</div>
+                <div class="kpi-value">{{ kpiData.punctuality.avgDelayMinutes | number:'1.0-0' }}min</div>
+              </div>
+              <div class="kpi-item">
+                <div class="kpi-label">Absence Days</div>
+                <div class="kpi-value">{{ kpiData.absenceDays | number:'1.1-1' }}</div>
+              </div>
+            </div>
           </div>
-          <ng-template #loading>
+          <ng-template #loadingKpiTemplate>
             <div class="loading-spinner">
               <mat-icon class="spin">refresh</mat-icon>
               <p>Loading statistics...</p>

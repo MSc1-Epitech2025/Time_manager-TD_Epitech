@@ -43,6 +43,35 @@ interface ClockMutationResponse {
   createClockForMe: ClockRecord;
 }
 
+interface PunctualityStats {
+  lateRate: number;
+  avgDelayMinutes: number;
+}
+
+interface AbsenceBreakdown {
+  type: string;
+  days: number;
+}
+
+interface UserKpiSummary {
+  userId: string;
+  fullName: string;
+  presenceRate: number;
+  avgHoursPerDay: number;
+  overtimeHours: number;
+  punctuality: PunctualityStats;
+  absenceDays: number;
+  absenceByType: AbsenceBreakdown[];
+  reportsAuthored: number;
+  reportsReceived: number;
+  periodStart: string;
+  periodEnd: string;
+}
+
+interface MyKpiResponse {
+  myKpi: UserKpiSummary;
+}
+
 const GRAPHQL_ENDPOINT = environment.GRAPHQL_ENDPOINT;
 
 const MY_CLOCKS_QUERY = `
@@ -103,10 +132,12 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
   loadingStats = false;
   loadingAbsences = false;
   loadingLeaveBalance = false;
+  loadingKpi = false;
   weather: WeatherSnapshot | null = null;
   recentAbsences: Absence[] = [];
   leaveAccounts: Array<{ leaveType: string; balance: number }> = [];
   expandedLeaveItems = new Set<number>();
+  kpiData: UserKpiSummary | null = null;
 
   pieChartData: ChartConfiguration<'pie'>['data'] = {
     labels: ['Presence', 'Delays', 'Absence'],
@@ -146,6 +177,7 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
     this.initWeather();
     this.loadRecentAbsences();
     this.loadLeaveBalance();
+    this.loadMyKpi();
   }
 
   ngOnDestroy(): void {
@@ -414,8 +446,16 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
     this.loadingAbsences = true;
     try {
       const absences = await firstValueFrom(this.absenceService.myAbsences());
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
       this.recentAbsences = absences
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .filter(absence => {
+          const endDate = new Date(absence.endDate);
+          endDate.setHours(0, 0, 0, 0);
+          return endDate >= today;
+        })
+        .sort((a, b) => new Date(a.endDate).getTime() - new Date(b.endDate).getTime())
         .slice(0, 5);
     } catch (err) {
       console.error('Failed to load absences:', err);
@@ -467,6 +507,70 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
     } finally {
       this.loadingLeaveBalance = false;
     }
+  }
+
+  private async loadMyKpi() {
+    this.loadingKpi = true;
+    try {
+      const startDate = this.formatDateToYYYYMMDD(this.weekRange.from);
+      const endDate = this.formatDateToYYYYMMDD(this.weekRange.to);
+
+      const response = await firstValueFrom(
+        this.http.post<GraphqlPayload<MyKpiResponse>>(
+          GRAPHQL_ENDPOINT,
+          {
+            query: `
+              query MyKpi($startDate: String!, $endDate: String!) {
+                myKpi(startDate: $startDate, endDate: $endDate) {
+                  userId
+                  fullName
+                  presenceRate
+                  avgHoursPerDay
+                  overtimeHours
+                  punctuality {
+                    lateRate
+                    avgDelayMinutes
+                  }
+                  absenceDays
+                  absenceByType {
+                    type
+                    days
+                  }
+                  reportsAuthored
+                  reportsReceived
+                  periodStart
+                  periodEnd
+                }
+              }
+            `,
+            variables: {
+              startDate,
+              endDate,
+            },
+          },
+          { withCredentials: true }
+        )
+      );
+
+      if (response.errors?.length) {
+        throw new Error(response.errors.map((e) => e.message).join(', '));
+      }
+
+      if (response.data?.myKpi) {
+        this.kpiData = response.data.myKpi;
+      }
+    } catch (err) {
+      console.error('Failed to load KPI data:', err);
+    } finally {
+      this.loadingKpi = false;
+    }
+  }
+
+  private formatDateToYYYYMMDD(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   requestAbsence() {
