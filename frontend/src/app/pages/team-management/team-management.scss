@@ -1,5 +1,11 @@
 // colors variables
+// colors variables
 :root {
+  --c-bg: #1e1e28;
+  --c-text: #f9fafb;
+  --c-card: #2a2a3c;
+  --c-border: #3b3b4f;
+  --c-primary: #7c3aed;
   --c-bg: #1e1e28;
   --c-text: #f9fafb;
   --c-card: #2a2a3c;
@@ -10,8 +16,14 @@
   --c-success: #22c55e;
   --c-warning: #f59e0b;
   --c-danger: #ef4444;
+  --c-muted: #9ca3af;
+  --c-success: #22c55e;
+  --c-warning: #f59e0b;
+  --c-danger: #ef4444;
 }
 
+// main layout
+.team-management-page {
 // main layout
 .team-management-page {
   display: flex;
@@ -25,8 +37,33 @@
 
 .main-content {
   flex: 1;
+.main-content {
+  flex: 1;
   display: flex;
   flex-direction: column;
+  padding: 1.5rem 2rem;
+  overflow: hidden;
+  height: 100vh;
+  gap: 1rem;
+}
+
+// material card customization
+::ng-deep .team-management-page {
+  mat-card {
+    background: var(--c-card);
+    color: var(--c-text);
+    border: 1px solid var(--c-border);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(16, 24, 40, 0.12);
+    }
+  }
+
+  mat-card-title {
+    color: var(--c-text);
+    font-weight: 700;
   padding: 1.5rem 2rem;
   overflow: hidden;
   height: 100vh;
@@ -113,7 +150,7 @@
 // header card
 .header-card {
   background: linear-gradient(135deg, #a78bfa 0%, #f472b6 100%);
-  border: none ;
+  border: none !important;
 
   .header-section {
     display: flex;
@@ -161,7 +198,7 @@
 // search card
 .search-card {
   mat-card-content {
-    padding: 0 ;
+    padding: 0 !important;
   }
 
   .search-section {
@@ -250,7 +287,7 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    padding: 0 ;
+    padding: 0 !important;
   }
 
   .teams-list {
@@ -292,7 +329,7 @@
 
 // team item
 .team-item {
-  padding: 1.25rem ;
+  padding: 1.25rem !important;
   min-height: 100px;
 
   &-content {
