@@ -14,51 +14,29 @@
 
 // main layout
 .planning-container {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  width: 100%;
-  background: var(--c-bg);
-  color: var(--c-text);
-  font-family: Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
-  overflow: hidden;
-  padding: 1.5rem 2rem;
-  gap: 1rem;
+    background-color: #1e1e28;
+    color: #f9fafb;
+    min-height: 100vh;
+    padding: 2rem;
 }
 
-// material card customization
-::ng-deep .planning-container {
-  mat-card {
-    background: var(--c-card);
-    color: var(--c-text);
-    border: 1px solid var(--c-border);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(16, 24, 40, 0.12);
-    }
-  }
-
-  mat-card-title {
-    color: var(--c-text);
-    font-weight: 700;
+.planning-header {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 1rem;
+    justify-content: space-between;
+    margin-bottom: 1rem;
 
-    mat-icon {
-      color: var(--c-primary);
+    h2 {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #a78bfa;
     }
-  }
 
-  mat-form-field {
-    .mat-mdc-text-field-wrapper {
-      background-color: rgba(124, 58, 237, 0.1);
-    }
-
-    .mat-mdc-form-field-focus-overlay {
-      background-color: transparent;
+    .role-indicators {
+        display: flex;
+        gap: 0.5rem;
     }
 
     .mdc-text-field--filled:not(.mdc-text-field--disabled) {
@@ -68,7 +46,7 @@
     .mat-mdc-select-value,
     .mat-mdc-select-arrow,
     label {
-      color: var(--c-text) ;
+      color: var(--c-text) !important;
     }
   }
 
@@ -118,7 +96,7 @@
 // header card
 .header-card {
   background: linear-gradient(135deg, #a78bfa 0%, #f472b6 100%);
-  border: none ;
+  border: none !important;
   flex-shrink: 0;
 
   .header-section {
@@ -172,7 +150,7 @@
   flex-shrink: 0;
 
   mat-card-content {
-    padding: 0.75rem 1rem ;
+    padding: 0.75rem 1rem !important;
   }
 
   .filters-legend-section {
@@ -230,7 +208,7 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    padding: 0.5rem ;
+    padding: 0.5rem !important;
   }
 }
 
@@ -321,7 +299,7 @@ full-calendar {
     }
 
     .fc-button {
-      background-color: rgba(124, 58, 237, 0.3) !important ;
+      background-color: rgba(124, 58, 237, 0.3) !important;
       border-color: var(--c-primary) !important;
       color: var(--c-text) !important;
       padding: 0.4rem 0.8rem;
@@ -348,7 +326,7 @@ full-calendar {
       }
 
       &:focus {
-        box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.4) ;
+        box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.4) !important;
       }
     }
 
@@ -388,7 +366,7 @@ full-calendar {
     }
 
     .fc-day-today {
-      background-color: rgba(238, 75, 222, 0.575) ;
+      background-color: rgba(238, 75, 222, 0.575) !important;
     }
 
     .fc-timegrid-axis {
@@ -458,12 +436,12 @@ full-calendar {
 
   .header-section {
     flex-direction: column;
-    align-items: flex-start ;
+    align-items: flex-start !important;
   }
 
   .filters-legend-section {
     flex-direction: column;
-    align-items: flex-start ;
+    align-items: flex-start !important;
   }
 
   .team-filter .team-select {
