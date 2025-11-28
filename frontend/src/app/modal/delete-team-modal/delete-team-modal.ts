@@ -22,7 +22,11 @@ export class DeleteTeamModalComponent {
     private dialogRef: MatDialogRef<DeleteTeamModalComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
-    this.team = { ...data.team, members: [...data.team.members] , isDestroyed: false};
+    this.team = { 
+      ...data.team, 
+      members: data.team.members ? [...data.team.members] : [],
+      isDestroyed: false
+    };
   }
 
   onCancel() {

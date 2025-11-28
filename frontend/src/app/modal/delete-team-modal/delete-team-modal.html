@@ -1,13 +1,23 @@
-<h2 mat-dialog-title>Delete team</h2>
+<h2 mat-dialog-title>Delete Team</h2>
 
 <mat-dialog-content class="dialog-content">
   <div class="scrollable-content">
-    <p>Are you sure you want to delete the {{team.name}} team</p>
+    <div class="team-info">
+      <div class="team-detail">
+        <span><strong>{{ team.name }}</strong></span>
+      </div>
+      <div class="team-detail" *ngIf="team.description">
+        <span>{{ team.description }}</span>
+      </div>
+    </div>
+    
+    <p class="confirmation-text">
+      Are you sure you want to delete this team?
+    </p>
   </div>
 </mat-dialog-content>
 
-
 <mat-dialog-actions align="end">
   <button mat-button (click)="onCancel()">Cancel</button>
-  <button mat-flat-button color="primary" (click)="onSave()">Delete</button>
+  <button mat-flat-button color="warn" (click)="onSave()">Delete</button>
 </mat-dialog-actions>
