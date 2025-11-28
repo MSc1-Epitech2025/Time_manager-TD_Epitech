@@ -46,7 +46,7 @@
     .mat-mdc-select-value,
     .mat-mdc-select-arrow,
     label {
-      color: var(--c-text) !important;
+      color: var(--c-text) ;
     }
   }
 
@@ -96,7 +96,7 @@
 // header card
 .header-card {
   background: linear-gradient(135deg, #a78bfa 0%, #f472b6 100%);
-  border: none !important;
+  border: none ;
   flex-shrink: 0;
 
   .header-section {
@@ -150,7 +150,7 @@
   flex-shrink: 0;
 
   mat-card-content {
-    padding: 0.75rem 1rem !important;
+    padding: 0.75rem 1rem ;
   }
 
   .filters-legend-section {
@@ -208,7 +208,7 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    padding: 0.5rem !important;
+    padding: 0.5rem ;
   }
 }
 
@@ -299,9 +299,9 @@ full-calendar {
     }
 
     .fc-button {
-      background-color: rgba(124, 58, 237, 0.3) !important;
-      border-color: var(--c-primary) !important;
-      color: var(--c-text) !important;
+      background-color: rgba(124, 58, 237, 0.3) ;
+      border-color: var(--c-primary) ;
+      color: var(--c-text) ;
       padding: 0.4rem 0.8rem;
       font-size: 0.85rem;
       text-transform: capitalize;
@@ -309,15 +309,15 @@ full-calendar {
       margin: 0 2px;
 
       &:hover:not(:disabled) {
-        background-color: rgba(124, 58, 237, 0.5) !important;
-        border-color: var(--c-primary) !important;
+        background-color: rgba(124, 58, 237, 0.5) ;
+        border-color: var(--c-primary) ;
       }
 
       &.fc-button-active,
       &:active {
-        background-color: var(--c-primary) !important;
-        border-color: var(--c-primary) !important;
-        color: white !important;
+        background-color: var(--c-primary) ;
+        border-color: var(--c-primary) ;
+        color: white ;
       }
 
       &:disabled {
@@ -326,7 +326,7 @@ full-calendar {
       }
 
       &:focus {
-        box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.4) !important;
+        box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.4) ;
       }
     }
 
@@ -366,7 +366,7 @@ full-calendar {
     }
 
     .fc-day-today {
-      background-color: rgba(238, 75, 222, 0.575) !important;
+      background-color: rgba(238, 75, 222, 0.575) ;
     }
 
     .fc-timegrid-axis {
@@ -436,12 +436,12 @@ full-calendar {
 
   .header-section {
     flex-direction: column;
-    align-items: flex-start !important;
+    align-items: flex-start ;
   }
 
   .filters-legend-section {
     flex-direction: column;
-    align-items: flex-start !important;
+    align-items: flex-start ;
   }
 
   .team-filter .team-select {
