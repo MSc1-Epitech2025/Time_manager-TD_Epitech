@@ -264,6 +264,9 @@ export class PlanningComponent implements OnInit {
   }
 
   private getEventColor(absence: Absence, isOwn: boolean): string {
+    if (absence.status === 'REJECTED') {
+      return '#ef4444';
+    }
     if (isOwn) {
       return absence.status === 'PENDING' ? '#f59e0b' : '#10b981';
     }
