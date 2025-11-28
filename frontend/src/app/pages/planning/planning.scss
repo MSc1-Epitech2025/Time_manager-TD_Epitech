@@ -321,9 +321,9 @@ full-calendar {
     }
 
     .fc-button {
-      background-color: rgba(124, 58, 237, 0.3) ;
-      border-color: var(--c-primary) ;
-      color: var(--c-text) ;
+      background-color: rgba(124, 58, 237, 0.3) !important ;
+      border-color: var(--c-primary) !important;
+      color: var(--c-text) !important;
       padding: 0.4rem 0.8rem;
       font-size: 0.85rem;
       text-transform: capitalize;
@@ -331,15 +331,15 @@ full-calendar {
       margin: 0 2px;
 
       &:hover:not(:disabled) {
-        background-color: rgba(124, 58, 237, 0.5) ;
-        border-color: var(--c-primary) ;
+        background-color: rgba(124, 58, 237, 0.5) !important;
+        border-color: var(--c-primary) !important;
       }
 
       &.fc-button-active,
       &:active {
-        background-color: var(--c-primary) ;
-        border-color: var(--c-primary) ;
-        color: white ;
+        background-color: var(--c-primary) !important;
+        border-color: var(--c-primary) !important;
+        color: white !important;
       }
 
       &:disabled {
