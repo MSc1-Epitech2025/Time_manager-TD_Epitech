@@ -1,105 +1,234 @@
-<div class="dashboard">
-  <!-- ===== Main Content ===== -->
+<div class="team-management-page">
   <main class="main-content">
-    <!-- Header -->
-    <header class="header">
-      <h2>Team Management</h2>
-    </header>
-
-    <!-- Search bar-->
-    <section class="search-section">
-      <div class="search-container">
-        <mat-icon>search</mat-icon>
-        <input
-          type="text"
-          class="search-bar"
-          placeholder="Search for a team..."
-          [(ngModel)]="searchTerm"
-          (ngModelChange)="searchTeams()"
-        />
-      </div>
-
-      <button class="search-btn" (click)="searchTeams()">
-        <mat-icon>search</mat-icon>
-        Search
-      </button>
-    </section>
-
-    <section *ngIf="isLoading || lastError" class="status-section">
-      <div *ngIf="isLoading">Loading teams...</div>
-      <div *ngIf="!isLoading && lastError">{{ lastError }}</div>
-    </section>
-
-    <!-- === TEAM Section === -->
-    <section class="team-grid" *ngIf="!isLoading && filteredTeams.length">
-      <div class="team-card" *ngFor="let team of filteredTeams">
-        <div class="team-header">
-          <div class="team-avatar">
-            {{ team.name.charAt(0).toUpperCase() }}
+    <!-- Header Card -->
+    <mat-card class="header-card" appearance="outlined">
+      <mat-card-content>
+        <div class="header-section">
+          <div class="header-info">
+            <h1 class="page-title">Team Management</h1>
+            <p class="page-subtitle">Manage and monitor all teams in the system</p>
           </div>
-          <div class="team-info">
-            <button
-              class="team-name-btn"
-              (click)="viewTeamDetails(team)"
-              (keydown.enter)="viewTeamDetails(team)"
-              (keydown.space)="viewTeamDetails(team)"
-            >
-              {{ team.name }}
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <div class="content-wrapper">
+      <!-- Left side: Team List -->
+      <section class="team-list-section">
+        <!-- Search Card -->
+        <mat-card class="search-card" appearance="outlined">
+          <mat-card-content>
+            <div class="search-section">
+              <mat-form-field appearance="outline" class="search-field">
+                <mat-label>Search for a team</mat-label>
+                <input
+                  matInput
+                  type="text"
+                  [(ngModel)]="searchTerm"
+                  (ngModelChange)="searchTeams()"
+                  placeholder="Team name..."
+                />
+                <mat-icon matPrefix>search</mat-icon>
+              </mat-form-field>
+
+              <button mat-raised-button class="create-btn" *ngIf="isAdminUser" (click)="showCreateForm()">
+                <mat-icon>group_add</mat-icon>
+                <span>Create Team</span>
+              </button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Loading or error status -->
+        <mat-card *ngIf="isLoading || lastError" class="status-card" appearance="outlined">
+          <mat-card-content>
+            <div *ngIf="isLoading" class="loading-spinner">
+              <mat-icon class="spin">refresh</mat-icon>
+              <p>Loading teams...</p>
+            </div>
+            <div *ngIf="!isLoading && lastError" class="error-state">
+              <mat-icon>error_outline</mat-icon>
+              <p>{{ lastError }}</p>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Team list Card -->
+        <mat-card class="teams-list-card" appearance="outlined" *ngIf="!isLoading && !lastError">
+          <mat-card-content class="teams-list-content">
+            <mat-list *ngIf="filteredTeams.length > 0" class="teams-list">
+              <mat-list-item
+                *ngFor="let team of filteredTeams; let last = last"
+                class="team-item"
+                [class.selected]="selectedTeam?.id === team.id"
+                (click)="selectTeam(team)"
+              >
+                <div matListItemTitle class="team-item-content">
+                  <button 
+                    mat-icon-button 
+                    class="view-team-btn"
+                    (click)="viewTeamDetails(team); $event.stopPropagation()"
+                    title="View team dashboard"
+                  >
+                    <mat-icon>dashboard</mat-icon>
+                  </button>
+                  <div class="team-avatar">
+                    {{ team.name.charAt(0).toUpperCase() }}
+                  </div>
+                  <div class="team-info">
+                    <div class="team-name">{{ team.name }}</div>
+                    <div class="team-description">{{ team.description || 'No description' }}</div>
+                    <div class="team-members-count">{{ team.members.length }} member{{ team.members.length !== 1 ? 's' : '' }}</div>
+                  </div>
+                </div>
+                <mat-divider *ngIf="!last"></mat-divider>
+              </mat-list-item>
+            </mat-list>
+
+            <div *ngIf="filteredTeams.length === 0" class="empty-state">
+              <mat-icon>group_off</mat-icon>
+              <p>No teams to display</p>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </section>
+
+      <!-- Right side: Team Form -->
+      <section class="team-form-section" *ngIf="showForm">
+        <mat-card class="form-card" appearance="outlined" #teamFormSection>
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>{{ isCreating ? 'group_add' : (isAdminUser ? 'edit' : 'visibility') }}</mat-icon>
+              {{ isCreating ? 'Create Team' : (isAdminUser ? 'Edit Team' : 'View Team') }}
+            </mat-card-title>
+            <button mat-icon-button class="close-btn" (click)="cancelForm()">
+              <mat-icon>close</mat-icon>
             </button>
-            <p class="team-description">
-              {{ team.description || 'No description' }}
-            </p>
-            <span>{{ team.members.length }} members</span>
-          </div>
-        </div>
+          </mat-card-header>
+          <mat-card-content>
+            <form class="team-form" #teamForm="ngForm">
+              <mat-form-field appearance="outline">
+                <mat-label>Team Name</mat-label>
+                <input
+                  matInput
+                  [(ngModel)]="formData.name"
+                  name="name"
+                  required
+                  [readonly]="!isAdminUser"
+                />
+                <mat-icon matPrefix>group</mat-icon>
+              </mat-form-field>
 
-        <div class="team-members">
-          <div *ngIf="team.members.length === 0" class="no-members">
-            No members
-          </div>
-          <div *ngFor="let member of team.members.slice(0, 5)" [title]="member.name" class="member-card">
-            <img src="img/userProfil.png" [alt]="member.name[0]" class="member-avatar" />
-            <p>{{ member.name }}</p>
-          </div>
-          <span *ngIf="team.members.length > 5" class="more-members">
-            +{{ team.members.length - 5 }}
-          </span>
-        </div>
+              <mat-form-field appearance="outline">
+                <mat-label>Description</mat-label>
+                <textarea
+                  matInput
+                  [(ngModel)]="formData.description"
+                  name="description"
+                  rows="3"
+                  [readonly]="!isAdminUser"
+                ></textarea>
+                <mat-icon matPrefix>description</mat-icon>
+              </mat-form-field>
 
-        <div class="team-actions">
-          <button *ngIf="isAdminUser" (click)="openEditTeamModal(team)">
-            <mat-icon>edit</mat-icon>
-            Edit
-          </button>
-          <button *ngIf="isAdminUser" (click)="openDeleteTeamModal(team)">
-            <mat-icon>delete</mat-icon>
-            Delete
-          </button>
-        </div>
-      </div>
-    </section>
+              <!-- Members Section -->
+              <div class="members-section">
+                <h3 class="section-title">
+                  <mat-icon>people</mat-icon>
+                  Members
+                </h3>
 
-    <section *ngIf="isManagerUser && !isAdminUser" class="hint-section">
-      <p>You can see the teams you are part of. Click on the team name to see details.</p>
-    </section>
+                <div class="members-list" *ngIf="formData.members.length > 0">
+                  <div class="member-item" *ngFor="let member of formData.members; let i = index">
+                    <mat-icon class="member-icon">person</mat-icon>
+                    <div class="member-info">
+                      <span class="member-name">{{ member.name }}</span>
+                      <small class="member-email" *ngIf="member.email">{{ member.email }}</small>
+                    </div>
+                    <button 
+                      mat-icon-button 
+                      color="warn" 
+                      (click)="removeMember(i)" 
+                      type="button"
+                      *ngIf="isAdminUser"
+                    >
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                </div>
 
-    <section *ngIf="isAdminUser" class="hint-section">
-      <p>You can create, edit, or delete teams.</p>
-    </section>
+                <div *ngIf="formData.members.length === 0" class="no-members">
+                  <mat-icon>person_off</mat-icon>
+                  <p>No members added yet</p>
+                </div>
 
-    <section *ngIf="!isLoading && !lastError && !filteredTeams.length" class="status-section">
-      No teams to display.
-    </section>
+                <!-- Add Member Autocomplete - Only for Admin -->
+                <mat-form-field appearance="outline" class="add-member-field" *ngIf="isAdminUser">
+                  <mat-label>Add Member</mat-label>
+                  <input
+                    matInput
+                    [(ngModel)]="newMemberInput"
+                    (ngModelChange)="onMemberInputChange()"
+                    [matAutocomplete]="auto"
+                    placeholder="Search by name or email"
+                    name="newMember"
+                  />
+                  <mat-icon matPrefix>person_add</mat-icon>
+                  <mat-autocomplete #auto="matAutocomplete">
+                    <mat-option
+                      *ngFor="let user of filteredUsers | async"
+                      (click)="addMember(user)"
+                    >
+                      <div class="user-option">
+                        <span class="user-name">{{ user.name }}</span>
+                        <small class="user-email" *ngIf="user.email">{{ user.email }}</small>
+                      </div>
+                    </mat-option>
+                  </mat-autocomplete>
+                </mat-form-field>
+              </div>
 
-    <button
-      matButton="filled"
-      class="add-team-btn"
-      *ngIf="isAdminUser"
-      (click)="showAddModal()"
-    >
-      <mat-icon>add</mat-icon>
-      Add a team
-    </button>
+              <div class="form-actions">
+                <button
+                  mat-raised-button
+                  class="btn-create"
+                  type="button"
+                  *ngIf="isCreating && isAdminUser"
+                  [disabled]="!teamForm.valid || isLoading"
+                  (click)="createTeam()"
+                >
+                  <mat-icon>add</mat-icon>
+                  <span>Create</span>
+                </button>
 
+                <button
+                  mat-raised-button
+                  class="btn-update"
+                  type="button"
+                  *ngIf="!isCreating && isAdminUser"
+                  [disabled]="!teamForm.valid || isLoading"
+                  (click)="updateTeam()"
+                >
+                  <mat-icon>save</mat-icon>
+                  <span>Update</span>
+                </button>
+
+                <button
+                  mat-raised-button
+                  class="btn-delete"
+                  type="button"
+                  *ngIf="!isCreating && isAdminUser"
+                  [disabled]="isLoading"
+                  (click)="deleteTeam()"
+                >
+                  <mat-icon>delete</mat-icon>
+                  <span>Delete</span>
+                </button>
+              </div>
+            </form>
+          </mat-card-content>
+        </mat-card>
+      </section>
+    </div>
   </main>
 </div>
