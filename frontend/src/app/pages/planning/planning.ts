@@ -10,6 +10,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/services/auth';
 import { AbsenceService, Absence } from '../../core/services/absence';
@@ -35,6 +38,9 @@ interface TeamOption {
     MatFormFieldModule,
     MatSelectModule,
     MatButtonModule,
+    MatCardModule,
+    MatChipsModule,
+    MatButtonToggleModule,
   ],
   templateUrl: './planning.html',
   styleUrls: ['./planning.scss'],
@@ -54,15 +60,21 @@ export class PlanningComponent implements OnInit {
   events: EventInput[] = [];
 
   calendarOptions: CalendarOptions = {
-    plugins: [dayGridPlugin, interactionPlugin],
+    plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
     initialView: 'dayGridMonth',
     headerToolbar: {
       left: 'prev,next today',
       center: 'title',
-      right: '',
+      right: 'dayGridMonth,dayGridWeek',
+    },
+    buttonText: {
+      today: 'Today',
+      month: 'Month',
+      week: 'Week',
     },
     expandRows: true,
     height: 'auto',
+    contentHeight: 'auto',
     nowIndicator: true,
     locale: 'en',
     firstDay: 1,
@@ -76,6 +88,15 @@ export class PlanningComponent implements OnInit {
     dayMaxEvents: false,
     eventDisplay: 'block',
     displayEventTime: false,
+    views: {
+      dayGridMonth: {
+        titleFormat: { year: 'numeric', month: 'long' },
+      },
+      dayGridWeek: {
+        titleFormat: { year: 'numeric', month: 'long', day: 'numeric' },
+        dayHeaderFormat: { weekday: 'short', day: 'numeric', month: 'numeric' },
+      },
+    },
   };
 
   constructor(
