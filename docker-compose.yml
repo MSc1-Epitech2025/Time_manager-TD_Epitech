@@ -13,8 +13,6 @@ services:
     environment:
       - CHOKIDAR_USEPOLLING=true
       - WATCHPACK_POLLING=true
-      - GRAPHQL_ENDPOINT=${GRAPHQL_ENDPOINT}
-      - AZURE_URL=${AZURE_URL}
     depends_on:
       - backend
     restart: unless-stopped

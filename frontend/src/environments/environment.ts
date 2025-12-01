@@ -1,5 +1,5 @@
 export const environment = {
   production: false,
-  GRAPHQL_ENDPOINT: (window as any).env?.GRAPHQL_ENDPOINT,
-  AZURE_URL: (window as any).env?.AZURE_URL
+  GRAPHQL_ENDPOINT: 'http://localhost:8030/graphql',
+  AZURE_URL: 'http://localhost:8085/'
 };

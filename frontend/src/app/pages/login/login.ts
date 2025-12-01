@@ -17,6 +17,7 @@ import { MatRippleModule } from '@angular/material/core';
 import { AuthService, Role } from '../../core/services/auth';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NotificationService } from '../../core/services/notification';
+import { environment } from '../../../environments/environment';
 
 interface Bubble {
   x: number;
@@ -237,7 +238,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   get password() { return this.form.get('password'); }
 
   loginWithMicrosoft() {
-    window.location.href = 'http://localhost:8085/';
+    window.location.href = environment.AZURE_URL;
   }
 
 }
