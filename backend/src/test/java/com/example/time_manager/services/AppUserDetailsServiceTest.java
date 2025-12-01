@@ -181,7 +181,7 @@ class AppUserDetailsServiceTest {
 
         assertThat(authorities)
                 .extracting(GrantedAuthority::getAuthority)
-                .containsExactly("EMPLOYEE");  // fallback réel dans ton service
+                .containsExactly("EMPLOYEE");
     }
 
     @SuppressWarnings("unchecked")
