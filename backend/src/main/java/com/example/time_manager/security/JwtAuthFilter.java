@@ -45,14 +45,28 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
+        String path = request.getRequestURI();
+
+        if (path.startsWith("/oauth2/")
+                || path.startsWith("/login/oauth2/")
+                || path.equals("/oauth2/success")) {
+
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        if (path.startsWith("/favicon") || path.startsWith("/resources/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String token = extractToken(request);
         String username = null;
 
         if (token != null) {
             try {
                 username = jwtUtil.extractUsername(token);
-            } catch (Exception ignore) {
-            }
+            } catch (Exception ignore) {}
         }
 
         if (token != null && username != null && jwtUtil.isAccessTokenValid(token, username)) {
@@ -60,14 +74,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             var authToken = new UsernamePasswordAuthenticationToken(
                     userDetails, null, userDetails.getAuthorities());
-            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            authToken.setDetails(
+                    new WebAuthenticationDetailsSource().buildDetails(request)
+            );
 
             SecurityContextHolder.getContext().setAuthentication(authToken);
 
-            System.out.println("User: " + username);
-            System.out.println("Authorities: " + userDetails.getAuthorities());
         } else {
-            SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);
