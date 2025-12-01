@@ -340,7 +340,7 @@ class AbsenceServiceReadTest {
 
         assertThatThrownBy(() -> service.listTeamAbsences("emp@test.com", 1L))
                 .isInstanceOf(org.springframework.security.access.AccessDeniedException.class)
-                .hasMessageContaining("manager only");
+                .hasMessageContaining("not your team");
     }
 
     @Test

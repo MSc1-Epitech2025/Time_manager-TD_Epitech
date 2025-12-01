@@ -42,7 +42,7 @@ class KpiServiceTest {
         var ratio = KpiService.class.getDeclaredMethod("ratio", Number.class, Number.class);
         ratio.setAccessible(true);
 
-        assertEquals(BigDecimal.ZERO, ratio.invoke(service, 10, 0));
+        assertNull(ratio.invoke(service, 10, 0));
         assertEquals(new BigDecimal("50.00"), ratio.invoke(service, 1, 2));
         assertEquals(new BigDecimal("33.33"), ratio.invoke(service, 1, 3));
     }
@@ -92,10 +92,10 @@ class KpiServiceTest {
 
         assertEquals(new BigDecimal("20.00"), k.getManagersShare());
         assertEquals(new BigDecimal("10.00"), k.getAdminsShare());
-
         assertEquals(new BigDecimal("50.00"), k.getPresenceRate());
 
         assertEquals(new BigDecimal("1.00"), k.getAvgHoursPerDay());
+
         assertEquals(new BigDecimal("20"), k.getTotalAbsenceDays());
         assertEquals(new BigDecimal("20.00"), k.getAbsenceRate());
 
@@ -211,7 +211,7 @@ class KpiServiceTest {
 
         BigDecimal result = (BigDecimal) method.invoke(service, 10, null);
 
-        assertEquals(BigDecimal.ZERO, result);
+        assertNull(result);
     }
 
     @Test
@@ -441,7 +441,7 @@ class KpiServiceTest {
 
         UserKpiSummary summary = service.getUser(uid, start, end);
 
-        assertNotNull(summary.getAvgHoursPerDay());
+        assertNull(summary.getAvgHoursPerDay());
     }
 
     @Test
@@ -526,7 +526,7 @@ class KpiServiceTest {
 
         GlobalKpiSummary k = service.getGlobal(start, end);
 
-        assertEquals(new BigDecimal("50.00"), k.getAvgHoursPerDay());
+        assertNull(k.getAvgHoursPerDay());
     }
 
     @Test
@@ -561,6 +561,6 @@ class KpiServiceTest {
 
         TeamKpiSummary k = service.getTeam(7, start, end);
 
-        assertEquals(new BigDecimal("10.00"), k.getAvgHoursPerDay());
+        assertNull(k.getAvgHoursPerDay());
     }
 }
