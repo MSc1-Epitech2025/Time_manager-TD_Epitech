@@ -1,4 +1,0 @@
-window.env = {
-  GRAPHQL_ENDPOINT: "${GRAPHQL_ENDPOINT}",
-  AZURE_URL: "${AZURE_URL}"
-};
