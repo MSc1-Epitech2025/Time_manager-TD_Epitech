@@ -149,4 +149,24 @@ class KpiGraphQLControllerTest {
     void testConstructorStoresDependencies() {
         assertThat(new KpiGraphQLController(kpiService, userRepository)).isNotNull();
     }
+
+    @Test
+    void testMyKpi_invalidUserId_shouldThrowIllegalStateException() {
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getName()).thenReturn("john.doe@epitech.eu");
+
+        User user = mock(User.class);
+        when(user.getId()).thenReturn("NOT-A-UUID");
+        when(userRepository.findByEmail("john.doe@epitech.eu")).thenReturn(Optional.of(user));
+
+        assertThatThrownBy(() ->
+                controller.myKpi("2025-01-01", "2025-01-31", authentication)
+        )
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Invalid user id format: NOT-A-UUID");
+
+        verify(userRepository).findByEmail("john.doe@epitech.eu");
+        verifyNoInteractions(kpiService);
+    }
 }

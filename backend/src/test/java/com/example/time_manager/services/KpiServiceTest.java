@@ -563,4 +563,45 @@ class KpiServiceTest {
 
         assertNull(k.getAvgHoursPerDay());
     }
+
+    @Test
+    void testGetGlobal_approvalDelayNull_shouldSetNull() {
+
+        LocalDate start = LocalDate.of(2024, 1, 1);
+        LocalDate end   = LocalDate.of(2024, 1, 31);
+
+        when(jdbc.queryForObject(contains("SELECT COUNT(*) FROM users"), eq(Integer.class)))
+                .thenReturn(10);
+
+        when(jdbc.queryForObject(contains("manager"), eq(Integer.class)))
+                .thenReturn(2);
+
+        when(jdbc.queryForObject(contains("admin"), eq(Integer.class)))
+                .thenReturn(1);
+
+        when(jdbc.queryForObject(contains("DISTINCT CONCAT"), eq(Number.class), any(), any()))
+                .thenReturn(50);
+
+        when(jdbc.queryForObject(contains("WITH RECURSIVE d"), eq(Number.class), any(), any()))
+                .thenReturn(100);
+
+        when(jdbc.queryForObject(contains("SUM(TIMESTAMPDIFF"), eq(Number.class), any(), any()))
+                .thenReturn(3000);
+
+        when(jdbc.queryForObject(startsWith("SELECT COUNT(*) FROM ("), eq(Number.class), any(), any()))
+                .thenReturn(50);
+
+        when(jdbc.queryForObject(contains("absence_days"), eq(Number.class), any(), any()))
+                .thenReturn(20);
+
+        when(jdbc.queryForObject(contains("approved_at"), eq(Number.class), any(), any()))
+                .thenReturn(null);
+
+        when(jdbc.queryForObject(contains("FROM reports"), eq(Integer.class), any(), any()))
+                .thenReturn(8);
+
+        GlobalKpiSummary k = service.getGlobal(start, end);
+
+        assertNull(k.getApprovalDelayHours());
+    }
 }
