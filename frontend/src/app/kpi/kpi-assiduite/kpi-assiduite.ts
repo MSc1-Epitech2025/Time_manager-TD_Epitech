@@ -76,6 +76,11 @@ export class KpiAssiduiteComponent implements AfterViewInit, OnChanges {
 
     this.chart.update();
   }
+  
+  getChartImage(): string | null {
+  if (!this.chart) return null;
+  return this.chart.toBase64Image();
+}
 
   renderChart() {
     const ctx = this.chartRef.nativeElement.getContext('2d');
