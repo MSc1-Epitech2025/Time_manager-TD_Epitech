@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.Authentication;
 
+import java.io.IOException;
+
 @RestController
 public class OAuth2CallbackController {
 
@@ -23,7 +25,8 @@ public class OAuth2CallbackController {
     }
 
     @GetMapping("/oauth2/success")
-    public ResponseEntity<Void> handleAzureCallback(Authentication auth, HttpServletResponse response) {
+    public void handleAzureCallback(Authentication auth, HttpServletResponse response) throws IOException {
+
         if (auth == null) {
             throw new RuntimeException("No auth context");
         }
@@ -53,14 +56,24 @@ public class OAuth2CallbackController {
         );
         String refreshToken = jwtUtil.generateRefreshToken(user.getEmail(), user.getId());
 
+        boolean isDev = true;
+
         ResponseCookie accessCookie = ResponseCookie.from("access_token", accessToken)
-                .httpOnly(true).secure(true).sameSite("None").path("/graphql").build();
+                .httpOnly(true)
+                .secure(!isDev)
+                .sameSite("None")
+                .path("/")
+                .build();
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
 
         ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", refreshToken)
-                .httpOnly(true).secure(true).sameSite("None").path("/graphql").build();
+                .httpOnly(true)
+                .secure(!isDev)
+                .sameSite("None")
+                .path("/")
+                .build();
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
-        return ResponseEntity.ok().build();
+        response.sendRedirect("http://localhost:4205/auth/callback");
     }
 }

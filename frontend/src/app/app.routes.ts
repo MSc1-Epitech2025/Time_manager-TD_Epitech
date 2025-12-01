@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authCanMatch, authCanActivate, roleCanActivate, planningUrlGuard } from './core/guards/auth-guard';
 import { ShellComponent } from './layout/shell/shell';
+import {AuthCallbackComponent} from './auth/callback';
 
 export const routes: Routes = [
     // Login
@@ -78,6 +79,12 @@ export const routes: Routes = [
 
                 loadComponent: () => import('./pages/users/users')
                     .then(m => m.UsersComponent),
+            },
+
+            // Callback to microsoft connection
+            {
+              path: 'auth/callback',
+              component: AuthCallbackComponent
             },
 
 
