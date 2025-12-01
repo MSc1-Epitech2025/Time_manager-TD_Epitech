@@ -8,6 +8,11 @@
     </div>
   </header>
 
+  <button class="export-btn pdf" (click)="exportReportEmployeesPdf()">
+    <mat-icon>picture_as_pdf</mat-icon>
+    Export PDF
+  </button>
+
   <!-- KPIs SYNTHÉTIQUES -->
   <section class="dashboard-summary">
     <div class="summary-card positive" (click)="selectKpi('attendance')" [class.active]="selectedKpi === 'attendance'">

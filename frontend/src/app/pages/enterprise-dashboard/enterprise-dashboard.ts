@@ -16,6 +16,7 @@ import {
   Utilisateur,
   PresenceDuJour,
 } from '../../core/services/kpi';
+import { ReportService } from '../../core/services/report';
 
 // Kpi Components
 import { KpiAssiduiteComponent } from '../../kpi/kpi-assiduite/kpi-assiduite';
@@ -48,6 +49,17 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
 
   users: Utilisateur[] = [];
   loading = false;
+
+  fakeEmployee = {
+  name: 'Jean Dupont',
+  team: 'Développement',
+  presence: 92,
+  late: 4,
+  absence: 4,
+  weeklyHours: 37,
+  productivity: 87,
+  tasksDone: 42,
+};
 
   selectedKpi: 'absenteeism' | 'attendance' | 'productivity' = 'absenteeism';
 
@@ -520,5 +532,15 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
     });
 
     return { months, teams, data };
+  }
+
+  exportReportEmployeesPdf() {
+    const reportService = new ReportService();
+    reportService.exportEmployeeReportPdfWithChart(this.fakeEmployee, "");
+  }
+
+  exportReportEmployeesExcel() {
+    const reportService = new ReportService();
+    reportService.exportEmployeeReport(this.fakeEmployee);
   }
 }
