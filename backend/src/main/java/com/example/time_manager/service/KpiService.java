@@ -1,23 +1,24 @@
 package com.example.time_manager.service;
 
-import com.example.time_manager.model.kpi.*;
-import com.example.time_manager.model.kpi.AbsenceBreakdown;
-import com.example.time_manager.model.kpi.LeaveBalance;
-import com.example.time_manager.model.kpi.PunctualityStats;
-import com.example.time_manager.model.kpi.TeamKpiSummary;
-import com.example.time_manager.model.kpi.UserKpiSummary;
-import com.example.time_manager.model.kpi.GlobalKpiSummary;
+import java.math.BigDecimal;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.time.LocalDate;
-import java.util.*;
+import com.example.time_manager.model.kpi.AbsenceBreakdown;
+import com.example.time_manager.model.kpi.GlobalKpiSummary;
+import com.example.time_manager.model.kpi.LeaveBalance;
+import com.example.time_manager.model.kpi.PunctualityStats;
+import com.example.time_manager.model.kpi.TeamKpiSummary;
+import com.example.time_manager.model.kpi.UserKpiSummary;
 
 @Service
 public class KpiService {
@@ -36,14 +37,35 @@ public class KpiService {
     }
 
     private static BigDecimal nz(Number n) {
-        return (n == null) ? BigDecimal.ZERO : new BigDecimal(n.toString());
+        if (n == null) return BigDecimal.ZERO;
+        if (n instanceof BigDecimal bd) return bd;
+        return new BigDecimal(n.toString());
     }
 
+
     private BigDecimal ratio(Number a, Number b) {
-        BigDecimal A = nz(a), B = nz(b);
-        if (B.compareTo(BigDecimal.ZERO) == 0) return BigDecimal.ZERO;
+        if (b == null) {
+            return null;
+        }
+        BigDecimal B = nz(b);
+        if (B.compareTo(BigDecimal.ZERO) <= 0) {
+            return null;
+        }
+        BigDecimal A = nz(a);
         return A.multiply(BigDecimal.valueOf(100))
                 .divide(B, 2, java.math.RoundingMode.HALF_UP);
+    }
+
+
+    private BigDecimal avgHoursPerDay(Number totalMinutes, Number dayCount) {
+        long days = (dayCount == null) ? 0L : dayCount.longValue();
+        if (days <= 0L) {
+            return null; 
+        }
+        BigDecimal total = nz(totalMinutes);
+        return total
+                .divide(BigDecimal.valueOf(days), 2, java.math.RoundingMode.HALF_UP)
+                .divide(BigDecimal.valueOf(60), 2, java.math.RoundingMode.HALF_UP);
     }
 
     // -------------------- Global --------------------
@@ -62,6 +84,7 @@ public class KpiService {
         Integer admins = jdbc.queryForObject(
                 "SELECT COUNT(*) FROM users WHERE JSON_CONTAINS(role, JSON_QUOTE('admin'))",
                 Integer.class);
+
         k.setManagersShare(ratio(managers, headcount));
         k.setAdminsShare(ratio(admins, headcount));
 
@@ -102,11 +125,7 @@ public class KpiService {
                 "  GROUP BY user_id, DATE(`at`)" +
                 ") s",
                 Number.class, start, end.plusDays(1));
-
-        BigDecimal avgHours = (nz(totalMinutes)
-                .divide(new BigDecimal(dayCount == null ? 1 : dayCount.longValue()), 2, java.math.RoundingMode.HALF_UP))
-                .divide(BigDecimal.valueOf(60), 2, java.math.RoundingMode.HALF_UP);
-        k.setAvgHoursPerDay(avgHours);
+        k.setAvgHoursPerDay(avgHoursPerDay(totalMinutes, dayCount));
 
         Number absenceDays = jdbc.queryForObject(
                 "SELECT COALESCE(SUM(CASE period " +
@@ -123,7 +142,7 @@ public class KpiService {
                 "FROM absence " +
                 "WHERE approved_at IS NOT NULL AND created_at BETWEEN ? AND ?",
                 Number.class, start.atStartOfDay(), end.plusDays(1).atStartOfDay());
-        k.setApprovalDelayHours(nz(approvalDelay));
+        k.setApprovalDelayHours(approvalDelay == null ? null : nz(approvalDelay));
 
         Integer totalReports = jdbc.queryForObject(
                 "SELECT COUNT(*) FROM reports WHERE created_at BETWEEN ? AND ?",
@@ -156,7 +175,6 @@ public class KpiService {
                 "WHERE c.`at` BETWEEN ? AND ? AND c.kind='IN'",
                 Number.class, teamId, start, end.plusDays(1));
 
-        // plannedDays (chaîne SQL corrigée)
         Number plannedDays = jdbc.queryForObject(
                 "WITH RECURSIVE d AS (" +
                 "  SELECT ? AS dt UNION ALL " +
@@ -170,6 +188,7 @@ public class KpiService {
                 "     AND ws.day_of_week = " + weekdayEnumExpr("d.dt") +
                 ") x",
                 Number.class, start, end, teamId);
+
         k.setPresenceRate(ratio(presentDays, plannedDays));
 
         Number totalMinutes = jdbc.queryForObject(
@@ -195,10 +214,7 @@ public class KpiService {
                 ") s",
                 Number.class, teamId, start, end.plusDays(1));
 
-        BigDecimal avgHours = (nz(totalMinutes)
-                .divide(new BigDecimal(dayCount == null ? 1 : dayCount.longValue()), 2, java.math.RoundingMode.HALF_UP))
-                .divide(BigDecimal.valueOf(60), 2, java.math.RoundingMode.HALF_UP);
-        k.setAvgHoursPerDay(avgHours);
+        k.setAvgHoursPerDay(avgHoursPerDay(totalMinutes, dayCount));
 
         Number absenceDays = jdbc.queryForObject(
                 "SELECT COALESCE(SUM(CASE ad.period " +
@@ -208,6 +224,7 @@ public class KpiService {
                 "JOIN team_members tm ON tm.user_id = a.user_id AND tm.team_id = ? " +
                 "WHERE ad.absence_date BETWEEN ? AND ?",
                 Number.class, teamId, start, end);
+
         k.setAbsenceRate(ratio(absenceDays, plannedDays));
 
         Integer reports = jdbc.queryForObject(
@@ -251,6 +268,7 @@ public class KpiService {
                 "     AND ws.day_of_week = " + weekdayEnumExpr("d.dt") +
                 ") x",
                 Number.class, start, end, userId.toString());
+
         k.setPresenceRate(ratio(presentDays, plannedDays));
 
         Number totalMinutes = jdbc.queryForObject(
@@ -273,10 +291,7 @@ public class KpiService {
                 ") s",
                 Number.class, userId.toString(), start, end.plusDays(1));
 
-        BigDecimal avgHours = (nz(totalMinutes)
-                .divide(new BigDecimal(dayCount == null ? 1 : dayCount.longValue()), 2, java.math.RoundingMode.HALF_UP))
-                .divide(BigDecimal.valueOf(60), 2, java.math.RoundingMode.HALF_UP);
-        k.setAvgHoursPerDay(avgHours);
+        k.setAvgHoursPerDay(avgHoursPerDay(totalMinutes, dayCount));
 
         Number plannedMinutes = jdbc.queryForObject(
                 "WITH RECURSIVE d AS (" +
@@ -288,6 +303,7 @@ public class KpiService {
                 "JOIN work_schedules ws ON ws.user_id = ? " +
                 "  AND ws.day_of_week = " + weekdayEnumExpr("d.dt"),
                 Number.class, start, end, userId.toString());
+
         BigDecimal overtime = nz(totalMinutes)
                 .subtract(nz(plannedMinutes))
                 .divide(BigDecimal.valueOf(60), 2, java.math.RoundingMode.HALF_UP);
@@ -308,6 +324,7 @@ public class KpiService {
                 ") z " +
                 "WHERE plan_start IS NOT NULL AND first_in IS NOT NULL AND TIME(first_in) > plan_start",
                 Number.class, start, end, userId.toString(), userId.toString());
+
         BigDecimal lateRate = ratio(lateCount, plannedDays);
 
         Number avgDelayMin = jdbc.queryForObject(
@@ -315,7 +332,7 @@ public class KpiService {
                 "  SELECT ? AS dt UNION ALL " +
                 "  SELECT DATE_ADD(dt, INTERVAL 1 DAY) FROM d WHERE dt < ?" +
                 ") " +
-                "SELECT COALESCE(AVG(TIMESTAMPDIFF(MINUTE, plan_start, first_in)),0) FROM (" +
+                "SELECT AVG(TIMESTAMPDIFF(MINUTE, plan_start, first_in)) FROM (" +
                 "  SELECT d.dt, " +
                 "    (SELECT MIN(start_time) FROM work_schedules ws " +
                 "     WHERE ws.user_id=? AND ws.day_of_week = " + weekdayEnumExpr("d.dt") + ") AS plan_start, " +
@@ -325,7 +342,9 @@ public class KpiService {
                 ") z " +
                 "WHERE plan_start IS NOT NULL AND first_in IS NOT NULL AND TIME(first_in) > plan_start",
                 Number.class, start, end, userId.toString(), userId.toString());
-        k.setPunctuality(new PunctualityStats(lateRate, nz(avgDelayMin)));
+
+        BigDecimal avgDelay = (avgDelayMin == null ? null : nz(avgDelayMin));
+        k.setPunctuality(new PunctualityStats(lateRate, avgDelay));
 
         Number absDays = jdbc.queryForObject(
                 "SELECT COALESCE(SUM(CASE period " +
