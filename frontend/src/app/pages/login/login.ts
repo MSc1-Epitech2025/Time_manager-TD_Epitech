@@ -237,7 +237,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   get password() { return this.form.get('password'); }
 
   loginWithMicrosoft() {
-    window.location.href = 'http://localhost:8080/oauth2/authorization/azure';
+    window.location.href = 'http://localhost:8085/';
   }
 
 }
