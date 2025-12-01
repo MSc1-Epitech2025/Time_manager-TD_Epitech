@@ -1,16 +1,5 @@
 package com.example.time_manager.service;
 
-import com.example.time_manager.model.kpi.AbsenceBreakdown;
-import com.example.time_manager.model.kpi.GlobalKpiSummary;
-import com.example.time_manager.model.kpi.LeaveBalance;
-import com.example.time_manager.model.kpi.PunctualityStats;
-import com.example.time_manager.model.kpi.TeamKpiSummary;
-import com.example.time_manager.model.kpi.UserKpiSummary;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -18,6 +7,18 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.example.time_manager.model.kpi.AbsenceBreakdown;
+import com.example.time_manager.model.kpi.GlobalKpiSummary;
+import com.example.time_manager.model.kpi.LeaveBalance;
+import com.example.time_manager.model.kpi.PunctualityStats;
+import com.example.time_manager.model.kpi.TeamKpiSummary;
+import com.example.time_manager.model.kpi.UserKpiSummary;
 
 @Service
 public class KpiService {
@@ -35,40 +36,31 @@ public class KpiService {
              + "WHEN 4 THEN 'FRI' WHEN 5 THEN 'SAT' ELSE 'SUN' END";
     }
 
-    /**
-     * Convertit un Number en BigDecimal, 0 si null.
-     */
     private static BigDecimal nz(Number n) {
         if (n == null) return BigDecimal.ZERO;
         if (n instanceof BigDecimal bd) return bd;
         return new BigDecimal(n.toString());
     }
 
-    /**
-     * Ratio en pourcentage (0–100) avec 2 décimales.
-     * Retourne null si le dénominateur est nul ou <= 0 (données insuffisantes).
-     */
+
     private BigDecimal ratio(Number a, Number b) {
         if (b == null) {
             return null;
         }
         BigDecimal B = nz(b);
         if (B.compareTo(BigDecimal.ZERO) <= 0) {
-            return null; // données insuffisantes
+            return null;
         }
         BigDecimal A = nz(a);
         return A.multiply(BigDecimal.valueOf(100))
                 .divide(B, 2, java.math.RoundingMode.HALF_UP);
     }
 
-    /**
-     * Moyenne d'heures par jour à partir de minutes totales et du nombre de jours.
-     * Retourne null si dayCount <= 0 (données insuffisantes).
-     */
+
     private BigDecimal avgHoursPerDay(Number totalMinutes, Number dayCount) {
         long days = (dayCount == null) ? 0L : dayCount.longValue();
         if (days <= 0L) {
-            return null; // pas assez de jours pour calculer
+            return null; 
         }
         BigDecimal total = nz(totalMinutes);
         return total
@@ -93,7 +85,6 @@ public class KpiService {
                 "SELECT COUNT(*) FROM users WHERE JSON_CONTAINS(role, JSON_QUOTE('admin'))",
                 Integer.class);
 
-        // part de managers/admins dans le headcount (nullable si headcount <= 0)
         k.setManagersShare(ratio(managers, headcount));
         k.setAdminsShare(ratio(admins, headcount));
 
@@ -113,8 +104,6 @@ public class KpiService {
                 "  JOIN work_schedules ws ON ws.day_of_week = " + weekdayEnumExpr("d.dt") +
                 ") x",
                 Number.class, start, end);
-
-        // taux de présence global (nullable si aucun jour planifié)
         k.setPresenceRate(ratio(presentDays, plannedDays));
 
         Number totalMinutes = jdbc.queryForObject(
@@ -136,8 +125,6 @@ public class KpiService {
                 "  GROUP BY user_id, DATE(`at`)" +
                 ") s",
                 Number.class, start, end.plusDays(1));
-
-        // moyenne d'heures par jour (nullable si aucun jour de présence)
         k.setAvgHoursPerDay(avgHoursPerDay(totalMinutes, dayCount));
 
         Number absenceDays = jdbc.queryForObject(
@@ -148,8 +135,6 @@ public class KpiService {
                 "WHERE absence_date BETWEEN ? AND ?",
                 Number.class, start, end);
         k.setTotalAbsenceDays(nz(absenceDays));
-
-        // taux d'absence (nullable si aucun jour planifié)
         k.setAbsenceRate(ratio(absenceDays, plannedDays));
 
         Number approvalDelay = jdbc.queryForObject(
@@ -157,7 +142,6 @@ public class KpiService {
                 "FROM absence " +
                 "WHERE approved_at IS NOT NULL AND created_at BETWEEN ? AND ?",
                 Number.class, start.atStartOfDay(), end.plusDays(1).atStartOfDay());
-        // ici 0 = aucune absence approuvée ou délai moyen nul ; null si AVG() retourne null
         k.setApprovalDelayHours(approvalDelay == null ? null : nz(approvalDelay));
 
         Integer totalReports = jdbc.queryForObject(
@@ -205,7 +189,6 @@ public class KpiService {
                 ") x",
                 Number.class, start, end, teamId);
 
-        // taux de présence équipe (nullable si aucun jour planifié)
         k.setPresenceRate(ratio(presentDays, plannedDays));
 
         Number totalMinutes = jdbc.queryForObject(
@@ -231,7 +214,6 @@ public class KpiService {
                 ") s",
                 Number.class, teamId, start, end.plusDays(1));
 
-        // moyenne d'heures par jour équipe (nullable si aucun jour de présence)
         k.setAvgHoursPerDay(avgHoursPerDay(totalMinutes, dayCount));
 
         Number absenceDays = jdbc.queryForObject(
@@ -243,7 +225,6 @@ public class KpiService {
                 "WHERE ad.absence_date BETWEEN ? AND ?",
                 Number.class, teamId, start, end);
 
-        // taux d'absence équipe (nullable si aucun jour planifié)
         k.setAbsenceRate(ratio(absenceDays, plannedDays));
 
         Integer reports = jdbc.queryForObject(
@@ -288,7 +269,6 @@ public class KpiService {
                 ") x",
                 Number.class, start, end, userId.toString());
 
-        // taux de présence utilisateur (nullable si aucun jour planifié)
         k.setPresenceRate(ratio(presentDays, plannedDays));
 
         Number totalMinutes = jdbc.queryForObject(
@@ -311,7 +291,6 @@ public class KpiService {
                 ") s",
                 Number.class, userId.toString(), start, end.plusDays(1));
 
-        // moyenne d'heures par jour utilisateur (nullable si aucun jour de présence)
         k.setAvgHoursPerDay(avgHoursPerDay(totalMinutes, dayCount));
 
         Number plannedMinutes = jdbc.queryForObject(
@@ -325,7 +304,6 @@ public class KpiService {
                 "  AND ws.day_of_week = " + weekdayEnumExpr("d.dt"),
                 Number.class, start, end, userId.toString());
 
-        // heures sup = total - prévu (peut être négatif si moins travaillé que prévu, mais pas de division)
         BigDecimal overtime = nz(totalMinutes)
                 .subtract(nz(plannedMinutes))
                 .divide(BigDecimal.valueOf(60), 2, java.math.RoundingMode.HALF_UP);
@@ -347,7 +325,6 @@ public class KpiService {
                 "WHERE plan_start IS NOT NULL AND first_in IS NOT NULL AND TIME(first_in) > plan_start",
                 Number.class, start, end, userId.toString(), userId.toString());
 
-        // taux de retard (nullable si aucun jour planifié)
         BigDecimal lateRate = ratio(lateCount, plannedDays);
 
         Number avgDelayMin = jdbc.queryForObject(
@@ -366,7 +343,6 @@ public class KpiService {
                 "WHERE plan_start IS NOT NULL AND first_in IS NOT NULL AND TIME(first_in) > plan_start",
                 Number.class, start, end, userId.toString(), userId.toString());
 
-        // si avgDelayMin est null → pas de retard mesurable (données insuffisantes pour ce champ)
         BigDecimal avgDelay = (avgDelayMin == null ? null : nz(avgDelayMin));
         k.setPunctuality(new PunctualityStats(lateRate, avgDelay));
 
