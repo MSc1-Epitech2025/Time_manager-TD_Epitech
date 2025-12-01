@@ -749,4 +749,14 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
 
     return { months, teams, data };
   }
+
+  exportReportEmployeesPdf() {
+    const reportService = new ReportService();
+    reportService.exportEmployeeReportPdfWithChart(this.fakeEmployee, "");
+  }
+
+  exportReportEmployeesExcel() {
+    const reportService = new ReportService();
+    reportService.exportEmployeeReport(this.fakeEmployee);
+  }
 }
