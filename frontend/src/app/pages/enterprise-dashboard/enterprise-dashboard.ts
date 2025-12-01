@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit , ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -751,8 +751,16 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
   }
 
   exportReportEmployeesPdf() {
+
+     const chartImg = this.assiduiteComp.getChartImage();
+
+  if (!chartImg) {
+    console.error("Impossible de récupérer l'image du KPI Assiduité");
+    return;
+  }
+
     const reportService = new ReportService();
-    reportService.exportEmployeeReportPdfWithChart(this.fakeEmployee, "");
+    reportService.exportEmployeeReportPdfWithChart(this.fakeEmployee, chartImg);
   }
 
   exportReportEmployeesExcel() {
