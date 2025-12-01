@@ -42,7 +42,7 @@ class KpiServiceTest {
         var ratio = KpiService.class.getDeclaredMethod("ratio", Number.class, Number.class);
         ratio.setAccessible(true);
 
-        assertEquals(BigDecimal.ZERO, ratio.invoke(service, 10, 0));
+        assertNull(ratio.invoke(service, 10, 0));
         assertEquals(new BigDecimal("50.00"), ratio.invoke(service, 1, 2));
         assertEquals(new BigDecimal("33.33"), ratio.invoke(service, 1, 3));
     }
@@ -92,10 +92,10 @@ class KpiServiceTest {
 
         assertEquals(new BigDecimal("20.00"), k.getManagersShare());
         assertEquals(new BigDecimal("10.00"), k.getAdminsShare());
-
         assertEquals(new BigDecimal("50.00"), k.getPresenceRate());
 
         assertEquals(new BigDecimal("1.00"), k.getAvgHoursPerDay());
+
         assertEquals(new BigDecimal("20"), k.getTotalAbsenceDays());
         assertEquals(new BigDecimal("20.00"), k.getAbsenceRate());
 
@@ -211,7 +211,7 @@ class KpiServiceTest {
 
         BigDecimal result = (BigDecimal) method.invoke(service, 10, null);
 
-        assertEquals(BigDecimal.ZERO, result);
+        assertNull(result);
     }
 
     @Test
@@ -441,7 +441,7 @@ class KpiServiceTest {
 
         UserKpiSummary summary = service.getUser(uid, start, end);
 
-        assertNotNull(summary.getAvgHoursPerDay());
+        assertNull(summary.getAvgHoursPerDay());
     }
 
     @Test
@@ -526,7 +526,7 @@ class KpiServiceTest {
 
         GlobalKpiSummary k = service.getGlobal(start, end);
 
-        assertEquals(new BigDecimal("50.00"), k.getAvgHoursPerDay());
+        assertNull(k.getAvgHoursPerDay());
     }
 
     @Test
@@ -561,6 +561,47 @@ class KpiServiceTest {
 
         TeamKpiSummary k = service.getTeam(7, start, end);
 
-        assertEquals(new BigDecimal("10.00"), k.getAvgHoursPerDay());
+        assertNull(k.getAvgHoursPerDay());
+    }
+
+    @Test
+    void testGetGlobal_approvalDelayNull_shouldSetNull() {
+
+        LocalDate start = LocalDate.of(2024, 1, 1);
+        LocalDate end   = LocalDate.of(2024, 1, 31);
+
+        when(jdbc.queryForObject(contains("SELECT COUNT(*) FROM users"), eq(Integer.class)))
+                .thenReturn(10);
+
+        when(jdbc.queryForObject(contains("manager"), eq(Integer.class)))
+                .thenReturn(2);
+
+        when(jdbc.queryForObject(contains("admin"), eq(Integer.class)))
+                .thenReturn(1);
+
+        when(jdbc.queryForObject(contains("DISTINCT CONCAT"), eq(Number.class), any(), any()))
+                .thenReturn(50);
+
+        when(jdbc.queryForObject(contains("WITH RECURSIVE d"), eq(Number.class), any(), any()))
+                .thenReturn(100);
+
+        when(jdbc.queryForObject(contains("SUM(TIMESTAMPDIFF"), eq(Number.class), any(), any()))
+                .thenReturn(3000);
+
+        when(jdbc.queryForObject(startsWith("SELECT COUNT(*) FROM ("), eq(Number.class), any(), any()))
+                .thenReturn(50);
+
+        when(jdbc.queryForObject(contains("absence_days"), eq(Number.class), any(), any()))
+                .thenReturn(20);
+
+        when(jdbc.queryForObject(contains("approved_at"), eq(Number.class), any(), any()))
+                .thenReturn(null);
+
+        when(jdbc.queryForObject(contains("FROM reports"), eq(Integer.class), any(), any()))
+                .thenReturn(8);
+
+        GlobalKpiSummary k = service.getGlobal(start, end);
+
+        assertNull(k.getApprovalDelayHours());
     }
 }

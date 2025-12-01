@@ -181,7 +181,7 @@ class AppUserDetailsServiceTest {
 
         assertThat(authorities)
                 .extracting(GrantedAuthority::getAuthority)
-                .containsExactly("[INVALID-JSON");
+                .containsExactly("EMPLOYEE");
     }
 
     @SuppressWarnings("unchecked")

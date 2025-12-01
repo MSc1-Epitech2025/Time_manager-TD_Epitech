@@ -91,7 +91,7 @@ services:
       - SONAR_HOST_URL=${SONAR_HOST_URL}
       - SONAR_TOKEN=${SONAR_TOKEN}
     volumes:
-      - ./backend:/usr/src/app/backend
+      - ./backend:/usr/src/app/backend:ro
       - ./sonarqube/backend/sonar-project.properties:/usr/src/app/sonar-project.properties
       - ./backend/build:/usr/src/app/backend/build
     working_dir: /usr/src/app
