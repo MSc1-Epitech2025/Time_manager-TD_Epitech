@@ -1,76 +1,99 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>KpiService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">time-manager</a> &gt; <a href="index.source.html" class="el_package">com.example.time_manager.service</a> &gt; <span class="el_source">KpiService.java</span></div><h1>KpiService.java</h1><pre class="source lang-java linenums">package com.example.time_manager.service;
 
-import com.example.time_manager.model.kpi.*;
-import com.example.time_manager.model.kpi.AbsenceBreakdown;
-import com.example.time_manager.model.kpi.LeaveBalance;
-import com.example.time_manager.model.kpi.PunctualityStats;
-import com.example.time_manager.model.kpi.TeamKpiSummary;
-import com.example.time_manager.model.kpi.UserKpiSummary;
-import com.example.time_manager.model.kpi.GlobalKpiSummary;
+import java.math.BigDecimal;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.time.LocalDate;
-import java.util.*;
+import com.example.time_manager.model.kpi.AbsenceBreakdown;
+import com.example.time_manager.model.kpi.GlobalKpiSummary;
+import com.example.time_manager.model.kpi.LeaveBalance;
+import com.example.time_manager.model.kpi.PunctualityStats;
+import com.example.time_manager.model.kpi.TeamKpiSummary;
+import com.example.time_manager.model.kpi.UserKpiSummary;
 
 @Service
 public class KpiService {
 
     private final JdbcTemplate jdbc;
 
-<span class="fc" id="L27">    public KpiService(JdbcTemplate jdbc) {</span>
-<span class="fc" id="L28">        this.jdbc = jdbc;</span>
-<span class="fc" id="L29">    }</span>
+<span class="fc" id="L28">    public KpiService(JdbcTemplate jdbc) {</span>
+<span class="fc" id="L29">        this.jdbc = jdbc;</span>
+<span class="fc" id="L30">    }</span>
 
     // -------------------- Helpers --------------------
     private static String weekdayEnumExpr(String aliasDateCol) {
-<span class="fc" id="L33">        return &quot;CASE WEEKDAY(&quot; + aliasDateCol + &quot;) &quot;</span>
+<span class="fc" id="L34">        return &quot;CASE WEEKDAY(&quot; + aliasDateCol + &quot;) &quot;</span>
              + &quot;WHEN 0 THEN 'MON' WHEN 1 THEN 'TUE' WHEN 2 THEN 'WED' WHEN 3 THEN 'THU' &quot;
              + &quot;WHEN 4 THEN 'FRI' WHEN 5 THEN 'SAT' ELSE 'SUN' END&quot;;
     }
 
     private static BigDecimal nz(Number n) {
-<span class="fc bfc" id="L39" title="All 2 branches covered.">        return (n == null) ? BigDecimal.ZERO : new BigDecimal(n.toString());</span>
+<span class="fc bfc" id="L40" title="All 2 branches covered.">        if (n == null) return BigDecimal.ZERO;</span>
+<span class="fc bfc" id="L41" title="All 2 branches covered.">        if (n instanceof BigDecimal bd) return bd;</span>
+<span class="fc" id="L42">        return new BigDecimal(n.toString());</span>
     }
 
+
     private BigDecimal ratio(Number a, Number b) {
-<span class="fc" id="L43">        BigDecimal A = nz(a), B = nz(b);</span>
-<span class="fc bfc" id="L44" title="All 2 branches covered.">        if (B.compareTo(BigDecimal.ZERO) == 0) return BigDecimal.ZERO;</span>
-<span class="fc" id="L45">        return A.multiply(BigDecimal.valueOf(100))</span>
-<span class="fc" id="L46">                .divide(B, 2, java.math.RoundingMode.HALF_UP);</span>
+<span class="fc bfc" id="L47" title="All 2 branches covered.">        if (b == null) {</span>
+<span class="fc" id="L48">            return null;</span>
+        }
+<span class="fc" id="L50">        BigDecimal B = nz(b);</span>
+<span class="fc bfc" id="L51" title="All 2 branches covered.">        if (B.compareTo(BigDecimal.ZERO) &lt;= 0) {</span>
+<span class="fc" id="L52">            return null;</span>
+        }
+<span class="fc" id="L54">        BigDecimal A = nz(a);</span>
+<span class="fc" id="L55">        return A.multiply(BigDecimal.valueOf(100))</span>
+<span class="fc" id="L56">                .divide(B, 2, java.math.RoundingMode.HALF_UP);</span>
+    }
+
+
+    private BigDecimal avgHoursPerDay(Number totalMinutes, Number dayCount) {
+<span class="fc bfc" id="L61" title="All 2 branches covered.">        long days = (dayCount == null) ? 0L : dayCount.longValue();</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">        if (days &lt;= 0L) {</span>
+<span class="fc" id="L63">            return null; </span>
+        }
+<span class="fc" id="L65">        BigDecimal total = nz(totalMinutes);</span>
+<span class="fc" id="L66">        return total</span>
+<span class="fc" id="L67">                .divide(BigDecimal.valueOf(days), 2, java.math.RoundingMode.HALF_UP)</span>
+<span class="fc" id="L68">                .divide(BigDecimal.valueOf(60), 2, java.math.RoundingMode.HALF_UP);</span>
     }
 
     // -------------------- Global --------------------
     @Transactional(readOnly = true)
     public GlobalKpiSummary getGlobal(LocalDate start, LocalDate end) {
-<span class="fc" id="L52">        GlobalKpiSummary k = new GlobalKpiSummary();</span>
-<span class="fc" id="L53">        k.setPeriodStart(start);</span>
-<span class="fc" id="L54">        k.setPeriodEnd(end);</span>
+<span class="fc" id="L74">        GlobalKpiSummary k = new GlobalKpiSummary();</span>
+<span class="fc" id="L75">        k.setPeriodStart(start);</span>
+<span class="fc" id="L76">        k.setPeriodEnd(end);</span>
 
-<span class="fc" id="L56">        Integer headcount = jdbc.queryForObject(&quot;SELECT COUNT(*) FROM users&quot;, Integer.class);</span>
-<span class="fc" id="L57">        k.setHeadcount(headcount);</span>
+<span class="fc" id="L78">        Integer headcount = jdbc.queryForObject(&quot;SELECT COUNT(*) FROM users&quot;, Integer.class);</span>
+<span class="fc" id="L79">        k.setHeadcount(headcount);</span>
 
-<span class="fc" id="L59">        Integer managers = jdbc.queryForObject(</span>
+<span class="fc" id="L81">        Integer managers = jdbc.queryForObject(</span>
                 &quot;SELECT COUNT(*) FROM users WHERE JSON_CONTAINS(role, JSON_QUOTE('manager'))&quot;,
                 Integer.class);
-<span class="fc" id="L62">        Integer admins = jdbc.queryForObject(</span>
+<span class="fc" id="L84">        Integer admins = jdbc.queryForObject(</span>
                 &quot;SELECT COUNT(*) FROM users WHERE JSON_CONTAINS(role, JSON_QUOTE('admin'))&quot;,
                 Integer.class);
-<span class="fc" id="L65">        k.setManagersShare(ratio(managers, headcount));</span>
-<span class="fc" id="L66">        k.setAdminsShare(ratio(admins, headcount));</span>
 
-<span class="fc" id="L68">        Number presentDays = jdbc.queryForObject(</span>
+<span class="fc" id="L88">        k.setManagersShare(ratio(managers, headcount));</span>
+<span class="fc" id="L89">        k.setAdminsShare(ratio(admins, headcount));</span>
+
+<span class="fc" id="L91">        Number presentDays = jdbc.queryForObject(</span>
                 &quot;SELECT COUNT(DISTINCT CONCAT(user_id,'#', DATE(`at`))) FROM clocks &quot; +
                 &quot;WHERE `at` BETWEEN ? AND ? AND kind='IN'&quot;,
-<span class="fc" id="L71">                Number.class, start, end.plusDays(1));</span>
+<span class="fc" id="L94">                Number.class, start, end.plusDays(1));</span>
 
-<span class="fc" id="L73">        Number plannedDays = jdbc.queryForObject(</span>
+<span class="fc" id="L96">        Number plannedDays = jdbc.queryForObject(</span>
                 &quot;WITH RECURSIVE d AS (&quot; +
                 &quot;  SELECT ? AS dt UNION ALL &quot; +
                 &quot;  SELECT DATE_ADD(dt, INTERVAL 1 DAY) FROM d WHERE dt &lt; ?&quot; +
@@ -78,12 +101,12 @@ public class KpiService {
                 &quot;SELECT COUNT(*) FROM (&quot; +
                 &quot;  SELECT DISTINCT ws.user_id, d.dt &quot; +
                 &quot;  FROM d &quot; +
-<span class="fc" id="L81">                &quot;  JOIN work_schedules ws ON ws.day_of_week = &quot; + weekdayEnumExpr(&quot;d.dt&quot;) +</span>
+<span class="fc" id="L104">                &quot;  JOIN work_schedules ws ON ws.day_of_week = &quot; + weekdayEnumExpr(&quot;d.dt&quot;) +</span>
                 &quot;) x&quot;,
                 Number.class, start, end);
-<span class="fc" id="L84">        k.setPresenceRate(ratio(presentDays, plannedDays));</span>
+<span class="fc" id="L107">        k.setPresenceRate(ratio(presentDays, plannedDays));</span>
 
-<span class="fc" id="L86">        Number totalMinutes = jdbc.queryForObject(</span>
+<span class="fc" id="L109">        Number totalMinutes = jdbc.queryForObject(</span>
                 &quot;SELECT COALESCE(SUM(TIMESTAMPDIFF(MINUTE, first_in, last_out)),0) FROM (&quot; +
                 &quot;  SELECT user_id, DATE(`at`) d, &quot; +
                 &quot;         MIN(CASE WHEN kind='IN' THEN `at` END) AS first_in, &quot; +
@@ -93,71 +116,66 @@ public class KpiService {
                 &quot;  GROUP BY user_id, DATE(`at`) &quot; +
                 &quot;  HAVING first_in IS NOT NULL AND last_out IS NOT NULL&quot; +
                 &quot;) t&quot;,
-<span class="fc" id="L96">                Number.class, start, end.plusDays(1));</span>
+<span class="fc" id="L119">                Number.class, start, end.plusDays(1));</span>
 
-<span class="fc" id="L98">        Number dayCount = jdbc.queryForObject(</span>
+<span class="fc" id="L121">        Number dayCount = jdbc.queryForObject(</span>
                 &quot;SELECT COUNT(*) FROM (&quot; +
                 &quot;  SELECT user_id, DATE(`at`) d &quot; +
                 &quot;  FROM clocks WHERE `at` BETWEEN ? AND ? &quot; +
                 &quot;  GROUP BY user_id, DATE(`at`)&quot; +
                 &quot;) s&quot;,
-<span class="fc" id="L104">                Number.class, start, end.plusDays(1));</span>
+<span class="fc" id="L127">                Number.class, start, end.plusDays(1));</span>
+<span class="fc" id="L128">        k.setAvgHoursPerDay(avgHoursPerDay(totalMinutes, dayCount));</span>
 
-<span class="fc" id="L106">        BigDecimal avgHours = (nz(totalMinutes)</span>
-<span class="fc bfc" id="L107" title="All 2 branches covered.">                .divide(new BigDecimal(dayCount == null ? 1 : dayCount.longValue()), 2, java.math.RoundingMode.HALF_UP))</span>
-<span class="fc" id="L108">                .divide(BigDecimal.valueOf(60), 2, java.math.RoundingMode.HALF_UP);</span>
-<span class="fc" id="L109">        k.setAvgHoursPerDay(avgHours);</span>
-
-<span class="fc" id="L111">        Number absenceDays = jdbc.queryForObject(</span>
+<span class="fc" id="L130">        Number absenceDays = jdbc.queryForObject(</span>
                 &quot;SELECT COALESCE(SUM(CASE period &quot; +
                 &quot; WHEN 'FULL_DAY' THEN 1 WHEN 'AM' THEN 0.5 WHEN 'PM' THEN 0.5 END),0) &quot; +
                 &quot;FROM absence_days ad &quot; +
                 &quot;JOIN absence a ON a.id = ad.absence_id &quot; +
                 &quot;WHERE absence_date BETWEEN ? AND ?&quot;,
                 Number.class, start, end);
-<span class="fc" id="L118">        k.setTotalAbsenceDays(nz(absenceDays));</span>
-<span class="fc" id="L119">        k.setAbsenceRate(ratio(absenceDays, plannedDays));</span>
+<span class="fc" id="L137">        k.setTotalAbsenceDays(nz(absenceDays));</span>
+<span class="fc" id="L138">        k.setAbsenceRate(ratio(absenceDays, plannedDays));</span>
 
-<span class="fc" id="L121">        Number approvalDelay = jdbc.queryForObject(</span>
+<span class="fc" id="L140">        Number approvalDelay = jdbc.queryForObject(</span>
                 &quot;SELECT AVG(TIMESTAMPDIFF(HOUR, created_at, approved_at)) &quot; +
                 &quot;FROM absence &quot; +
                 &quot;WHERE approved_at IS NOT NULL AND created_at BETWEEN ? AND ?&quot;,
-<span class="fc" id="L125">                Number.class, start.atStartOfDay(), end.plusDays(1).atStartOfDay());</span>
-<span class="fc" id="L126">        k.setApprovalDelayHours(nz(approvalDelay));</span>
+<span class="fc" id="L144">                Number.class, start.atStartOfDay(), end.plusDays(1).atStartOfDay());</span>
+<span class="fc bfc" id="L145" title="All 2 branches covered.">        k.setApprovalDelayHours(approvalDelay == null ? null : nz(approvalDelay));</span>
 
-<span class="fc" id="L128">        Integer totalReports = jdbc.queryForObject(</span>
+<span class="fc" id="L147">        Integer totalReports = jdbc.queryForObject(</span>
                 &quot;SELECT COUNT(*) FROM reports WHERE created_at BETWEEN ? AND ?&quot;,
-<span class="fc" id="L130">                Integer.class, start.atStartOfDay(), end.plusDays(1).atStartOfDay());</span>
-<span class="fc" id="L131">        k.setTotalReports(totalReports);</span>
+<span class="fc" id="L149">                Integer.class, start.atStartOfDay(), end.plusDays(1).atStartOfDay());</span>
+<span class="fc" id="L150">        k.setTotalReports(totalReports);</span>
 
-<span class="fc" id="L133">        return k;</span>
+<span class="fc" id="L152">        return k;</span>
     }
 
     // -------------------- Team --------------------
     @Transactional(readOnly = true)
     public TeamKpiSummary getTeam(Integer teamId, LocalDate start, LocalDate end) {
-<span class="fc" id="L139">        TeamKpiSummary k = new TeamKpiSummary();</span>
-<span class="fc" id="L140">        k.setTeamId(teamId);</span>
-<span class="fc" id="L141">        k.setPeriodStart(start);</span>
-<span class="fc" id="L142">        k.setPeriodEnd(end);</span>
+<span class="fc" id="L158">        TeamKpiSummary k = new TeamKpiSummary();</span>
+<span class="fc" id="L159">        k.setTeamId(teamId);</span>
+<span class="fc" id="L160">        k.setPeriodStart(start);</span>
+<span class="fc" id="L161">        k.setPeriodEnd(end);</span>
 
-<span class="fc" id="L144">        Map&lt;String, Object&gt; team = jdbc.queryForMap(&quot;SELECT id, name FROM teams WHERE id=?&quot;, teamId);</span>
-<span class="fc" id="L145">        k.setTeamName((String) team.get(&quot;name&quot;));</span>
+<span class="fc" id="L163">        Map&lt;String, Object&gt; team = jdbc.queryForMap(&quot;SELECT id, name FROM teams WHERE id=?&quot;, teamId);</span>
+<span class="fc" id="L164">        k.setTeamName((String) team.get(&quot;name&quot;));</span>
 
-<span class="fc" id="L147">        Integer headcount = jdbc.queryForObject(</span>
+<span class="fc" id="L166">        Integer headcount = jdbc.queryForObject(</span>
                 &quot;SELECT COUNT(*) FROM team_members WHERE team_id = ?&quot;,
                 Integer.class, teamId);
-<span class="fc" id="L150">        k.setHeadcount(headcount);</span>
+<span class="fc" id="L169">        k.setHeadcount(headcount);</span>
 
-<span class="fc" id="L152">        Number presentDays = jdbc.queryForObject(</span>
+<span class="fc" id="L171">        Number presentDays = jdbc.queryForObject(</span>
                 &quot;SELECT COUNT(DISTINCT CONCAT(c.user_id,'#', DATE(c.`at`))) &quot; +
                 &quot;FROM clocks c &quot; +
                 &quot;JOIN team_members tm ON tm.user_id = c.user_id AND tm.team_id = ? &quot; +
                 &quot;WHERE c.`at` BETWEEN ? AND ? AND c.kind='IN'&quot;,
-<span class="fc" id="L157">                Number.class, teamId, start, end.plusDays(1));</span>
+<span class="fc" id="L176">                Number.class, teamId, start, end.plusDays(1));</span>
 
-        // plannedDays (chaîne SQL corrigée)
-<span class="fc" id="L160">        Number plannedDays = jdbc.queryForObject(</span>
+<span class="fc" id="L178">        Number plannedDays = jdbc.queryForObject(</span>
                 &quot;WITH RECURSIVE d AS (&quot; +
                 &quot;  SELECT ? AS dt UNION ALL &quot; +
                 &quot;  SELECT DATE_ADD(dt, INTERVAL 1 DAY) FROM d WHERE dt &lt; ?&quot; +
@@ -167,12 +185,13 @@ public class KpiService {
                 &quot;  FROM d &quot; +
                 &quot;  JOIN team_members tm ON tm.team_id = ? &quot; +
                 &quot;  JOIN work_schedules ws ON ws.user_id = tm.user_id &quot; +
-<span class="fc" id="L170">                &quot;     AND ws.day_of_week = &quot; + weekdayEnumExpr(&quot;d.dt&quot;) +</span>
+<span class="fc" id="L188">                &quot;     AND ws.day_of_week = &quot; + weekdayEnumExpr(&quot;d.dt&quot;) +</span>
                 &quot;) x&quot;,
                 Number.class, start, end, teamId);
-<span class="fc" id="L173">        k.setPresenceRate(ratio(presentDays, plannedDays));</span>
 
-<span class="fc" id="L175">        Number totalMinutes = jdbc.queryForObject(</span>
+<span class="fc" id="L192">        k.setPresenceRate(ratio(presentDays, plannedDays));</span>
+
+<span class="fc" id="L194">        Number totalMinutes = jdbc.queryForObject(</span>
                 &quot;SELECT COALESCE(SUM(TIMESTAMPDIFF(MINUTE, first_in, last_out)),0) FROM (&quot; +
                 &quot;  SELECT c.user_id, DATE(c.`at`) d, &quot; +
                 &quot;         MIN(CASE WHEN c.kind='IN' THEN c.`at` END) AS first_in, &quot; +
@@ -183,9 +202,9 @@ public class KpiService {
                 &quot;  GROUP BY c.user_id, DATE(c.`at`) &quot; +
                 &quot;  HAVING first_in IS NOT NULL AND last_out IS NOT NULL&quot; +
                 &quot;) t&quot;,
-<span class="fc" id="L186">                Number.class, teamId, start, end.plusDays(1));</span>
+<span class="fc" id="L205">                Number.class, teamId, start, end.plusDays(1));</span>
 
-<span class="fc" id="L188">        Number dayCount = jdbc.queryForObject(</span>
+<span class="fc" id="L207">        Number dayCount = jdbc.queryForObject(</span>
                 &quot;SELECT COUNT(*) FROM (&quot; +
                 &quot;  SELECT c.user_id, DATE(c.`at`) d &quot; +
                 &quot;  FROM clocks c &quot; +
@@ -193,14 +212,11 @@ public class KpiService {
                 &quot;  WHERE c.`at` BETWEEN ? AND ? &quot; +
                 &quot;  GROUP BY c.user_id, DATE(c.`at`)&quot; +
                 &quot;) s&quot;,
-<span class="fc" id="L196">                Number.class, teamId, start, end.plusDays(1));</span>
+<span class="fc" id="L215">                Number.class, teamId, start, end.plusDays(1));</span>
 
-<span class="fc" id="L198">        BigDecimal avgHours = (nz(totalMinutes)</span>
-<span class="fc bfc" id="L199" title="All 2 branches covered.">                .divide(new BigDecimal(dayCount == null ? 1 : dayCount.longValue()), 2, java.math.RoundingMode.HALF_UP))</span>
-<span class="fc" id="L200">                .divide(BigDecimal.valueOf(60), 2, java.math.RoundingMode.HALF_UP);</span>
-<span class="fc" id="L201">        k.setAvgHoursPerDay(avgHours);</span>
+<span class="fc" id="L217">        k.setAvgHoursPerDay(avgHoursPerDay(totalMinutes, dayCount));</span>
 
-<span class="fc" id="L203">        Number absenceDays = jdbc.queryForObject(</span>
+<span class="fc" id="L219">        Number absenceDays = jdbc.queryForObject(</span>
                 &quot;SELECT COALESCE(SUM(CASE ad.period &quot; +
                 &quot; WHEN 'FULL_DAY' THEN 1 WHEN 'AM' THEN 0.5 WHEN 'PM' THEN 0.5 END),0) &quot; +
                 &quot;FROM absence_days ad &quot; +
@@ -208,38 +224,39 @@ public class KpiService {
                 &quot;JOIN team_members tm ON tm.user_id = a.user_id AND tm.team_id = ? &quot; +
                 &quot;WHERE ad.absence_date BETWEEN ? AND ?&quot;,
                 Number.class, teamId, start, end);
-<span class="fc" id="L211">        k.setAbsenceRate(ratio(absenceDays, plannedDays));</span>
 
-<span class="fc" id="L213">        Integer reports = jdbc.queryForObject(</span>
+<span class="fc" id="L228">        k.setAbsenceRate(ratio(absenceDays, plannedDays));</span>
+
+<span class="fc" id="L230">        Integer reports = jdbc.queryForObject(</span>
                 &quot;SELECT COUNT(*) &quot; +
                 &quot;FROM reports r &quot; +
                 &quot;JOIN team_members tm ON tm.user_id = r.author_id &quot; +
                 &quot;WHERE tm.team_id = ? AND r.created_at BETWEEN ? AND ?&quot;,
-<span class="fc" id="L218">                Integer.class, teamId, start.atStartOfDay(), end.plusDays(1).atStartOfDay());</span>
-<span class="fc" id="L219">        k.setReportsAuthored(reports);</span>
+<span class="fc" id="L235">                Integer.class, teamId, start.atStartOfDay(), end.plusDays(1).atStartOfDay());</span>
+<span class="fc" id="L236">        k.setReportsAuthored(reports);</span>
 
-<span class="fc" id="L221">        return k;</span>
+<span class="fc" id="L238">        return k;</span>
     }
 
     // -------------------- User --------------------
     @Transactional(readOnly = true)
     public UserKpiSummary getUser(UUID userId, LocalDate start, LocalDate end) {
-<span class="fc" id="L227">        UserKpiSummary k = new UserKpiSummary();</span>
-<span class="fc" id="L228">        k.setUserId(userId);</span>
-<span class="fc" id="L229">        k.setPeriodStart(start);</span>
-<span class="fc" id="L230">        k.setPeriodEnd(end);</span>
+<span class="fc" id="L244">        UserKpiSummary k = new UserKpiSummary();</span>
+<span class="fc" id="L245">        k.setUserId(userId);</span>
+<span class="fc" id="L246">        k.setPeriodStart(start);</span>
+<span class="fc" id="L247">        k.setPeriodEnd(end);</span>
 
-<span class="fc" id="L232">        Map&lt;String, Object&gt; u = jdbc.queryForMap(</span>
+<span class="fc" id="L249">        Map&lt;String, Object&gt; u = jdbc.queryForMap(</span>
                 &quot;SELECT CONCAT(first_name, ' ', last_name) AS full_name FROM users WHERE id = ?&quot;,
-<span class="fc" id="L234">                userId.toString());</span>
-<span class="fc" id="L235">        k.setFullName((String) u.get(&quot;full_name&quot;));</span>
+<span class="fc" id="L251">                userId.toString());</span>
+<span class="fc" id="L252">        k.setFullName((String) u.get(&quot;full_name&quot;));</span>
 
-<span class="fc" id="L237">        Number presentDays = jdbc.queryForObject(</span>
+<span class="fc" id="L254">        Number presentDays = jdbc.queryForObject(</span>
                 &quot;SELECT COUNT(DISTINCT DATE(`at`)) &quot; +
                 &quot;FROM clocks WHERE user_id = ? AND `at` BETWEEN ? AND ? AND kind='IN'&quot;,
-<span class="fc" id="L240">                Number.class, userId.toString(), start, end.plusDays(1));</span>
+<span class="fc" id="L257">                Number.class, userId.toString(), start, end.plusDays(1));</span>
 
-<span class="fc" id="L242">        Number plannedDays = jdbc.queryForObject(</span>
+<span class="fc" id="L259">        Number plannedDays = jdbc.queryForObject(</span>
                 &quot;WITH RECURSIVE d AS (&quot; +
                 &quot;  SELECT ? AS dt UNION ALL &quot; +
                 &quot;  SELECT DATE_ADD(dt, INTERVAL 1 DAY) FROM d WHERE dt &lt; ?&quot; +
@@ -248,12 +265,13 @@ public class KpiService {
                 &quot;  SELECT DISTINCT d.dt &quot; +
                 &quot;  FROM d &quot; +
                 &quot;  JOIN work_schedules ws ON ws.user_id = ? &quot; +
-<span class="fc" id="L251">                &quot;     AND ws.day_of_week = &quot; + weekdayEnumExpr(&quot;d.dt&quot;) +</span>
+<span class="fc" id="L268">                &quot;     AND ws.day_of_week = &quot; + weekdayEnumExpr(&quot;d.dt&quot;) +</span>
                 &quot;) x&quot;,
-<span class="fc" id="L253">                Number.class, start, end, userId.toString());</span>
-<span class="fc" id="L254">        k.setPresenceRate(ratio(presentDays, plannedDays));</span>
+<span class="fc" id="L270">                Number.class, start, end, userId.toString());</span>
 
-<span class="fc" id="L256">        Number totalMinutes = jdbc.queryForObject(</span>
+<span class="fc" id="L272">        k.setPresenceRate(ratio(presentDays, plannedDays));</span>
+
+<span class="fc" id="L274">        Number totalMinutes = jdbc.queryForObject(</span>
                 &quot;SELECT COALESCE(SUM(TIMESTAMPDIFF(MINUTE, first_in, last_out)),0) FROM (&quot; +
                 &quot;  SELECT DATE(`at`) d, &quot; +
                 &quot;         MIN(CASE WHEN kind='IN' THEN `at` END) AS first_in, &quot; +
@@ -263,22 +281,19 @@ public class KpiService {
                 &quot;  GROUP BY DATE(`at`) &quot; +
                 &quot;  HAVING first_in IS NOT NULL AND last_out IS NOT NULL&quot; +
                 &quot;) t&quot;,
-<span class="fc" id="L266">                Number.class, userId.toString(), start, end.plusDays(1));</span>
+<span class="fc" id="L284">                Number.class, userId.toString(), start, end.plusDays(1));</span>
 
-<span class="fc" id="L268">        Number dayCount = jdbc.queryForObject(</span>
+<span class="fc" id="L286">        Number dayCount = jdbc.queryForObject(</span>
                 &quot;SELECT COUNT(*) FROM (&quot; +
                 &quot;  SELECT DATE(`at`) d &quot; +
                 &quot;  FROM clocks WHERE user_id=? AND `at` BETWEEN ? AND ? &quot; +
                 &quot;  GROUP BY DATE(`at`)&quot; +
                 &quot;) s&quot;,
-<span class="fc" id="L274">                Number.class, userId.toString(), start, end.plusDays(1));</span>
+<span class="fc" id="L292">                Number.class, userId.toString(), start, end.plusDays(1));</span>
 
-<span class="fc" id="L276">        BigDecimal avgHours = (nz(totalMinutes)</span>
-<span class="fc bfc" id="L277" title="All 2 branches covered.">                .divide(new BigDecimal(dayCount == null ? 1 : dayCount.longValue()), 2, java.math.RoundingMode.HALF_UP))</span>
-<span class="fc" id="L278">                .divide(BigDecimal.valueOf(60), 2, java.math.RoundingMode.HALF_UP);</span>
-<span class="fc" id="L279">        k.setAvgHoursPerDay(avgHours);</span>
+<span class="fc" id="L294">        k.setAvgHoursPerDay(avgHoursPerDay(totalMinutes, dayCount));</span>
 
-<span class="fc" id="L281">        Number plannedMinutes = jdbc.queryForObject(</span>
+<span class="fc" id="L296">        Number plannedMinutes = jdbc.queryForObject(</span>
                 &quot;WITH RECURSIVE d AS (&quot; +
                 &quot;  SELECT ? AS dt UNION ALL &quot; +
                 &quot;  SELECT DATE_ADD(dt, INTERVAL 1 DAY) FROM d WHERE dt &lt; ?&quot; +
@@ -286,14 +301,15 @@ public class KpiService {
                 &quot;SELECT COALESCE(SUM(TIMESTAMPDIFF(MINUTE, ws.start_time, ws.end_time)),0) &quot; +
                 &quot;FROM d &quot; +
                 &quot;JOIN work_schedules ws ON ws.user_id = ? &quot; +
-<span class="fc" id="L289">                &quot;  AND ws.day_of_week = &quot; + weekdayEnumExpr(&quot;d.dt&quot;),</span>
-<span class="fc" id="L290">                Number.class, start, end, userId.toString());</span>
-<span class="fc" id="L291">        BigDecimal overtime = nz(totalMinutes)</span>
-<span class="fc" id="L292">                .subtract(nz(plannedMinutes))</span>
-<span class="fc" id="L293">                .divide(BigDecimal.valueOf(60), 2, java.math.RoundingMode.HALF_UP);</span>
-<span class="fc" id="L294">        k.setOvertimeHours(overtime);</span>
+<span class="fc" id="L304">                &quot;  AND ws.day_of_week = &quot; + weekdayEnumExpr(&quot;d.dt&quot;),</span>
+<span class="fc" id="L305">                Number.class, start, end, userId.toString());</span>
 
-<span class="fc" id="L296">        Number lateCount = jdbc.queryForObject(</span>
+<span class="fc" id="L307">        BigDecimal overtime = nz(totalMinutes)</span>
+<span class="fc" id="L308">                .subtract(nz(plannedMinutes))</span>
+<span class="fc" id="L309">                .divide(BigDecimal.valueOf(60), 2, java.math.RoundingMode.HALF_UP);</span>
+<span class="fc" id="L310">        k.setOvertimeHours(overtime);</span>
+
+<span class="fc" id="L312">        Number lateCount = jdbc.queryForObject(</span>
                 &quot;WITH RECURSIVE d AS (&quot; +
                 &quot;  SELECT ? AS dt UNION ALL &quot; +
                 &quot;  SELECT DATE_ADD(dt, INTERVAL 1 DAY) FROM d WHERE dt &lt; ?&quot; +
@@ -301,53 +317,56 @@ public class KpiService {
                 &quot;SELECT COUNT(*) FROM (&quot; +
                 &quot;  SELECT d.dt, &quot; +
                 &quot;    (SELECT MIN(start_time) FROM work_schedules ws &quot; +
-<span class="fc" id="L304">                &quot;     WHERE ws.user_id=? AND ws.day_of_week = &quot; + weekdayEnumExpr(&quot;d.dt&quot;) + &quot;) AS plan_start, &quot; +</span>
+<span class="fc" id="L320">                &quot;     WHERE ws.user_id=? AND ws.day_of_week = &quot; + weekdayEnumExpr(&quot;d.dt&quot;) + &quot;) AS plan_start, &quot; +</span>
                 &quot;    (SELECT MIN(`at`) FROM clocks c &quot; +
                 &quot;     WHERE c.user_id=? AND DATE(c.`at`)=d.dt AND c.kind='IN') AS first_in &quot; +
                 &quot;  FROM d&quot; +
                 &quot;) z &quot; +
                 &quot;WHERE plan_start IS NOT NULL AND first_in IS NOT NULL AND TIME(first_in) &gt; plan_start&quot;,
-<span class="fc" id="L310">                Number.class, start, end, userId.toString(), userId.toString());</span>
-<span class="fc" id="L311">        BigDecimal lateRate = ratio(lateCount, plannedDays);</span>
+<span class="fc" id="L326">                Number.class, start, end, userId.toString(), userId.toString());</span>
 
-<span class="fc" id="L313">        Number avgDelayMin = jdbc.queryForObject(</span>
+<span class="fc" id="L328">        BigDecimal lateRate = ratio(lateCount, plannedDays);</span>
+
+<span class="fc" id="L330">        Number avgDelayMin = jdbc.queryForObject(</span>
                 &quot;WITH RECURSIVE d AS (&quot; +
                 &quot;  SELECT ? AS dt UNION ALL &quot; +
                 &quot;  SELECT DATE_ADD(dt, INTERVAL 1 DAY) FROM d WHERE dt &lt; ?&quot; +
                 &quot;) &quot; +
-                &quot;SELECT COALESCE(AVG(TIMESTAMPDIFF(MINUTE, plan_start, first_in)),0) FROM (&quot; +
+                &quot;SELECT AVG(TIMESTAMPDIFF(MINUTE, plan_start, first_in)) FROM (&quot; +
                 &quot;  SELECT d.dt, &quot; +
                 &quot;    (SELECT MIN(start_time) FROM work_schedules ws &quot; +
-<span class="fc" id="L321">                &quot;     WHERE ws.user_id=? AND ws.day_of_week = &quot; + weekdayEnumExpr(&quot;d.dt&quot;) + &quot;) AS plan_start, &quot; +</span>
+<span class="fc" id="L338">                &quot;     WHERE ws.user_id=? AND ws.day_of_week = &quot; + weekdayEnumExpr(&quot;d.dt&quot;) + &quot;) AS plan_start, &quot; +</span>
                 &quot;    (SELECT MIN(`at`) FROM clocks c &quot; +
                 &quot;     WHERE c.user_id=? AND DATE(c.`at`)=d.dt AND c.kind='IN') AS first_in &quot; +
                 &quot;  FROM d&quot; +
                 &quot;) z &quot; +
                 &quot;WHERE plan_start IS NOT NULL AND first_in IS NOT NULL AND TIME(first_in) &gt; plan_start&quot;,
-<span class="fc" id="L327">                Number.class, start, end, userId.toString(), userId.toString());</span>
-<span class="fc" id="L328">        k.setPunctuality(new PunctualityStats(lateRate, nz(avgDelayMin)));</span>
+<span class="fc" id="L344">                Number.class, start, end, userId.toString(), userId.toString());</span>
 
-<span class="fc" id="L330">        Number absDays = jdbc.queryForObject(</span>
+<span class="pc bpc" id="L346" title="1 of 2 branches missed.">        BigDecimal avgDelay = (avgDelayMin == null ? null : nz(avgDelayMin));</span>
+<span class="fc" id="L347">        k.setPunctuality(new PunctualityStats(lateRate, avgDelay));</span>
+
+<span class="fc" id="L349">        Number absDays = jdbc.queryForObject(</span>
                 &quot;SELECT COALESCE(SUM(CASE period &quot; +
                 &quot; WHEN 'FULL_DAY' THEN 1 WHEN 'AM' THEN 0.5 WHEN 'PM' THEN 0.5 END),0) &quot; +
                 &quot;FROM absence_days ad &quot; +
                 &quot;JOIN absence a ON a.id=ad.absence_id &quot; +
                 &quot;WHERE a.user_id=? AND ad.absence_date BETWEEN ? AND ?&quot;,
-<span class="fc" id="L336">                Number.class, userId.toString(), start, end);</span>
-<span class="fc" id="L337">        k.setAbsenceDays(nz(absDays));</span>
+<span class="fc" id="L355">                Number.class, userId.toString(), start, end);</span>
+<span class="fc" id="L356">        k.setAbsenceDays(nz(absDays));</span>
 
-<span class="fc" id="L339">        List&lt;AbsenceBreakdown&gt; byType = jdbc.query(</span>
+<span class="fc" id="L358">        List&lt;AbsenceBreakdown&gt; byType = jdbc.query(</span>
                 &quot;SELECT a.type, &quot; +
                 &quot;       SUM(CASE ad.period WHEN 'FULL_DAY' THEN 1 WHEN 'AM' THEN 0.5 WHEN 'PM' THEN 0.5 END) AS days &quot; +
                 &quot;FROM absence a &quot; +
                 &quot;JOIN absence_days ad ON a.id=ad.absence_id &quot; +
                 &quot;WHERE a.user_id=? AND ad.absence_date BETWEEN ? AND ? &quot; +
                 &quot;GROUP BY a.type&quot;,
-<span class="fc" id="L346">                (rs, i) -&gt; new AbsenceBreakdown(rs.getString(&quot;type&quot;), rs.getBigDecimal(&quot;days&quot;)),</span>
-<span class="fc" id="L347">                userId.toString(), start, end);</span>
-<span class="fc" id="L348">        k.setAbsenceByType(byType);</span>
+<span class="fc" id="L365">                (rs, i) -&gt; new AbsenceBreakdown(rs.getString(&quot;type&quot;), rs.getBigDecimal(&quot;days&quot;)),</span>
+<span class="fc" id="L366">                userId.toString(), start, end);</span>
+<span class="fc" id="L367">        k.setAbsenceByType(byType);</span>
 
-<span class="fc" id="L350">        List&lt;LeaveBalance&gt; balances = jdbc.query(</span>
+<span class="fc" id="L369">        List&lt;LeaveBalance&gt; balances = jdbc.query(</span>
                 &quot;SELECT la.leave_type, la.opening_balance, &quot; +
                 &quot;       COALESCE(SUM(CASE ll.kind WHEN 'ACCRUAL' THEN ll.amount END),0) AS accrued, &quot; +
                 &quot;       COALESCE(SUM(CASE ll.kind WHEN 'DEBIT' THEN ll.amount END),0)   AS debited, &quot; +
@@ -357,32 +376,32 @@ public class KpiService {
                 &quot;LEFT JOIN leave_ledger ll ON ll.account_id = la.id AND ll.entry_date BETWEEN ? AND ? &quot; +
                 &quot;WHERE la.user_id = ? &quot; +
                 &quot;GROUP BY la.id, la.leave_type, la.opening_balance&quot;,
-<span class="fc" id="L360">                new RowMapper&lt;LeaveBalance&gt;() {</span>
+<span class="fc" id="L379">                new RowMapper&lt;LeaveBalance&gt;() {</span>
                     @Override public LeaveBalance mapRow(ResultSet rs, int rowNum) throws SQLException {
-<span class="fc" id="L362">                        BigDecimal opening = rs.getBigDecimal(&quot;opening_balance&quot;);</span>
-<span class="fc" id="L363">                        BigDecimal accrued = nz(rs.getBigDecimal(&quot;accrued&quot;));</span>
-<span class="fc" id="L364">                        BigDecimal debited = nz(rs.getBigDecimal(&quot;debited&quot;));</span>
-<span class="fc" id="L365">                        BigDecimal adjustments = nz(rs.getBigDecimal(&quot;adjustments&quot;));</span>
-<span class="fc" id="L366">                        BigDecimal expired = nz(rs.getBigDecimal(&quot;expired&quot;));</span>
-<span class="fc" id="L367">                        BigDecimal current = opening.add(accrued).add(adjustments).subtract(debited).subtract(expired);</span>
-<span class="fc" id="L368">                        return new LeaveBalance(</span>
-<span class="fc" id="L369">                                rs.getString(&quot;leave_type&quot;),</span>
+<span class="fc" id="L381">                        BigDecimal opening = rs.getBigDecimal(&quot;opening_balance&quot;);</span>
+<span class="fc" id="L382">                        BigDecimal accrued = nz(rs.getBigDecimal(&quot;accrued&quot;));</span>
+<span class="fc" id="L383">                        BigDecimal debited = nz(rs.getBigDecimal(&quot;debited&quot;));</span>
+<span class="fc" id="L384">                        BigDecimal adjustments = nz(rs.getBigDecimal(&quot;adjustments&quot;));</span>
+<span class="fc" id="L385">                        BigDecimal expired = nz(rs.getBigDecimal(&quot;expired&quot;));</span>
+<span class="fc" id="L386">                        BigDecimal current = opening.add(accrued).add(adjustments).subtract(debited).subtract(expired);</span>
+<span class="fc" id="L387">                        return new LeaveBalance(</span>
+<span class="fc" id="L388">                                rs.getString(&quot;leave_type&quot;),</span>
                                 opening, accrued, debited, adjustments, expired, current
                         );
                     }
-<span class="fc" id="L373">                }, start, end, userId.toString());</span>
-<span class="fc" id="L374">        k.setLeaveBalances(balances);</span>
+<span class="fc" id="L392">                }, start, end, userId.toString());</span>
+<span class="fc" id="L393">        k.setLeaveBalances(balances);</span>
 
-<span class="fc" id="L376">        Integer authored = jdbc.queryForObject(</span>
+<span class="fc" id="L395">        Integer authored = jdbc.queryForObject(</span>
                 &quot;SELECT COUNT(*) FROM reports WHERE author_id=? AND created_at BETWEEN ? AND ?&quot;,
-<span class="fc" id="L378">                Integer.class, userId.toString(), start.atStartOfDay(), end.plusDays(1).atStartOfDay());</span>
-<span class="fc" id="L379">        Integer received = jdbc.queryForObject(</span>
+<span class="fc" id="L397">                Integer.class, userId.toString(), start.atStartOfDay(), end.plusDays(1).atStartOfDay());</span>
+<span class="fc" id="L398">        Integer received = jdbc.queryForObject(</span>
                 &quot;SELECT COUNT(*) FROM reports WHERE target_user_id=? AND created_at BETWEEN ? AND ?&quot;,
-<span class="fc" id="L381">                Integer.class, userId.toString(), start.atStartOfDay(), end.plusDays(1).atStartOfDay());</span>
-<span class="fc" id="L382">        k.setReportsAuthored(authored);</span>
-<span class="fc" id="L383">        k.setReportsReceived(received);</span>
+<span class="fc" id="L400">                Integer.class, userId.toString(), start.atStartOfDay(), end.plusDays(1).atStartOfDay());</span>
+<span class="fc" id="L401">        k.setReportsAuthored(authored);</span>
+<span class="fc" id="L402">        k.setReportsReceived(received);</span>
 
-<span class="fc" id="L385">        return k;</span>
+<span class="fc" id="L404">        return k;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

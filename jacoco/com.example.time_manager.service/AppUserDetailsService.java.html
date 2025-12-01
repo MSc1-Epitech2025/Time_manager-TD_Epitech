@@ -35,34 +35,42 @@ public class AppUserDetailsService implements UserDetailsService {
 <span class="fc" id="L35">                u.getEmail(), u.getPassword(), authorities);</span>
     }
 
-private Collection&lt;? extends GrantedAuthority&gt; mapAuthorities(User u) {
-<span class="fc" id="L39">    String raw = u.getRole();</span>
-<span class="fc bfc" id="L40" title="All 4 branches covered.">    if (raw == null || raw.isBlank()) {</span>
-<span class="fc" id="L41">        return List.of(new SimpleGrantedAuthority(&quot;EMPLOYEE&quot;));</span>
-    }
-    try {
-        List&lt;String&gt; roles;
-<span class="fc bfc" id="L45" title="All 2 branches covered.">        if (raw.startsWith(&quot;[&quot;)) {</span>
-<span class="fc" id="L46">            roles = mapper.readValue(raw, new TypeReference&lt;List&lt;String&gt;&gt;() {});</span>
-        } else {
-<span class="fc" id="L48">            roles = List.of(raw);</span>
+    private Collection&lt;? extends GrantedAuthority&gt; mapAuthorities(User u) {
+<span class="fc" id="L39">        String raw = u.getRole();</span>
+<span class="fc bfc" id="L40" title="All 4 branches covered.">        if (raw == null || raw.isBlank()) {</span>
+<span class="fc" id="L41">            return List.of(new SimpleGrantedAuthority(&quot;EMPLOYEE&quot;));</span>
         }
-        
-<span class="fc" id="L51">        var authorities = roles.stream()</span>
-<span class="fc bfc" id="L52" title="All 2 branches covered.">            .filter(s -&gt; s != null)</span>
-<span class="fc" id="L53">            .map(String::trim)</span>
-<span class="fc bfc" id="L54" title="All 2 branches covered.">            .filter(s -&gt; !s.isEmpty())</span>
-<span class="fc" id="L55">            .map(String::toUpperCase) </span>
-<span class="fc" id="L56">            .distinct()</span>
-<span class="fc" id="L57">            .map(SimpleGrantedAuthority::new)</span>
-<span class="fc" id="L58">            .collect(Collectors.toList());</span>
-        
-<span class="fc bfc" id="L60" title="All 2 branches covered.">        return authorities.isEmpty() </span>
-<span class="fc" id="L61">            ? List.of(new SimpleGrantedAuthority(&quot;EMPLOYEE&quot;))</span>
-<span class="fc" id="L62">            : authorities;</span>
-<span class="fc" id="L63">    } catch (Exception e) {</span>
-<span class="fc" id="L64">        return List.of(new SimpleGrantedAuthority(raw.toUpperCase()));</span>
+
+<span class="fc" id="L44">        String trimmed = raw.trim();</span>
+        try {
+            List&lt;String&gt; tokens;
+
+<span class="fc bfc" id="L48" title="All 2 branches covered.">            if (trimmed.startsWith(&quot;[&quot;)) {</span>
+<span class="fc" id="L49">                List&lt;String&gt; roles = mapper.readValue(trimmed, new TypeReference&lt;List&lt;String&gt;&gt;() {});</span>
+<span class="fc" id="L50">                tokens = roles.stream()</span>
+<span class="fc bfc" id="L51" title="All 2 branches covered.">                        .filter(s -&gt; s != null)</span>
+<span class="fc" id="L52">                        .flatMap(s -&gt; java.util.Arrays.stream(s.split(&quot;[\\s,;|]+&quot;)))</span>
+<span class="fc" id="L53">                        .toList();</span>
+<span class="fc" id="L54">            } else {</span>
+<span class="fc" id="L55">                tokens = java.util.Arrays.stream(trimmed.split(&quot;[\\s,;|]+&quot;))</span>
+<span class="fc" id="L56">                        .toList();</span>
+            }
+
+<span class="fc" id="L59">            var authorities = tokens.stream()</span>
+<span class="fc" id="L60">                    .map(String::trim)</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">                    .filter(s -&gt; !s.isEmpty())</span>
+<span class="fc" id="L62">                    .map(String::toUpperCase)        </span>
+<span class="fc" id="L63">                    .distinct()</span>
+<span class="fc" id="L64">                    .map(SimpleGrantedAuthority::new) </span>
+<span class="fc" id="L65">                    .collect(Collectors.toList());</span>
+
+<span class="fc bfc" id="L67" title="All 2 branches covered.">            return authorities.isEmpty()</span>
+<span class="fc" id="L68">                    ? List.of(new SimpleGrantedAuthority(&quot;EMPLOYEE&quot;))</span>
+<span class="fc" id="L69">                    : authorities;</span>
+
+<span class="fc" id="L71">        } catch (Exception e) {</span>
+<span class="fc" id="L72">            return List.of(new SimpleGrantedAuthority(&quot;EMPLOYEE&quot;));</span>
+        }
     }
-}
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>
