@@ -1,4 +1,3 @@
-
 type LeaveBalance {
   leaveType: String
   openingBalance: Float
@@ -57,14 +56,14 @@ type UserKpiSummary {
   leaveBalances: [LeaveBalance!]
   reportsAuthored: Int
   reportsReceived: Int
+
   periodStart: String
   periodEnd: String
 }
-
 
 extend type Query {
   globalKpi(startDate: String!, endDate: String!): GlobalKpiSummary!
   teamKpi(teamId: ID!, startDate: String!, endDate: String!): TeamKpiSummary!
   userKpi(userId: ID!, startDate: String!, endDate: String!): UserKpiSummary!
-  myKpi(startDate: String!, endDate: String!): UserKpiSummary!   # <-- ajout
+  myKpi(startDate: String!, endDate: String!): UserKpiSummary!
 }
