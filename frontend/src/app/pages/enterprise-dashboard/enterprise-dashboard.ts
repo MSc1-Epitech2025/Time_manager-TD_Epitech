@@ -193,6 +193,20 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
   }
 
+  getPresenceRate(userId: string): string {
+    const kpi = this.allUsersKpi.find(k => k?.userId === userId);
+    if (!kpi) return '-';
+    
+    return `${(kpi.presenceRate || 0).toFixed(1)}%`;
+  }
+
+  getAbsenceDays(userId: string): number {
+    const kpi = this.allUsersKpi.find(k => k?.userId === userId);
+    if (!kpi) return 0;
+    
+    return kpi.absenceDays || 0;
+  }
+
   private toMinutes(t: string | undefined): number {
     if (!t) return 0;
     const match = t.match(/(\d+)h\s*(\d+)m/);
@@ -742,82 +756,49 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
       'Nov',
       'Déc',
     ];
-    const teams = [...new Set(this.users.map((u) => u.nom))];
+    // Use actual teams from allTeams instead of user names
+    const teams = this._selectedTeam 
+      ? [this._selectedTeam] 
+      : this.allTeams.map(t => t.name);
 
     const data: { [team: string]: number[] } = {};
 
     teams.forEach((team) => {
       data[team] = months.map((_, monthIndex) => {
         const teamUsers = this.users.filter((u) => u.equipe === team);
+        
+        // Get KPI data for team members
+        const teamKpis = this.allUsersKpi.filter(kpi => {
+          if (!kpi) return false;
+          const user = this.users.find(u => u.id === kpi.userId);
+          return user && user.equipe === team;
+        });
 
         if (selectedKpi === 'absenteeism') {
-          const totalAbsences = teamUsers.reduce(
-            (sum, u) =>
-              sum +
-              u.historique
-                .filter((h) => h.date.getMonth() === monthIndex)
-                .reduce((s, h) => s + h.absences, 0),
-            0
+          // Sum of absence days for team members
+          const totalAbsences = teamKpis.reduce((sum, kpi) => 
+            sum + (kpi.absenceDays || 0), 0
           );
           return totalAbsences;
         }
 
         if (selectedKpi === 'attendance') {
-          const totalEmployees = teamUsers.length || 1;
-          const presentCount = teamUsers.reduce(
-            (sum, u) =>
-              sum +
-              u.historique.filter(
-                (h) =>
-                  h.date.getMonth() === monthIndex && h.presence
-              ).length,
-            0
-          );
-          const uniqueDays =
-            new Set(
-              teamUsers.flatMap((u) =>
-                u.historique
-                  .filter((h) => h.date.getMonth() === monthIndex)
-                  .map((h) => h.date.toDateString())
-              )
-            ).size || 1;
-
-          const percentage =
-            (presentCount / (totalEmployees * uniqueDays)) * 100;
-          return Math.round(percentage);
+          // Average presence rate for team
+          if (teamKpis.length === 0) return 0;
+          const avgPresenceRate = teamKpis.reduce((sum, kpi) => 
+            sum + (kpi.presenceRate || 0), 0
+          ) / teamKpis.length;
+          return Math.round(avgPresenceRate);
         }
 
         if (selectedKpi === 'productivity') {
-          const daysInMonth = new Date(
-            new Date().getFullYear(),
-            monthIndex + 1,
-            0
-          ).getDate();
-
-          const totalHoursWorked = teamUsers.reduce(
-            (sum, u) =>
-              sum +
-              u.historique
-                .filter((h) => h.date.getMonth() === monthIndex)
-                .reduce((s, h) => {
-                  const m = h.tempsTravail?.match(
-                    /(?:(\d+)h)?\s*(?:(\d+)m)?/
-                  );
-                  const hh = m ? Number(m[1] || 0) : 0;
-                  const mm = m ? Number(m[2] || 0) : 0;
-                  return s + hh + mm / 60;
-                }, 0),
-            0
-          );
-
-          const totalHoursPlanned =
-            teamUsers.length * 8 * daysInMonth;
-          return totalHoursPlanned
-            ? Math.min(
-                100,
-                Math.round((totalHoursWorked / totalHoursPlanned) * 100)
-              )
-            : 0;
+          // Average hours per day for team
+          if (teamKpis.length === 0) return 0;
+          const avgHours = teamKpis.reduce((sum, kpi) => 
+            sum + (kpi.avgHoursPerDay || 0), 0
+          ) / teamKpis.length;
+          // Convert to productivity percentage (based on 8h workday)
+          return Math.min(100, Math.round((avgHours / 8) * 100));
         }
 
         return 0;

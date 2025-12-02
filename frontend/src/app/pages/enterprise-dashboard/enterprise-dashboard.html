@@ -196,7 +196,11 @@
         <mat-card-header>
           <mat-card-title>
             <mat-icon>table_chart</mat-icon>
-            <span>{{ selectedKpi === 'productivity' ? 'Work Hours Details' : 'Team Presence Details' }}</span>
+            <span>{{ 
+              selectedKpi === 'productivity' ? 'Work Hours Details' : 
+              selectedKpi === 'attendance' ? 'Attendance Details' :
+              'Absenteeism Details' 
+            }}</span>
           </mat-card-title>
         </mat-card-header>
         <mat-card-content>
@@ -229,14 +233,15 @@
             </table>
           </div>
 
-          <!-- Attendance/Absenteeism Table -->
-          <div *ngIf="!loading && selectedKpi !== 'productivity'" class="table-wrapper">
+          <!-- Attendance Table -->
+          <div *ngIf="!loading && selectedKpi === 'attendance'" class="table-wrapper">
             <table class="details-table">
               <thead>
                 <tr>
                   <th>Name</th>
                   <th>Team</th>
-                  <th>Status</th>
+                  <th>Presence Rate</th>
+                  <th>Avg Hours/Day</th>
                 </tr>
               </thead>
               <tbody>
@@ -246,16 +251,38 @@
                     <mat-chip class="team-chip">{{ user.equipe }}</mat-chip>
                   </td>
                   <td>
-                    <span *ngIf="selectedPeriod === 'last_week' && getPresence(user.id) !== null">
-                      <mat-chip [class.present]="getPresence(user.id)" [class.absent]="!getPresence(user.id)">
-                        {{ getPresence(user.id) ? 'Present' : 'Absent' }}
-                      </mat-chip>
-                    </span>
-                    <span *ngIf="selectedPeriod !== 'last_week' || getPresence(user.id) === null">
-                      <span class="presence-count">
-                        {{ getPresenceCount(user.id).present }} / {{ getPresenceCount(user.id).total }}
-                      </span>
-                    </span>
+                    <span class="rate-badge">{{ getPresenceRate(user.id) }}</span>
+                  </td>
+                  <td>
+                    <span class="time-badge">{{ getTempsTravail(user.id) }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Absenteeism Table -->
+          <div *ngIf="!loading && selectedKpi === 'absenteeism'" class="table-wrapper">
+            <table class="details-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Team</th>
+                  <th>Absence Days</th>
+                  <th>Presence Rate</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let user of filteredUsers">
+                  <td>{{ user.nom }}</td>
+                  <td>
+                    <mat-chip class="team-chip">{{ user.equipe }}</mat-chip>
+                  </td>
+                  <td>
+                    <mat-chip class="absence-chip">{{ getAbsenceDays(user.id) }}</mat-chip>
+                  </td>
+                  <td>
+                    <span class="rate-badge">{{ getPresenceRate(user.id) }}</span>
                   </td>
                 </tr>
               </tbody>
