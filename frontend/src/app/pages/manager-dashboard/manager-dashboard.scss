@@ -181,7 +181,7 @@
 // header card
 .header-card {
   background: linear-gradient(135deg, #a78bfa 0%, #f472b6 100%);
-  border: none !important;
+  border: none ;
 
   .profile-section {
     display: flex;
@@ -318,8 +318,8 @@
 
   .employee-item {
     padding: 1rem;
-    height: auto !important;
-    min-height: unset !important;
+    height: auto ;
+    min-height: unset ;
 
     &.selected {
       background: rgba(167, 139, 250, 0.2);

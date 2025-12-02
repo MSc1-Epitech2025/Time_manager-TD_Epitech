@@ -12,91 +12,36 @@ import { MatListModule } from '@angular/material/list';
 import { MatDividerModule } from '@angular/material/divider';
 import { NgChartsModule } from 'ng2-charts';
 import { ChartConfiguration, ChartOptions } from 'chart.js';
-import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { ManagerService } from '../../core/services/manager';
-import { ReportService } from '../../core/services/report';
 import { Router } from '@angular/router';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { AbsenceRequestModal } from '../../modal/absence-request-modal/absence-request-modal';
+
+// Services
 import { AuthService } from '../../core/services/auth';
 import { PlanningService, PlanningEvent } from '../../core/services/planning';
 import { NotificationService } from '../../core/services/notification';
 import { WeatherService, WeatherSnapshot } from '../../core/services/weather';
 import { AbsenceService, Absence } from '../../core/services/absence';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { AbsenceRequestModal } from '../../modal/absence-request-modal/absence-request-modal';
-import { environment } from '../../../environments/environment';
+import { ClockService } from '../../core/services/clock';
+import { LeaveAccountService, LeaveAccountDto } from '../../core/services/leave-account';
+import { KpiService } from '../../core/services/kpi';
 
-type ClockKind = 'IN' | 'OUT';
-
-interface ClockRecord {
-  id: string;
-  kind: ClockKind;
-  at: string;
-}
-
-interface GraphqlPayload<T> {
-  data: T;
-  errors?: { message: string }[];
-}
-
-interface MyClocksResponse {
-  myClocks: ClockRecord[];
-}
-
-interface ClockMutationResponse {
-  createClockForMe: ClockRecord;
-}
-
-interface PunctualityStats {
-  lateRate: number;
-  avgDelayMinutes: number;
-}
-
-interface AbsenceBreakdown {
-  type: string;
-  days: number;
-}
-
-interface UserKpiSummary {
-  userId: string;
-  fullName: string;
-  presenceRate: number;
-  avgHoursPerDay: number;
-  overtimeHours: number;
-  punctuality: PunctualityStats;
-  absenceDays: number;
-  absenceByType: AbsenceBreakdown[];
-  reportsAuthored: number;
-  reportsReceived: number;
-  periodStart: string;
-  periodEnd: string;
-}
-
-interface MyKpiResponse {
-  myKpi: UserKpiSummary;
-}
-
-const GRAPHQL_ENDPOINT = environment.GRAPHQL_ENDPOINT;
-
-const MY_CLOCKS_QUERY = `
-  query MyClocks($from: String, $to: String) {
-    myClocks(from: $from, to: $to) {
-      id
-      kind
-      at
-    }
-  }
-`;
-
-const CLOCK_MUTATION = `
-  mutation CreateClockForMe($input: ClockCreateInput!) {
-    createClockForMe(input: $input) {
-      id
-      kind
-      at
-    }
-  }
-`;
+// Models & Utils
+import { ClockRecord, UserKpiSummary } from '../../shared/models/graphql.types';
+import { currentWeekRange, formatDate, getCurrentQuarter, formatDateToYYYYMMDD } from '../../shared/utils/date.utils';
+import { 
+  buildSessions, 
+  computeTimeMetrics, 
+  normalizeChartData,
+  SessionAnalysis 
+} from '../../shared/business-logic/time-tracking.logic';
+import { 
+  formatAbsenceType, 
+  formatTimeHHMM, 
+  formatHoursMinutes,
+  getWeatherIcon 
+} from '../../shared/utils/formatting.utils';
 
 @Component({
   selector: 'app-employee-dashboard',
@@ -144,7 +89,7 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
   loadingKpi = false;
   weather: WeatherSnapshot | null = null;
   recentAbsences: Absence[] = [];
-  leaveAccounts: Array<{ leaveType: string; balance: number }> = [];
+  leaveAccounts: LeaveAccountDto[] = [];
   expandedLeaveItems = new Set<number>();
   kpiData: UserKpiSummary | null = null;
 
@@ -172,11 +117,13 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private auth: AuthService,
-    private http: HttpClient,
+    private clockService: ClockService,
     private planningService: PlanningService,
     private notify: NotificationService,
     private weatherService: WeatherService,
     private absenceService: AbsenceService,
+    private leaveAccountService: LeaveAccountService,
+    private kpiService: KpiService,
     private dialog: MatDialog,
   ) {}
 
@@ -204,18 +151,11 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
   }
 
   get todayHoursMinutes(): { hours: number; minutes: number } {
-    const total = this.todayTotalSeconds;
-    return {
-      hours: Math.floor(total / 3600),
-      minutes: Math.floor((total % 3600) / 60),
-    };
+    return formatHoursMinutes(this.todayTotalSeconds);
   }
 
   get formattedTimer(): string {
-    const seconds = this.timer;
-    const minutes = Math.floor(seconds / 60) % 60;
-    const hours = Math.floor(seconds / 3600);
-    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+    return formatTimeHHMM(this.timer);
   }
 
   async toggleWorkStatus() {
@@ -234,7 +174,7 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
   private async startWork() {
     this.actionPending = true;
     try {
-      const result = await this.sendClockMutation('IN');
+      const result = await firstValueFrom(this.clockService.createClock('IN'));
       console.log('Clock in result:', result);
       this.notify.success('Clock in recorded');
       await this.refreshDashboard();
@@ -248,7 +188,7 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
   private async stopWork() {
     this.actionPending = true;
     try {
-      const result = await this.sendClockMutation('OUT');
+      const result = await firstValueFrom(this.clockService.createClock('OUT'));
       console.log('Clock out result:', result);
       this.notify.success('Clock out recorded');
       await this.refreshDashboard();
@@ -267,7 +207,10 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
 
       this.weekRange = currentWeekRange();
       const [clocks, planning] = await Promise.all([
-        this.fetchClocks(this.weekRange),
+        firstValueFrom(this.clockService.getClocks(
+          this.weekRange.from.toISOString(),
+          this.weekRange.to.toISOString()
+        )),
         firstValueFrom(this.planningService.getEmployeePlanning()),
       ]);
 
@@ -290,12 +233,17 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
     this.isWorking = false;
     this.statusLabel = 'Demarrer';
 
-    const { sessions, openSession, firstInPerDay } = buildSessions(this.clockEvents);
-    const todayKey = toDayKey(new Date());
+    const { sessions, openSession } = buildSessions(this.clockEvents);
+    const todayKey = new Date().toISOString().split('T')[0];
 
-    this.baseTodaySeconds = sessions.reduce((acc, session) => {
-      return acc + overlapSeconds(session.start, session.end, dayRange(todayKey));
-    }, 0);
+    const metrics = computeTimeMetrics(
+      sessions,
+      this.absenceEvents,
+      this.weekRange,
+      todayKey
+    );
+
+    this.baseTodaySeconds = metrics.baseTodaySeconds;
 
     if (openSession) {
       this.currentSessionStart = openSession.start;
@@ -304,31 +252,11 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
       this.startTicker(openSession.start);
     }
 
-    const totalWorkedSeconds = sessions.reduce((acc, session) => {
-      return acc + overlapSeconds(session.start, session.end, this.weekRange);
-    }, 0);
-
-    const lateDays = countLateDays(firstInPerDay);
-    const absenceHours = computeAbsenceHours(this.absenceEvents, this.weekRange);
-    const totalWeekDays = countWeekdays(this.weekRange.from, this.weekRange.to);
-    const expectedHours = totalWeekDays * 8;
-    const expectedSeconds = expectedHours * 3600;
-
-    const presencePct = expectedHours
-      ? clampPct((totalWorkedSeconds / 3600 / expectedHours) * 100)
-      : 0;
-    const absencePct = expectedHours
-      ? clampPct((absenceHours / expectedHours) * 100)
-      : 0;
-    const latenessPct = totalWeekDays
-      ? clampPct((lateDays / totalWeekDays) * 100)
-      : 0;
-
-    const sum = presencePct + absencePct + latenessPct;
-    const scale = sum > 100 && sum > 0 ? 100 / sum : 1;
-    const adjPresence = Math.round(presencePct * scale);
-    const adjAbsence = Math.round(absencePct * scale);
-    const adjLate = Math.max(0, 100 - adjPresence - adjAbsence);
+    const [adjPresence, adjLate, adjAbsence] = normalizeChartData(
+      metrics.presencePct,
+      metrics.absencePct,
+      metrics.latenessPct
+    );
 
     this.pieChartData = {
       ...this.pieChartData,
@@ -339,72 +267,6 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
         },
       ],
     };
-  }
-
-  private async fetchClocks(range: { from: Date; to: Date }): Promise<ClockRecord[]> {
-    try {
-      const response = await firstValueFrom(
-        this.http.post<GraphqlPayload<MyClocksResponse>>(
-          GRAPHQL_ENDPOINT,
-          {
-            query: MY_CLOCKS_QUERY,
-            variables: {
-              from: range.from.toISOString(),
-              to: range.to.toISOString(),
-            },
-          },
-          { withCredentials: true }
-        )
-      );
-
-      if (response.errors?.length) {
-        throw new Error(response.errors.map((e) => e.message).join(', '));
-      }
-
-      return response.data?.myClocks ?? [];
-    } catch (error: any) {
-      console.error('Failed to fetch clocks:', error);
-      if (error.status === 0) {
-        throw new Error('Cannot connect to server. Please check if the backend is running.');
-      }
-      throw error;
-    }
-  }
-
-  private async sendClockMutation(kind: ClockKind): Promise<ClockRecord> {
-    try {
-      const response = await firstValueFrom(
-        this.http.post<GraphqlPayload<ClockMutationResponse>>(
-          GRAPHQL_ENDPOINT,
-          {
-            query: CLOCK_MUTATION,
-            variables: { input: { kind } },
-          },
-          { withCredentials: true }
-        )
-      );
-
-      console.log('Clock mutation response:', response);
-
-      if (response.errors?.length) {
-        const errorMsg = response.errors.map((e) => e.message).join(', ');
-        console.error('GraphQL errors:', response.errors);
-        throw new Error(errorMsg);
-      }
-
-      if (!response.data?.createClockForMe) {
-        console.error('No data in response:', response);
-        throw new Error('No data returned from clock mutation');
-      }
-
-      return response.data.createClockForMe;
-    } catch (error: any) {
-      console.error('Clock mutation failed:', error);
-      if (error.status === 0) {
-        throw new Error('Cannot connect to server. Please check if the backend is running.');
-      }
-      throw error;
-    }
   }
 
   private startTicker(start: Date) {
@@ -479,38 +341,9 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
       const session = this.auth.session;
       if (!session?.user.id) return;
 
-      const response = await firstValueFrom(
-        this.http.post<GraphqlPayload<any>>(
-          GRAPHQL_ENDPOINT,
-          {
-            query: `
-              query LeaveAccountsByUser($userId: ID!) {
-                leaveAccountsByUser(userId: $userId) {
-                  id
-                  currentBalance
-                  leaveType {
-                    code
-                    label
-                  }
-                }
-              }
-            `,
-            variables: { userId: session.user.id },
-          },
-          { withCredentials: true }
-        )
+      this.leaveAccounts = await firstValueFrom(
+        this.leaveAccountService.getLeaveAccountsByUser(session.user.id)
       );
-
-      if (response.errors?.length) {
-        throw new Error(response.errors.map((e) => e.message).join(', '));
-      }
-
-      if (response.data?.leaveAccountsByUser) {
-        this.leaveAccounts = response.data.leaveAccountsByUser.map((acc: any) => ({
-          leaveType: acc.leaveType?.label || acc.leaveType?.code || 'Unknown',
-          balance: acc.currentBalance || 0,
-        }));
-      }
     } catch (err) {
       console.error('Failed to load leave balance:', err);
     } finally {
@@ -521,90 +354,18 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
   private async loadMyKpi() {
     this.loadingKpi = true;
     try {
-      const now = new Date();
-      const currentMonth = now.getMonth(); // 0-11
-      
-      // Déterminer le trimestre actuel
-      let quarterStart: Date;
-      let quarterEnd: Date;
-      
-      if (currentMonth >= 0 && currentMonth <= 2) {
-        // Q1: Janvier - Mars
-        quarterStart = new Date(now.getFullYear(), 0, 1);
-        quarterEnd = new Date(now.getFullYear(), 2, 31, 23, 59, 59);
-      } else if (currentMonth >= 3 && currentMonth <= 5) {
-        // Q2: Avril - Juin
-        quarterStart = new Date(now.getFullYear(), 3, 1);
-        quarterEnd = new Date(now.getFullYear(), 5, 30, 23, 59, 59);
-      } else if (currentMonth >= 6 && currentMonth <= 8) {
-        // Q3: Juillet - Septembre
-        quarterStart = new Date(now.getFullYear(), 6, 1);
-        quarterEnd = new Date(now.getFullYear(), 8, 30, 23, 59, 59);
-      } else {
-        // Q4: Octobre - Décembre
-        quarterStart = new Date(now.getFullYear(), 9, 1);
-        quarterEnd = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
-      }
-      
-      const startDate = this.formatDateToYYYYMMDD(quarterStart);
-      const endDate = this.formatDateToYYYYMMDD(quarterEnd);
+      const quarter = getCurrentQuarter();
+      const startDate = formatDateToYYYYMMDD(quarter.start);
+      const endDate = formatDateToYYYYMMDD(quarter.end);
 
-      const response = await firstValueFrom(
-        this.http.post<GraphqlPayload<MyKpiResponse>>(
-          GRAPHQL_ENDPOINT,
-          {
-            query: `
-              query MyKpi($startDate: String!, $endDate: String!) {
-                myKpi(startDate: $startDate, endDate: $endDate) {
-                  userId
-                  fullName
-                  presenceRate
-                  avgHoursPerDay
-                  overtimeHours
-                  punctuality {
-                    lateRate
-                    avgDelayMinutes
-                  }
-                  absenceDays
-                  absenceByType {
-                    type
-                    days
-                  }
-                  reportsAuthored
-                  reportsReceived
-                  periodStart
-                  periodEnd
-                }
-              }
-            `,
-            variables: {
-              startDate,
-              endDate,
-            },
-          },
-          { withCredentials: true }
-        )
+      this.kpiData = await firstValueFrom(
+        this.kpiService.getMyKpi(startDate, endDate)
       );
-
-      if (response.errors?.length) {
-        throw new Error(response.errors.map((e) => e.message).join(', '));
-      }
-
-      if (response.data?.myKpi) {
-        this.kpiData = response.data.myKpi;
-      }
     } catch (err) {
       console.error('Failed to load KPI data:', err);
     } finally {
       this.loadingKpi = false;
     }
-  }
-
-  private formatDateToYYYYMMDD(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
   }
 
   requestAbsence() {
@@ -659,145 +420,14 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
 
   getWeatherIcon(): string {
     if (!this.weather) return 'wb_sunny';
-    const code = this.weather.code;
-    const isDay = this.weather.isDay;
-
-    if (code === 0) return isDay ? 'wb_sunny' : 'nights_stay';
-    if (code <= 3) return isDay ? 'wb_cloudy' : 'cloud';
-    if (code <= 67) return 'grain';
-    if (code <= 77) return 'ac_unit';
-    if (code <= 82) return 'water_drop';
-    if (code <= 99) return 'thunderstorm';
-    return 'wb_sunny';
+    return getWeatherIcon(this.weather.code, this.weather.isDay);
   }
 
   formatAbsenceType(type: string): string {
-    const typeMap: Record<string, string> = {
-      SICK: 'Sick Leave',
-      VACATION: 'Vacation',
-      PERSONAL: 'Personal Leave',
-      FORMATION: 'Training',
-      OTHER: 'Other',
-      RTT: 'RTT',
-    };
-    return typeMap[type] || type;
+    return formatAbsenceType(type);
   }
 
   formatDate(dateStr: string): string {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    return formatDate(dateStr);
   }
-}
-
-interface ClockSession {
-  start: Date;
-  end: Date;
-}
-
-function buildSessions(clocks: ClockRecord[]): {
-  sessions: ClockSession[];
-  openSession: { start: Date } | null;
-  firstInPerDay: Map<string, Date>;
-} {
-  const sorted = [...clocks].sort((a, b) => Date.parse(a.at) - Date.parse(b.at));
-  const sessions: ClockSession[] = [];
-  const firstInPerDay = new Map<string, Date>();
-  let currentStart: Date | null = null;
-  for (const clock of sorted) {
-    const at = new Date(clock.at);
-    const dayKey = toDayKey(at);
-    if (clock.kind === 'IN') {
-      currentStart = at;
-      if (!firstInPerDay.has(dayKey) || at < firstInPerDay.get(dayKey)!) {
-        firstInPerDay.set(dayKey, at);
-      }
-    } else if (clock.kind === 'OUT' && currentStart) {
-      sessions.push({ start: currentStart, end: at });
-      currentStart = null;
-    }
-  }
-  const openSession = currentStart ? { start: currentStart } : null;
-  return { sessions, openSession, firstInPerDay };
-}
-
-function overlapSeconds(start: Date, end: Date, range: { from: Date; to: Date }): number {
-  const rangeStart = range.from.getTime();
-  const rangeEnd = range.to.getTime();
-  const s = Math.max(start.getTime(), rangeStart);
-  const e = Math.min(end.getTime(), rangeEnd);
-  return e > s ? Math.floor((e - s) / 1000) : 0;
-}
-
-function dayRange(dayKey: string): { from: Date; to: Date } {
-  const [y, m, d] = dayKey.split('-').map((value) => Number(value));
-  const from = new Date(y, m - 1, d, 0, 0, 0, 0);
-  const to = new Date(from);
-  to.setDate(from.getDate() + 1);
-  return { from, to };
-}
-
-function currentWeekRange(): { from: Date; to: Date } {
-  const now = new Date();
-  const from = new Date(now);
-  const day = from.getDay() === 0 ? 7 : from.getDay();
-  from.setDate(from.getDate() - day + 1);
-  from.setHours(0, 0, 0, 0);
-  const to = new Date(from);
-  to.setDate(from.getDate() + 7);
-  return { from, to };
-}
-
-function toDayKey(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
-function countWeekdays(from: Date, to: Date): number {
-  const cursor = new Date(from);
-  let count = 0;
-  while (cursor < to) {
-    const day = cursor.getDay();
-    if (day !== 0 && day !== 6) count += 1;
-    cursor.setDate(cursor.getDate() + 1);
-  }
-  return count;
-}
-
-function countLateDays(firstInPerDay: Map<string, Date>): number {
-  const thresholdMinutes = 9 * 60 + 5;
-  let late = 0;
-  for (const value of firstInPerDay.values()) {
-    const minutes = value.getHours() * 60 + value.getMinutes();
-    if (minutes > thresholdMinutes) late += 1;
-  }
-  return late;
-}
-
-function computeAbsenceHours(events: PlanningEvent[], range: { from: Date; to: Date }): number {
-  const rangeStart = range.from.getTime();
-  const rangeEnd = range.to.getTime();
-  let units = 0;
-  for (const event of events) {
-    const date = parseDate(event.date);
-    if (!date) continue;
-    const time = date.getTime();
-    if (time < rangeStart || time >= rangeEnd) continue;
-    if (event.status && event.status !== 'APPROVED') continue;
-    if (event.period === 'AM' || event.period === 'PM') units += 0.5;
-    else units += 1;
-  }
-  return units * 8;
-}
-
-function parseDate(value: string): Date | null {
-  const [y, m, d] = value.split('-').map((v) => Number(v));
-  if ([y, m, d].some((v) => Number.isNaN(v))) return null;
-  return new Date(y, m - 1, d, 0, 0, 0, 0);
-}
-
-function clampPct(value: number): number {
-  if (!Number.isFinite(value)) return 0;
-  return Math.max(0, Math.min(100, Math.round(value)));
 }

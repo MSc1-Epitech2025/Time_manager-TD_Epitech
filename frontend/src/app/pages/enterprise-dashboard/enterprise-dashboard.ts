@@ -23,7 +23,6 @@ import {
 } from '../../core/services/kpi';
 
 // Kpi Components
-import { KpiComparatifComponent } from '../../kpi/kpi-comparatif/kpi-comparatif';
 import { KpiBarChartComponent, BarChartData } from '../../kpi/kpi-bar-chart/kpi-bar-chart';
 
 interface GraphQLResponse<T> {
@@ -48,7 +47,6 @@ interface GraphQLResponse<T> {
     MatChipsModule,
     MatDividerModule,
     NgChartsModule,
-    KpiComparatifComponent,
     KpiBarChartComponent,
   ],
   styleUrls: ['./enterprise-dashboard.scss'],

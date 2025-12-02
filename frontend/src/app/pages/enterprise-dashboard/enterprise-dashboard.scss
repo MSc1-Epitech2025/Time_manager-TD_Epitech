@@ -81,14 +81,14 @@
       .mdc-notched-outline__leading,
       .mdc-notched-outline__notch,
       .mdc-notched-outline__trailing {
-        border-color: var(--c-primary) !important;
+        border-color: var(--c-primary) ;
       }
     }
 
     .mat-mdc-select-value,
     .mat-mdc-form-field-input-control,
     label {
-      color: var(--c-text) !important;
+      color: var(--c-text) ;
     }
   }
 
@@ -127,7 +127,7 @@
 // header card
 .header-card {
   background: linear-gradient(135deg, #a78bfa 0%, #f472b6 100%);
-  border: none !important;
+  border: none ;
 
   .header-section {
     display: flex;

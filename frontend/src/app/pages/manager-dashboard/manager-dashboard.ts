@@ -13,57 +13,18 @@ import { MatDividerModule } from '@angular/material/divider';
 import { NgChartsModule } from 'ng2-charts';
 import { ChartConfiguration, ChartOptions } from 'chart.js';
 import { ActivatedRoute, Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
+
+// Services
 import { ManagerService, EmployeeSummary } from '../../core/services/manager';
 import { ReportService } from '../../core/services/report';
 import { AuthService } from '../../core/services/auth';
 import { TeamService, Team } from '../../core/services/team';
-import { HttpClient } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { KpiService } from '../../core/services/kpi';
 
-interface GraphqlPayload<T> {
-  data: T;
-  errors?: { message: string }[];
-}
-
-interface PunctualityStats {
-  lateRate: number;
-  avgDelayMinutes: number;
-}
-
-interface AbsenceBreakdown {
-  type: string;
-  days: number;
-}
-
-interface UserKpiSummary {
-  userId: string;
-  fullName: string;
-  presenceRate: number;
-  avgHoursPerDay: number;
-  overtimeHours: number;
-  punctuality: PunctualityStats;
-  absenceDays: number;
-  absenceByType: AbsenceBreakdown[];
-  reportsAuthored: number;
-  reportsReceived: number;
-  periodStart: string;
-  periodEnd: string;
-}
-
-interface TeamKpiSummary {
-  teamId: string;
-  teamName: string;
-  headcount: number;
-  presenceRate: number;
-  avgHoursPerDay: number;
-  absenceRate: number;
-  reportsAuthored: number;
-  periodStart: string;
-  periodEnd: string;
-}
-
-const GRAPHQL_ENDPOINT = environment.GRAPHQL_ENDPOINT;
+// Models & Utils
+import { UserKpiSummary, TeamKpiSummary } from '../../shared/models/graphql.types';
+import { currentWeekRange, getCurrentQuarter, getYearRange, formatDateToYYYYMMDD } from '../../shared/utils/date.utils';
 
 @Component({
   selector: 'app-manager-dashboard',
@@ -129,8 +90,8 @@ export class ManagerDashboard implements OnInit {
     private readonly managerService: ManagerService,
     private readonly reportService: ReportService,
     private readonly auth: AuthService,
-    private readonly http: HttpClient,
     private readonly teamService: TeamService,
+    private readonly kpiService: KpiService,
   ) { }
 
   ngOnInit() {
@@ -207,69 +168,16 @@ export class ManagerDashboard implements OnInit {
 
   private async loadEmployeeKpiToCache(employeeId: string) {
     try {
-      const now = new Date();
-      const currentMonth = now.getMonth();
-      
-      let quarterStart: Date;
-      let quarterEnd: Date;
-      
-      if (currentMonth >= 0 && currentMonth <= 2) {
-        quarterStart = new Date(now.getFullYear(), 0, 1);
-        quarterEnd = new Date(now.getFullYear(), 2, 31, 23, 59, 59);
-      } else if (currentMonth >= 3 && currentMonth <= 5) {
-        quarterStart = new Date(now.getFullYear(), 3, 1);
-        quarterEnd = new Date(now.getFullYear(), 5, 30, 23, 59, 59);
-      } else if (currentMonth >= 6 && currentMonth <= 8) {
-        quarterStart = new Date(now.getFullYear(), 6, 1);
-        quarterEnd = new Date(now.getFullYear(), 8, 30, 23, 59, 59);
-      } else {
-        quarterStart = new Date(now.getFullYear(), 9, 1);
-        quarterEnd = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
-      }
-      
-      const startDate = this.formatDateToYYYYMMDD(quarterStart);
-      const endDate = this.formatDateToYYYYMMDD(quarterEnd);
+      const quarter = getCurrentQuarter();
+      const startDate = formatDateToYYYYMMDD(quarter.start);
+      const endDate = formatDateToYYYYMMDD(quarter.end);
 
-      const response = await firstValueFrom(
-        this.http.post<GraphqlPayload<{ userKpi: UserKpiSummary }>>(
-          GRAPHQL_ENDPOINT,
-          {
-            query: `
-              query UserKpi($userId: ID!, $startDate: String!, $endDate: String!) {
-                userKpi(userId: $userId, startDate: $startDate, endDate: $endDate) {
-                  userId
-                  fullName
-                  presenceRate
-                  avgHoursPerDay
-                  overtimeHours
-                  punctuality {
-                    lateRate
-                    avgDelayMinutes
-                  }
-                  absenceDays
-                  absenceByType {
-                    type
-                    days
-                  }
-                  reportsAuthored
-                  reportsReceived
-                  periodStart
-                  periodEnd
-                }
-              }
-            `,
-            variables: {
-              userId: employeeId,
-              startDate,
-              endDate,
-            },
-          },
-          { withCredentials: true }
-        )
+      const kpi = await firstValueFrom(
+        this.kpiService.getUserKpi(employeeId, startDate, endDate)
       );
 
-      if (response.data?.userKpi) {
-        this.employeeKpiCache.set(employeeId, response.data.userKpi);
+      if (kpi) {
+        this.employeeKpiCache.set(employeeId, kpi);
       }
     } catch (err) {
       console.error(`Failed to load KPI for employee ${employeeId}:`, err);
@@ -280,79 +188,13 @@ export class ManagerDashboard implements OnInit {
     this.loadingKpi = true;
     this.employeeKpiData = null;
     try {
-      const now = new Date();
-      const currentMonth = now.getMonth(); // 0-11
-      
-      // Déterminer le trimestre actuel
-      let quarterStart: Date;
-      let quarterEnd: Date;
-      
-      if (currentMonth >= 0 && currentMonth <= 2) {
-        // Q1: Janvier - Mars
-        quarterStart = new Date(now.getFullYear(), 0, 1);
-        quarterEnd = new Date(now.getFullYear(), 2, 31, 23, 59, 59);
-      } else if (currentMonth >= 3 && currentMonth <= 5) {
-        // Q2: Avril - Juin
-        quarterStart = new Date(now.getFullYear(), 3, 1);
-        quarterEnd = new Date(now.getFullYear(), 5, 30, 23, 59, 59);
-      } else if (currentMonth >= 6 && currentMonth <= 8) {
-        // Q3: Juillet - Septembre
-        quarterStart = new Date(now.getFullYear(), 6, 1);
-        quarterEnd = new Date(now.getFullYear(), 8, 30, 23, 59, 59);
-      } else {
-        // Q4: Octobre - Décembre
-        quarterStart = new Date(now.getFullYear(), 9, 1);
-        quarterEnd = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
-      }
-      
-      const startDate = this.formatDateToYYYYMMDD(quarterStart);
-      const endDate = this.formatDateToYYYYMMDD(quarterEnd);
+      const quarter = getCurrentQuarter();
+      const startDate = formatDateToYYYYMMDD(quarter.start);
+      const endDate = formatDateToYYYYMMDD(quarter.end);
 
-      const response = await firstValueFrom(
-        this.http.post<GraphqlPayload<{ userKpi: UserKpiSummary }>>(
-          GRAPHQL_ENDPOINT,
-          {
-            query: `
-              query UserKpi($userId: ID!, $startDate: String!, $endDate: String!) {
-                userKpi(userId: $userId, startDate: $startDate, endDate: $endDate) {
-                  userId
-                  fullName
-                  presenceRate
-                  avgHoursPerDay
-                  overtimeHours
-                  punctuality {
-                    lateRate
-                    avgDelayMinutes
-                  }
-                  absenceDays
-                  absenceByType {
-                    type
-                    days
-                  }
-                  reportsAuthored
-                  reportsReceived
-                  periodStart
-                  periodEnd
-                }
-              }
-            `,
-            variables: {
-              userId: employeeId,
-              startDate,
-              endDate,
-            },
-          },
-          { withCredentials: true }
-        )
+      this.employeeKpiData = await firstValueFrom(
+        this.kpiService.getUserKpi(employeeId, startDate, endDate)
       );
-
-      if (response.errors?.length) {
-        throw new Error(response.errors.map((e) => e.message).join(', '));
-      }
-
-      if (response.data?.userKpi) {
-        this.employeeKpiData = response.data.userKpi;
-      }
     } catch (err) {
       console.error('Failed to load employee KPI data:', err);
     } finally {
@@ -366,49 +208,13 @@ export class ManagerDashboard implements OnInit {
     this.loadingTeamKpi = true;
     this.teamKpiData = null;
     try {
-      const now = new Date();
-      const yearStart = new Date(now.getFullYear(), 0, 1); // 1er janvier de l'année en cours
-      const yearEnd = new Date(now.getFullYear(), 11, 31, 23, 59, 59); // 31 décembre de l'année en cours
-      
-      const startDate = this.formatDateToYYYYMMDD(yearStart);
-      const endDate = this.formatDateToYYYYMMDD(yearEnd);
+      const yearRange = getYearRange();
+      const startDate = formatDateToYYYYMMDD(yearRange.start);
+      const endDate = formatDateToYYYYMMDD(yearRange.end);
 
-      const response = await firstValueFrom(
-        this.http.post<GraphqlPayload<{ teamKpi: TeamKpiSummary }>>(
-          GRAPHQL_ENDPOINT,
-          {
-            query: `
-              query TeamKpi($teamId: ID!, $startDate: String!, $endDate: String!) {
-                teamKpi(teamId: $teamId, startDate: $startDate, endDate: $endDate) {
-                  teamId
-                  teamName
-                  headcount
-                  presenceRate
-                  avgHoursPerDay
-                  absenceRate
-                  reportsAuthored
-                  periodStart
-                  periodEnd
-                }
-              }
-            `,
-            variables: {
-              teamId: this.selectedTeamId,
-              startDate,
-              endDate,
-            },
-          },
-          { withCredentials: true }
-        )
+      this.teamKpiData = await firstValueFrom(
+        this.kpiService.getTeamKpi(this.selectedTeamId, startDate, endDate)
       );
-
-      if (response.errors?.length) {
-        throw new Error(response.errors.map((e) => e.message).join(', '));
-      }
-
-      if (response.data?.teamKpi) {
-        this.teamKpiData = response.data.teamKpi;
-      }
     } catch (err) {
       console.error('Failed to load team KPI data:', err);
     } finally {
@@ -417,10 +223,7 @@ export class ManagerDashboard implements OnInit {
   }
 
   private formatDateToYYYYMMDD(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    return formatDateToYYYYMMDD(date);
   }
 
   getEmployeeKpiFromCache(employeeId: string): UserKpiSummary | undefined {
@@ -502,15 +305,4 @@ export class ManagerDashboard implements OnInit {
       this.selectEmployee(results[0]);
     }
   }
-}
-
-function currentWeekRange(): { from: Date; to: Date } {
-  const now = new Date();
-  const from = new Date(now);
-  const day = from.getDay() === 0 ? 7 : from.getDay();
-  from.setDate(from.getDate() - day + 1);
-  from.setHours(0, 0, 0, 0);
-  const to = new Date(from);
-  to.setDate(from.getDate() + 7);
-  return { from, to };
 }

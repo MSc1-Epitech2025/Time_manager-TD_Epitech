@@ -11,6 +11,7 @@ import {
 
 import { AuthService } from './auth';
 import { environment } from '../../../environments/environment';
+import { currentWeekRange } from '../../shared/utils/date.utils';
 
 const GRAPHQL_ENDPOINT = environment.GRAPHQL_ENDPOINT;
 type ClockKind = 'IN' | 'OUT';
@@ -423,14 +424,6 @@ function dedupeById<T>(items: T[], pickId: (item: T) => string): T[] {
     }
   }
   return Array.from(map.values());
-}
-
-function currentWeekRange(): { from: Date; to: Date } {
-  const now = new Date();
-  const from = startOfWeek(now);
-  const to = new Date(from);
-  to.setDate(from.getDate() + 7);
-  return { from, to };
 }
 
 function startOfWeek(date: Date): Date {
