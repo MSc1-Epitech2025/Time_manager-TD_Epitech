@@ -3,10 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
-import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatDividerModule } from '@angular/material/divider';
 import { NgChartsModule } from 'ng2-charts';
 import { ChartOptions } from 'chart.js';
 
@@ -24,6 +26,7 @@ import { KpiComparatifComponent } from '../../kpi/kpi-comparatif/kpi-comparatif'
 
 @Component({
   selector: 'app-enterprise-dashboard',
+  standalone: true,
   templateUrl: './enterprise-dashboard.html',
   imports: [
     CommonModule,
@@ -32,8 +35,10 @@ import { KpiComparatifComponent } from '../../kpi/kpi-comparatif/kpi-comparatif'
     MatButtonModule,
     MatIconModule,
     MatFormFieldModule,
-    MatTabsModule,
     MatInputModule,
+    MatSelectModule,
+    MatChipsModule,
+    MatDividerModule,
     NgChartsModule,
     KpiAssiduiteComponent,
     KpiComparatifComponent,
@@ -41,18 +46,20 @@ import { KpiComparatifComponent } from '../../kpi/kpi-comparatif/kpi-comparatif'
   styleUrls: ['./enterprise-dashboard.scss'],
 })
 export class EnterpriseDashboard implements OnInit, OnDestroy {
-  isWorking = false;
-  timer = 0;
-  time: { hours: number; minutes: number } = { hours: 0, minutes: 0 };
-  status = 'startWorking';
-
   users: Utilisateur[] = [];
   loading = false;
 
-  selectedKpi: 'absenteeism' | 'attendance' | 'productivity' = 'absenteeism';
+  selectedKpi: 'absenteeism' | 'attendance' | 'productivity' = 'attendance';
+
+  // Toggle visibility for sections
+  showSummary = true;
+  showChart = true;
+  showTopList = true;
+  showDetailsTable = true;
+  showComparative = true;
 
   private _selectedTeam = '';
-  private _selectedPeriod: 'day' | 'week' | 'month' = 'day';
+  private _selectedPeriod: 'last_week' | 'quarter' | 'year' = 'last_week';
 
   get selectedTeam(): string {
     return this._selectedTeam;
@@ -66,10 +73,10 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
     }
   }
 
-  get selectedPeriod(): 'day' | 'week' | 'month' {
+  get selectedPeriod(): 'last_week' | 'quarter' | 'year' {
     return this._selectedPeriod;
   }
-  set selectedPeriod(value: 'day' | 'week' | 'month') {
+  set selectedPeriod(value: 'last_week' | 'quarter' | 'year') {
     if (this._selectedPeriod !== value) {
       this._selectedPeriod = value;
       this.updateFilteredUsers();
@@ -142,9 +149,6 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
   getTempsTravail(userId: string): string {
     const entries = this.filteredByPeriod.filter((f) => f.user.id === userId);
     if (entries.length === 0) return '-';
-    if (this.selectedPeriod === 'day') {
-      return this.normalizeTime(entries[0].day?.tempsTravail);
-    }
 
     let totalMinutes = 0;
 
@@ -254,38 +258,48 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
       user.historique.forEach((day) => {
         if (this._selectedTeam && user.equipe !== this._selectedTeam) return;
 
-        if (
-          this._selectedPeriod === 'day' &&
-          day.date.toDateString() === now.toDateString()
-        ) {
-          result.push({ user, day });
-        }
-
-        if (this._selectedPeriod === 'week') {
+        // Last Week filter - shows previous week (Mon-Sun)
+        if (this._selectedPeriod === 'last_week') {
           const today = new Date();
           today.setHours(0, 0, 0, 0);
           const dayOfWeek = today.getDay();
           const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
 
-          const weekStart = new Date(today);
-          weekStart.setDate(today.getDate() + diffToMonday);
-          weekStart.setHours(0, 0, 0, 0);
+          // Last week's Monday
+          const lastWeekStart = new Date(today);
+          lastWeekStart.setDate(today.getDate() + diffToMonday - 7);
+          lastWeekStart.setHours(0, 0, 0, 0);
 
-          const weekEnd = new Date(weekStart);
-          weekEnd.setDate(weekStart.getDate() + 6);
-          weekEnd.setHours(23, 59, 59, 999);
+          // Last week's Sunday
+          const lastWeekEnd = new Date(lastWeekStart);
+          lastWeekEnd.setDate(lastWeekStart.getDate() + 6);
+          lastWeekEnd.setHours(23, 59, 59, 999);
 
-          if (day.date >= weekStart && day.date <= weekEnd) {
+          if (day.date >= lastWeekStart && day.date <= lastWeekEnd) {
             result.push({ user, day });
           }
         }
 
-        if (
-          this._selectedPeriod === 'month' &&
-          day.date.getMonth() === now.getMonth() &&
-          day.date.getFullYear() === now.getFullYear()
-        ) {
-          result.push({ user, day });
+        // Quarter filter - shows last 3 months
+        if (this._selectedPeriod === 'quarter') {
+          const threeMonthsAgo = new Date(now);
+          threeMonthsAgo.setMonth(now.getMonth() - 3);
+          threeMonthsAgo.setHours(0, 0, 0, 0);
+
+          if (day.date >= threeMonthsAgo && day.date <= now) {
+            result.push({ user, day });
+          }
+        }
+
+        // Year filter - shows last 12 months
+        if (this._selectedPeriod === 'year') {
+          const oneYearAgo = new Date(now);
+          oneYearAgo.setFullYear(now.getFullYear() - 1);
+          oneYearAgo.setHours(0, 0, 0, 0);
+
+          if (day.date >= oneYearAgo && day.date <= now) {
+            result.push({ user, day });
+          }
         }
       });
     });
@@ -418,6 +432,27 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
       productivityRate,
       100 - productivityRate,
     ];
+  }
+
+  // Toggle methods for showing/hiding sections
+  toggleSummary() {
+    this.showSummary = !this.showSummary;
+  }
+
+  toggleChart() {
+    this.showChart = !this.showChart;
+  }
+
+  toggleTopList() {
+    this.showTopList = !this.showTopList;
+  }
+
+  toggleDetailsTable() {
+    this.showDetailsTable = !this.showDetailsTable;
+  }
+
+  toggleComparative() {
+    this.showComparative = !this.showComparative;
   }
 
   getComparativeMonthlyData(
