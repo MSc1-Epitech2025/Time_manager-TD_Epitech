@@ -47,10 +47,10 @@ export class KpiBarChartComponent implements AfterViewInit, OnChanges {
 
   getBarColor() {
     switch (this.selectedKpi) {
-      case 'absenteeism': return '#ef4444'; // red
-      case 'attendance': return '#22c55e'; // green
-      case 'productivity': return '#f472b6'; // pink
-      default: return '#a78bfa'; // purple
+      case 'absenteeism': return '#ef4444';
+      case 'attendance': return '#22c55e';
+      case 'productivity': return '#f472b6';
+      default: return '#a78bfa';
     }
   }
 

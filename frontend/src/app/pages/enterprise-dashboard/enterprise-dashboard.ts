@@ -54,8 +54,8 @@ interface GraphQLResponse<T> {
 export class EnterpriseDashboard implements OnInit, OnDestroy {
   users: Utilisateur[] = [];
   loading = false;
-  allUsersKpi: any[] = []; // Store all users KPI data from backend
-  allTeams: any[] = []; // Store teams data
+  allUsersKpi: any[] = [];
+  allTeams: any[] = [];
 
   private _selectedKpi: 'absenteeism' | 'attendance' | 'productivity' = 'attendance';
   
@@ -78,7 +78,6 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
     if (this._selectedTeam !== value) {
       this._selectedTeam = value;
       this.updateFilteredUsers();
-      // Refresh all KPI stats immediately
       this.loadKpiData();
     }
   }
@@ -91,7 +90,6 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
       this._selectedPeriod = value;
       this.loading = true;
       this.loadAllKpiData().then(() => {
-        // Force refresh all KPI stats for all types
         this.loadAbsenteeismData([]);
         this.loadAttendanceData([]);
         this.loadProductivityData([]);
@@ -169,7 +167,6 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
     const kpi = this.allUsersKpi.find(k => k?.userId === userId);
     if (!kpi) return '-';
     
-    // No specific "pointage" in KPI, but we can show late info
     const lateRate = kpi.punctuality?.lateRate || 0;
     return lateRate > 20 ? 'Often Late' : 'On Time';
   }
@@ -227,19 +224,17 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
     const kpi = this.allUsersKpi.find(k => k?.userId === userId);
     if (!kpi) return null;
     
-    // Use presence rate to determine if present
     const presenceRate = kpi.presenceRate || 0;
-    return presenceRate > 50; // Consider present if presence rate > 50%
+    return presenceRate > 50;
   }
 
   getPresenceCount(userId: string): { present: number; total: number } {
     const kpi = this.allUsersKpi.find(k => k?.userId === userId);
     if (!kpi) return { present: 0, total: 0 };
     
-    // Estimate based on period
-    let estimatedDays = 5; // week
-    if (this._selectedPeriod === 'quarter') estimatedDays = 65; // ~13 weeks
-    if (this._selectedPeriod === 'year') estimatedDays = 260; // ~52 weeks
+    let estimatedDays = 5;
+    if (this._selectedPeriod === 'quarter') estimatedDays = 65;
+    if (this._selectedPeriod === 'year') estimatedDays = 260;
     
     const presenceRate = kpi.presenceRate || 0;
     const present = Math.round((presenceRate / 100) * estimatedDays);
@@ -252,9 +247,7 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
     this.loading = true;
 
     try {
-      // Load teams and users first
       await this.loadTeamsAndUsers();
-      // Then load KPI data
       await this.loadAllKpiData();
     } catch (error) {
       console.error('Error loading dashboard data:', error);
@@ -545,23 +538,20 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
       .filter(([_, c]) => c > 0)
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count)
-      .slice(0, 10); // Top 10
-
-    // Prepare absenteeism bar chart data
+      .slice(0, 10);
     this.absenteeismChartData = Object.entries(byName)
       .map(([name, value]) => ({ 
-        name: name.split(' ')[0], // First name only for readability
+        name: name.split(' ')[0],
         value: value 
       }))
       .sort((a, b) => b.value - a.value)
-      .slice(0, 10); // Top 10 for chart
+      .slice(0, 10);
     
-    // Update bar chart if absenteeism is selected
     if (this.selectedKpi === 'absenteeism') {
       this.barChartData = this.absenteeismChartData;
     }
 
-    const labels = Object.keys(byName).slice(0, 5); // Top 5 for pie chart
+    const labels = Object.keys(byName).slice(0, 5);
     const data = labels.map(name => byName[name]);
 
     this.pieChartData = {
@@ -578,7 +568,6 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
   loadAttendanceData(
     filtered: Array<{ user: Utilisateur; day: PresenceDuJour }>
   ) {
-    // Use real KPI data from backend
     let totalPresent = 0;
     let totalLate = 0;
     let totalAbsent = 0;
@@ -590,7 +579,6 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
       const user = this.users.find(u => u.id === kpi.userId);
       if (!user) return;
       
-      // Filter by team if selected
       if (this._selectedTeam && user.equipe !== this._selectedTeam) return;
       
       const presenceRate = kpi.presenceRate || 0;
@@ -598,7 +586,6 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
       
       byName[kpi.fullName] = presenceRate;
       
-      // Estimate present/absent based on presence rate
       if (presenceRate > 80) {
         totalPresent++;
       } else if (presenceRate > 50) {
@@ -613,18 +600,14 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
     this.topAttendance = Object.entries(byName)
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count)
-      .slice(0, 10); // Top 10
-
-    // Prepare attendance bar chart data
+      .slice(0, 10);
     this.attendanceChartData = Object.entries(byName)
       .map(([name, value]) => ({ 
-        name: name.split(' ')[0], // First name only
+        name: name.split(' ')[0],
         value: value 
       }))
       .sort((a, b) => b.value - a.value)
-      .slice(0, 10); // Top 10 for chart
-    
-    // Update bar chart if attendance is selected
+      .slice(0, 10);
     if (this.selectedKpi === 'attendance') {
       this.barChartData = this.attendanceChartData;
     }
@@ -640,7 +623,6 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
   loadProductivityData(
     filtered: Array<{ user: Utilisateur; day: PresenceDuJour }>
   ) {
-    // Use real KPI data from backend
     let totalHoursWorked = 0;
     let totalUsers = 0;
     const byName: Record<string, number> = {};
@@ -651,7 +633,6 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
       const user = this.users.find(u => u.id === kpi.userId);
       if (!user) return;
       
-      // Filter by team if selected
       if (this._selectedTeam && user.equipe !== this._selectedTeam) return;
       
       const avgHours = kpi.avgHoursPerDay || 0;
@@ -676,18 +657,15 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
         return { name, percent };
       })
       .sort((a, b) => b.percent - a.percent)
-      .slice(0, 10); // Top 10
-
-    // Prepare productivity bar chart data with hours
+      .slice(0, 10);
     this.productivityChartData = Object.entries(byName)
       .map(([name, value]) => ({ 
-        name: name.split(' ')[0], // First name only
+        name: name.split(' ')[0],
         value: value 
       }))
       .sort((a, b) => b.value - a.value)
-      .slice(0, 10); // Top 10 for chart
+      .slice(0, 10);
     
-    // Update bar chart if productivity is selected
     if (this.selectedKpi === 'productivity') {
       this.barChartData = this.productivityChartData;
     }
@@ -699,7 +677,6 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
     this.pieChartData.labels = ['Productivity', 'Non-Productivity'];
   }
 
-  // Update bar chart data based on selected KPI
   private updateBarChartData() {
     switch (this.selectedKpi) {
       case 'absenteeism':
@@ -731,7 +708,6 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
       'Nov',
       'Déc',
     ];
-    // Use actual teams from allTeams instead of user names
     const teams = this._selectedTeam 
       ? [this._selectedTeam] 
       : this.allTeams.map(t => t.name);
@@ -742,7 +718,6 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
       data[team] = months.map((_, monthIndex) => {
         const teamUsers = this.users.filter((u) => u.equipe === team);
         
-        // Get KPI data for team members
         const teamKpis = this.allUsersKpi.filter(kpi => {
           if (!kpi) return false;
           const user = this.users.find(u => u.id === kpi.userId);
@@ -750,7 +725,6 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
         });
 
         if (selectedKpi === 'absenteeism') {
-          // Sum of absence days for team members
           const totalAbsences = teamKpis.reduce((sum, kpi) => 
             sum + (kpi.absenceDays || 0), 0
           );
@@ -758,7 +732,6 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
         }
 
         if (selectedKpi === 'attendance') {
-          // Average presence rate for team
           if (teamKpis.length === 0) return 0;
           const avgPresenceRate = teamKpis.reduce((sum, kpi) => 
             sum + (kpi.presenceRate || 0), 0
@@ -767,12 +740,10 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
         }
 
         if (selectedKpi === 'productivity') {
-          // Average hours per day for team
           if (teamKpis.length === 0) return 0;
           const avgHours = teamKpis.reduce((sum, kpi) => 
             sum + (kpi.avgHoursPerDay || 0), 0
           ) / teamKpis.length;
-          // Convert to productivity percentage (based on 8h workday)
           return Math.min(100, Math.round((avgHours / 8) * 100));
         }
 
