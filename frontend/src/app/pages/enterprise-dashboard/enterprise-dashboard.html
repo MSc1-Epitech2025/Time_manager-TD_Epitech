@@ -8,24 +8,6 @@
             <h1>Enterprise Dashboard</h1>
             <p>Monitor team performance and KPIs</p>
           </div>
-          <div class="header-controls">
-            <button mat-raised-button class="toggle-btn" (click)="toggleChart()">
-              <mat-icon>{{ showChart ? 'visibility_off' : 'visibility' }}</mat-icon>
-              <span>Chart</span>
-            </button>
-            <button mat-raised-button class="toggle-btn" (click)="toggleTopList()">
-              <mat-icon>{{ showTopList ? 'visibility_off' : 'visibility' }}</mat-icon>
-              <span>Rankings</span>
-            </button>
-            <button mat-raised-button class="toggle-btn" (click)="toggleDetailsTable()">
-              <mat-icon>{{ showDetailsTable ? 'visibility_off' : 'visibility' }}</mat-icon>
-              <span>Details</span>
-            </button>
-            <button mat-raised-button class="toggle-btn" (click)="toggleComparative()">
-              <mat-icon>{{ showComparative ? 'visibility_off' : 'visibility' }}</mat-icon>
-              <span>Comparison</span>
-            </button>
-          </div>
         </div>
       </mat-card-content>
     </mat-card>
@@ -105,7 +87,7 @@
       <!-- Chart and Top List Section -->
       <div class="top-row">
         <!-- Chart Card -->
-        <mat-card class="chart-card" appearance="outlined" *ngIf="showChart">
+        <mat-card class="chart-card" appearance="outlined">
           <mat-card-header>
             <mat-card-title>
               <mat-icon>pie_chart</mat-icon>
@@ -127,7 +109,7 @@
         </mat-card>
 
         <!-- Top Performers Card -->
-        <mat-card class="top-list-card" appearance="outlined" *ngIf="showTopList">
+        <mat-card class="top-list-card" appearance="outlined">
           <mat-card-header>
             <mat-card-title>
               <mat-icon>leaderboard</mat-icon>
@@ -192,7 +174,7 @@
       </div>
 
       <!-- Details Table Section -->
-      <mat-card class="details-card" appearance="outlined" *ngIf="showDetailsTable">
+      <mat-card class="details-card" appearance="outlined">
         <mat-card-header>
           <mat-card-title>
             <mat-icon>table_chart</mat-icon>
@@ -291,23 +273,6 @@
         </mat-card-content>
       </mat-card>
 
-      <!-- Comparative Chart Section -->
-      <mat-card class="comparative-card" appearance="outlined" *ngIf="showComparative">
-        <mat-card-header>
-          <mat-card-title>
-            <mat-icon>show_chart</mat-icon>
-            <span>Comparative Analysis</span>
-          </mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="comparative-wrapper">
-            <app-kpi-comparatif 
-              [comparativeData]="getComparativeMonthlyData(selectedKpi)" 
-              [selectedKpi]="selectedKpi">
-            </app-kpi-comparatif>
-          </div>
-        </mat-card-content>
-      </mat-card>
     </div>
   </main>
 </div>

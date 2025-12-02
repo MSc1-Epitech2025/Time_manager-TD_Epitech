@@ -69,12 +69,6 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
     this.updateBarChartData();
   }
 
-  // Toggle visibility for sections
-  showChart = true;
-  showTopList = true;
-  showDetailsTable = true;
-  showComparative = true;
-
   private _selectedTeam = '';
   private _selectedPeriod: 'last_week' | 'quarter' | 'year' = 'last_week';
   private readonly GRAPHQL_ENDPOINT = environment.GRAPHQL_ENDPOINT;
@@ -720,23 +714,6 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
         this.barChartData = this.productivityChartData;
         break;
     }
-  }
-
-  // Toggle methods for showing/hiding sections
-  toggleChart() {
-    this.showChart = !this.showChart;
-  }
-
-  toggleTopList() {
-    this.showTopList = !this.showTopList;
-  }
-
-  toggleDetailsTable() {
-    this.showDetailsTable = !this.showDetailsTable;
-  }
-
-  toggleComparative() {
-    this.showComparative = !this.showComparative;
   }
 
   getComparativeMonthlyData(
