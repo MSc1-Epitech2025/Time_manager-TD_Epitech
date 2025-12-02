@@ -16,15 +16,15 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 // Services
-import { ManagerService, EmployeeSummary } from '../../core/services/manager';
-import { ReportService } from '../../core/services/report';
-import { AuthService } from '../../core/services/auth';
-import { TeamService, Team } from '../../core/services/team';
-import { KpiService } from '../../core/services/kpi';
+import { ManagerService, EmployeeSummary } from '@core/services/manager';
+import { ReportService } from '@core/services/report';
+import { AuthService } from '@core/services/auth';
+import { TeamService, Team } from '@core/services/team';
+import { KpiService } from '@core/services/kpi';
 
 // Models & Utils
-import { UserKpiSummary, TeamKpiSummary } from '../../shared/models/graphql.types';
-import { currentWeekRange, getCurrentQuarter, getYearRange, formatDateToYYYYMMDD } from '../../shared/utils/date.utils';
+import { UserKpiSummary, TeamKpiSummary } from '@shared/models/graphql.types';
+import { currentWeekRange, getCurrentQuarter, getYearRange, formatDateToYYYYMMDD } from '@shared/utils/date.utils';
 
 @Component({
   selector: 'app-manager-dashboard',

@@ -14,13 +14,13 @@ import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { firstValueFrom } from 'rxjs';
-import { AuthService } from '../../core/services/auth';
-import { AbsenceService, Absence } from '../../core/services/absence';
-import { TeamService } from '../../core/services/team';
+import { AuthService } from '@core/services/auth';
+import { AbsenceService, Absence } from '@core/services/absence';
+import { TeamService } from '@core/services/team';
 import { MatDialog } from '@angular/material/dialog';
-import { AbsenceRequestModal } from '../../modal/absence-request-modal/absence-request-modal';
-import { AbsenceApprovalModal } from '../../modal/absence-approval-modal/absence-approval-modal';
-import { NotificationService } from '../../core/services/notification';
+import { AbsenceRequestModal } from '@modal/absence-request-modal/absence-request-modal';
+import { AbsenceApprovalModal } from '@modal/absence-approval-modal/absence-approval-modal';
+import { NotificationService } from '@core/services/notification';
 
 interface TeamOption {
   id: string;

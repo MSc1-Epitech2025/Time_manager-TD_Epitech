@@ -14,9 +14,9 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { Router } from '@angular/router';
 import { Observable, forkJoin, map, of, tap, switchMap } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { DeleteTeamModalComponent } from '../../modal/delete-team-modal/delete-team-modal';
-import { TeamService, Team, TeamMember, isGraphqlAuthorizationError } from '../../core/services/team';
-import { AuthService, Role } from '../../core/services/auth';
+import { DeleteTeamModalComponent } from '@modal/delete-team-modal/delete-team-modal';
+import { TeamService, Team, TeamMember, isGraphqlAuthorizationError } from '@core/services/team';
+import { AuthService, Role } from '@core/services/auth';
 
 @Component({
   selector: 'app-team-management',

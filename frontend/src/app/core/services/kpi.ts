@@ -8,12 +8,12 @@ import {
   switchMap,
   Observable,
 } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { environment } from '@environments/environment';
 import { 
   GraphqlPayload, 
   UserKpiSummary, 
   TeamKpiSummary 
-} from '../../shared/models/graphql.types';
+} from '@shared/models/graphql.types';
 
 
 export interface PresenceDuJour {

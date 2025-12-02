@@ -1,6 +1,6 @@
-import { ClockRecord } from '../models/graphql.types';
-import { PlanningEvent } from '../../core/services/planning';
-import { toDayKey, countWeekdays, clampPct, dayRange } from '../utils/date.utils';
+import { ClockRecord } from '@shared/models/graphql.types';
+import { PlanningEvent } from '@core/services/planning';
+import { toDayKey, countWeekdays, clampPct, dayRange } from '@shared/utils/date.utils';
 
 export interface ClockSession {
   start: Date;

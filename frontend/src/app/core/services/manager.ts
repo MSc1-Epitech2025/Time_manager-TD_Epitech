@@ -10,8 +10,8 @@ import {
 } from 'rxjs';
 
 import { AuthService } from './auth';
-import { environment } from '../../../environments/environment';
-import { currentWeekRange } from '../../shared/utils/date.utils';
+import { environment } from '@environments/environment';
+import { currentWeekRange } from '@shared/utils/date.utils';
 
 const GRAPHQL_ENDPOINT = environment.GRAPHQL_ENDPOINT;
 type ClockKind = 'IN' | 'OUT';

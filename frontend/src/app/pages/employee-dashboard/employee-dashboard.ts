@@ -15,33 +15,33 @@ import { ChartConfiguration, ChartOptions } from 'chart.js';
 import { firstValueFrom } from 'rxjs';
 import { Router } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { AbsenceRequestModal } from '../../modal/absence-request-modal/absence-request-modal';
+import { AbsenceRequestModal } from '@modal/absence-request-modal/absence-request-modal';
 
 // Services
-import { AuthService } from '../../core/services/auth';
-import { PlanningService, PlanningEvent } from '../../core/services/planning';
-import { NotificationService } from '../../core/services/notification';
-import { WeatherService, WeatherSnapshot } from '../../core/services/weather';
-import { AbsenceService, Absence } from '../../core/services/absence';
-import { ClockService } from '../../core/services/clock';
-import { LeaveAccountService, LeaveAccountDto } from '../../core/services/leave-account';
-import { KpiService } from '../../core/services/kpi';
+import { AuthService } from '@core/services/auth';
+import { PlanningService, PlanningEvent } from '@core/services/planning';
+import { NotificationService } from '@core/services/notification';
+import { WeatherService, WeatherSnapshot } from '@core/services/weather';
+import { AbsenceService, Absence } from '@core/services/absence';
+import { ClockService } from '@core/services/clock';
+import { LeaveAccountService, LeaveAccountDto } from '@core/services/leave-account';
+import { KpiService } from '@core/services/kpi';
 
 // Models & Utils
-import { ClockRecord, UserKpiSummary } from '../../shared/models/graphql.types';
-import { currentWeekRange, formatDate, getCurrentQuarter, formatDateToYYYYMMDD } from '../../shared/utils/date.utils';
+import { ClockRecord, UserKpiSummary } from '@shared/models/graphql.types';
+import { currentWeekRange, formatDate, getCurrentQuarter, formatDateToYYYYMMDD } from '@shared/utils/date.utils';
 import { 
   buildSessions, 
   computeTimeMetrics, 
   normalizeChartData,
   SessionAnalysis 
-} from '../../shared/business-logic/time-tracking.logic';
+} from '@shared/business-logic/time-tracking.logic';
 import { 
   formatAbsenceType, 
   formatTimeHHMM, 
   formatHoursMinutes,
   getWeatherIcon 
-} from '../../shared/utils/formatting.utils';
+} from '@shared/utils/formatting.utils';
 
 @Component({
   selector: 'app-employee-dashboard',

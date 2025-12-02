@@ -13,17 +13,17 @@ import { NgChartsModule } from 'ng2-charts';
 import { ChartOptions } from 'chart.js';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { environment } from '@environments/environment';
 
 // Services
 import {
   KpiService,
   Utilisateur,
   PresenceDuJour,
-} from '../../core/services/kpi';
+} from '@core/services/kpi';
 
 // Kpi Components
-import { KpiBarChartComponent, BarChartData } from '../../kpi/kpi-bar-chart/kpi-bar-chart';
+import { KpiBarChartComponent, BarChartData } from '@kpi/kpi-bar-chart/kpi-bar-chart';
 
 interface GraphQLResponse<T> {
   data: T;

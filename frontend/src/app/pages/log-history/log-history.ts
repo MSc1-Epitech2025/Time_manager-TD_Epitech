@@ -7,7 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { Router } from '@angular/router';
-import { AuthService } from '../../core/services/auth';
+import { AuthService } from '@core/services/auth';
 
 @Component({
   selector: 'app-log-history',

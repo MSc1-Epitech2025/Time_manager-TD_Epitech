@@ -9,7 +9,7 @@ import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
-import { AbsenceType, AbsencePeriod } from '../../core/services/absence';
+import { AbsenceType, AbsencePeriod } from '@core/services/absence';
 
 export interface AbsenceRequestData {
   startDate?: Date;

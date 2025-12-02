@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
-import { environment } from '../../../environments/environment';
-import { GraphqlPayload, LeaveAccount } from '../../shared/models/graphql.types';
+import { environment } from '@environments/environment';
+import { GraphqlPayload, LeaveAccount } from '@shared/models/graphql.types';
 
 export interface LeaveAccountDto {
   leaveType: string;
