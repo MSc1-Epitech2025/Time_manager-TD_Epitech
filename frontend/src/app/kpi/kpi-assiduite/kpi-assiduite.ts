@@ -49,19 +49,17 @@ export class KpiAssiduiteComponent implements AfterViewInit, OnChanges {
   }
 
   getColors() {
-    if (this.selectedKpi === 'absenteeism') {
-      return this.buildDynamicColors(this.data.length);
-    }
-
-    switch (this.selectedKpi) {
-      case 'attendance': return ['#22c55e', '#ef4444'];
-      case 'productivity': return ['#3b82f6', '#9ca3af'];
-    }
-    return [];
+    // Use dynamic colors based on data length for all KPIs
+    return this.buildDynamicColors(this.data.length);
   }
 
   getLabels() {
-    if (this.selectedKpi === 'absenteeism') return this.labels ?? [];
+    // Always use the labels passed from parent component if available
+    if (this.labels && this.labels.length > 0) {
+      return this.labels;
+    }
+    
+    // Fallback to default labels only if no labels provided
     if (this.selectedKpi === 'attendance') return ['Presence','Absence'];
     if (this.selectedKpi === 'productivity') return ['Productivity','Non-Productivity'];
     return [];
@@ -105,8 +103,14 @@ export class KpiAssiduiteComponent implements AfterViewInit, OnChanges {
           ctx.restore();
           return;
         }
-        else if (this.selectedKpi !== 'absenteeism') {
-
+        
+        // Don't show percentage in center when displaying user data
+        // Only show for generic labels (Presence/Absence or Productivity/Non-Productivity)
+        const isGenericLabels = this.labels.length === 0 || 
+          (this.selectedKpi === 'attendance' && this.labels.includes('Presence')) ||
+          (this.selectedKpi === 'productivity' && this.labels.includes('Productivity'));
+        
+        if (isGenericLabels && this.selectedKpi !== 'absenteeism') {
           const mainValue = this.data[0];
           ctx.font = `bold 28px Inter`;
   
@@ -115,8 +119,9 @@ export class KpiAssiduiteComponent implements AfterViewInit, OnChanges {
   
           ctx.strokeText(mainValue + '%', x, y);
           ctx.fillText(mainValue + '%', x, y);
-          ctx.restore();
         }
+        
+        ctx.restore();
       }
     };
 

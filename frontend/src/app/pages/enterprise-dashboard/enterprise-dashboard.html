@@ -9,10 +9,6 @@
             <p>Monitor team performance and KPIs</p>
           </div>
           <div class="header-controls">
-            <button mat-raised-button class="toggle-btn" (click)="toggleSummary()">
-              <mat-icon>{{ showSummary ? 'visibility_off' : 'visibility' }}</mat-icon>
-              <span>Summary</span>
-            </button>
             <button mat-raised-button class="toggle-btn" (click)="toggleChart()">
               <mat-icon>{{ showChart ? 'visibility_off' : 'visibility' }}</mat-icon>
               <span>Chart</span>
@@ -34,57 +30,6 @@
       </mat-card-content>
     </mat-card>
 
-    <!-- Summary Cards Section -->
-    <section class="summary-section" *ngIf="showSummary">
-      <mat-card 
-        class="summary-card attendance" 
-        appearance="outlined"
-        (click)="selectKpi('attendance')" 
-        [class.active]="selectedKpi === 'attendance'">
-        <mat-card-content>
-          <div class="card-icon">
-            <mat-icon>business_center</mat-icon>
-          </div>
-          <div class="card-info">
-            <span class="value">{{ attendanceStats?.present || 0 }}</span>
-            <h3>Attendance</h3>
-          </div>
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card 
-        class="summary-card absenteeism" 
-        appearance="outlined"
-        (click)="selectKpi('absenteeism')"
-        [class.active]="selectedKpi === 'absenteeism'">
-        <mat-card-content>
-          <div class="card-icon">
-            <mat-icon>person_off</mat-icon>
-          </div>
-          <div class="card-info">
-            <span class="value">{{ absenteeismStats?.totalAbsences || 0 }}</span>
-            <h3>Absenteeism</h3>
-          </div>
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card 
-        class="summary-card productivity" 
-        appearance="outlined"
-        (click)="selectKpi('productivity')"
-        [class.active]="selectedKpi === 'productivity'">
-        <mat-card-content>
-          <div class="card-icon">
-            <mat-icon>trending_up</mat-icon>
-          </div>
-          <div class="card-info">
-            <span class="value">{{ productivityStats?.averageHours || 0 }}h</span>
-            <h3>Productivity</h3>
-          </div>
-        </mat-card-content>
-      </mat-card>
-    </section>
-
     <!-- Controls Bar -->
     <mat-card class="controls-card" appearance="outlined">
       <mat-card-content>
@@ -92,24 +37,42 @@
           <div class="kpi-tabs">
             <button 
               mat-raised-button 
+              class="kpi-stat-btn"
               [class.active]="selectedKpi === 'attendance'" 
               (click)="selectKpi('attendance')">
-              <mat-icon>business_center</mat-icon>
-              <span>Attendance</span>
+              <div class="kpi-btn-icon">
+                <mat-icon>business_center</mat-icon>
+              </div>
+              <div class="kpi-btn-content">
+                <span class="kpi-btn-label">Attendance</span>
+                <span class="kpi-btn-value">{{ attendanceStats?.present || 0 }}</span>
+              </div>
             </button>
             <button 
               mat-raised-button 
+              class="kpi-stat-btn"
               [class.active]="selectedKpi === 'absenteeism'" 
               (click)="selectKpi('absenteeism')">
-              <mat-icon>person_off</mat-icon>
-              <span>Absenteeism</span>
+              <div class="kpi-btn-icon">
+                <mat-icon>person_off</mat-icon>
+              </div>
+              <div class="kpi-btn-content">
+                <span class="kpi-btn-label">Absenteeism</span>
+                <span class="kpi-btn-value">{{ absenteeismStats?.totalAbsences || 0 }}</span>
+              </div>
             </button>
             <button 
               mat-raised-button 
+              class="kpi-stat-btn"
               [class.active]="selectedKpi === 'productivity'" 
               (click)="selectKpi('productivity')">
-              <mat-icon>trending_up</mat-icon>
-              <span>Productivity</span>
+              <div class="kpi-btn-icon">
+                <mat-icon>trending_up</mat-icon>
+              </div>
+              <div class="kpi-btn-content">
+                <span class="kpi-btn-label">Productivity</span>
+                <span class="kpi-btn-value">{{ productivityStats?.averageHours || 0 }}h</span>
+              </div>
             </button>
           </div>
 
@@ -155,11 +118,10 @@
           </mat-card-header>
           <mat-card-content>
             <div class="chart-wrapper">
-              <app-kpi-assiduite 
-                [data]="pieChartData.datasets[0].data" 
-                [selectedKpi]="selectedKpi"
-                [labels]="pieChartData.labels">
-              </app-kpi-assiduite>
+              <app-kpi-bar-chart
+                [data]="barChartData"
+                [selectedKpi]="selectedKpi">
+              </app-kpi-bar-chart>
             </div>
           </mat-card-content>
         </mat-card>

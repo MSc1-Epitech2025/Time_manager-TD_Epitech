@@ -175,100 +175,6 @@
   }
 }
 
-// summary section
-.summary-section {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
-}
-
-.summary-card {
-  cursor: pointer;
-  border-left: 4px solid var(--c-primary);
-  transition: all 0.3s;
-
-  &.attendance {
-    border-left-color: var(--c-success);
-  }
-
-  &.absenteeism {
-    border-left-color: var(--c-danger);
-  }
-
-  &.productivity {
-    border-left-color: var(--c-accent);
-  }
-
-  &.active {
-    border-left-width: 6px;
-    box-shadow: 0 8px 24px rgba(124, 58, 237, 0.3);
-  }
-
-  mat-card-content {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1.5rem;
-  }
-
-  .card-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: rgba(124, 58, 237, 0.15);
-
-    mat-icon {
-      font-size: 32px;
-      width: 32px;
-      height: 32px;
-      color: var(--c-primary);
-    }
-  }
-
-  &.attendance .card-icon {
-    background: rgba(34, 197, 94, 0.15);
-    mat-icon {
-      color: var(--c-success);
-    }
-  }
-
-  &.absenteeism .card-icon {
-    background: rgba(239, 68, 68, 0.15);
-    mat-icon {
-      color: var(--c-danger);
-    }
-  }
-
-  &.productivity .card-icon {
-    background: rgba(244, 114, 182, 0.15);
-    mat-icon {
-      color: var(--c-accent);
-    }
-  }
-
-  .card-info {
-    flex: 1;
-
-    .value {
-      display: block;
-      font-size: 2rem;
-      font-weight: 700;
-      color: var(--c-text);
-      margin-bottom: 0.3rem;
-    }
-
-    h3 {
-      margin: 0;
-      font-size: 0.95rem;
-      font-weight: 500;
-      color: var(--c-muted);
-    }
-  }
-}
-
 // controls card
 .controls-card {
   mat-card-content {
@@ -285,36 +191,89 @@
 
   .kpi-tabs {
     display: flex;
-    gap: 0.5rem;
+    gap: 1rem;
     flex-wrap: wrap;
 
-    button {
+    .kpi-stat-btn {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 1rem;
+      padding: 0.8rem 1.2rem;
       background: rgba(124, 58, 237, 0.1);
       color: var(--c-text);
-      border: 1px solid var(--c-border);
+      border: 2px solid var(--c-border);
       transition: all 0.3s;
+      min-width: 160px;
+      height: auto;
 
-      mat-icon {
-        font-size: 20px;
-        width: 20px;
-        height: 20px;
+      .kpi-btn-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(124, 58, 237, 0.2);
+        transition: all 0.3s;
+
+        mat-icon {
+          font-size: 22px;
+          width: 22px;
+          height: 22px;
+          color: var(--c-primary);
+        }
+      }
+
+      .kpi-btn-content {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.15rem;
+
+        .kpi-btn-label {
+          font-size: 0.75rem;
+          font-weight: 500;
+          color: var(--c-muted);
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .kpi-btn-value {
+          font-size: 1.4rem;
+          font-weight: 700;
+          color: var(--c-text);
+          line-height: 1;
+        }
       }
 
       &.active {
         background: var(--c-primary);
-        color: #fff;
         border-color: var(--c-primary);
+        box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
 
-        mat-icon {
-          color: #fff;
+        .kpi-btn-icon {
+          background: rgba(255, 255, 255, 0.2);
+
+          mat-icon {
+            color: #fff;
+          }
+        }
+
+        .kpi-btn-content {
+          .kpi-btn-label {
+            color: rgba(255, 255, 255, 0.9);
+          }
+
+          .kpi-btn-value {
+            color: #fff;
+          }
         }
       }
 
       &:hover:not(.active) {
         background: rgba(124, 58, 237, 0.2);
+        border-color: var(--c-primary);
+        transform: translateY(-2px);
       }
     }
   }
