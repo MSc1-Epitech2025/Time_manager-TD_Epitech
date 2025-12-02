@@ -521,8 +521,33 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
   private async loadMyKpi() {
     this.loadingKpi = true;
     try {
-      const startDate = this.formatDateToYYYYMMDD(this.weekRange.from);
-      const endDate = this.formatDateToYYYYMMDD(this.weekRange.to);
+      const now = new Date();
+      const currentMonth = now.getMonth(); // 0-11
+      
+      // Déterminer le trimestre actuel
+      let quarterStart: Date;
+      let quarterEnd: Date;
+      
+      if (currentMonth >= 0 && currentMonth <= 2) {
+        // Q1: Janvier - Mars
+        quarterStart = new Date(now.getFullYear(), 0, 1);
+        quarterEnd = new Date(now.getFullYear(), 2, 31, 23, 59, 59);
+      } else if (currentMonth >= 3 && currentMonth <= 5) {
+        // Q2: Avril - Juin
+        quarterStart = new Date(now.getFullYear(), 3, 1);
+        quarterEnd = new Date(now.getFullYear(), 5, 30, 23, 59, 59);
+      } else if (currentMonth >= 6 && currentMonth <= 8) {
+        // Q3: Juillet - Septembre
+        quarterStart = new Date(now.getFullYear(), 6, 1);
+        quarterEnd = new Date(now.getFullYear(), 8, 30, 23, 59, 59);
+      } else {
+        // Q4: Octobre - Décembre
+        quarterStart = new Date(now.getFullYear(), 9, 1);
+        quarterEnd = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
+      }
+      
+      const startDate = this.formatDateToYYYYMMDD(quarterStart);
+      const endDate = this.formatDateToYYYYMMDD(quarterEnd);
 
       const response = await firstValueFrom(
         this.http.post<GraphqlPayload<MyKpiResponse>>(
