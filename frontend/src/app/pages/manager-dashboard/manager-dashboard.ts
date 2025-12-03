@@ -159,8 +159,8 @@ export class ManagerDashboard implements OnInit {
     }
   }
 
+  // Load KPI for all employees
   private async loadAllEmployeesKpi() {
-    // Load KPI for all employees in parallel
     for (const employee of this.employees) {
       this.loadEmployeeKpiToCache(employee.id);
     }
@@ -239,7 +239,6 @@ export class ManagerDashboard implements OnInit {
           this.employees = data;
           this.loadingEmployees = false;
           this.applyFilters();
-          // Load KPI for all employees
           this.loadAllEmployeesKpi();
         },
         error: (err) => {
@@ -256,7 +255,6 @@ export class ManagerDashboard implements OnInit {
           this.employees = data;
           this.loadingEmployees = false;
           this.applyFilters();
-          // Load KPI for all employees
           this.loadAllEmployeesKpi();
         },
         error: (err) => {

@@ -67,7 +67,6 @@ export class TeamManagement implements OnInit {
 
   ngOnInit(): void {
     this.refreshTeams();
-    // Only load all users if user is admin
     if (this.isAdminUser) {
       this.loadAllUsers();
     }

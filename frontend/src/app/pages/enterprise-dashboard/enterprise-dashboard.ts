@@ -124,7 +124,7 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
   productivityList: Array<{ name: string; hours: number }> = [];
   topProductivity: Array<{ name: string; percent: number }> = [];
 
-  // Bar chart data for visualization
+  // Bar chart data
   barChartData: BarChartData[] = [];
   private absenteeismChartData: BarChartData[] = [];
   private attendanceChartData: BarChartData[] = [];
@@ -445,19 +445,17 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
       user.historique.forEach((day) => {
         if (this._selectedTeam && user.equipe !== this._selectedTeam) return;
 
-        // Last Week filter - shows previous week (Mon-Sun)
+        // Last Week filter, shows previous week
         if (this._selectedPeriod === 'last_week') {
           const today = new Date();
           today.setHours(0, 0, 0, 0);
           const dayOfWeek = today.getDay();
           const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
 
-          // Last week's Monday
           const lastWeekStart = new Date(today);
           lastWeekStart.setDate(today.getDate() + diffToMonday - 7);
           lastWeekStart.setHours(0, 0, 0, 0);
 
-          // Last week's Sunday
           const lastWeekEnd = new Date(lastWeekStart);
           lastWeekEnd.setDate(lastWeekStart.getDate() + 6);
           lastWeekEnd.setHours(23, 59, 59, 999);
@@ -467,7 +465,7 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
           }
         }
 
-        // Quarter filter - shows last 3 months
+        // Quarter filter, shows last 3 months
         if (this._selectedPeriod === 'quarter') {
           const threeMonthsAgo = new Date(now);
           threeMonthsAgo.setMonth(now.getMonth() - 3);
@@ -478,7 +476,7 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
           }
         }
 
-        // Year filter - shows last 12 months
+        // Year filter, shows last 12 months
         if (this._selectedPeriod === 'year') {
           const oneYearAgo = new Date(now);
           oneYearAgo.setFullYear(now.getFullYear() - 1);
@@ -516,14 +514,12 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
   ) {
     const byName: Record<string, number> = {};
     
-    // Use real KPI data from backend
     this.allUsersKpi.forEach(kpi => {
       if (!kpi) return;
       
       const user = this.users.find(u => u.id === kpi.userId);
       if (!user) return;
       
-      // Filter by team if selected
       if (this._selectedTeam && user.equipe !== this._selectedTeam) return;
       
       byName[kpi.fullName] = kpi.absenceDays || 0;
