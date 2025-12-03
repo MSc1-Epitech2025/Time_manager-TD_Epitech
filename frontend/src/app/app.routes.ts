@@ -25,8 +25,7 @@ export const routes: Routes = [
             // Manager dashboard
             {
                 path: 'manager',
-                canMatch: [authCanMatch],
-                canActivate: [authCanActivate, managerGuard],
+                canActivate: [managerGuard],
                 loadComponent: () => import('./pages/manager-dashboard/manager-dashboard')
                     .then(m => m.ManagerDashboard),
             },
@@ -34,8 +33,7 @@ export const routes: Routes = [
             // Admin dashboard
             {
                 path: 'enterprise',
-                canMatch: [authCanMatch],
-                canActivate: [authCanActivate, adminGuard],
+                canActivate: [adminGuard],
                 loadComponent: () => import('./pages/enterprise-dashboard/enterprise-dashboard')
                     .then(m => m.EnterpriseDashboard),
             },
@@ -43,8 +41,7 @@ export const routes: Routes = [
             // Manager detail
             {
                 path: 'manager/employee/:id',
-                canMatch: [authCanMatch],
-                canActivate: [authCanActivate, managerGuard],
+                canActivate: [managerGuard],
                 loadComponent: () => import('./pages/employee-detail/employee-detail')
                     .then(m => m.EmployeeDetailComponent),
             },
@@ -52,8 +49,7 @@ export const routes: Routes = [
             // Planning
             {
                 path: 'planning',
-                canMatch: [authCanMatch],
-                canActivate: [authCanActivate, planningUrlGuard],
+                canActivate: [planningUrlGuard],
                 loadComponent: () => import('./pages/planning/planning')
                     .then(m => m.PlanningComponent),
             },
@@ -61,8 +57,7 @@ export const routes: Routes = [
             // Teams (Manager only)
             {
                 path: 'teams',
-                canMatch: [authCanMatch],
-                canActivate: [authCanActivate, managerGuard],
+                canActivate: [managerGuard],
                 loadComponent: () => import('./pages/team-management/team-management')
                     .then(m => m.TeamManagement),
             },
@@ -70,8 +65,7 @@ export const routes: Routes = [
             // Users (Admin only)
             {
                 path: 'users',
-                canMatch: [authCanMatch],
-                canActivate: [authCanActivate, adminGuard],
+                canActivate: [adminGuard],
                 loadComponent: () => import('./pages/users/users')
                     .then(m => m.UsersComponent),
             },
