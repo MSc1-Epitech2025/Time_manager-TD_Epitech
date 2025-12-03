@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authCanMatch, authCanActivate, roleCanActivate, planningUrlGuard } from './core/guards/auth-guard';
+import { authCanMatch, authCanActivate, roleCanActivate, planningUrlGuard, adminGuard, managerGuard } from './core/guards/auth-guard';
 import { ShellComponent } from './layout/shell/shell';
 
 export const routes: Routes = [
@@ -26,7 +26,7 @@ export const routes: Routes = [
             {
                 path: 'manager',
                 canMatch: [authCanMatch],
-                canActivate: [authCanActivate, roleCanActivate],
+                canActivate: [authCanActivate, managerGuard],
                 loadComponent: () => import('./pages/manager-dashboard/manager-dashboard')
                     .then(m => m.ManagerDashboard),
             },
@@ -34,8 +34,8 @@ export const routes: Routes = [
             // Admin dashboard
             {
                 path: 'enterprise',
-
-
+                canMatch: [authCanMatch],
+                canActivate: [authCanActivate, adminGuard],
                 loadComponent: () => import('./pages/enterprise-dashboard/enterprise-dashboard')
                     .then(m => m.EnterpriseDashboard),
             },
@@ -43,6 +43,8 @@ export const routes: Routes = [
             // Manager detail
             {
                 path: 'manager/employee/:id',
+                canMatch: [authCanMatch],
+                canActivate: [authCanActivate, managerGuard],
                 loadComponent: () => import('./pages/employee-detail/employee-detail')
                     .then(m => m.EmployeeDetailComponent),
             },
@@ -59,23 +61,17 @@ export const routes: Routes = [
             // Teams (Manager only)
             {
                 path: 'teams',
-
+                canMatch: [authCanMatch],
+                canActivate: [authCanActivate, managerGuard],
                 loadComponent: () => import('./pages/team-management/team-management')
                     .then(m => m.TeamManagement),
-            },
-
-            // Logs history
-            {
-                path: 'logs',
-
-                loadComponent: () => import('./pages/log-history/log-history')
-                    .then(m => m.LogHistory),
             },
 
             // Users (Admin only)
             {
                 path: 'users',
-
+                canMatch: [authCanMatch],
+                canActivate: [authCanActivate, adminGuard],
                 loadComponent: () => import('./pages/users/users')
                     .then(m => m.UsersComponent),
             },

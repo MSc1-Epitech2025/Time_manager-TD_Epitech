@@ -29,6 +29,38 @@ export const roleCanActivate: CanActivateFn = (): boolean | UrlTree => {
   return router.createUrlTree(['/employee']);
 };
 
+export const adminGuard: CanActivateFn = (): boolean | UrlTree => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  const session = auth.session;
+  if (!session || !auth.isAuthenticated) {
+    return router.createUrlTree(['/login'], { queryParams: { reason: 'unauth' } });
+  }
+
+  const roles = session.user.roles ?? [];
+  if (includesRole(roles, 'ADMIN')) {
+    return true;
+  }
+  return router.createUrlTree(['/employee']);
+};
+
+export const managerGuard: CanActivateFn = (): boolean | UrlTree => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  const session = auth.session;
+  if (!session || !auth.isAuthenticated) {
+    return router.createUrlTree(['/login'], { queryParams: { reason: 'unauth' } });
+  }
+
+  const roles = session.user.roles ?? [];
+  if (includesRole(roles, 'MANAGER') || includesRole(roles, 'ADMIN')) {
+    return true;
+  }
+  return router.createUrlTree(['/employee']);
+};
+
 export const planningUrlGuard: CanActivateFn = (route: ActivatedRouteSnapshot, _state: RouterStateSnapshot): boolean | UrlTree => {
   const auth = inject(AuthService);
   const router = inject(Router);
