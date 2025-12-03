@@ -115,7 +115,7 @@
 // header card
 .header-card {
   background: linear-gradient(135deg, #a78bfa 0%, #f472b6 100%);
-  border: none !important;
+  border: none ;
 
   .profile-section {
     display: flex;
@@ -389,8 +389,8 @@
     background: rgba(124, 58, 237, 0.05);
     border-radius: 8px;
     border-left: 3px solid var(--c-accent);
-    height: auto !important;
-    min-height: unset !important;
+    height: auto ;
+    min-height: unset ;
 
     .absence-content {
       display: flex;

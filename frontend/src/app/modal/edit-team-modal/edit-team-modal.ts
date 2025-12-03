@@ -8,7 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { Observable } from 'rxjs';
-import { TeamService, TeamMember } from '../../core/services/team';
+import { TeamService, TeamMember } from '@core/services/team';
 
 @Component({
   selector: 'app-edit-team-modal',

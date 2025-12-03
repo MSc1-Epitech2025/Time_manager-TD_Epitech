@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, forkJoin, map, of } from 'rxjs';
 
 import { AuthService } from './auth';
-import { environment } from '../../../environments/environment';
+import { environment } from '@environments/environment';
 
 const GRAPHQL_ENDPOINT = environment.GRAPHQL_ENDPOINT;
 

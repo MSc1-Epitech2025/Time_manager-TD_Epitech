@@ -6,12 +6,25 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatListModule } from '@angular/material/list';
+import { MatDividerModule } from '@angular/material/divider';
 import { NgChartsModule } from 'ng2-charts';
 import { ChartConfiguration, ChartOptions } from 'chart.js';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ManagerService, EmployeeSummary } from '../../core/services/manager';
-import { ReportService } from '../../core/services/report';
-import { AuthService } from '../../core/services/auth';
+import { firstValueFrom } from 'rxjs';
+
+// Services
+import { ManagerService, EmployeeSummary } from '@core/services/manager';
+import { ReportService } from '@core/services/report';
+import { AuthService } from '@core/services/auth';
+import { TeamService, Team } from '@core/services/team';
+import { KpiService } from '@core/services/kpi';
+
+// Models & Utils
+import { UserKpiSummary, TeamKpiSummary } from '@shared/models/graphql.types';
+import { currentWeekRange, getCurrentQuarter, getYearRange, formatDateToYYYYMMDD } from '@shared/utils/date.utils';
 
 @Component({
   selector: 'app-manager-dashboard',
@@ -24,19 +37,32 @@ import { AuthService } from '../../core/services/auth';
     MatIconModule,
     MatFormFieldModule,
     MatInputModule,
+    MatChipsModule,
+    MatProgressBarModule,
+    MatListModule,
+    MatDividerModule,
     NgChartsModule,
   ],
   templateUrl: './manager-dashboard.html',
   styleUrls: ['./manager-dashboard.scss'],
 })
 export class ManagerDashboard implements OnInit {
+  Math = Math;
   employees: EmployeeSummary[] = [];
   filteredEmployees: EmployeeSummary[] = [];
   searchTerm = '';
   selectedEmployee: EmployeeSummary | null = null;
   loadingEmployees = false;
-  private selectedTeamId: string | null = null;
-  private selectedTeamName: string | null = null;
+  loadingKpi = false;
+  loadingTeamKpi = false;
+  selectedTeamId: string | null = null;
+  selectedTeamName: string | null = null;
+  weekRange = currentWeekRange();
+  
+  employeeKpiData: UserKpiSummary | null = null;
+  teamKpiData: TeamKpiSummary | null = null;
+  teamData: Team | null = null;
+  employeeKpiCache: Map<string, UserKpiSummary> = new Map();
 
   pieChartData: ChartConfiguration<'pie'>['data'] = {
     labels: ['Presence', 'Retards', 'Absences'],
@@ -64,6 +90,8 @@ export class ManagerDashboard implements OnInit {
     private readonly managerService: ManagerService,
     private readonly reportService: ReportService,
     private readonly auth: AuthService,
+    private readonly teamService: TeamService,
+    private readonly kpiService: KpiService,
   ) { }
 
   ngOnInit() {
@@ -73,6 +101,10 @@ export class ManagerDashboard implements OnInit {
       this.selectedTeamId = teamId ? teamId.trim() : null;
       this.selectedTeamName = teamName ? teamName.trim().toLowerCase() : null;
       this.loadEmployees();
+      if (this.selectedTeamId) {
+        this.loadTeamData();
+        this.loadTeamKpi();
+      }
     });
   }
 
@@ -91,6 +123,7 @@ export class ManagerDashboard implements OnInit {
         },
       ],
     };
+    this.loadEmployeeKpi(emp.id);
   }
 
   goToPlanning() {
@@ -101,15 +134,100 @@ export class ManagerDashboard implements OnInit {
     this.router.navigate(['/employee']);
   }
 
+  goToTeamManagement() {
+    this.router.navigate(['/team-management']);
+  }
+
   exportExcel() {
-    if (this.selectedEmployee) {
-      this.reportService.exportEmployeeReport(this.selectedEmployee);
+    if (this.employeeKpiData) {
+      this.reportService.exportEmployeeKpiReport(this.employeeKpiData);
     }
   }
 
   logout() {
     this.auth.logout();
     this.router.navigate(['/login']);
+  }
+
+  private async loadTeamData() {
+    if (!this.selectedTeamId) return;
+    
+    try {
+      this.teamData = await firstValueFrom(this.teamService.getTeam(this.selectedTeamId));
+    } catch (err) {
+      console.error('Failed to load team data:', err);
+    }
+  }
+
+  // Load KPI for all employees
+  private async loadAllEmployeesKpi() {
+    for (const employee of this.employees) {
+      this.loadEmployeeKpiToCache(employee.id);
+    }
+  }
+
+  private async loadEmployeeKpiToCache(employeeId: string) {
+    try {
+      const quarter = getCurrentQuarter();
+      const startDate = formatDateToYYYYMMDD(quarter.start);
+      const endDate = formatDateToYYYYMMDD(quarter.end);
+
+      const kpi = await firstValueFrom(
+        this.kpiService.getUserKpi(employeeId, startDate, endDate)
+      );
+
+      if (kpi) {
+        this.employeeKpiCache.set(employeeId, kpi);
+      }
+    } catch (err) {
+      console.error(`Failed to load KPI for employee ${employeeId}:`, err);
+    }
+  }
+
+  private async loadEmployeeKpi(employeeId: string) {
+    this.loadingKpi = true;
+    this.employeeKpiData = null;
+    try {
+      const quarter = getCurrentQuarter();
+      const startDate = formatDateToYYYYMMDD(quarter.start);
+      const endDate = formatDateToYYYYMMDD(quarter.end);
+
+      this.employeeKpiData = await firstValueFrom(
+        this.kpiService.getUserKpi(employeeId, startDate, endDate)
+      );
+    } catch (err) {
+      console.error('Failed to load employee KPI data:', err);
+    } finally {
+      this.loadingKpi = false;
+    }
+  }
+
+  private async loadTeamKpi() {
+    if (!this.selectedTeamId) return;
+    
+    this.loadingTeamKpi = true;
+    this.teamKpiData = null;
+    try {
+      const yearRange = getYearRange();
+      const startDate = formatDateToYYYYMMDD(yearRange.start);
+      const endDate = formatDateToYYYYMMDD(yearRange.end);
+
+      this.teamKpiData = await firstValueFrom(
+        this.kpiService.getTeamKpi(this.selectedTeamId, startDate, endDate)
+      );
+    } catch (err) {
+      console.error('Failed to load team KPI data:', err);
+    } finally {
+      this.loadingTeamKpi = false;
+    }
+  }
+
+  private formatDateToYYYYMMDD(date: Date): string {
+    return formatDateToYYYYMMDD(date);
+  }
+
+  getEmployeeKpiFromCache(employeeId: string): UserKpiSummary | undefined {
+    return this.employeeKpiCache.get(employeeId);
   }
 
   private loadEmployees() {
@@ -121,6 +239,7 @@ export class ManagerDashboard implements OnInit {
           this.employees = data;
           this.loadingEmployees = false;
           this.applyFilters();
+          this.loadAllEmployeesKpi();
         },
         error: (err) => {
           console.error('Failed to load team employees', err);
@@ -136,6 +255,7 @@ export class ManagerDashboard implements OnInit {
           this.employees = data;
           this.loadingEmployees = false;
           this.applyFilters();
+          this.loadAllEmployeesKpi();
         },
         error: (err) => {
           console.error('Failed to load employees', err);
@@ -184,4 +304,3 @@ export class ManagerDashboard implements OnInit {
     }
   }
 }
-

@@ -8,7 +8,12 @@ import {
   switchMap,
   Observable,
 } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { environment } from '@environments/environment';
+import { 
+  GraphqlPayload, 
+  UserKpiSummary, 
+  TeamKpiSummary 
+} from '@shared/models/graphql.types';
 
 
 export interface PresenceDuJour {
@@ -31,9 +36,9 @@ export class KpiService {
   constructor(private http: HttpClient) {}
 
   private readonly GRAPHQL_ENDPOINT = environment.GRAPHQL_ENDPOINT;
-  // ───────────────────────────────────────────────
+  
   //   GENERIC GRAPHQL WRAPPER
-  // ───────────────────────────────────────────────
+  
   private query<T>(query: string, variables: any = {}): Observable<T | null> {
     return this.http
       .post<{ data: T }>(
@@ -50,9 +55,9 @@ export class KpiService {
       );
   }
 
-  // ───────────────────────────────────────────────
+  
   //   USERS
-  // ───────────────────────────────────────────────
+  
   users() {
     return this.query<{ users: any[] }>(`
       query {
@@ -66,9 +71,9 @@ export class KpiService {
     `);
   }
 
-  // ───────────────────────────────────────────────
-  //   TEAMS (RETURNS MEMBERS DIRECTLY)
-  // ───────────────────────────────────────────────
+  
+  //   TEAMS
+  
   teams() {
     return this.query<{ teams: any[] }>(`
       query {
@@ -86,9 +91,9 @@ export class KpiService {
     `);
   }
 
-  // ───────────────────────────────────────────────
-  //   CLOCKS (CORRECT SIGNATURE)
-  // ───────────────────────────────────────────────
+  
+  //   CLOCKS
+  
   clocksForUser(userId: string, from: string, to: string) {
     return this.query<{ clocksForUser: any[] }>(
       `
@@ -105,9 +110,9 @@ export class KpiService {
     );
   }
 
-  // ───────────────────────────────────────────────
+  
   //   HELPERS DATE & TEMPS
-  // ───────────────────────────────────────────────
+  
   private toIso(date: Date): string {
     return (
       date.getFullYear() +
@@ -137,9 +142,9 @@ export class KpiService {
     return `${Math.floor(m / 60)}h ${m % 60}m`;
   }
 
-  // ───────────────────────────────────────────────
-  //   LOAD FULL DATA (1 MONTH)
-  // ───────────────────────────────────────────────
+  
+  //   LOAD FULL DATA
+  
   loadFullData(): Observable<Utilisateur[]> {
     const now = new Date();
     const start = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -158,9 +163,9 @@ export class KpiService {
 
         if (!users.length) return of([]);
 
-        // ───────────────────────────────────────────────
+        
         //   BUILD USER → TEAM MAP
-        // ───────────────────────────────────────────────
+        
         const userTeamMap: Record<string, string> = {};
 
         teams.forEach(team => {
@@ -169,9 +174,9 @@ export class KpiService {
           });
         });
 
-        // ───────────────────────────────────────────────
+        
         //   CLOCK REQUESTS FOR EACH USER
-        // ───────────────────────────────────────────────
+        
         const userRequests = users.map(u =>
           this.clocksForUser(u.id, from, to).pipe(
             map(res => {
@@ -231,6 +236,132 @@ export class KpiService {
         );
 
         return forkJoin(userRequests);
+      })
+    );
+  }
+
+  // User KPI
+  getUserKpi(userId: string, startDate: string, endDate: string): Observable<UserKpiSummary | null> {
+    const query = `
+      query UserKpi($userId: ID!, $startDate: String!, $endDate: String!) {
+        userKpi(userId: $userId, startDate: $startDate, endDate: $endDate) {
+          userId
+          fullName
+          presenceRate
+          avgHoursPerDay
+          overtimeHours
+          punctuality {
+            lateRate
+            avgDelayMinutes
+          }
+          absenceDays
+          absenceByType {
+            type
+            days
+          }
+          reportsAuthored
+          reportsReceived
+          periodStart
+          periodEnd
+        }
+      }
+    `;
+
+    return this.http.post<GraphqlPayload<{ userKpi: UserKpiSummary }>>(
+      this.GRAPHQL_ENDPOINT,
+      { query, variables: { userId, startDate, endDate } },
+      { withCredentials: true }
+    ).pipe(
+      map(response => {
+        if (response.errors?.length) {
+          throw new Error(response.errors.map((e: any) => e.message).join(', '));
+        }
+        return response.data?.userKpi ?? null;
+      }),
+      catchError(err => {
+        console.error('Failed to load user KPI:', err);
+        return of(null);
+      })
+    );
+  }
+
+  // My KPI
+  getMyKpi(startDate: string, endDate: string): Observable<UserKpiSummary | null> {
+    const query = `
+      query MyKpi($startDate: String!, $endDate: String!) {
+        myKpi(startDate: $startDate, endDate: $endDate) {
+          userId
+          fullName
+          presenceRate
+          avgHoursPerDay
+          overtimeHours
+          punctuality {
+            lateRate
+            avgDelayMinutes
+          }
+          absenceDays
+          absenceByType {
+            type
+            days
+          }
+          reportsAuthored
+          reportsReceived
+          periodStart
+          periodEnd
+        }
+      }
+    `;
+
+    return this.http.post<GraphqlPayload<{ myKpi: UserKpiSummary }>>(
+      this.GRAPHQL_ENDPOINT,
+      { query, variables: { startDate, endDate } },
+      { withCredentials: true }
+    ).pipe(
+      map(response => {
+        if (response.errors?.length) {
+          throw new Error(response.errors.map((e: any) => e.message).join(', '));
+        }
+        return response.data?.myKpi ?? null;
+      }),
+      catchError(err => {
+        console.error('Failed to load my KPI:', err);
+        return of(null);
+      })
+    );
+  }
+
+  // Team KPI
+  getTeamKpi(teamId: string, startDate: string, endDate: string): Observable<TeamKpiSummary | null> {
+    const query = `
+      query TeamKpi($teamId: ID!, $startDate: String!, $endDate: String!) {
+        teamKpi(teamId: $teamId, startDate: $startDate, endDate: $endDate) {
+          teamId
+          teamName
+          headcount
+          presenceRate
+          avgHoursPerDay
+          absenceRate
+          reportsAuthored
+          periodStart
+          periodEnd
+        }
+      }
+    `;
+
+    return this.http.post<GraphqlPayload<{ teamKpi: TeamKpiSummary }>>(
+      this.GRAPHQL_ENDPOINT,
+      { query, variables: { teamId, startDate, endDate } },
+      { withCredentials: true }
+    ).pipe(
+      map(response => {
+        if (response.errors?.length) {
+          throw new Error(response.errors.map((e: any) => e.message).join(', '));
+        }
+        return response.data?.teamKpi ?? null;
+      }),
+      catchError(err => {
+        console.error('Failed to load team KPI:', err);
+        return of(null);
       })
     );
   }

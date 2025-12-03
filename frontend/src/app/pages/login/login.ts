@@ -14,9 +14,9 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRippleModule } from '@angular/material/core';
 
 // aunth service
-import { AuthService, Role } from '../../core/services/auth';
+import { AuthService, Role } from '@core/services/auth';
 import { ActivatedRoute, Router } from '@angular/router';
-import { NotificationService } from '../../core/services/notification';
+import { NotificationService } from '@core/services/notification';
 
 interface Bubble {
   x: number;
@@ -224,7 +224,7 @@ export class LoginComponent implements OnInit, OnDestroy {
         }
 
       } catch (e) {
-        this.notify.error('Identifiants invalides ou service indisponible.');
+        this.notify.error('Invalid credentials or service unavailable.');
         console.error(e);
       } finally {
         this.loading.set(false);

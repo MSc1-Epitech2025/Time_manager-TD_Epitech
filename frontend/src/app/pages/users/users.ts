@@ -7,9 +7,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { MatListModule } from '@angular/material/list';
+import { MatDividerModule } from '@angular/material/divider';
 import { MatDialog } from '@angular/material/dialog';
-import { UserService, User, CreateUserInput, UpdateUserInput } from '../../core/services/user';
-import { DeleteUserModalComponent } from '../../modal/delete-user-modal/delete-user-modal';
+import { UserService, User, CreateUserInput, UpdateUserInput } from '@core/services/user';
+import { DeleteUserModalComponent } from '@modal/delete-user-modal/delete-user-modal';
 
 @Component({
   selector: 'app-users',
@@ -23,6 +25,8 @@ import { DeleteUserModalComponent } from '../../modal/delete-user-modal/delete-u
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    MatListModule,
+    MatDividerModule,
   ],
   templateUrl: './users.html',
   styleUrl: './users.scss',

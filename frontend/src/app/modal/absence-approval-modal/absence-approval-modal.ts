@@ -3,7 +3,7 @@ import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/materia
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
-import { Absence } from '../../core/services/absence';
+import { Absence } from '@core/services/absence';
 
 export interface AbsenceApprovalData {
   absence: Absence;

@@ -1,61 +1,75 @@
 <div class="planning-container">
-  <header class="planning-header">
-    <h2>
-      <mat-icon fontSet="material-icons-outlined" fontIcon="calendar_month"></mat-icon>
-      Absence Calendar
-    </h2>
-
-    <div class="role-indicators">
-      <p *ngIf="isAdmin" class="role-tag admin">Admin</p>
-      <p *ngIf="isManager && !isAdmin" class="role-tag manager">Manager</p>
-      <p *ngIf="isEmployee && !isManager && !isAdmin" class="role-tag employee">Employee</p>
-    </div>
-  </header>
-
-  <div class="info-section">
-    <div class="legend">
-      <div class="legend-item">
-        <span class="legend-color" style="background-color: #10b981;"></span>
-        <span class="legend-label">My Approved</span>
+  <!-- Header Card -->
+  <mat-card class="header-card" appearance="outlined">
+    <mat-card-content>
+      <div class="header-section">
+        <div class="header-info">
+          <h1 class="page-title">Absence Calendar</h1>
+          <p class="page-subtitle">
+            <mat-icon>info</mat-icon>
+            {{ isManager || isAdmin ? 'Click on dates to create absences, click on events to approve/reject' : 'Click on dates to request an absence' }}
+          </p>
+        </div>
+        <div class="role-indicators">
+          <mat-chip *ngIf="isAdmin" class="role-chip admin" highlighted>Admin</mat-chip>
+          <mat-chip *ngIf="isManager && !isAdmin" class="role-chip manager" highlighted>Manager</mat-chip>
+          <mat-chip *ngIf="isEmployee && !isManager && !isAdmin" class="role-chip employee" highlighted>Employee</mat-chip>
+        </div>
       </div>
-      <div class="legend-item">
-        <span class="legend-color" style="background-color: #f59e0b;"></span>
-        <span class="legend-label">Pending</span>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Filters and Legend Card -->
+  <mat-card class="filters-legend-card" appearance="outlined">
+    <mat-card-content>
+      <div class="filters-legend-section">
+        <div class="legend">
+          <div class="legend-item">
+            <span class="legend-color" style="background-color: #10b981;"></span>
+            <span class="legend-label">My Approved</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-color" style="background-color: #f59e0b;"></span>
+            <span class="legend-label">Pending</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-color" style="background-color: #8b5cf6;"></span>
+            <span class="legend-label">Team Approved</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-color" style="background-color: #ef4444;"></span>
+            <span class="legend-label">Rejected</span>
+          </div>
+        </div>
+
+        <div class="team-filter" *ngIf="isAdmin && teams.length > 0">
+          <mat-form-field appearance="fill" class="team-select">
+            <mat-label>Select Team</mat-label>
+            <mat-select [(ngModel)]="selectedTeamId" (selectionChange)="onTeamChange()">
+              <mat-option *ngFor="let team of teams" [value]="team.id">
+                {{ team.name }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
       </div>
-      <div class="legend-item">
-        <span class="legend-color" style="background-color: #8b5cf6;"></span>
-        <span class="legend-label">Team Approved</span>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Calendar Card -->
+  <mat-card class="calendar-card" appearance="outlined">
+    <mat-card-content>
+      <div class="calendar-wrapper" *ngIf="!loading; else loadingTpl">
+        <full-calendar [options]="calendarOptions"></full-calendar>
       </div>
-    </div>
 
-    <div class="actions">
-      <p class="instruction-text">
-        <mat-icon>info</mat-icon>
-        {{ isManager || isAdmin ? 'Click on dates to create absences, click on events to approve/reject' : 'Click on dates to request an absence' }}
-      </p>
-    </div>
-  </div>
-
-  <div class="filters" *ngIf="isAdmin && teams.length > 0">
-    <mat-form-field appearance="fill" class="team-select">
-      <mat-label>Select Team</mat-label>
-      <mat-select [(ngModel)]="selectedTeamId" (selectionChange)="onTeamChange()">
-        <mat-option *ngFor="let team of teams" [value]="team.id">
-          {{ team.name }}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
-  </div>
-
-  <div class="calendar-wrapper" *ngIf="!loading; else loadingTpl">
-    <full-calendar [options]="calendarOptions"></full-calendar>
-  </div>
-
-  <ng-template #loadingTpl>
-    <div class="loading">
-      <mat-icon class="spinner">refresh</mat-icon>
-      Loading absences...
-    </div>
-  </ng-template>
+      <ng-template #loadingTpl>
+        <div class="loading">
+          <mat-icon class="spinner">refresh</mat-icon>
+          Loading absences...
+        </div>
+      </ng-template>
+    </mat-card-content>
+  </mat-card>
 </div>
 

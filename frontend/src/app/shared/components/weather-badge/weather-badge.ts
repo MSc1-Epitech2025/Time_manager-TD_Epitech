@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, Input, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { WeatherService, WeatherSnapshot } from '../../../core/services/weather';
+import { WeatherService, WeatherSnapshot } from '@core/services/weather';
 
 @Component({
   selector: 'app-weather-badge',

@@ -1,6 +1,6 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, CanMatchFn, Router, UrlTree, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
-import { AuthService, Role } from '../services/auth';
+import { AuthService, Role } from '@core/services/auth';
 
 function checkAuth(): boolean | UrlTree {
   const auth = inject(AuthService);
