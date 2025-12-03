@@ -10,70 +10,43 @@ function checkAuth(): boolean | UrlTree {
     : router.createUrlTree(['/login'], { queryParams: { reason: 'unauth' } });
 }
 
+function getAuthenticatedSession() {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  const session = auth.session;
+  if (!session || !auth.isAuthenticated) {
+    return { session: null, redirect: router.createUrlTree(['/login'], { queryParams: { reason: 'unauth' } }) };
+  }
+  return { session, redirect: null };
+}
+
+function checkRole(requiredRoles: Role[]): boolean | UrlTree {
+  const { session, redirect } = getAuthenticatedSession();
+  if (redirect) return redirect;
+
+  const router = inject(Router);
+  const userRoles = session!.user.roles ?? [];
+  const hasAccess = requiredRoles.some(role => includesRole(userRoles, role));
+  
+  return hasAccess ? true : router.createUrlTree(['/employee']);
+}
+
 export const authCanMatch: CanMatchFn = () => checkAuth();
 export const authCanActivate: CanActivateFn = () => checkAuth();
 
-export const roleCanActivate: CanActivateFn = (): boolean | UrlTree => {
-  const auth = inject(AuthService);
-  const router = inject(Router);
-
-  const session = auth.session;
-  if (!session || !auth.isAuthenticated) {
-    return router.createUrlTree(['/login'], { queryParams: { reason: 'unauth' } });
-  }
-
-  const roles = session.user.roles ?? [];
-  if (includesRole(roles, 'MANAGER') || includesRole(roles, 'ADMIN')) {
-    return true;
-  }
-  return router.createUrlTree(['/employee']);
-};
-
-export const adminGuard: CanActivateFn = (): boolean | UrlTree => {
-  const auth = inject(AuthService);
-  const router = inject(Router);
-
-  const session = auth.session;
-  if (!session || !auth.isAuthenticated) {
-    return router.createUrlTree(['/login'], { queryParams: { reason: 'unauth' } });
-  }
-
-  const roles = session.user.roles ?? [];
-  if (includesRole(roles, 'ADMIN')) {
-    return true;
-  }
-  return router.createUrlTree(['/employee']);
-};
-
-export const managerGuard: CanActivateFn = (): boolean | UrlTree => {
-  const auth = inject(AuthService);
-  const router = inject(Router);
-
-  const session = auth.session;
-  if (!session || !auth.isAuthenticated) {
-    return router.createUrlTree(['/login'], { queryParams: { reason: 'unauth' } });
-  }
-
-  const roles = session.user.roles ?? [];
-  if (includesRole(roles, 'MANAGER') || includesRole(roles, 'ADMIN')) {
-    return true;
-  }
-  return router.createUrlTree(['/employee']);
-};
+export const adminGuard: CanActivateFn = () => checkRole(['ADMIN']);
+export const managerGuard: CanActivateFn = () => checkRole(['MANAGER', 'ADMIN']);
 
 export const planningUrlGuard: CanActivateFn = (route: ActivatedRouteSnapshot, _state: RouterStateSnapshot): boolean | UrlTree => {
-  const auth = inject(AuthService);
+  const { session, redirect } = getAuthenticatedSession();
+  if (redirect) return redirect;
+
   const router = inject(Router);
-
-  const session = auth.session;
-  if (!session || !auth.isAuthenticated) {
-    return router.createUrlTree(['/login'], { queryParams: { reason: 'unauth' } });
-  }
-
-  const roles = session.user.roles ?? [];
+  const roles = session!.user.roles ?? [];
   const isManager = includesRole(roles, 'MANAGER') || includesRole(roles, 'ADMIN');
 
-  const displayName = deriveDisplayName(session.user).trim();
+  const displayName = deriveDisplayName(session!.user).trim();
 
   const qp = route.queryParams ?? {};
   const key = isManager ? 'manager' : 'employee';

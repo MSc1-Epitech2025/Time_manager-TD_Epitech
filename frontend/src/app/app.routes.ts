@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authCanMatch, authCanActivate, roleCanActivate, planningUrlGuard, adminGuard, managerGuard } from './core/guards/auth-guard';
+import { authCanMatch, authCanActivate, planningUrlGuard, adminGuard, managerGuard } from './core/guards/auth-guard';
 import { ShellComponent } from './layout/shell/shell';
 
 export const routes: Routes = [
