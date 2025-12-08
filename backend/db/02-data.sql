@@ -267,7 +267,7 @@ VALUES
 -- ==========================================================
 INSERT INTO leave_types (code, label) VALUES
   ('VAC', 'Paid Vacation'),
-  ('RTT', 'Réduction du temps de travail'),
+  ('RTT', 'Reduce Time of Work'),
   ('SICK', 'Sick Leave')
 ON DUPLICATE KEY UPDATE label = VALUES(label);
 

@@ -16,6 +16,10 @@ public interface LeaveLedgerRepository extends JpaRepository<LeaveLedger, Long> 
 
   List<LeaveLedger> findByReferenceAbsence_Id(Long absenceId);
   Optional<LeaveLedger> findFirstByReferenceAbsence_Id(Long absenceId);
+  List<LeaveLedger> findByAccount_User_EmailOrderByEntryDateAsc(String email);
+
+  List<LeaveLedger> findByAccount_User_EmailAndEntryDateBetweenOrderByEntryDateAsc(
+      String email, LocalDate from, LocalDate to);
   void deleteByReferenceAbsence_Id(Long absenceId);
 
   @Query("""

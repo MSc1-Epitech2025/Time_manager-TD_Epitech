@@ -7,6 +7,7 @@ import com.example.time_manager.service.leave.LeaveAccountService;
 import org.springframework.graphql.data.method.annotation.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -31,6 +32,13 @@ public class LeaveAccountController {
     BigDecimal v = service.computeCurrentBalance(account.getId());
     return v.doubleValue();
   }
+
+  @QueryMapping
+  public List<LeaveAccount> myLeaveAccounts(Authentication authentication) {
+  String email = authentication.getName();
+  return service.listByUserEmail(email);
+  }
+
 
   @PreAuthorize("hasAuthority('ADMIN')")
   @MutationMapping

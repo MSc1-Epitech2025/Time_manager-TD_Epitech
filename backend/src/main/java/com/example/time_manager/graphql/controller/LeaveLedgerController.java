@@ -10,6 +10,7 @@ import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.stereotype.Controller;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -30,6 +31,19 @@ public class LeaveLedgerController {
     }
     return service.listByAccount(accountId);
   }
+  @QueryMapping
+  public List<LeaveLedger> myLeaveLedger(Authentication authentication,
+                                         @Argument String from,
+                                         @Argument String to) {
+    String email = authentication.getName();
+
+    if (from != null && to != null) {
+      return service.listByUserEmailBetween(email, LocalDate.parse(from), LocalDate.parse(to));
+    }
+    return service.listByUserEmail(email);
+  }
+
+
   @PreAuthorize("hasAuthority('ADMIN')")
   @MutationMapping
   public LeaveLedger addLeaveLedgerEntry(@Argument LeaveLedgerCreateInput input) {

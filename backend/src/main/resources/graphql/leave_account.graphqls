@@ -30,6 +30,7 @@ input LeaveAccountUpdateInput {
 extend type Query {
   leaveAccount(id: ID!): LeaveAccount
   leaveAccountsByUser(userId: ID!): [LeaveAccount!]!
+  myLeaveAccounts: [LeaveAccount!]!      
 }
 
 extend type Mutation {
