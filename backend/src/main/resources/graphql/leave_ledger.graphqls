@@ -29,6 +29,7 @@ input LeaveLedgerUpdateInput {
 
 extend type Query {
   leaveLedgerByAccount(accountId: ID!, from: String, to: String): [LeaveLedger!]!
+  myLeaveLedger(from: String, to: String): [LeaveLedger!]!   
 }
 
 extend type Mutation {

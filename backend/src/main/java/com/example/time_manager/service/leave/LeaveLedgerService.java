@@ -30,6 +30,15 @@ public class LeaveLedgerService {
     this.absenceRepo = absenceRepo;
   }
 
+  public List<LeaveLedger> listByUserEmail(String email) {
+    return repo.findByAccount_User_EmailOrderByEntryDateAsc(email);
+  }
+
+  public List<LeaveLedger> listByUserEmailBetween(String email, LocalDate from, LocalDate to) {
+    return repo.findByAccount_User_EmailAndEntryDateBetweenOrderByEntryDateAsc(email, from, to);
+  }
+
+
   public LeaveLedger addEntry(Long accountId, LocalDate date, LeaveLedgerKind kind,
                               BigDecimal amount, Long refAbsenceId, String note) {
     if (amount == null) throw new IllegalArgumentException("amount is required");

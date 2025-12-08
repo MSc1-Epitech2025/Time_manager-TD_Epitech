@@ -83,4 +83,11 @@ public class LeaveAccountService {
     BigDecimal delta = ledgerRepo.sumSignedAmountByAccountId(accountId).orElse(BigDecimal.ZERO);
     return opening.add(delta);
   }
+
+  public List<LeaveAccount> listByUserEmail(String email) {
+  User user = userRepo.findByEmail(email)
+    .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
+  return repo.findByUser_Id(user.getId());
+}
+
 }
