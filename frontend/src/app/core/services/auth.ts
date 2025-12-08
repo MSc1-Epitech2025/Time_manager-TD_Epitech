@@ -217,7 +217,7 @@ export class AuthService {
     };
   }
 
-  private normalizeUser(user: Partial<SessionUser>): SessionUser {
+  normalizeUser(user: Partial<SessionUser>): SessionUser {
     const roles = this.extractRoles(user.roles ?? []);
     const firstName = user.firstName?.toString().trim() || undefined;
     const lastName = user.lastName?.toString().trim() || undefined;
@@ -237,7 +237,7 @@ export class AuthService {
     };
   }
 
-  private extractRoles(input: unknown): Role[] {
+  extractRoles(input: unknown): Role[] {
     const collected = new Set<Role>();
 
     const addToken = (value: string) => {

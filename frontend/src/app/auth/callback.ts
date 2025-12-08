@@ -14,7 +14,10 @@ import { AuthService } from '../core/services/auth';
 })
 export class AuthCallbackComponent implements OnInit {
 
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(
+    private auth: AuthService,
+    private router: Router
+  ) {}
 
   ngOnInit() {
     this.handleCallback();
@@ -22,15 +25,42 @@ export class AuthCallbackComponent implements OnInit {
 
   private async handleCallback(): Promise<void> {
     try {
-      const me = await this.auth.refreshProfile();
-      console.log("me", me)
+      console.log("OAuth Callback détecté ✔");
 
-      if (!me) {
-        this.router.navigate(['/fdsfsfsfsfsfssfsd']);
+      const params = new URLSearchParams(window.location.search);
+
+      const id = params.get("id");
+      const email = params.get("email");
+      const firstName = params.get("firstName");
+      const lastName = params.get("lastName");
+      const role = params.get("role");
+
+      console.log("Query Params reçus :", { id, email, firstName, lastName, role });
+
+      if (!id || !email) {
+        console.error("Paramètres manquants dans la redirection OAuth.");
+        this.router.navigate(['/login']);
         return;
       }
 
-      const roles = me.roles ?? [];
+      const user = this.auth.normalizeUser({
+        id,
+        email,
+        firstName: firstName ?? undefined,
+        lastName: lastName ?? undefined,
+        roles: this.auth.extractRoles(role ?? 'EMPLOYEE')
+      });
+
+      console.log("User normalisé :", user);
+
+      this.auth.loginSuccess({
+        accessToken: null,
+        refreshToken: null,
+        expiresAt: null,
+        user
+      }, true);
+
+      const roles = user.roles ?? [];
 
       if (roles.includes('ADMIN')) {
         this.router.navigate(['/enterprise']);
@@ -41,7 +71,7 @@ export class AuthCallbackComponent implements OnInit {
       }
 
     } catch (e) {
-      console.error(e);
+      console.error("Erreur callback OAuth", e);
       this.router.navigate(['/login']);
     }
   }
