@@ -10,6 +10,12 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/login/login').then(m => m.LoginComponent),
     },
 
+    // Callback to microsoft connection
+    {
+      path: "auth/callback",
+      loadComponent: () => import('./auth/callback').then(m => m.AuthCallbackComponent)
+    },
+
     {
         path: '',
         component: ShellComponent,
@@ -70,13 +76,6 @@ export const routes: Routes = [
                 loadComponent: () => import('./pages/users/users')
                     .then(m => m.UsersComponent),
             },
-
-            // Callback to microsoft connection
-            {
-              path: 'auth/callback',
-              component: AuthCallbackComponent
-            },
-
 
             // Default
             { path: '', pathMatch: 'full', redirectTo: 'employee' },
