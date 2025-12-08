@@ -13,6 +13,8 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @Component
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
@@ -73,6 +75,16 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
-        response.sendRedirect("http://localhost:4205/auth/callback");
+        String redirectUrl = String.format(
+                "http://localhost:4205/auth/callback?email=%s&firstName=%s&lastName=%s&id=%s&role=%s",
+                URLEncoder.encode(user.getEmail(), StandardCharsets.UTF_8),
+                URLEncoder.encode(user.getFirstName(), StandardCharsets.UTF_8),
+                URLEncoder.encode(user.getLastName(), StandardCharsets.UTF_8),
+                user.getId(),
+                URLEncoder.encode(user.getRole(), StandardCharsets.UTF_8)
+        );
+
+        response.sendRedirect(redirectUrl);
+
     }
 }
