@@ -2,16 +2,15 @@ spring:
   security:
     oauth2:
       client:
+        provider:
+          azure:
+            issuer-uri: https://login.microsoftonline.com/${AZURE_TENANT_ID}/v2.0
         registration:
           azure-dev:
-            client-id: YOUR_CLIENT_ID
-            client-secret: YOUR_SECRET
+            provider: azure
+            client-id: ${AZURE_CLIENT_ID}
+            client-secret: ${AZURE_CLIENT_SECRET}
             scope:
               - openid
               - email
               - profile
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
-
-        provider:
-          azure-dev:
-            issuer-uri: https://login.microsoftonline.com/YOUR_TENANT_ID/v2.0
