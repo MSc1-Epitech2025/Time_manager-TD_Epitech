@@ -1,37 +1,37 @@
-package com.example.time_manager.rest.controller;
+package com.example.time_manager.security;
 
 import com.example.time_manager.model.User;
-import com.example.time_manager.security.JwtUtil;
 import com.example.time_manager.service.UserService;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
-@RestController
-public class OAuth2CallbackController {
+@Component
+public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
     private final UserService userService;
     private final JwtUtil jwtUtil;
 
-    public OAuth2CallbackController(UserService userService, JwtUtil jwtUtil) {
+    public OAuth2SuccessHandler(UserService userService, JwtUtil jwtUtil) {
         this.userService = userService;
         this.jwtUtil = jwtUtil;
     }
 
-    @GetMapping("/oauth2/success")
-    public void handleAzureCallback(Authentication auth, HttpServletResponse response) throws IOException {
+    @Override
+    public void onAuthenticationSuccess(HttpServletRequest request,
+                                        HttpServletResponse response,
+                                        Authentication authentication)
+            throws IOException, ServletException {
 
-        if (auth == null) {
-            throw new RuntimeException("No auth context");
-        }
-
-        var principal = (org.springframework.security.oauth2.core.oidc.user.OidcUser) auth.getPrincipal();
+        OidcUser principal = (OidcUser) authentication.getPrincipal();
         String email = principal.getEmail();
         String azureOid = principal.getClaim("oid");
 
@@ -56,22 +56,21 @@ public class OAuth2CallbackController {
         );
         String refreshToken = jwtUtil.generateRefreshToken(user.getEmail(), user.getId());
 
-        boolean isDev = true;
-
         ResponseCookie accessCookie = ResponseCookie.from("access_token", accessToken)
                 .httpOnly(true)
-                .secure(!isDev)
+                .secure(false)
                 .sameSite("None")
                 .path("/")
                 .build();
-        response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
 
         ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", refreshToken)
                 .httpOnly(true)
-                .secure(!isDev)
+                .secure(false)
                 .sameSite("None")
                 .path("/")
                 .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
         response.sendRedirect("http://localhost:4205/auth/callback");
