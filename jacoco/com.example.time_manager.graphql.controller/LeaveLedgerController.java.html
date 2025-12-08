@@ -10,7 +10,6 @@ import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.stereotype.Controller;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -20,49 +19,36 @@ import java.util.List;
 @Controller
 public class LeaveLedgerController {
   private final LeaveLedgerService service;
-<span class="fc" id="L23">  public LeaveLedgerController(LeaveLedgerService service) { this.service = service; }</span>
+<span class="fc" id="L22">  public LeaveLedgerController(LeaveLedgerService service) { this.service = service; }</span>
 
   @QueryMapping
   public List&lt;LeaveLedger&gt; leaveLedgerByAccount(@Argument Long accountId,
                                                 @Argument String from,
                                                 @Argument String to) {
-<span class="fc bfc" id="L29" title="All 4 branches covered.">    if (from != null &amp;&amp; to != null) {</span>
-<span class="fc" id="L30">      return service.listByAccountBetween(accountId, LocalDate.parse(from), LocalDate.parse(to));</span>
+<span class="fc bfc" id="L28" title="All 4 branches covered.">    if (from != null &amp;&amp; to != null) {</span>
+<span class="fc" id="L29">      return service.listByAccountBetween(accountId, LocalDate.parse(from), LocalDate.parse(to));</span>
     }
-<span class="fc" id="L32">    return service.listByAccount(accountId);</span>
+<span class="fc" id="L31">    return service.listByAccount(accountId);</span>
   }
-  @QueryMapping
-  public List&lt;LeaveLedger&gt; myLeaveLedger(Authentication authentication,
-                                         @Argument String from,
-                                         @Argument String to) {
-<span class="nc" id="L38">    String email = authentication.getName();</span>
-
-<span class="nc bnc" id="L40" title="All 4 branches missed.">    if (from != null &amp;&amp; to != null) {</span>
-<span class="nc" id="L41">      return service.listByUserEmailBetween(email, LocalDate.parse(from), LocalDate.parse(to));</span>
-    }
-<span class="nc" id="L43">    return service.listByUserEmail(email);</span>
-  }
-
-
   @PreAuthorize(&quot;hasAuthority('ADMIN')&quot;)
   @MutationMapping
   public LeaveLedger addLeaveLedgerEntry(@Argument LeaveLedgerCreateInput input) {
-<span class="fc bfc" id="L50" title="All 2 branches covered.">    LocalDate date = input.getEntryDate() != null ? LocalDate.parse(input.getEntryDate()) : null;</span>
-<span class="fc" id="L51">    LeaveLedgerKind kind = LeaveLedgerKind.valueOf(input.getKind());</span>
-<span class="fc bfc" id="L52" title="All 2 branches covered.">    BigDecimal amount = input.getAmount() != null ? BigDecimal.valueOf(input.getAmount()) : null;</span>
-<span class="fc" id="L53">    return service.addEntry(input.getAccountId(), date, kind, amount, input.getReferenceAbsenceId(), input.getNote());</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">    LocalDate date = input.getEntryDate() != null ? LocalDate.parse(input.getEntryDate()) : null;</span>
+<span class="fc" id="L37">    LeaveLedgerKind kind = LeaveLedgerKind.valueOf(input.getKind());</span>
+<span class="fc bfc" id="L38" title="All 2 branches covered.">    BigDecimal amount = input.getAmount() != null ? BigDecimal.valueOf(input.getAmount()) : null;</span>
+<span class="fc" id="L39">    return service.addEntry(input.getAccountId(), date, kind, amount, input.getReferenceAbsenceId(), input.getNote());</span>
   }
   @PreAuthorize(&quot;hasAuthority('ADMIN')&quot;)
   @MutationMapping
   public LeaveLedger updateLeaveLedgerEntry(@Argument LeaveLedgerUpdateInput input) {
-<span class="fc bfc" id="L58" title="All 2 branches covered.">    LocalDate date = input.getEntryDate() != null ? LocalDate.parse(input.getEntryDate()) : null;</span>
-<span class="fc bfc" id="L59" title="All 2 branches covered.">    BigDecimal amount = input.getAmount() != null ? BigDecimal.valueOf(input.getAmount()) : null;</span>
-<span class="fc" id="L60">    return service.update(input.getId(), date, amount, input.getNote());</span>
+<span class="fc bfc" id="L44" title="All 2 branches covered.">    LocalDate date = input.getEntryDate() != null ? LocalDate.parse(input.getEntryDate()) : null;</span>
+<span class="fc bfc" id="L45" title="All 2 branches covered.">    BigDecimal amount = input.getAmount() != null ? BigDecimal.valueOf(input.getAmount()) : null;</span>
+<span class="fc" id="L46">    return service.update(input.getId(), date, amount, input.getNote());</span>
   }
   @PreAuthorize(&quot;hasAuthority('ADMIN')&quot;)
   @MutationMapping
   public Boolean deleteLeaveLedgerEntry(@Argument Long id) {
-<span class="fc" id="L65">    return service.delete(id);</span>
+<span class="fc" id="L51">    return service.delete(id);</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

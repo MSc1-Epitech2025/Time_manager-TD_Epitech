@@ -83,12 +83,5 @@ public class LeaveAccountService {
 <span class="fc" id="L83">    BigDecimal delta = ledgerRepo.sumSignedAmountByAccountId(accountId).orElse(BigDecimal.ZERO);</span>
 <span class="fc" id="L84">    return opening.add(delta);</span>
   }
-
-  public List&lt;LeaveAccount&gt; listByUserEmail(String email) {
-<span class="nc" id="L88">  User user = userRepo.findByEmail(email)</span>
-<span class="nc" id="L89">    .orElseThrow(() -&gt; new IllegalArgumentException(&quot;User not found with email: &quot; + email));</span>
-<span class="nc" id="L90">  return repo.findByUser_Id(user.getId());</span>
-}
-
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

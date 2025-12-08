@@ -7,7 +7,6 @@ import com.example.time_manager.service.leave.LeaveAccountService;
 import org.springframework.graphql.data.method.annotation.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -17,50 +16,43 @@ import java.util.List;
 @Controller
 public class LeaveAccountController {
   private final LeaveAccountService service;
-<span class="fc" id="L20">  public LeaveAccountController(LeaveAccountService service) { this.service = service; }</span>
+<span class="fc" id="L19">  public LeaveAccountController(LeaveAccountService service) { this.service = service; }</span>
 
   @QueryMapping
-<span class="fc" id="L23">  public LeaveAccount leaveAccount(@Argument Long id) { return service.get(id); }</span>
+<span class="fc" id="L22">  public LeaveAccount leaveAccount(@Argument Long id) { return service.get(id); }</span>
 
   @QueryMapping
   public List&lt;LeaveAccount&gt; leaveAccountsByUser(@Argument String userId) {
-<span class="fc" id="L27">    return service.listByUser(userId);</span>
+<span class="fc" id="L26">    return service.listByUser(userId);</span>
   }
 
   @SchemaMapping(typeName = &quot;LeaveAccount&quot;, field = &quot;currentBalance&quot;)
   public Double currentBalance(LeaveAccount account) {
-<span class="fc" id="L32">    BigDecimal v = service.computeCurrentBalance(account.getId());</span>
-<span class="fc" id="L33">    return v.doubleValue();</span>
+<span class="fc" id="L31">    BigDecimal v = service.computeCurrentBalance(account.getId());</span>
+<span class="fc" id="L32">    return v.doubleValue();</span>
   }
-
-  @QueryMapping
-  public List&lt;LeaveAccount&gt; myLeaveAccounts(Authentication authentication) {
-<span class="nc" id="L38">  String email = authentication.getName();</span>
-<span class="nc" id="L39">  return service.listByUserEmail(email);</span>
-  }
-
 
   @PreAuthorize(&quot;hasAuthority('ADMIN')&quot;)
   @MutationMapping
   public LeaveAccount createLeaveAccount(@Argument LeaveAccountCreateInput input) {
-<span class="fc bfc" id="L46" title="All 2 branches covered.">    BigDecimal opening = input.getOpeningBalance() != null ? BigDecimal.valueOf(input.getOpeningBalance()) : null;</span>
-<span class="fc bfc" id="L47" title="All 2 branches covered.">    BigDecimal accrual = input.getAccrualPerMonth() != null ? BigDecimal.valueOf(input.getAccrualPerMonth()) : null;</span>
-<span class="fc bfc" id="L48" title="All 2 branches covered.">    BigDecimal maxCarry = input.getMaxCarryover() != null ? BigDecimal.valueOf(input.getMaxCarryover()) : null;</span>
-<span class="fc bfc" id="L49" title="All 2 branches covered.">    LocalDate expireOn = input.getCarryoverExpireOn() != null ? LocalDate.parse(input.getCarryoverExpireOn()) : null;</span>
-<span class="fc" id="L50">    return service.create(input.getUserId(), input.getLeaveTypeCode(), opening, accrual, maxCarry, expireOn);</span>
+<span class="fc bfc" id="L38" title="All 2 branches covered.">    BigDecimal opening = input.getOpeningBalance() != null ? BigDecimal.valueOf(input.getOpeningBalance()) : null;</span>
+<span class="fc bfc" id="L39" title="All 2 branches covered.">    BigDecimal accrual = input.getAccrualPerMonth() != null ? BigDecimal.valueOf(input.getAccrualPerMonth()) : null;</span>
+<span class="fc bfc" id="L40" title="All 2 branches covered.">    BigDecimal maxCarry = input.getMaxCarryover() != null ? BigDecimal.valueOf(input.getMaxCarryover()) : null;</span>
+<span class="fc bfc" id="L41" title="All 2 branches covered.">    LocalDate expireOn = input.getCarryoverExpireOn() != null ? LocalDate.parse(input.getCarryoverExpireOn()) : null;</span>
+<span class="fc" id="L42">    return service.create(input.getUserId(), input.getLeaveTypeCode(), opening, accrual, maxCarry, expireOn);</span>
   }
 
   @PreAuthorize(&quot;hasAuthority('ADMIN')&quot;)
   @MutationMapping
   public LeaveAccount updateLeaveAccount(@Argument LeaveAccountUpdateInput input) {
-<span class="fc bfc" id="L56" title="All 2 branches covered.">    BigDecimal opening = input.getOpeningBalance() != null ? BigDecimal.valueOf(input.getOpeningBalance()) : null;</span>
-<span class="fc bfc" id="L57" title="All 2 branches covered.">    BigDecimal accrual = input.getAccrualPerMonth() != null ? BigDecimal.valueOf(input.getAccrualPerMonth()) : null;</span>
-<span class="fc bfc" id="L58" title="All 2 branches covered.">    BigDecimal maxCarry = input.getMaxCarryover() != null ? BigDecimal.valueOf(input.getMaxCarryover()) : null;</span>
-<span class="fc bfc" id="L59" title="All 2 branches covered.">    LocalDate expireOn = input.getCarryoverExpireOn() != null ? LocalDate.parse(input.getCarryoverExpireOn()) : null;</span>
-<span class="fc" id="L60">    return service.update(input.getId(), opening, accrual, maxCarry, expireOn);</span>
+<span class="fc bfc" id="L48" title="All 2 branches covered.">    BigDecimal opening = input.getOpeningBalance() != null ? BigDecimal.valueOf(input.getOpeningBalance()) : null;</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">    BigDecimal accrual = input.getAccrualPerMonth() != null ? BigDecimal.valueOf(input.getAccrualPerMonth()) : null;</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">    BigDecimal maxCarry = input.getMaxCarryover() != null ? BigDecimal.valueOf(input.getMaxCarryover()) : null;</span>
+<span class="fc bfc" id="L51" title="All 2 branches covered.">    LocalDate expireOn = input.getCarryoverExpireOn() != null ? LocalDate.parse(input.getCarryoverExpireOn()) : null;</span>
+<span class="fc" id="L52">    return service.update(input.getId(), opening, accrual, maxCarry, expireOn);</span>
   }
   @PreAuthorize(&quot;hasAuthority('ADMIN')&quot;)
   @MutationMapping
-<span class="fc" id="L64">  public Boolean deleteLeaveAccount(@Argument Long id) { return service.delete(id); }</span>
+<span class="fc" id="L56">  public Boolean deleteLeaveAccount(@Argument Long id) { return service.delete(id); }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>
