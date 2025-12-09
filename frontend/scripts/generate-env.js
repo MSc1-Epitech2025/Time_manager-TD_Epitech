@@ -5,6 +5,11 @@ const envPath = path.resolve(__dirname, '../../.env');
 const outputDir = path.resolve(__dirname, '../src/environments');
 
 function parseEnvFile(filePath) {
+  if (!fs.existsSync(filePath)) {
+    console.warn('.env file not found, using environment variables');
+    return null;
+  }
+  
   const content = fs.readFileSync(filePath, 'utf-8');
   const env = {};
   
@@ -21,14 +26,28 @@ function parseEnvFile(filePath) {
   return env;
 }
 
+function getEnvValue(envFromFile, key) {
+  if (process.env[key]) {
+    return process.env[key];
+  }
+  if (envFromFile && envFromFile[key]) {
+    return envFromFile[key];
+  }
+  return null;
+}
+
 function generateEnvironmentFile(production) {
-  const env = parseEnvFile(envPath);
+  const envFromFile = parseEnvFile(envPath);
+  
+  const graphqlEndpoint = getEnvValue(envFromFile, 'GRAPHQL_ENDPOINT');
+  const jwtExpMinutes = getEnvValue(envFromFile, 'SECURITY_JWT_EXPMINUTES');
+  const jwtRefreshDays = getEnvValue(envFromFile, 'SECURITY_JWT_REFRESH_DAYS');
   
   const content = `export const environment = {
   production: ${production},
-  GRAPHQL_ENDPOINT: '${env.GRAPHQL_ENDPOINT}',
-  JWT_EXP_MINUTES: ${env.SECURITY_JWT_EXPMINUTES},
-  JWT_REFRESH_DAYS: ${env.SECURITY_JWT_REFRESH_DAYS},
+  GRAPHQL_ENDPOINT: '${graphqlEndpoint}',
+  JWT_EXP_MINUTES: ${jwtExpMinutes},
+  JWT_REFRESH_DAYS: ${jwtRefreshDays},
   MAX_REFRESH_COUNT: 4 //here
 };
 `;
@@ -38,11 +57,6 @@ function generateEnvironmentFile(production) {
   
   fs.writeFileSync(outputPath, content, 'utf-8');
   console.log(`Generated ${fileName}`);
-}
-
-if (!fs.existsSync(envPath)) {
-  console.error('.env file not found');
-  process.exit(1);
 }
 
 if (!fs.existsSync(outputDir)) {
