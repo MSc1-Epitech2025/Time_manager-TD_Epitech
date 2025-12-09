@@ -69,7 +69,6 @@ export class WeatherService {
           )
         ),
         catchError((err, _caught) => {
-          console.warn('[Weather] fetch error:', err);
           return [];
         })
       )

@@ -13,6 +13,9 @@ services:
     environment:
       - CHOKIDAR_USEPOLLING=true
       - WATCHPACK_POLLING=true
+      - GRAPHQL_ENDPOINT=${GRAPHQL_ENDPOINT}
+      - SECURITY_JWT_EXPMINUTES=${SECURITY_JWT_EXPMINUTES}
+      - SECURITY_JWT_REFRESH_DAYS=${SECURITY_JWT_REFRESH_DAYS}
     depends_on:
       - backend
     restart: unless-stopped

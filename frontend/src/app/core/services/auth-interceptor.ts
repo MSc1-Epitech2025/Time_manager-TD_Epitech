@@ -2,14 +2,17 @@ import { Injectable, inject } from '@angular/core';
 import {
   HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpErrorResponse
 } from '@angular/common/http';
-import { Observable, throwError, catchError } from 'rxjs';
+import { Observable, throwError, catchError, switchMap, from } from 'rxjs';
 import { Router } from '@angular/router';
 import { AuthService } from './auth';
+import { environment } from '@environments/environment';
 
 const BACKEND_HOSTS = new Set([
   'http://localhost:8030',
   'https://localhost:8030',
 ]);
+
+const MAX_REFRESH_COUNT = environment.MAX_REFRESH_COUNT; 
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
@@ -24,9 +27,24 @@ export class AuthInterceptor implements HttpInterceptor {
 
     return next.handle(authReq).pipe(
       catchError((err: HttpErrorResponse) => {
-        if (err.status === 401) {
+        if (err.status === 401 || err.status === 403) {
+          const session = this.auth.session;
+          const refreshCount = session?.refreshCount ?? 0;
+
+          if (session && refreshCount < MAX_REFRESH_COUNT) { 
+            return from(this.auth.refreshToken()).pipe(
+              switchMap(() => {
+                const retryReq = authReq.clone({ withCredentials: true });
+                return next.handle(retryReq);
+              }),
+              catchError((refreshErr) => {
+                this.auth.logout();
+                return throwError(() => refreshErr);
+              })
+            );
+          }
+
           this.auth.logout();
-          this.router.navigate(['/login'], { queryParams: { reason: 'expired' } });
         }
         return throwError(() => err);
       })
