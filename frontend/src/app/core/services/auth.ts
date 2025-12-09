@@ -43,7 +43,7 @@ type GraphqlResponse<T> = {
 const STORAGE_KEY = 'tm.session';
 const REMEMBER_KEY = 'tm.remember';
 const GRAPHQL_ENDPOINT = environment.GRAPHQL_ENDPOINT;
-const MAX_REFRESH_COUNT = environment.MAX_REFRESH_COUNT; //here
+const MAX_REFRESH_COUNT = environment.MAX_REFRESH_COUNT; 
 const JWT_EXP_MS = environment.JWT_EXP_MINUTES * 60 * 1000;
 const USER_BY_EMAIL_QUERY = `
   query UserByEmail($email: String!) {
@@ -348,8 +348,7 @@ export class AuthService {
     if (!sess) return;
 
     const refreshCount = sess.refreshCount ?? 0;
-    if (refreshCount >= MAX_REFRESH_COUNT) { //here
-      console.warn('Max refresh count reached, will logout on next expiry');
+    if (refreshCount >= MAX_REFRESH_COUNT) {
     }
 
     const timeUntilExpiry = JWT_EXP_MS - 2000;
@@ -372,7 +371,7 @@ export class AuthService {
     if (!sess) return;
 
     const refreshCount = sess.refreshCount ?? 0;
-    if (refreshCount >= MAX_REFRESH_COUNT) { //here
+    if (refreshCount >= MAX_REFRESH_COUNT) { 
       console.log('Token expired and max refresh reached, logging out');
       this.logout();
       return;
@@ -391,7 +390,7 @@ export class AuthService {
     if (!sess) throw new Error('No active session');
 
     const refreshCount = sess.refreshCount ?? 0;
-    if (refreshCount >= MAX_REFRESH_COUNT) { //here
+    if (refreshCount >= MAX_REFRESH_COUNT) { 
       throw new Error('Max refresh count reached');
     }
 

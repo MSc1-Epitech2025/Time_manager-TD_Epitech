@@ -48,7 +48,7 @@ function generateEnvironmentFile(production) {
   GRAPHQL_ENDPOINT: '${graphqlEndpoint}',
   JWT_EXP_MINUTES: ${jwtExpMinutes},
   JWT_REFRESH_DAYS: ${jwtRefreshDays},
-  MAX_REFRESH_COUNT: 4 //here
+  MAX_REFRESH_COUNT: 4
 };
 `;
 

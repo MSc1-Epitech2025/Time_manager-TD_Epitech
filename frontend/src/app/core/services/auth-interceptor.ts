@@ -12,7 +12,7 @@ const BACKEND_HOSTS = new Set([
   'https://localhost:8030',
 ]);
 
-const MAX_REFRESH_COUNT = environment.MAX_REFRESH_COUNT; //here
+const MAX_REFRESH_COUNT = environment.MAX_REFRESH_COUNT; 
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
@@ -31,7 +31,7 @@ export class AuthInterceptor implements HttpInterceptor {
           const session = this.auth.session;
           const refreshCount = session?.refreshCount ?? 0;
 
-          if (session && refreshCount < MAX_REFRESH_COUNT) { //here
+          if (session && refreshCount < MAX_REFRESH_COUNT) { 
             return from(this.auth.refreshToken()).pipe(
               switchMap(() => {
                 const retryReq = authReq.clone({ withCredentials: true });
