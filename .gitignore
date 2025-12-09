@@ -64,3 +64,7 @@ backend/out/
 copilot_instruction.md
 
 /frontend/dist
+
+# Generated environment files
+/frontend/src/environments/environment.ts
+/frontend/src/environments/environment.development.ts
