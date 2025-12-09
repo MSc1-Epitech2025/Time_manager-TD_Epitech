@@ -27,7 +27,7 @@ export class AuthInterceptor implements HttpInterceptor {
 
     return next.handle(authReq).pipe(
       catchError((err: HttpErrorResponse) => {
-        if (err.status === 401) {
+        if (err.status === 401 || err.status === 403) {
           const session = this.auth.session;
           const refreshCount = session?.refreshCount ?? 0;
 
@@ -39,14 +39,12 @@ export class AuthInterceptor implements HttpInterceptor {
               }),
               catchError((refreshErr) => {
                 this.auth.logout();
-                this.router.navigate(['/login'], { queryParams: { reason: 'expired' } });
                 return throwError(() => refreshErr);
               })
             );
           }
 
           this.auth.logout();
-          this.router.navigate(['/login'], { queryParams: { reason: 'expired' } });
         }
         return throwError(() => err);
       })

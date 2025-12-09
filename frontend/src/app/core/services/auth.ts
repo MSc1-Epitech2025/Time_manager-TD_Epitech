@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { BehaviorSubject, catchError, firstValueFrom, map, of } from 'rxjs';
 import { environment } from '@environments/environment';
 
@@ -65,7 +66,7 @@ export class AuthService {
 
   public readonly sessionChanges$ = this.session$.asObservable();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private router: Router) {}
 
   get session(): Session | null {
     return this.session$.value;
@@ -106,6 +107,7 @@ export class AuthService {
     this.clearTokenExpiryMonitoring();
     this.session$.next(null);
     this.clearStorage();
+    this.router.navigate(['/login'], { queryParams: { reason: 'expired' } });
   }
 
   async login(email: string, password: string, remember = true) {
@@ -350,9 +352,12 @@ export class AuthService {
       console.warn('Max refresh count reached, will logout on next expiry');
     }
 
+    const timeUntilExpiry = JWT_EXP_MS - 2000;
+    console.log(`Token will expire in ${timeUntilExpiry / 1000}s (refresh ${refreshCount}/${MAX_REFRESH_COUNT})`);
+
     this.tokenExpiryTimer = setTimeout(() => {
       this.handleTokenExpiry();
-    }, JWT_EXP_MS - 5000);
+    }, timeUntilExpiry);
   }
 
   private clearTokenExpiryMonitoring() {
@@ -391,8 +396,8 @@ export class AuthService {
     }
 
     const query = `
-      mutation RefreshToken {
-        refreshToken {
+      mutation Refresh {
+        refresh {
           ok
         }
       }
@@ -410,7 +415,7 @@ export class AuthService {
     }
 
     const result = await response.json();
-    const ok = result.data?.refreshToken?.ok;
+    const ok = result.data?.refresh?.ok;
 
     if (!ok) {
       throw new Error('Token refresh was not successful');
