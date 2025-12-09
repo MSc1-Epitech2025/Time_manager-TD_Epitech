@@ -21,6 +21,7 @@ export type Session = {
   refreshToken: string | null;
   expiresAt: number | null;
   user: SessionUser;
+  refreshCount?: number;
 };
 
 type UserResponse = {
@@ -41,6 +42,8 @@ type GraphqlResponse<T> = {
 const STORAGE_KEY = 'tm.session';
 const REMEMBER_KEY = 'tm.remember';
 const GRAPHQL_ENDPOINT = environment.GRAPHQL_ENDPOINT;
+const MAX_REFRESH_COUNT = environment.MAX_REFRESH_COUNT; //here
+const JWT_EXP_MS = environment.JWT_EXP_MINUTES * 60 * 1000;
 const USER_BY_EMAIL_QUERY = `
   query UserByEmail($email: String!) {
     userByEmail(email: $email) {
@@ -58,6 +61,7 @@ const USER_BY_EMAIL_QUERY = `
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private session$ = new BehaviorSubject<Session | null>(null);
+  private tokenExpiryTimer: any = null;
 
   public readonly sessionChanges$ = this.session$.asObservable();
 
@@ -82,6 +86,7 @@ export class AuthService {
       const parsed = JSON.parse(raw);
       const normalized = this.normalizeSession(parsed);
       this.session$.next(normalized);
+      this.startTokenExpiryMonitoring();
     } catch (err) {
       console.warn('Invalid stored session', err);
       this.clearStorage();
@@ -91,11 +96,14 @@ export class AuthService {
   loginSuccess(session: Session, remember = true) {
     localStorage.setItem(REMEMBER_KEY, String(remember));
     this.clearStorage();
-    this.persistSession(session, remember);
-    this.session$.next(session);
+    const sessionWithRefreshCount = { ...session, refreshCount: 0 };
+    this.persistSession(sessionWithRefreshCount, remember);
+    this.session$.next(sessionWithRefreshCount);
+    this.startTokenExpiryMonitoring();
   }
 
   logout() {
+    this.clearTokenExpiryMonitoring();
     this.session$.next(null);
     this.clearStorage();
   }
@@ -330,5 +338,94 @@ export class AuthService {
       phone: resp.phone ?? undefined,
       roles: this.extractRoles(resp.role),
     };
+  }
+
+  private startTokenExpiryMonitoring() {
+    this.clearTokenExpiryMonitoring();
+    const sess = this.session;
+    if (!sess) return;
+
+    const refreshCount = sess.refreshCount ?? 0;
+    if (refreshCount >= MAX_REFRESH_COUNT) { //here
+      console.warn('Max refresh count reached, will logout on next expiry');
+    }
+
+    this.tokenExpiryTimer = setTimeout(() => {
+      this.handleTokenExpiry();
+    }, JWT_EXP_MS - 5000);
+  }
+
+  private clearTokenExpiryMonitoring() {
+    if (this.tokenExpiryTimer) {
+      clearTimeout(this.tokenExpiryTimer);
+      this.tokenExpiryTimer = null;
+    }
+  }
+
+  private async handleTokenExpiry() {
+    const sess = this.session;
+    if (!sess) return;
+
+    const refreshCount = sess.refreshCount ?? 0;
+    if (refreshCount >= MAX_REFRESH_COUNT) { //here
+      console.log('Token expired and max refresh reached, logging out');
+      this.logout();
+      return;
+    }
+
+    try {
+      await this.refreshToken();
+    } catch (err) {
+      console.error('Token refresh failed, logging out', err);
+      this.logout();
+    }
+  }
+
+  async refreshToken(): Promise<void> {
+    const sess = this.session;
+    if (!sess) throw new Error('No active session');
+
+    const refreshCount = sess.refreshCount ?? 0;
+    if (refreshCount >= MAX_REFRESH_COUNT) { //here
+      throw new Error('Max refresh count reached');
+    }
+
+    const query = `
+      mutation RefreshToken {
+        refreshToken {
+          ok
+        }
+      }
+    `;
+
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ query }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Token refresh request failed');
+    }
+
+    const result = await response.json();
+    const ok = result.data?.refreshToken?.ok;
+
+    if (!ok) {
+      throw new Error('Token refresh was not successful');
+    }
+
+    const updatedSession: Session = {
+      ...sess,
+      refreshCount: refreshCount + 1,
+      expiresAt: Date.now() + JWT_EXP_MS,
+    };
+
+    this.session$.next(updatedSession);
+    this.persistSession(updatedSession, this.shouldRemember());
+    this.startTokenExpiryMonitoring();
+
+    console.log(`Token refreshed (${updatedSession.refreshCount}/${MAX_REFRESH_COUNT})`);
   }
 }
