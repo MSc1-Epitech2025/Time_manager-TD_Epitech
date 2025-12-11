@@ -21,13 +21,8 @@
             <div class="search-section">
               <mat-form-field appearance="outline" class="search-field">
                 <mat-label>Search for a user</mat-label>
-                <input
-                  matInput
-                  type="text"
-                  [(ngModel)]="searchTerm"
-                  (ngModelChange)="searchUsers()"
-                  placeholder="Name or email..."
-                />
+                <input matInput type="text" [(ngModel)]="searchTerm" (ngModelChange)="searchUsers()"
+                  placeholder="Name or email..." />
                 <mat-icon matPrefix>search</mat-icon>
               </mat-form-field>
 
@@ -57,12 +52,8 @@
         <mat-card class="users-list-card" appearance="outlined" *ngIf="!isLoading && !lastError">
           <mat-card-content class="users-list-content">
             <mat-list *ngIf="filteredUsers.length > 0" class="users-list">
-              <mat-list-item
-                *ngFor="let user of filteredUsers; let last = last"
-                class="user-item"
-                [class.selected]="selectedUser?.id === user.id"
-                (click)="selectUser(user)"
-              >
+              <mat-list-item *ngFor="let user of filteredUsers; let last = last" class="user-item"
+                [class.selected]="selectedUser?.id === user.id" (click)="selectUser(user)">
                 <div matListItemTitle class="user-item-content">
                   <div class="user-avatar">
                     {{ user.firstName.charAt(0).toUpperCase() }}{{ user.lastName.charAt(0).toUpperCase() }}
@@ -100,58 +91,32 @@
             <form class="user-form" #userForm="ngForm">
               <mat-form-field appearance="outline">
                 <mat-label>First Name</mat-label>
-                <input
-                  matInput
-                  [(ngModel)]="formData.firstName"
-                  name="firstName"
-                  required
-                />
+                <input matInput [(ngModel)]="formData.firstName" name="firstName" required />
                 <mat-icon matPrefix>person</mat-icon>
               </mat-form-field>
 
               <mat-form-field appearance="outline">
                 <mat-label>Last Name</mat-label>
-                <input
-                  matInput
-                  [(ngModel)]="formData.lastName"
-                  name="lastName"
-                  required
-                />
+                <input matInput [(ngModel)]="formData.lastName" name="lastName" required />
                 <mat-icon matPrefix>person</mat-icon>
               </mat-form-field>
 
               <mat-form-field appearance="outline">
                 <mat-label>Email</mat-label>
-                <input
-                  matInput
-                  type="email"
-                  [(ngModel)]="formData.email"
-                  name="email"
-                  required
-                />
+                <input matInput type="email" [(ngModel)]="formData.email" name="email" required />
                 <mat-icon matPrefix>email</mat-icon>
               </mat-form-field>
 
               <mat-form-field appearance="outline" *ngIf="isCreating">
                 <mat-label>Password</mat-label>
-                <input
-                  matInput
-                  type="password"
-                  [(ngModel)]="formData.password"
-                  name="password"
-                  [required]="isCreating"
-                />
+                <input matInput type="password" [(ngModel)]="formData.password" name="password"
+                  [required]="isCreating" />
                 <mat-icon matPrefix>lock</mat-icon>
               </mat-form-field>
 
               <mat-form-field appearance="outline">
                 <mat-label>Phone</mat-label>
-                <input
-                  matInput
-                  type="tel"
-                  [(ngModel)]="formData.phone"
-                  name="phone"
-                />
+                <input matInput type="tel" [(ngModel)]="formData.phone" name="phone" />
                 <mat-icon matPrefix>phone</mat-icon>
               </mat-form-field>
 
@@ -160,54 +125,31 @@
                 <mat-select [(ngModel)]="formData.role" name="role">
                   <mat-option value="EMPLOYEE">Employee</mat-option>
                   <mat-option value="MANAGER">Manager</mat-option>
-                  <mat-option value="ADMIN">Admin</mat-option>
                 </mat-select>
                 <mat-icon matPrefix>badge</mat-icon>
               </mat-form-field>
 
               <mat-form-field appearance="outline">
                 <mat-label>Position</mat-label>
-                <input
-                  matInput
-                  [(ngModel)]="formData.poste"
-                  name="poste"
-                />
+                <input matInput [(ngModel)]="formData.poste" name="poste" />
                 <mat-icon matPrefix>work</mat-icon>
               </mat-form-field>
 
               <div class="form-actions">
-                <button
-                  mat-raised-button
-                  class="btn-create"
-                  type="button"
-                  *ngIf="isCreating"
-                  [disabled]="!userForm.valid || isLoading"
-                  (click)="createUser()"
-                >
+                <button mat-raised-button class="btn-create" type="button" *ngIf="isCreating"
+                  [disabled]="!userForm.valid || isLoading" (click)="createUser()">
                   <mat-icon>add</mat-icon>
                   <span>Create</span>
                 </button>
 
-                <button
-                  mat-raised-button
-                  class="btn-update"
-                  type="button"
-                  *ngIf="!isCreating"
-                  [disabled]="!userForm.valid || isLoading"
-                  (click)="updateUser()"
-                >
+                <button mat-raised-button class="btn-update" type="button" *ngIf="!isCreating"
+                  [disabled]="!userForm.valid || isLoading" (click)="updateUser()">
                   <mat-icon>save</mat-icon>
                   <span>Update</span>
                 </button>
 
-                <button
-                  mat-raised-button
-                  class="btn-delete"
-                  type="button"
-                  *ngIf="!isCreating"
-                  [disabled]="isLoading"
-                  (click)="deleteUser()"
-                >
+                <button mat-raised-button class="btn-delete" type="button" *ngIf="!isCreating" [disabled]="isLoading"
+                  (click)="deleteUser()">
                   <mat-icon>delete</mat-icon>
                   <span>Delete</span>
                 </button>
