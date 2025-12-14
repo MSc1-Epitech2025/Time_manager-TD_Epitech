@@ -2,26 +2,32 @@ package com.example.time_manager.graphql.controller;
 
 import java.time.Duration;
 
-import com.example.time_manager.dto.auth.AuthRequest;
-import jakarta.security.auth.message.AuthException;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import com.example.time_manager.dto.auth.AuthRequest;
 import com.example.time_manager.dto.auth.AuthResponse;
+import com.example.time_manager.dto.auth.ChangePasswordInput;
 import com.example.time_manager.dto.auth.CreateUserInput;
+import com.example.time_manager.dto.auth.ResetPasswordInput;
+import com.example.time_manager.dto.auth.ResetPasswordRequestInput;
 import com.example.time_manager.dto.auth.UpdateUserInput;
 import com.example.time_manager.model.User;
 import com.example.time_manager.security.JwtUtil;
+import com.example.time_manager.security.PasswordGenerator;
 import com.example.time_manager.service.UserService;
 import com.example.time_manager.service.auth.PasswordResetService;
 
+import jakarta.security.auth.message.AuthException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -60,12 +66,12 @@ public class UserGraphQLController {
         u.setPoste(input.poste());
         u.setAvatarUrl(input.avatarUrl());
 
-        String tempPwd = com.example.time_manager.security.PasswordGenerator.generate(14);
+        String tempPwd = PasswordGenerator.generate(14);
         u.setPassword(tempPwd);
 
         User saved = userService.saveUser(u);
 
-        passwordResetService.sendSetPasswordEmailFor(saved);
+    passwordResetService.sendSetPasswordEmailFor(saved, tempPwd);
 
         return saved;
     }
@@ -136,6 +142,29 @@ public class UserGraphQLController {
 
         addAccessCookie(httpResp, accessToken);
         addRefreshCookie(httpResp, refreshToken);
+        return new AuthResponse(true);
+    }
+
+    @PreAuthorize("permitAll()")
+    @MutationMapping
+    public AuthResponse requestPasswordReset(@Argument("input") ResetPasswordRequestInput input) {
+        passwordResetService.requestResetByEmail(input.email());
+        return new AuthResponse(true);
+    }
+
+    @PreAuthorize("permitAll()")
+    @MutationMapping
+    public AuthResponse resetPassword(@Argument("input") ResetPasswordInput input) {
+        passwordResetService.resetPassword(input.token(), input.newPassword());
+        return new AuthResponse(true);
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @MutationMapping
+    public AuthResponse changeMyPassword(@Argument("input") ChangePasswordInput input) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+        userService.changePassword(email, input.currentPassword(), input.newPassword());
         return new AuthResponse(true);
     }
 

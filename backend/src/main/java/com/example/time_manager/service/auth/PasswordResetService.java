@@ -21,7 +21,7 @@ public class PasswordResetService {
     private final PasswordResetTokenRepository tokenRepo;
     private final PasswordEncoder encoder;
     private final MailService mailService;
-    private final String frontBaseUrl = "https://ton-front.com";
+    private final String frontBaseUrl = "https://localhost:4200";
 
     private static final Duration TOKEN_TTL = Duration.ofMinutes(30);
 
@@ -38,7 +38,13 @@ public class PasswordResetService {
     }
 
     public void sendSetPasswordEmailFor(User user) {
-        String token = UUID.randomUUID().toString().replace("-", "") + UUID.randomUUID().toString().replace("-", "");
+    sendSetPasswordEmailFor(user, null);
+    }
+
+    public void sendSetPasswordEmailFor(User user, String tempPassword) {
+        String token = UUID.randomUUID().toString().replace("-", "")
+                + UUID.randomUUID().toString().replace("-", "");
+
         PasswordResetToken t = new PasswordResetToken();
         t.setToken(token);
         t.setUserId(user.getId());
@@ -46,12 +52,18 @@ public class PasswordResetService {
         tokenRepo.save(t);
 
         String resetUrl = frontBaseUrl + "/reset-password?token=" + token;
-        mailService.sendResetPasswordEmail(user.getEmail(), user.getFirstName(), resetUrl, TOKEN_TTL.toMinutes());
+
+        mailService.sendResetPasswordEmail(
+                user.getEmail(),
+                user.getFirstName(),
+                resetUrl,
+                TOKEN_TTL.toMinutes(),
+                tempPassword
+        );
     }
 
     public void requestResetByEmail(String email) {
         User u = userRepo.findByEmail(email).orElse(null);
-        // réponse neutre (évite l’énumération d’emails)
         if (u == null) return;
         sendSetPasswordEmailFor(u);
     }
