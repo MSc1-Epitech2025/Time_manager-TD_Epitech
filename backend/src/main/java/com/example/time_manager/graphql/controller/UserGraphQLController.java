@@ -20,6 +20,7 @@ import com.example.time_manager.dto.auth.UpdateUserInput;
 import com.example.time_manager.model.User;
 import com.example.time_manager.security.JwtUtil;
 import com.example.time_manager.service.UserService;
+import com.example.time_manager.service.auth.PasswordResetService;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,15 +31,17 @@ public class UserGraphQLController {
 
     private final UserService userService;
     private final JwtUtil jwtUtil;
-
+    private final PasswordResetService passwordResetService;
+    
     private static final boolean COOKIE_SECURE = true;
     private static final String COOKIE_SAMESITE = "None";
     private static final Duration ACCESS_MAX_AGE = Duration.ofMinutes(15);
     private static final Duration REFRESH_MAX_AGE = Duration.ofDays(7);
 
-    public UserGraphQLController(UserService userService, JwtUtil jwtUtil) {
+    public UserGraphQLController(UserService userService, JwtUtil jwtUtil,PasswordResetService passwordResetService) {
         this.userService = userService;
         this.jwtUtil = jwtUtil;
+        this.passwordResetService = passwordResetService;
     }
 
     @PreAuthorize("hasAuthority('ADMIN')")
@@ -56,10 +59,17 @@ public class UserGraphQLController {
         u.setRole(input.role());
         u.setPoste(input.poste());
         u.setAvatarUrl(input.avatarUrl());
-        u.setPassword(input.password());
 
-        return userService.saveUser(u);
+        String tempPwd = com.example.time_manager.security.PasswordGenerator.generate(14);
+        u.setPassword(tempPwd);
+
+        User saved = userService.saveUser(u);
+
+        passwordResetService.sendSetPasswordEmailFor(saved);
+
+        return saved;
     }
+
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @MutationMapping
