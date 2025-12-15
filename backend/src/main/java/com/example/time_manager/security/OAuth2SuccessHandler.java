@@ -76,7 +76,8 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
         String redirectUrl = String.format(
-                "http://localhost:4205/auth/callback?email=%s&firstName=%s&lastName=%s&id=%s&role=%s",
+// todo: adding variable env for scalable code
+                "http://localhost:4200/auth/callback?email=%s&firstName=%s&lastName=%s&id=%s&role=%s",
                 URLEncoder.encode(user.getEmail(), StandardCharsets.UTF_8),
                 URLEncoder.encode(user.getFirstName(), StandardCharsets.UTF_8),
                 URLEncoder.encode(user.getLastName(), StandardCharsets.UTF_8),
