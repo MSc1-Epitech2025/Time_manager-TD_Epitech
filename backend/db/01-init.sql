@@ -9,6 +9,7 @@ CREATE TABLE
     poste VARCHAR(100),
     avatar_url VARCHAR(500),
     password VARCHAR(255) NOT NULL,
+    first_connection BOOLEAN NOT NULL DEFAULT FALSE, 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );
 

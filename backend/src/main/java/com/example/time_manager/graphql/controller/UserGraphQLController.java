@@ -127,7 +127,9 @@ public class UserGraphQLController {
 
         var user = userService.findByEmail(input.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found after validation"));
-
+        if (!user.isFirstConnection()) {
+            userService.markFirstConnection(user.getId());
+        }
         String accessToken = jwtUtil.generateAccessToken(
                 user.getEmail(),
                 user.getId(),

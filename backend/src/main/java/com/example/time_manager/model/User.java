@@ -29,6 +29,8 @@ public class User {
     @Column(name = "avatar_url", length = 500)
     private String avatarUrl;
     private String azureOid;
+    @Column(name = "first_connection", nullable = false)
+    private boolean firstConnection = false;
 
     public User() {
     }
@@ -64,6 +66,9 @@ public class User {
 
     public String getAzureOid() { return azureOid; }
     public void setAzureOid(String azureOid) { this.azureOid = azureOid; }
+
+    public boolean isFirstConnection() { return firstConnection; }
+    public void setFirstConnection(boolean firstConnection) { this.firstConnection = firstConnection; }
 
 
 }
