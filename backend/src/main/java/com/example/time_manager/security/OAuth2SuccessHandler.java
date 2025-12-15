@@ -11,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -21,6 +22,9 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
     private final UserService userService;
     private final JwtUtil jwtUtil;
+
+    @Value("${FRONTEND_URL}")
+    private String frontendUrl;
 
     public OAuth2SuccessHandler(UserService userService, JwtUtil jwtUtil) {
         this.userService = userService;
@@ -76,8 +80,8 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
         String redirectUrl = String.format(
-// todo: adding variable env for scalable code
-                "http://localhost:4200/auth/callback?email=%s&firstName=%s&lastName=%s&id=%s&role=%s",
+                "%sauth/callback?email=%s&firstName=%s&lastName=%s&id=%s&role=%s",
+                frontendUrl,
                 URLEncoder.encode(user.getEmail(), StandardCharsets.UTF_8),
                 URLEncoder.encode(user.getFirstName(), StandardCharsets.UTF_8),
                 URLEncoder.encode(user.getLastName(), StandardCharsets.UTF_8),
@@ -86,6 +90,5 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         );
 
         response.sendRedirect(redirectUrl);
-
     }
 }
