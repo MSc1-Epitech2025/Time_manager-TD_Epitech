@@ -17,10 +17,7 @@
       <mat-card-content>
         <div class="controls-wrapper">
           <div class="kpi-tabs">
-            <button 
-              mat-raised-button 
-              class="kpi-stat-btn"
-              [class.active]="selectedKpi === 'attendance'" 
+            <button mat-raised-button class="kpi-stat-btn" [class.active]="selectedKpi === 'attendance'"
               (click)="selectKpi('attendance')">
               <div class="kpi-btn-icon">
                 <mat-icon>business_center</mat-icon>
@@ -30,10 +27,7 @@
                 <span class="kpi-btn-value">{{ attendanceStats?.present || 0 }}</span>
               </div>
             </button>
-            <button 
-              mat-raised-button 
-              class="kpi-stat-btn"
-              [class.active]="selectedKpi === 'absenteeism'" 
+            <button mat-raised-button class="kpi-stat-btn" [class.active]="selectedKpi === 'absenteeism'"
               (click)="selectKpi('absenteeism')">
               <div class="kpi-btn-icon">
                 <mat-icon>person_off</mat-icon>
@@ -43,10 +37,7 @@
                 <span class="kpi-btn-value">{{ absenteeismStats?.totalAbsences || 0 }}</span>
               </div>
             </button>
-            <button 
-              mat-raised-button 
-              class="kpi-stat-btn"
-              [class.active]="selectedKpi === 'productivity'" 
+            <button mat-raised-button class="kpi-stat-btn" [class.active]="selectedKpi === 'productivity'"
               (click)="selectKpi('productivity')">
               <div class="kpi-btn-icon">
                 <mat-icon>trending_up</mat-icon>
@@ -78,6 +69,21 @@
               </mat-select>
             </mat-form-field>
           </div>
+            <div class="export-buttons" style="display: flex; gap: 12px; margin-bottom: 20px;">
+              <button mat-raised-button color="primary" (click)="exportReportEmployeesPdf()">
+                <mat-icon>picture_as_pdf</mat-icon>
+                Export PDF (KPI équipe)
+              </button>
+
+              <button mat-raised-button color="accent" (click)="exportReportEmployeesExcel()">
+                <mat-icon>table_view</mat-icon>
+                Export Excel (KPI équipe)
+              </button>
+              <button mat-raised-button color="accent" (click)="exportReportEmployeePdf()">
+                <mat-icon>table_view</mat-icon>
+                Export Excel (KPI individuel)
+              </button>
+            </div>
         </div>
       </mat-card-content>
     </mat-card>
@@ -91,18 +97,16 @@
           <mat-card-header>
             <mat-card-title>
               <mat-icon>pie_chart</mat-icon>
-              <span>{{ 
-                selectedKpi === 'attendance' ? 'Attendance' : 
-                selectedKpi === 'absenteeism' ? 'Absenteeism' : 
-                'Productivity' 
-              }} Overview</span>
+              <span>{{
+                selectedKpi === 'attendance' ? 'Attendance' :
+                selectedKpi === 'absenteeism' ? 'Absenteeism' :
+                'Productivity'
+                }} Overview</span>
             </mat-card-title>
           </mat-card-header>
           <mat-card-content>
             <div class="chart-wrapper">
-              <app-kpi-bar-chart
-                [data]="barChartData"
-                [selectedKpi]="selectedKpi">
+              <app-kpi-bar-chart [data]="barChartData" [selectedKpi]="selectedKpi">
               </app-kpi-bar-chart>
             </div>
           </mat-card-content>
@@ -115,11 +119,11 @@
               <mat-icon>leaderboard</mat-icon>
               <span>{{
                 selectedKpi === 'absenteeism'
-                  ? 'Absenteeism Ranking'
-                  : selectedKpi === 'attendance'
-                  ? 'Attendance Ranking'
-                  : 'Productivity Ranking'
-              }}</span>
+                ? 'Absenteeism Ranking'
+                : selectedKpi === 'attendance'
+                ? 'Attendance Ranking'
+                : 'Productivity Ranking'
+                }}</span>
             </mat-card-title>
           </mat-card-header>
           <mat-card-content>
@@ -178,11 +182,11 @@
         <mat-card-header>
           <mat-card-title>
             <mat-icon>table_chart</mat-icon>
-            <span>{{ 
-              selectedKpi === 'productivity' ? 'Work Hours Details' : 
+            <span>{{
+              selectedKpi === 'productivity' ? 'Work Hours Details' :
               selectedKpi === 'attendance' ? 'Attendance Details' :
-              'Absenteeism Details' 
-            }}</span>
+              'Absenteeism Details'
+              }}</span>
           </mat-card-title>
         </mat-card-header>
         <mat-card-content>
