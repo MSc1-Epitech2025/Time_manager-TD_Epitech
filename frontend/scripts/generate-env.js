@@ -9,20 +9,20 @@ function parseEnvFile(filePath) {
     console.warn('.env file not found, using environment variables');
     return null;
   }
-  
+
   const content = fs.readFileSync(filePath, 'utf-8');
   const env = {};
-  
+
   content.split('\n').forEach(line => {
     line = line.trim();
     if (!line || line.startsWith('#')) return;
-    
+
     const [key, ...valueParts] = line.split('=');
     if (key && valueParts.length > 0) {
       env[key.trim()] = valueParts.join('=').trim();
     }
   });
-  
+
   return env;
 }
 
@@ -38,23 +38,25 @@ function getEnvValue(envFromFile, key) {
 
 function generateEnvironmentFile(production) {
   const envFromFile = parseEnvFile(envPath);
-  
+
   const graphqlEndpoint = getEnvValue(envFromFile, 'GRAPHQL_ENDPOINT');
   const jwtExpMinutes = getEnvValue(envFromFile, 'SECURITY_JWT_EXPMINUTES');
   const jwtRefreshDays = getEnvValue(envFromFile, 'SECURITY_JWT_REFRESH_DAYS');
-  
+  const azureUrl = getEnvValue(envFromFile, 'AZURE_URL');
+
   const content = `export const environment = {
   production: ${production},
   GRAPHQL_ENDPOINT: '${graphqlEndpoint}',
   JWT_EXP_MINUTES: ${jwtExpMinutes},
   JWT_REFRESH_DAYS: ${jwtRefreshDays},
-  MAX_REFRESH_COUNT: 3
+  MAX_REFRESH_COUNT: 3,
+  AZURE_URL: '${azureUrl}'
 };
 `;
 
   const fileName = production ? 'environment.development.ts' : 'environment.ts';
   const outputPath = path.join(outputDir, fileName);
-  
+
   fs.writeFileSync(outputPath, content, 'utf-8');
   console.log(`Generated ${fileName}`);
 }
