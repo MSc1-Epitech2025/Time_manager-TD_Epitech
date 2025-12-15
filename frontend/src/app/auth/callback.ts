@@ -25,7 +25,7 @@ export class AuthCallbackComponent implements OnInit {
 
   private async handleCallback(): Promise<void> {
     try {
-      
+
       const params = new URLSearchParams(window.location.search);
 
       const id = params.get("id");
