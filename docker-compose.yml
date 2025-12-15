@@ -68,15 +68,18 @@ services:
       - ./backend/db:/docker-entrypoint-initdb.d
 
   reverse-proxy:
-    image: nginx:latest
+    build: ./reverse-proxy
     container_name: reverse-proxy
     depends_on:
       - frontend
       - backend
     ports:
       - "8030:80"
-    volumes:
-      - ./reverse-proxy/nginx.conf:/etc/nginx/nginx.conf:ro
+    environment:
+      FRONTEND_CONTAINER_NAME: ${FRONTEND_CONTAINER_NAME}
+      FRONTEND_PORT: ${FRONTEND_PORT}
+      BACKEND_CONTAINER_NAME: ${BACKEND_CONTAINER_NAME}
+      BACKEND_PORT: ${BACKEND_PORT}
     restart: always
 
   sonarqube:

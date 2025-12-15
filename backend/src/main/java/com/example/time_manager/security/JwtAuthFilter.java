@@ -27,37 +27,23 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         this.userDetailsService = userDetailsService;
     }
 
-    // =====================================================
-    // IMPORTANT : routes ignorées par le filtre JWT
-    // =====================================================
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
 
         return
-                // GraphQL (login + queries publiques)
-                path.equals("/graphql")
-
-                        // OAuth2
-                        || path.startsWith("/oauth2/")
+                path.startsWith("/oauth2/")
                         || path.startsWith("/login/oauth2/")
                         || path.equals("/oauth2/success")
 
-                        // Infra / static
                         || path.startsWith("/actuator/")
                         || path.startsWith("/favicon")
                         || path.startsWith("/resources/");
     }
 
-    // =====================================================
-    // Extraction du token depuis les cookies
-    // =====================================================
     private String extractToken(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
-
-        if (cookies == null) {
-            return null;
-        }
+        if (cookies == null) return null;
 
         for (Cookie c : cookies) {
             if ("access_token".equals(c.getName())) {
@@ -67,9 +53,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         return null;
     }
 
-    // =====================================================
-    // Filtre JWT
-    // =====================================================
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -90,8 +73,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     && SecurityContextHolder.getContext().getAuthentication() == null
                     && jwtUtil.isAccessTokenValid(token, username)) {
 
-                UserDetails userDetails =
-                        userDetailsService.loadUserByUsername(username);
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
@@ -100,17 +82,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                 userDetails.getAuthorities()
                         );
 
-                authentication.setDetails(
-                        new WebAuthenticationDetailsSource()
-                                .buildDetails(request)
-                );
-
-                SecurityContextHolder.getContext()
-                        .setAuthentication(authentication);
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
             }
 
         } catch (Exception ex) {
-            // Token invalide → pas d’auth → on laisse passer
             SecurityContextHolder.clearContext();
         }
 

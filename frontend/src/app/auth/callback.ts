@@ -25,8 +25,7 @@ export class AuthCallbackComponent implements OnInit {
 
   private async handleCallback(): Promise<void> {
     try {
-      console.log("OAuth Callback détecté ✔");
-
+      
       const params = new URLSearchParams(window.location.search);
 
       const id = params.get("id");
@@ -50,8 +49,6 @@ export class AuthCallbackComponent implements OnInit {
         lastName: lastName ?? undefined,
         roles: this.auth.extractRoles(role ?? 'EMPLOYEE')
       });
-
-      console.log("User normalisé :", user);
 
       this.auth.loginSuccess({
         accessToken: null,
