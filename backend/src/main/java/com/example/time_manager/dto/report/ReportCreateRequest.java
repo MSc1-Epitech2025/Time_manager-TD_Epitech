@@ -1,12 +1,15 @@
 package com.example.time_manager.dto.report;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 public class ReportCreateRequest {
+
   @NotBlank
   private String targetUserId;
 
   @NotBlank
+  @Size(max = 255)
   private String title;
 
   private String body;

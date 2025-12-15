@@ -2,6 +2,7 @@ package com.example.time_manager.service;
 
 import java.util.List;
 
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,7 +18,7 @@ import jakarta.persistence.EntityNotFoundException;
 
 /**
  * Business logic for Reports:
- * - Any authenticated user can create a report to ANY target user (no direction restriction)
+ * - Any authenticated user can create a report to ANY target user
  * - Author can update/delete their own reports; ADMIN can manage all
  * - Visibility: a report is visible to its author, its target, or an ADMIN
  */
@@ -40,8 +41,7 @@ public class ReportService {
    * No role-based direction restriction: author -> target is always allowed.
    */
   public ReportResponse createForAuthorEmail(String authorEmail, ReportCreateRequest req) {
-    User author = userRepo.findByEmail(authorEmail)
-        .orElseThrow(() -> new EntityNotFoundException("Author not found: " + authorEmail));
+    User author = userByEmail(authorEmail);
 
     User target = userRepo.findById(req.getTargetUserId())
         .orElseThrow(() -> new EntityNotFoundException("Target user not found: " + req.getTargetUserId()));
@@ -60,7 +60,10 @@ public class ReportService {
 
   /** ADMIN: list all reports. */
   @Transactional(readOnly = true)
-  public List<ReportResponse> listAllForAdmin() {
+  public List<ReportResponse> listAllForAdmin(String email) {
+    User me = userByEmail(email);
+    requireAdmin(me);
+
     return reportRepo.findAllByOrderByCreatedAtDesc()
         .stream().map(this::toDto).toList();
   }
@@ -89,120 +92,134 @@ public class ReportService {
   public ReportResponse getVisibleTo(String email, Long id) {
     Report r = reportRepo.findById(id)
         .orElseThrow(() -> new EntityNotFoundException("Report not found: " + id));
+
     User me = userByEmail(email);
 
-    boolean isAdmin = hasRole(me, "ADMIN");
-    if (isAdmin) return toDto(r);
+    if (isAdmin(me) || isAuthor(me, r) || isTarget(me, r)) {
+      return toDto(r);
+    }
 
-    boolean isAuthor = r.getAuthor().getId().equals(me.getId());
-    boolean isTarget = r.getTarget().getId().equals(me.getId());
-    if (isAuthor || isTarget) return toDto(r);
-
-    throw new org.springframework.security.access.AccessDeniedException("Forbidden");
+    throw new AccessDeniedException("Forbidden");
   }
 
   /* ======================== UPDATE / DELETE ======================== */
 
   /**
    * Update allowed for ADMIN or the author.
-   * Can also reassign the target (if provided).
+   * Note: if your ReportUpdateRequest does NOT contain targetUserId anymore,
+   * then the reassignment block will simply never run.
    */
   public ReportResponse updateVisibleTo(String email, Long id, ReportUpdateRequest req) {
     Report r = reportRepo.findById(id)
         .orElseThrow(() -> new EntityNotFoundException("Report not found: " + id));
+
     User me = userByEmail(email);
 
-    boolean isAdmin = hasRole(me, "ADMIN");
-    boolean isAuthor = r.getAuthor().getId().equals(me.getId());
-    if (!(isAdmin || isAuthor)) {
-      throw new org.springframework.security.access.AccessDeniedException("Forbidden");
+    if (!(isAdmin(me) || isAuthor(me, r))) {
+      throw new AccessDeniedException("Forbidden");
     }
 
-    if (req.getTitle() != null) r.setTitle(req.getTitle());
-    if (req.getBody() != null)  r.setBody(req.getBody());
+    if (req.getTitle() != null) {
+      r.setTitle(req.getTitle());
+    }
 
-    if (req.getTargetUserId() != null) {
-      User target = userRepo.findById(req.getTargetUserId())
-          .orElseThrow(() -> new EntityNotFoundException("Target user not found: " + req.getTargetUserId()));
-      r.setTarget(target);
+    if (req.getBody() != null) {
+      r.setBody(req.getBody());
     }
 
     r = reportRepo.save(r);
     return toDto(r);
   }
-
   /**
    * Delete allowed for ADMIN or the author.
    */
   public void deleteVisibleTo(String email, Long id) {
     Report r = reportRepo.findById(id)
         .orElseThrow(() -> new EntityNotFoundException("Report not found: " + id));
+
     User me = userByEmail(email);
 
-    boolean isAdmin = hasRole(me, "ADMIN");
-    boolean isAuthor = r.getAuthor().getId().equals(me.getId());
-    if (!(isAdmin || isAuthor)) {
-      throw new org.springframework.security.access.AccessDeniedException("Forbidden");
+    if (!(isAdmin(me) || isAuthor(me, r))) {
+      throw new AccessDeniedException("Forbidden");
     }
+
     reportRepo.deleteById(id);
   }
 
-  /* ======================== Helpers ======================== */
+  /* ======================== Mapping ======================== */
 
   private ReportResponse toDto(Report r) {
-    var dto = new ReportResponse();
-    dto.id = r.getId();
-    dto.title = r.getTitle();
-    dto.body = r.getBody();
-    dto.createdAt = r.getCreatedAt();
-    dto.authorId = r.getAuthor().getId();
-    dto.authorEmail = r.getAuthor().getEmail();
-    dto.targetUserId = r.getTarget().getId();
-    dto.targetEmail = r.getTarget().getEmail();
+    ReportResponse dto = new ReportResponse();
+    dto.setId(r.getId());
+    dto.setTitle(r.getTitle());
+    dto.setBody(r.getBody());
+    dto.setCreatedAt(r.getCreatedAt());
+
+    // updatedAt: only if you add it to entity later
+    // dto.setUpdatedAt(r.getUpdatedAt());
+
+    dto.setAuthorId(r.getAuthor().getId());
+    dto.setAuthorEmail(r.getAuthor().getEmail());
+
+    dto.setTargetUserId(r.getTarget().getId());
+    dto.setTargetEmail(r.getTarget().getEmail());
+
     return dto;
   }
+
+  /* ======================== Helpers ======================== */
 
   private User userByEmail(String email) {
     return userRepo.findByEmail(email)
         .orElseThrow(() -> new EntityNotFoundException("User not found: " + email));
   }
 
+  private boolean isAuthor(User me, Report r) {
+    return r.getAuthor() != null && r.getAuthor().getId().equals(me.getId());
+  }
+
+  private boolean isTarget(User me, Report r) {
+    return r.getTarget() != null && r.getTarget().getId().equals(me.getId());
+  }
+
+  private void requireAdmin(User me) {
+    if (!isAdmin(me)) throw new AccessDeniedException("Admin only");
+  }
+
+  /**
+   * Role parsing robust for JSON-ish arrays stored as String:
+   * Examples supported: ["ADMIN"], ["employee manager"], ["EMPLOYEE","MANAGER"], ADMIN
+   */
+  private boolean isAdmin(User u) {
+    return hasRole(u, "ADMIN");
+  }
+
   private boolean hasRole(User u, String roleUpper) {
     String raw = u.getRole();
     if (raw == null || raw.isBlank()) return false;
-    String up = roleUpper.toUpperCase();
-    String normalized = raw.replaceAll("[\\[\\]\\s\\\"]", "").toUpperCase();
-    for (String r : normalized.split(",")) {
-      if (r.equals(up)) return true;
+
+    String wanted = roleUpper.toUpperCase();
+
+    // normalize: remove brackets/quotes, keep commas as separators
+    String normalized = raw
+        .replace("[", "")
+        .replace("]", "")
+        .replace("\"", "")
+        .trim()
+        .toUpperCase();
+
+    // split by comma if JSON array, else single value
+    String[] parts = normalized.split(",");
+
+    for (String p : parts) {
+      String r = p.trim();
+      if (r.equals(wanted)) return true;
+
+      // If you store "EMPLOYEE MANAGER" as a single string, treat it as containing MANAGER
+      if (wanted.equals("MANAGER") && r.contains("MANAGER")) return true;
+      if (wanted.equals("ADMIN") && r.contains("ADMIN")) return true;
+      if (wanted.equals("EMPLOYEE") && r.contains("EMPLOYEE")) return true;
     }
     return false;
-  }
-
-
-  @Transactional(readOnly = true)
-  public List<ReportResponse> listAll() {
-    return listAllForAdmin();
-  }
-
-  @Transactional(readOnly = true)
-  public List<ReportResponse> listMineByEmail(String email) {
-    return listAuthoredByEmail(email);
-  }
-
-  @Transactional(readOnly = true)
-  public ReportResponse loadVisibleByEmail(String email, Long id) {
-    return getVisibleTo(email, id);
-  }
-
-  public ReportResponse create(String authorEmail, ReportCreateRequest req) {
-    return createForAuthorEmail(authorEmail, req);
-  }
-
-  public ReportResponse update(String email, Long id, ReportUpdateRequest req) {
-    return updateVisibleTo(email, id, req);
-  }
-
-  public void delete(String email, Long id) {
-    deleteVisibleTo(email, id);
   }
 }
