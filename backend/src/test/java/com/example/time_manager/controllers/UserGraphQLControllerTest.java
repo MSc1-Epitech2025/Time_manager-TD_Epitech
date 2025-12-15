@@ -7,6 +7,8 @@ import com.example.time_manager.graphql.controller.UserGraphQLController;
 import com.example.time_manager.model.User;
 import com.example.time_manager.security.JwtUtil;
 import com.example.time_manager.service.UserService;
+import com.example.time_manager.service.auth.PasswordResetService;
+
 
 import jakarta.security.auth.message.AuthException;
 import jakarta.servlet.http.Cookie;
@@ -22,12 +24,16 @@ import java.lang.reflect.*;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class UserGraphQLControllerTest {
 
     @Mock private UserService userService;
     @Mock private JwtUtil jwtUtil;
+    @Mock private PasswordResetService passwordResetService;
 
     private UserGraphQLController controller;
 
@@ -37,7 +43,7 @@ class UserGraphQLControllerTest {
     @BeforeEach
     void setup() {
         MockitoAnnotations.openMocks(this);
-        controller = new UserGraphQLController(userService, jwtUtil);
+        controller = new UserGraphQLController(userService, jwtUtil, passwordResetService);
         request = new MockHttpServletRequest();
         response = new MockHttpServletResponse();
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request, response));
@@ -59,6 +65,9 @@ class UserGraphQLControllerTest {
 
         assertEquals("john@example.com", result.getEmail());
         verify(userService).saveUser(any(User.class));
+        verify(passwordResetService)
+        .sendSetPasswordEmailFor(eq(saved), anyString());
+
     }
 
     @Test
@@ -75,6 +84,9 @@ class UserGraphQLControllerTest {
                 () -> controller.register(input));
 
         assertTrue(ex.getMessage().contains("Email already exists"));
+        verify(passwordResetService, never())
+        .sendSetPasswordEmailFor(any(), anyString());
+
     }
 
     @Test
