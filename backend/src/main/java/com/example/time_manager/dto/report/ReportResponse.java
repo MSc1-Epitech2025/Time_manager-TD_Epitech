@@ -12,6 +12,14 @@ public class ReportResponse {
   private String targetUserId;
   private String targetEmail;
 
+  // nouveau
+  private String subjectUserId;
+  private String subjectEmail;
+
+  // nouveau
+  private String type;
+  private String severity;
+
   private String title;
   private String body;
 
@@ -34,6 +42,18 @@ public class ReportResponse {
 
   public String getTargetEmail() { return targetEmail; }
   public void setTargetEmail(String targetEmail) { this.targetEmail = targetEmail; }
+
+  public String getSubjectUserId() { return subjectUserId; }
+  public void setSubjectUserId(String subjectUserId) { this.subjectUserId = subjectUserId; }
+
+  public String getSubjectEmail() { return subjectEmail; }
+  public void setSubjectEmail(String subjectEmail) { this.subjectEmail = subjectEmail; }
+
+  public String getType() { return type; }
+  public void setType(String type) { this.type = type; }
+
+  public String getSeverity() { return severity; }
+  public void setSeverity(String severity) { this.severity = severity; }
 
   public String getTitle() { return title; }
   public void setTitle(String title) { this.title = title; }

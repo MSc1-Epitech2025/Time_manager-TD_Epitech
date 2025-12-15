@@ -8,6 +8,8 @@ public class ReportCreateRequest {
   @NotBlank
   private String targetUserId;
 
+  private String subjectUserId;
+
   @NotBlank
   @Size(max = 255)
   private String title;
@@ -18,6 +20,9 @@ public class ReportCreateRequest {
 
   public String getTargetUserId() { return targetUserId; }
   public void setTargetUserId(String targetUserId) { this.targetUserId = targetUserId; }
+
+  public String getSubjectUserId() { return subjectUserId; }
+  public void setSubjectUserId(String subjectUserId) { this.subjectUserId = subjectUserId; }
 
   public String getTitle() { return title; }
   public void setTitle(String title) { this.title = title; }
