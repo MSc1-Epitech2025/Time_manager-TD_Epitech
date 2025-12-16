@@ -44,7 +44,7 @@ type GraphqlResponse<T> = {
 const STORAGE_KEY = 'tm.session';
 const REMEMBER_KEY = 'tm.remember';
 const GRAPHQL_ENDPOINT = environment.GRAPHQL_ENDPOINT;
-const MAX_REFRESH_COUNT = environment.MAX_REFRESH_COUNT; 
+const MAX_REFRESH_COUNT = environment.MAX_REFRESH_COUNT;
 const JWT_EXP_MS = environment.JWT_EXP_MINUTES * 60 * 1000;
 const USER_BY_EMAIL_QUERY = `
   query UserByEmail($email: String!) {
@@ -104,11 +104,28 @@ export class AuthService {
     this.startTokenExpiryMonitoring();
   }
 
-  logout() {
+  async logout(reason: 'expired' | 'manual' = 'manual') {
     this.clearTokenExpiryMonitoring();
-    this.session$.next(null);
-    this.clearStorage();
-    this.router.navigate(['/login'], { queryParams: { reason: 'expired' } });
+
+    try {
+      await fetch(GRAPHQL_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          query: LOGOUT_MUTATION,
+        }),
+      });
+    } catch (err) {
+      console.warn('Logout backend failed, forcing local logout', err);
+    } finally {
+      this.session$.next(null);
+      this.clearStorage();
+
+      this.router.navigate(['/'], {
+        queryParams: reason === 'expired' ? { reason: 'expired' } : undefined,
+      });
+    }
   }
 
   async login(email: string, password: string, remember = true) {
@@ -376,7 +393,7 @@ export class AuthService {
     if (!sess) return;
 
     const refreshCount = sess.refreshCount ?? 0;
-    if (refreshCount >= MAX_REFRESH_COUNT) { 
+    if (refreshCount >= MAX_REFRESH_COUNT) {
       console.log('Token expired and max refresh reached, logging out');
       this.logout();
       return;
@@ -395,7 +412,7 @@ export class AuthService {
     if (!sess) throw new Error('No active session');
 
     const refreshCount = sess.refreshCount ?? 0;
-    if (refreshCount >= MAX_REFRESH_COUNT) { 
+    if (refreshCount >= MAX_REFRESH_COUNT) {
       throw new Error('Max refresh count reached');
     }
 
