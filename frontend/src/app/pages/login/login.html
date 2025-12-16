@@ -1,8 +1,8 @@
 <div class="login-shell">
-    <aside class="art" (mousemove)="onMouseMove($event)" (mouseleave)="onMouseLeave()">
+    <aside class="art">
         <div class="wave"></div>
 
-        <div class="bubble" *ngFor="let b of bubbles; index as i" [ngStyle]="getBubbleStyle(i)"></div>
+        <app-animated-bubbles [widthFactor]="0.55" [bubbleCount]="8" [enableMouseInteraction]="true"></app-animated-bubbles>
 
         <div class="welcome">
             <h2>Login Page</h2>

@@ -1,6 +1,6 @@
 <div class="homepage-shell">
-    <div class="particles-bg">
-        <div class="particle" *ngFor="let p of particles; index as i" [ngStyle]="getParticleStyle(i)"></div>
+    <div class="bubbles-bg">
+        <app-animated-bubbles [widthFactor]="1" [bubbleCount]="8" [enableMouseInteraction]="true"></app-animated-bubbles>
     </div>
 
     <header class="header">

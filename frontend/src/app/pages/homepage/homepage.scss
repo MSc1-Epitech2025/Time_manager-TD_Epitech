@@ -10,19 +10,15 @@
     width: 100vw;
 }
 
-.particles-bg {
+.bubbles-bg {
     position: absolute;
     inset: 0;
     overflow: hidden;
-    pointer-events: none;
     z-index: 0;
+    pointer-events: none;
 
-    .particle {
-        position: absolute;
-        border-radius: 50%;
-        background: var(--c-primary);
-        opacity: 0.15;
-        filter: blur(1px);
+    app-animated-bubbles {
+        pointer-events: auto;
     }
 }
 
