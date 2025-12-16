@@ -9,6 +9,9 @@
   --c-text: #1E1E28;
   --c-muted: #6B7280;
   --c-border: #E4E4E7;
+  --c-success: #22c55e;
+  --c-warning: #f59e0b;
+  --c-danger: #ef4444;
 }
 
 .theme-dark {
@@ -17,10 +20,12 @@
   --c-accent: #F472B6;
   --c-bg: #0F0F1A;
   --c-card: #1F1E2E;
-  --c-text: #F1EE2E;
   --c-text: #F8FAFC;
   --c-muted: #A1A1AA;
   --c-border: #27272A;
+  --c-success: #22c55e;
+  --c-warning: #f59e0b;
+  --c-danger: #ef4444;
 }
 
 @include mat.core();
