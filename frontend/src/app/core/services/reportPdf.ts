@@ -109,7 +109,7 @@ doc.setTextColor(130, 120, 200);
   let y = infoY + 25;
 
   // =====================================================
-  // SECTION 1 — Résumé KPI (Cards)
+  // SECTION 1 — KPI Overview (Cards)
   // =====================================================
   const kpiCards = [
     {
@@ -151,14 +151,12 @@ doc.setTextColor(130, 120, 200);
   doc.setFillColor(r, g, b);
   doc.roundedRect(x, y, 58, 30, 4, 4, 'F');
 
-  // Label
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(11);
   doc.text(`${card.label}`, x + 5, y + 10);
   doc.setFontSize(18);
   doc.text(`${card.value}`, x + 5, y + 24);
 
-  // Move to next card
   x += 62;
   if ((i + 1) % 3 === 0) {
     x = 14;
@@ -279,7 +277,7 @@ let y = infoY + 22;
 let x = 14;
 
   // =========================================================
-  // SECTION 1 — KPI Overview
+  // SECTION 1 — KPI Overview (Cards)
   // =========================================================
 
 doc.setFont("helvetica", "bold");
@@ -417,7 +415,7 @@ doc.text("Details by employee", 14, y);
   let chartY = doc.lastAutoTable.finalY;
 
   // ==============================================
-// SECTION 3 — Analysis
+// SECTION 3 — Recommendations
 // ==============================================
 
 doc.setFont("helvetica", "bold");

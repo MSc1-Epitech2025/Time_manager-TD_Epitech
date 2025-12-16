@@ -29,10 +29,6 @@ declare module 'jspdf' {
 @Injectable({ providedIn: 'root' })
 export class ReportService {
 
-  // ========================================================================
-  // HELPERS — ENTÊTE / FOOTER
-  // ========================================================================
-
   private buildFileName(base: string, ext: string): string {
     const date = new Date().toISOString().slice(0, 10);
     return `Document-${base}-${date}.${ext}`;
@@ -123,7 +119,6 @@ export class ReportService {
         continue;
       }
 
-      // Headers KPI + Absence
       if (
         (data[r][0] === 'Metric' && data[r][1] === 'Value') ||
         (data[r][0] === 'Type' && data[r][1] === 'Days')
@@ -132,13 +127,11 @@ export class ReportService {
         continue;
       }
 
-      // Lignes de section
       if (data[r].length === 1) {
         cell.s = { font: { bold: true } };
         continue;
       }
 
-      // Données
       cell.s = r % 2 === 0 ? altCellStyle : cellStyle;
     }
   }
@@ -243,13 +236,11 @@ export class ReportService {
       const cell = ws[cellRef];
       if (!cell) continue;
 
-      // Header
       if (row === 0) {
         cell.s = headerStyle;
       } else {
         cell.s = row % 2 === 0 ? altRowStyle : cellStyle;
 
-        // Format %
         if (col >= 2) {
           cell.z = '0.00%';
         }
