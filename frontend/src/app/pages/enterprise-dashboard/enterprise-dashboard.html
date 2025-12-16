@@ -8,6 +8,17 @@
             <h1>Enterprise Dashboard</h1>
             <p>Monitor team performance and KPIs</p>
           </div>
+          <div class="header-action">
+            <span class="export-label">Export :</span>
+              
+                <button color="primary" class= "export-btn" (click)="exportReportEmployeesPdf()">
+                  <mat-icon>picture_as_pdf</mat-icon>
+                </button>
+  
+                <button color="accent" class= "export-btn" (click)="exportReportEmployeesExcel()">
+                  <mat-icon>table_view</mat-icon>
+                </button>
+          </div>
         </div>
       </mat-card-content>
     </mat-card>
@@ -68,21 +79,10 @@
                 </mat-option>
               </mat-select>
             </mat-form-field>
-          </div>
-            <div class="export-buttons" style="display: flex; gap: 12px; margin-bottom: 20px;">
-              <button mat-raised-button color="primary" (click)="exportReportEmployeesPdf()">
-                <mat-icon>picture_as_pdf</mat-icon>
-                Export PDF (KPI équipe)
-              </button>
+            <div class="report-export">
 
-              <button mat-raised-button color="accent" (click)="exportReportEmployeesExcel()">
-                <mat-icon>table_view</mat-icon>
-                Export Excel (KPI équipe)
-              </button>
-              <button mat-raised-button color="accent" (click)="exportReportEmployeePdf()">
-                <mat-icon>table_view</mat-icon>
-                Export Excel (KPI individuel)
-              </button>
+                
+          </div>
             </div>
         </div>
       </mat-card-content>
