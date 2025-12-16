@@ -195,16 +195,6 @@ public class UserGraphQLController {
         return userService.updateUser(input.id(), input);
     }
 
-    @PreAuthorize("permitAll()")
-    @MutationMapping
-    public Boolean logout() {
-        HttpServletResponse httpResp = currentResponse();
-        expireCookie(httpResp, "access_token", "/");
-        expireCookie(httpResp, "access_token", "/graphql");
-        expireCookie(httpResp, "refresh_token", "/graphql");
-        return true;
-    }
-
     @PreAuthorize("hasAuthority('ADMIN')")
     @QueryMapping
     public java.util.List<User> users() {
@@ -216,6 +206,17 @@ public class UserGraphQLController {
     @QueryMapping
     public User userByEmail(@Argument("email") String email) {
         return userService.findByEmail(email).orElse(null);
+    }
+
+    @PreAuthorize("permitAll()")
+    @MutationMapping
+    public Boolean logout() {
+        HttpServletResponse httpResp = currentResponse();
+
+        expireCookie(httpResp, "access_token", "/graphql");
+        expireCookie(httpResp, "refresh_token", "/graphql");
+
+        return true;
     }
 
     private static HttpServletRequest currentRequest() {
