@@ -10,10 +10,10 @@
         pointer-events: none;
         transition: transform 0.05s linear;
         background: radial-gradient(circle at 30% 30%,
-                rgba(255, 255, 255, 0.95),
-                rgba(255, 255, 255, 0.4) 45%,
-                rgba(255, 255, 255, 0.15) 70%,
+                rgba(255, 255, 255, 1),
+                rgba(255, 255, 255, 0.7) 45%,
+                rgba(255, 255, 255, 0.35) 70%,
                 transparent 90%);
-        box-shadow: 0 0 40px rgba(255, 255, 255, 0.3);
+        box-shadow: 0 0 50px rgba(255, 255, 255, 0.6);
     }
 }
