@@ -1,0 +1,65 @@
+<div class="homepage-shell">
+    <div class="bubbles-bg">
+        <app-animated-bubbles [widthFactor]="1" [bubbleCount]="8" [enableMouseInteraction]="true"></app-animated-bubbles>
+    </div>
+
+    <header class="header">
+        <div class="logo">
+            <mat-icon class="logo-icon">schedule</mat-icon>
+            <span class="logo-text">Title</span>
+        </div>
+
+        <nav class="nav">
+            <button mat-flat-button color="primary" class="header-login-btn" (click)="goToLogin()">
+                <mat-icon>login</mat-icon>
+                Login
+            </button>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <div class="hero">
+            <div class="hero-badge">
+                <mat-icon>workspace_premium</mat-icon>
+                <span>Modern HR Solution</span>
+            </div>
+
+            <h1 class="hero-title">
+                Streamline Your
+                <span class="gradient-text">Time Management</span>
+            </h1>
+
+            <p class="hero-subtitle">
+                A comprehensive Time Manager and HR portal designed to optimize workforce efficiency,
+                track attendance, and manage team schedules seamlessly.
+            </p>
+        </div>
+
+        <div class="features">
+            <mat-card class="feature-card">
+                <mat-icon class="feature-icon">timer</mat-icon>
+                <h3>Time Tracking</h3>
+                <p>Accurate time logging for employees and teams</p>
+            </mat-card>
+
+            <mat-card class="feature-card">
+                <mat-icon class="feature-icon">analytics</mat-icon>
+                <h3>Analytics</h3>
+                <p>Real-time insights and performance metrics</p>
+            </mat-card>
+
+            <mat-card class="feature-card">
+                <mat-icon class="feature-icon">groups</mat-icon>
+                <h3>Team Management</h3>
+                <p>Organize and coordinate your workforce</p>
+            </mat-card>
+        </div>
+
+        <div class="contact-section">
+            <button mat-stroked-button class="btn-contact" (click)="onContact()">
+                <mat-icon>email</mat-icon>
+                Contact
+            </button>
+        </div>
+    </main>
+</div>

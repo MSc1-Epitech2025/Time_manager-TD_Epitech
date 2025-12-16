@@ -60,11 +60,11 @@ export class AuthCallbackComponent implements OnInit {
       const roles = user.roles ?? [];
 
       if (roles.includes('ADMIN')) {
-        this.router.navigate(['/enterprise']);
+        this.router.navigate(['/app/enterprise']);
       } else if (roles.includes('MANAGER')) {
-        this.router.navigate(['/employee']);
+        this.router.navigate(['/app/employee']);
       } else {
-        this.router.navigate(['/employee']);
+        this.router.navigate(['/app/employee']);
       }
 
     } catch (e) {

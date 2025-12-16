@@ -4,6 +4,13 @@ import { ShellComponent } from './layout/shell/shell';
 import {AuthCallbackComponent} from './auth/callback';
 
 export const routes: Routes = [
+    // Homepage
+    {
+        path: '',
+        pathMatch: 'full',
+        loadComponent: () => import('./pages/homepage/homepage').then(m => m.HomepageComponent),
+    },
+
     // Login
     {
         path: 'login',
@@ -17,7 +24,7 @@ export const routes: Routes = [
     },
 
     {
-        path: '',
+        path: 'app',
         component: ShellComponent,
         canMatch: [authCanMatch],
         canActivate: [authCanActivate],
@@ -79,7 +86,9 @@ export const routes: Routes = [
 
             // Default
             { path: '', pathMatch: 'full', redirectTo: 'employee' },
-            { path: '**', redirectTo: 'employee' },
         ]
-    }
+    },
+
+    // Catch all
+    { path: '**', redirectTo: '' }
 ];

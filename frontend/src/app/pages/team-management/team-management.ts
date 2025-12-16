@@ -129,7 +129,7 @@ export class TeamManagement implements OnInit {
   }
 
   viewTeamDetails(team: Team): void {
-    this.router.navigate(['/manager'], {
+    this.router.navigate(['/app/manager'], {
       queryParams: {
         teamId: team.id,
         teamName: team.name,

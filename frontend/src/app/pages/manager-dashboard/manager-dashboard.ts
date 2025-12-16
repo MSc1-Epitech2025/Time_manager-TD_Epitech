@@ -127,15 +127,15 @@ export class ManagerDashboard implements OnInit {
   }
 
   goToPlanning() {
-    this.router.navigate(['/planning']);
+    this.router.navigate(['/app/planning']);
   }
 
   goToEmp() {
-    this.router.navigate(['/employee']);
+    this.router.navigate(['/app/employee']);
   }
 
   goToTeamManagement() {
-    this.router.navigate(['/team-management']);
+    this.router.navigate(['/app/teams']);
   }
 
   exportExcel() {

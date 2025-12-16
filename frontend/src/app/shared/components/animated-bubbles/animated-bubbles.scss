@@ -1,0 +1,19 @@
+.bubbles-container {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: auto;
+
+    .bubble {
+        position: absolute;
+        border-radius: 50%;
+        pointer-events: none;
+        transition: transform 0.05s linear;
+        background: radial-gradient(circle at 30% 30%,
+                rgba(255, 255, 255, 1),
+                rgba(255, 255, 255, 0.7) 45%,
+                rgba(255, 255, 255, 0.35) 70%,
+                transparent 90%);
+        box-shadow: 0 0 50px rgba(255, 255, 255, 0.6);
+    }
+}

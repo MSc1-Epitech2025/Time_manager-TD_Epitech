@@ -29,7 +29,7 @@ function checkRole(requiredRoles: Role[]): boolean | UrlTree {
   const userRoles = session!.user.roles ?? [];
   const hasAccess = requiredRoles.some(role => includesRole(userRoles, role));
   
-  return hasAccess ? true : router.createUrlTree(['/employee']);
+  return hasAccess ? true : router.createUrlTree(['/app/employee']);
 }
 
 export const authCanMatch: CanMatchFn = () => checkAuth();
@@ -59,7 +59,7 @@ export const planningUrlGuard: CanActivateFn = (route: ActivatedRouteSnapshot, _
   if (!hasCorrectKey || !keyHasRightValue || hasWrongKey) {
     const queryParams: any = {};
     queryParams[key] = displayName;
-    return router.createUrlTree(['/planning'], { queryParams });
+    return router.createUrlTree(['/app/planning'], { queryParams });
   }
 
   return true;
