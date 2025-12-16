@@ -9,30 +9,30 @@
     <nav class="menu">
 
         <!-- admin -->
-        <button class="menu-btn" *ngIf="isAdmin()" [routerLink]="['/enterprise']" routerLinkActive="active">
+        <button class="menu-btn" *ngIf="isAdmin()" [routerLink]="['/app/enterprise']" routerLinkActive="active">
             <mat-icon>admin_panel_settings</mat-icon>
             Admin
         </button>
 
-        <button class="menu-btn" *ngIf="isAdmin()" [routerLink]="['/users']" routerLinkActive="active">
+        <button class="menu-btn" *ngIf="isAdmin()" [routerLink]="['/app/users']" routerLinkActive="active">
             <mat-icon>perm_identity</mat-icon>
             Users
         </button>
 
         <!-- employee -->
-        <button class="menu-btn" *ngIf="isEmployee()" [routerLink]="['/employee']" routerLinkActive="active">
+        <button class="menu-btn" *ngIf="isEmployee()" [routerLink]="['/app/employee']" routerLinkActive="active">
             <mat-icon>dashboard</mat-icon>
             Dashboard
         </button>
 
         <!-- manager -->
-        <button class="menu-btn" *ngIf="isManager()" [routerLink]="['/teams']" routerLinkActive="active">
+        <button class="menu-btn" *ngIf="isManager()" [routerLink]="['/app/teams']" routerLinkActive="active">
             <mat-icon>groups3</mat-icon>
             Teams
         </button>
 
         <!-- planning -->
-        <button class="menu-btn" [routerLink]="['/planning']" routerLinkActive="active">
+        <button class="menu-btn" [routerLink]="['/app/planning']" routerLinkActive="active">
             <mat-icon>calendar_month</mat-icon>
             Calendar
         </button>

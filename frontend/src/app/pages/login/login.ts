@@ -214,11 +214,11 @@ export class LoginComponent implements OnInit, OnDestroy {
         const has = (role: Role) => roles.includes(role);
 
         if (has('ADMIN')) {
-          this.router.navigate(['/enterprise']);
+          this.router.navigate(['/app/enterprise']);
         } else if (has('MANAGER')) {
-          this.router.navigate(['/employee']);
+          this.router.navigate(['/app/employee']);
         } else if (has('EMPLOYEE')) {
-          this.router.navigate(['/employee']);
+          this.router.navigate(['/app/employee']);
         } else {
           this.router.navigate(['/']);
           console.error('Unknown user roles:', roles);

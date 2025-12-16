@@ -295,10 +295,10 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
   }
 
   goToPlanning() {
-    this.router.navigate(['/planning']);
+    this.router.navigate(['/app/planning']);
   }
   goToTeams(){
-    this.router.navigate(['/planning']);
+    this.router.navigate(['/app/planning']);
   }
 
   logout() {
