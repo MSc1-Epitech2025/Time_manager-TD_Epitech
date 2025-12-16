@@ -1,12 +1,19 @@
 import { Routes } from '@angular/router';
 import { authCanMatch, authCanActivate, planningUrlGuard, adminGuard, managerGuard } from './core/guards/auth-guard';
 import { ShellComponent } from './layout/shell/shell';
+import {AuthCallbackComponent} from './auth/callback';
 
 export const routes: Routes = [
     // Login
     {
         path: 'login',
         loadComponent: () => import('./pages/login/login').then(m => m.LoginComponent),
+    },
+
+    // Callback to microsoft connection
+    {
+      path: "auth/callback",
+      loadComponent: () => import('./auth/callback').then(m => m.AuthCallbackComponent)
     },
 
     {
@@ -69,7 +76,6 @@ export const routes: Routes = [
                 loadComponent: () => import('./pages/users/users')
                     .then(m => m.UsersComponent),
             },
-
 
             // Default
             { path: '', pathMatch: 'full', redirectTo: 'employee' },
