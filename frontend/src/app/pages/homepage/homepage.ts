@@ -25,22 +25,10 @@ import { AnimatedBubblesComponent } from '../../shared/components/animated-bubbl
 export class HomepageComponent implements OnInit {
   private router = inject(Router);
 
-  theme = signal<'light' | 'dark'>('light');
-
   ngOnInit() {
-    const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
-    const saved = localStorage.getItem('tm-theme') as 'light' | 'dark' | null;
-    this.setTheme(saved ?? (prefersDark ? 'dark' : 'light'));
-  }
-
-  setTheme(t: 'light' | 'dark') {
-    this.theme.set(t);
-    document.documentElement.className = `theme-${t}`;
-    localStorage.setItem('tm-theme', t);
-  }
-
-  toggleTheme() {
-    this.setTheme(this.theme() === 'light' ? 'dark' : 'light');
+    // Force dark theme
+    document.documentElement.className = 'theme-dark';
+    localStorage.setItem('tm-theme', 'dark');
   }
 
   goToLogin() {
