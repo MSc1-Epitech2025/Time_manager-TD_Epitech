@@ -25,6 +25,7 @@ import { KpiService } from '@core/services/kpi';
 // Models & Utils
 import { UserKpiSummary, TeamKpiSummary } from '@shared/models/graphql.types';
 import { currentWeekRange, getCurrentQuarter, getYearRange, formatDateToYYYYMMDD } from '@shared/utils/date.utils';
+import { ReportPdfService , ReportableEmployee } from '@app/core/services/reportPdf';
 
 @Component({
   selector: 'app-manager-dashboard',
@@ -92,6 +93,7 @@ export class ManagerDashboard implements OnInit {
     private readonly auth: AuthService,
     private readonly teamService: TeamService,
     private readonly kpiService: KpiService,
+    private readonly reportPdfService: ReportPdfService,
   ) { }
 
   ngOnInit() {
@@ -141,6 +143,26 @@ export class ManagerDashboard implements OnInit {
   exportExcel() {
     if (this.employeeKpiData) {
       this.reportService.exportEmployeeKpiReport(this.employeeKpiData);
+    }
+  }
+  exportPdf() {
+    if (this.employeeKpiData) {
+      const user = this.employeeKpiData; 
+      console.log("Selected Employee:", user);
+      console.log("Employee user:", this.selectedEmployee);
+      
+        const employee: ReportableEmployee = {
+          name: user.fullName,
+          team: this.selectedEmployee?.team ?? 'Not specified',
+          presence: user.presenceRate ?? 0,
+          late: user.punctuality?.lateRate ?? 0,
+          absence: user.absenceDays ?? 0,
+          weeklyHours: user.avgHoursPerDay ?? 0,
+          productivity: Math.min(100, Math.round(((user.avgHoursPerDay ?? 0) / 8) * 100)),
+          overtime: user.overtimeHours ?? 0
+        };
+      
+      this.reportPdfService.exportEmployeeReportPdf(employee);
     }
   }
 

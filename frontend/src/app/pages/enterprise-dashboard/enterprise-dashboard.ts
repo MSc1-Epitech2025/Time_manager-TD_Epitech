@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit , ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -21,6 +21,8 @@ import {
   Utilisateur,
   PresenceDuJour,
 } from '@core/services/kpi';
+import { ReportService, ReportableEmployee } from '@core/services/report';
+import { ReportPdfService } from '@core/services/reportPdf';
 
 // Kpi Components
 import { KpiBarChartComponent, BarChartData } from '@kpi/kpi-bar-chart/kpi-bar-chart';
@@ -160,7 +162,9 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
 
   constructor(
     private kpiService: KpiService,
-    private http: HttpClient
+    private http: HttpClient,
+    private reportPdfService: ReportPdfService, 
+    private reportService: ReportService
   ) {}
 
   getPointage(userId: string): string {
@@ -749,4 +753,70 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
 
     return { months, teams, data };
   }
+
+    exportReportEmployeesPdf() {
+
+  const mapped: ReportableEmployee[] = this.filteredUsers.map(user => {
+    const kpi = this.allUsersKpi.find(k => k?.userId === user.id);
+
+    return {
+      name: user.nom,
+      team: user.equipe,
+      presence: kpi?.presenceRate ?? 0,
+      late: kpi?.punctuality?.lateRate ?? 0,
+      absence: kpi?.absenceDays ?? 0,
+      weeklyHours: kpi?.avgHoursPerDay ?? 0,
+      productivity: Math.min(100, Math.round(((kpi?.avgHoursPerDay ?? 0) / 8) * 100)),
+      tasksDone: kpi?.reportsAuthored ?? 0
+    };
+  });
+
+  this.reportPdfService.exportEmployeesReportPdf(
+    this.selectedTeam || "Entreprise",
+    mapped
+  );
+}
+
+exportReportEmployeePdf() {
+  const user = this.filteredUsers[0]; 
+  const kpi = this.allUsersKpi.find(k => k?.userId === user.id);
+
+  if (!kpi) {
+    console.warn("Aucun KPI trouvé pour cet utilisateur :", user.nom);
+    return;
+  }
+
+  const employee: ReportableEmployee = {
+    name: user.nom,
+    team: user.equipe,
+    presence: kpi.presenceRate ?? 0,
+    late: kpi.punctuality?.lateRate ?? 0,
+    absence: kpi.absenceDays ?? 0,
+    weeklyHours: kpi.avgHoursPerDay ?? 0,
+    productivity: Math.min(100, Math.round(((kpi.avgHoursPerDay ?? 0) / 8) * 100)),
+    overtime: kpi.overtimeHours ?? 0
+  };
+
+  this.reportPdfService.exportEmployeeReportPdf(employee);
+}
+
+exportReportEmployeesExcel() {
+
+  const mapped: ReportableEmployee[] = this.filteredUsers.map(user => {
+    const kpi = this.allUsersKpi.find(k => k?.userId === user.id);
+
+    return {
+      name: user.nom,
+      team: user.equipe,
+      presence: kpi?.presenceRate ?? 0,
+      late: kpi?.punctuality?.lateRate ?? 0,
+      absence: kpi?.absenceDays ?? 0,
+      weeklyHours: kpi?.avgHoursPerDay ?? 0,
+      productivity: Math.min(100, Math.round(((kpi?.avgHoursPerDay ?? 0) / 8) * 100)),
+      overtime: kpi?.overtimeHours ?? 0
+    };
+  });
+
+  this.reportService.exportEmployeesReport(mapped);
+}
 }
