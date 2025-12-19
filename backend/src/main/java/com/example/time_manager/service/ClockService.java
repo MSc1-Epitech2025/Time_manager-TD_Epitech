@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
@@ -20,11 +22,14 @@ public class ClockService {
 
     private final ClockRepository clockRepo;
     private final UserRepository userRepo;
+    private final AutoReportService autoReportService;
 
-    public ClockService(ClockRepository clockRepo, UserRepository userRepo) {
+    public ClockService(ClockRepository clockRepo, UserRepository userRepo, AutoReportService autoReportService) {
         this.clockRepo = clockRepo;
         this.userRepo = userRepo;
+        this.autoReportService = autoReportService;
     }
+
 
     /* ======================= CREATE ======================= */
 
@@ -54,6 +59,14 @@ public class ClockService {
         c.setAt(at != null ? at : Instant.now());
 
         c = clockRepo.save(c);
+        ZoneId zone = ZoneId.systemDefault();
+        LocalDate day = c.getAt().atZone(zone).toLocalDate();
+        Instant dayStart = day.atStartOfDay(zone).toInstant();
+        Instant dayEnd = day.plusDays(1).atStartOfDay(zone).toInstant();
+
+        List<ClockResponse> dayClocks = listForUser(user.getId(), dayStart, dayEnd);
+        autoReportService.onClockCreated(user.getId(), c.getKind(), c.getAt(), dayClocks);
+
         return toDto(c);
     }
 

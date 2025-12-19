@@ -16,11 +16,14 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.time_manager.dto.clock.ClockResponse;
 import com.example.time_manager.dto.work_schedule.WorkScheduleResponse;
 import com.example.time_manager.model.ClockKind;
 import com.example.time_manager.model.Report;
 import com.example.time_manager.model.User;
 import com.example.time_manager.model.WorkDay;
+import com.example.time_manager.model.absence.Absence;
+import com.example.time_manager.model.absence.AbsenceStatus;
 import com.example.time_manager.repository.ReportRepository;
 import com.example.time_manager.repository.TeamMemberRepository;
 import com.example.time_manager.repository.UserRepository;
@@ -30,6 +33,7 @@ import jakarta.persistence.EntityNotFoundException;
 @Service
 @Transactional
 public class AutoReportService {
+
   private static final String SYSTEM_EMAIL = "system@time-manager.local";
   private static final int LATE_GRACE_MIN = 5;
   private static final int OVERWORK_GRACE_MIN = 30;
@@ -38,28 +42,116 @@ public class AutoReportService {
   private final TeamMemberRepository teamMemberRepo;
   private final ReportRepository reportRepo;
   private final WorkScheduleService workScheduleService;
-  private final ClockService clockService;
 
   public AutoReportService(
       UserRepository userRepo,
       TeamMemberRepository teamMemberRepo,
       ReportRepository reportRepo,
-      WorkScheduleService workScheduleService,
-      ClockService clockService
+      WorkScheduleService workScheduleService
   ) {
     this.userRepo = userRepo;
     this.teamMemberRepo = teamMemberRepo;
     this.reportRepo = reportRepo;
     this.workScheduleService = workScheduleService;
-    this.clockService = clockService;
   }
 
-  public void onClockCreated(String userId, ClockKind kind, Instant at) {
-    ZoneId zone = ZoneId.systemDefault(); 
+  /* ==========================================================
+   * ABSENCE: employee -> manager(s)
+   * ========================================================== */
+
+  public void onAbsenceRequested(Absence absence) {
+    if (absence == null) return;
+
+    User employee = requireUser(absence.getUserId());
+    Set<User> managers = managersOfUserTeams(employee.getId());
+    if (managers.isEmpty()) {
+      managers = new java.util.HashSet<>(admins());
+      if (managers.isEmpty()) return;
+    }
+
+    String title = "Absence Request : " + employee.getEmail();
+    String body =
+        "Employee : " + employee.getEmail() + "\n" +
+        "Period : " + absence.getStartDate() + " -> " + absence.getEndDate() + "\n" +
+        "Type : " + absence.getType() + "\n" +
+        (absence.getReason() != null ? ("Reason : " + absence.getReason() + "\n") : "");
+
+    for (User manager : managers) {
+      String ruleKey = "ABSENCE_REQUEST:" + absence.getId() + ":" + manager.getId();
+      if (reportRepo.existsByRuleKey(ruleKey)) continue;
+
+      Report r = new Report();
+      r.setAuthor(employee); 
+      r.setTarget(manager);
+      r.setSubject(employee);
+
+      r.setType("ABSENCE_REQUEST");
+      r.setSeverity("INFO");
+      r.setRuleKey(ruleKey);
+
+      r.setTitle(title);
+      r.setBody(body);
+
+      reportRepo.save(r);
+    }
+  }
+
+  /* ==========================================================
+   * ABSENCE: manager/admin -> employee
+   * ========================================================== */
+
+  public void onAbsenceStatusChanged(String changerEmail, Absence absence, AbsenceStatus previous) {
+    if (absence == null) return;
+    if (previous != null && previous == absence.getStatus()) return;
+
+    User changer = userByEmail(changerEmail);
+    User employee = requireUser(absence.getUserId());
+
+    String newStatus = String.valueOf(absence.getStatus());
+    String severity = "REJECTED".equalsIgnoreCase(newStatus) ? "WARN" : "INFO";
+
+    String title = "Absence " + newStatus + " : " + employee.getEmail();
+    String body =
+        "Employé : " + employee.getEmail() + "\n" +
+        "Par : " + changer.getEmail() + "\n" +
+        "Période : " + absence.getStartDate() + " -> " + absence.getEndDate() + "\n" +
+        "Type : " + absence.getType() + "\n" +
+        "Ancien statut : " + previous + "\n" +
+        "Nouveau statut : " + absence.getStatus() + "\n";
+
+    String ruleKey = "ABSENCE_STATUS:" + absence.getId() + ":" + newStatus + ":" + employee.getId();
+    if (reportRepo.existsByRuleKey(ruleKey)) return;
+
+    Report r = new Report();
+    r.setAuthor(changer);      // manager/admin -> employee
+    r.setTarget(employee);
+    r.setSubject(employee);
+
+    r.setType("ABSENCE_STATUS");
+    r.setSeverity(severity);
+    r.setRuleKey(ruleKey);
+
+    r.setTitle(title);
+    r.setBody(body);
+
+    reportRepo.save(r);
+  }
+
+  /* ==========================================================
+   * CLOCK: late + overwork (pause-safe)
+   * ========================================================== */
+
+  /**
+   * Appelé depuis ClockService après save.
+   * @param dayClocks clocks du jour triés (ou non, on trie)
+   */
+  public void onClockCreated(String userId, ClockKind kind, Instant at, List<ClockResponse> dayClocks) {
+    if (userId == null || at == null || dayClocks == null || dayClocks.isEmpty()) return;
+
+    ZoneId zone = ZoneId.systemDefault();
     LocalDate day = at.atZone(zone).toLocalDate();
-    Instant dayStart = day.atStartOfDay(zone).toInstant();
-    Instant dayEnd = day.plusDays(1).atStartOfDay(zone).toInstant();
-    var clocks = clockService.listForUser(userId, dayStart, dayEnd).stream()
+
+    var clocks = dayClocks.stream()
         .sorted(Comparator.comparing(c -> c.at))
         .toList();
 
@@ -73,18 +165,14 @@ public class AutoReportService {
     }
   }
 
-  /* ========================= LATE ARRIVAL ========================= */
-
-  private void handleFirstInLateRule(String userId, Instant at, LocalDate day, ZoneId zone, List<?> clocks) {
-    // 1) trouver le premier IN de la journée
+  private void handleFirstInLateRule(String userId, Instant at, LocalDate day, ZoneId zone, List<ClockResponse> clocks) {
     var firstIn = clocks.stream()
-        .map(o -> (com.example.time_manager.dto.clock.ClockResponse)o) // adapte si ton type diffère
         .filter(c -> c.kind == ClockKind.IN)
         .min(Comparator.comparing(c -> c.at))
         .orElse(null);
 
     if (firstIn == null) return;
-    if (!firstIn.at.equals(at)) return; // pas le premier IN => ignore
+    if (!firstIn.at.equals(at)) return;
 
     ScheduleWindow w = scheduleWindow(userId, day);
     if (w == null || w.expectedStart == null) return;
@@ -92,18 +180,45 @@ public class AutoReportService {
     LocalTime actual = at.atZone(zone).toLocalTime();
     if (!actual.isAfter(w.expectedStart.plusMinutes(LATE_GRACE_MIN))) return;
 
-    User subject = userRepo.findById(userId)
-        .orElseThrow(() -> new EntityNotFoundException("User not found: " + userId));
-
+    User subject = requireUser(userId);
     boolean subjectIsManager = hasRole(subject, "manager");
 
     if (subjectIsManager) {
-      for (User admin : admins()) {
-        createLateReport(admin, subject, day, w.expectedStart, actual, "WARN");
-      }
+      for (User admin : admins()) createLateReport(admin, subject, day, w.expectedStart, actual, "WARN");
     } else {
-      for (User manager : managersOfUserTeams(userId)) {
-        createLateReport(manager, subject, day, w.expectedStart, actual, "INFO");
+      for (User manager : managersOfUserTeams(userId)) createLateReport(manager, subject, day, w.expectedStart, actual, "INFO");
+    }
+  }
+
+  private void handleOutEndOfDayRules(String userId, Instant at, LocalDate day, ZoneId zone, List<ClockResponse> clocks) {
+    if (clocks.isEmpty()) return;
+
+    var last = clocks.get(clocks.size() - 1);
+    if (!last.at.equals(at)) return; // OUT pas dernier => pause, ignore
+
+    ScheduleWindow w = scheduleWindow(userId, day);
+    if (w == null) return;
+
+    LocalTime outTime = at.atZone(zone).toLocalTime();
+
+    // anti-pause: check overwork seulement proche fin PM
+    if (w.pmEnd != null) {
+      LocalTime threshold = w.pmEnd.minusMinutes(10);
+      if (outTime.isBefore(threshold)) return;
+    }
+
+    int worked = workedMinutes(clocks);
+    int expected = w.expectedMinutes();
+
+    if (expected > 0 && worked > expected + OVERWORK_GRACE_MIN) {
+      User subject = requireUser(userId);
+      boolean subjectIsManager = hasRole(subject, "manager");
+      int extra = worked - expected;
+
+      if (subjectIsManager) {
+        for (User admin : admins()) createOverworkReport(admin, subject, day, worked, expected, extra);
+      } else {
+        for (User manager : managersOfUserTeams(userId)) createOverworkReport(manager, subject, day, worked, expected, extra);
       }
     }
   }
@@ -123,7 +238,7 @@ public class AutoReportService {
     r.setSeverity(severity);
     r.setRuleKey(ruleKey);
 
-    r.setTitle("Late Detected: " + subject.getEmail());
+    r.setTitle("Retard détecté : " + subject.getEmail());
     r.setBody(
         "Utilisateur : " + subject.getEmail() + "\n" +
         "Date : " + day + "\n" +
@@ -132,52 +247,6 @@ public class AutoReportService {
     );
 
     reportRepo.save(r);
-  }
-
-  /* ========================= OUT / END OF DAY ========================= */
-
-  private void handleOutEndOfDayRules(String userId, Instant at, LocalDate day, ZoneId zone, List<?> clocks) {
-    var list = clocks.stream().map(o -> (com.example.time_manager.dto.clock.ClockResponse)o)
-        .sorted(Comparator.comparing(c -> c.at))
-        .toList();
-
-    if (list.isEmpty()) return;
-
-    var last = list.get(list.size() - 1);
-    if (!last.at.equals(at)) return;
-
-    ScheduleWindow w = scheduleWindow(userId, day);
-    if (w == null) return;
-
-    LocalTime outTime = at.atZone(zone).toLocalTime();
-
-    if (w.pmEnd != null) {
-      LocalTime threshold = w.pmEnd.minusMinutes(10); 
-      if (outTime.isBefore(threshold)) {
-        return; 
-      }
-    }
-
-    int worked = workedMinutes(list, zone);
-    int expected = w.expectedMinutes();
-
-    if (expected > 0 && worked > expected + OVERWORK_GRACE_MIN) {
-      User subject = userRepo.findById(userId)
-          .orElseThrow(() -> new EntityNotFoundException("User not found: " + userId));
-
-      boolean subjectIsManager = hasRole(subject, "manager");
-      int extra = worked - expected;
-
-      if (subjectIsManager) {
-        for (User admin : admins()) {
-          createOverworkReport(admin, subject, day, worked, expected, extra);
-        }
-      } else {
-        for (User manager : managersOfUserTeams(userId)) {
-          createOverworkReport(manager, subject, day, worked, expected, extra);
-        }
-      }
-    }
   }
 
   private void createOverworkReport(User recipient, User subject, LocalDate day,
@@ -207,9 +276,7 @@ public class AutoReportService {
     reportRepo.save(r);
   }
 
-  /* ========================= CALCUL WORKED MINUTES ========================= */
-
-  private int workedMinutes(List<com.example.time_manager.dto.clock.ClockResponse> clocks, ZoneId zone) {
+  private int workedMinutes(List<ClockResponse> clocks) {
     Instant currentIn = null;
     long totalSeconds = 0;
 
@@ -217,15 +284,13 @@ public class AutoReportService {
       if (c.kind == ClockKind.IN) {
         if (currentIn == null) currentIn = c.at;
       } else {
-        if (currentIn != null) {
-          if (c.at.isAfter(currentIn)) {
-            totalSeconds += Duration.between(currentIn, c.at).getSeconds();
-          }
+        if (currentIn != null && c.at.isAfter(currentIn)) {
+          totalSeconds += Duration.between(currentIn, c.at).getSeconds();
           currentIn = null;
         }
       }
     }
-    return (int)(totalSeconds / 60);
+    return (int) (totalSeconds / 60);
   }
 
   private String fmtMinutes(int minutes) {
@@ -238,9 +303,8 @@ public class AutoReportService {
 
   private static class ScheduleWindow {
     LocalTime expectedStart;
-    LocalTime pmEnd;        
+    LocalTime pmEnd;
     Integer expectedMinutes;
-
     int expectedMinutes() { return expectedMinutes == null ? 0 : expectedMinutes; }
   }
 
@@ -276,11 +340,10 @@ public class AutoReportService {
       LocalTime st = parseTime(s.startTime());
       LocalTime en = parseTime(s.endTime());
       if (st != null && en != null && en.isAfter(st)) {
-        sum += (int)Duration.between(st, en).toMinutes();
+        sum += (int) Duration.between(st, en).toMinutes();
       }
     }
     w.expectedMinutes = sum;
-
     return w;
   }
 
@@ -330,13 +393,20 @@ public class AutoReportService {
         .orElseThrow(() -> new EntityNotFoundException("SYSTEM user missing: " + SYSTEM_EMAIL));
   }
 
+  private User requireUser(String id) {
+    return userRepo.findById(id)
+        .orElseThrow(() -> new EntityNotFoundException("User not found: " + id));
+  }
+
+  private User userByEmail(String email) {
+    return userRepo.findByEmail(email)
+        .orElseThrow(() -> new EntityNotFoundException("User not found: " + email));
+  }
+
   private boolean hasRole(User u, String roleLower) {
     String raw = u.getRole();
     if (raw == null) return false;
-    String normalized = raw.replace("[", "")
-        .replace("]", "")
-        .replace("\"", "")
-        .toLowerCase();
+    String normalized = raw.replace("[", "").replace("]", "").replace("\"", "").toLowerCase();
     for (String part : normalized.split(",")) {
       if (part.trim().contains(roleLower)) return true;
     }
