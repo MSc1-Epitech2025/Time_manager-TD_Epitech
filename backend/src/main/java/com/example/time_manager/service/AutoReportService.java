@@ -142,8 +142,7 @@ public class AutoReportService {
    * ========================================================== */
 
   /**
-   * Appelé depuis ClockService après save.
-   * @param dayClocks clocks du jour triés (ou non, on trie)
+   * @param dayClocks
    */
   public void onClockCreated(String userId, ClockKind kind, Instant at, List<ClockResponse> dayClocks) {
     if (userId == null || at == null || dayClocks == null || dayClocks.isEmpty()) return;
@@ -194,14 +193,14 @@ public class AutoReportService {
     if (clocks.isEmpty()) return;
 
     var last = clocks.get(clocks.size() - 1);
-    if (!last.at.equals(at)) return; // OUT pas dernier => pause, ignore
+    if (!last.at.equals(at)) return;
 
     ScheduleWindow w = scheduleWindow(userId, day);
     if (w == null) return;
 
     LocalTime outTime = at.atZone(zone).toLocalTime();
 
-    // anti-pause: check overwork seulement proche fin PM
+   
     if (w.pmEnd != null) {
       LocalTime threshold = w.pmEnd.minusMinutes(10);
       if (outTime.isBefore(threshold)) return;

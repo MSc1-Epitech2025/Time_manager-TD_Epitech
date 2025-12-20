@@ -48,7 +48,7 @@ public class ClockService {
                 : userRepo.findByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException("User not found: " + email));
 
-        var last = clockRepo.findTopByUserIdOrderByAtDesc(user.getId());
+        var last = clockRepo.findTopByUser_IdOrderByAtDescIdDesc(user.getId());
         if (last.isPresent() && last.get().getKind() == kind) {
             throw new IllegalStateException("Cannot punch " + kind + " twice in a row");
         }
@@ -84,9 +84,9 @@ public class ClockService {
     public List<ClockResponse> listForUser(String userId, Instant from, Instant to) {
         List<Clock> rows;
         if (from != null && to != null) {
-            rows = clockRepo.findByUserIdAndAtBetweenOrderByAtAsc(userId, from, to);
+            rows = clockRepo.findByUser_IdAndAtBetweenOrderByAtAsc(userId, from, to);
         } else {
-            rows = clockRepo.findByUserIdOrderByAtDesc(userId);
+            rows = clockRepo.findByUser_IdOrderByAtDesc(userId);
         }
         return rows.stream().map(this::toDto).toList();
     }
