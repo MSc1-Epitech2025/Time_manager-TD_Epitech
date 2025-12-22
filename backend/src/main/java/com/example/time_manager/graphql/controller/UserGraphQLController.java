@@ -216,7 +216,10 @@ public class UserGraphQLController {
         expireCookie(httpResp, "access_token", "/graphql");
         expireCookie(httpResp, "refresh_token", "/graphql");
 
-        return true;
+        expireCookie(httpResp, "access_token", "/");
+        expireCookie(httpResp, "refresh_token", "/");
+
+        return true; 
     }
 
     private static HttpServletRequest currentRequest() {
