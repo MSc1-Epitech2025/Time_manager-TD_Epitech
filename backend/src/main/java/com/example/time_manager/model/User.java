@@ -13,6 +13,7 @@ public class User {
 
 
     @Id
+    @Column(columnDefinition = "CHAR(36)")
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
