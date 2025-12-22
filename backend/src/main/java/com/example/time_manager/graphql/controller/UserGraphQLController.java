@@ -127,9 +127,10 @@ public class UserGraphQLController {
 
         var user = userService.findByEmail(input.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found after validation"));
-        if (!user.isFirstConnection()) {
-            userService.markFirstConnection(user.getId());
-        }
+        
+        // Return first connection status
+        boolean isFirstConnection = user.isFirstConnection();
+        
         String accessToken = jwtUtil.generateAccessToken(
                 user.getEmail(),
                 user.getId(),
@@ -144,7 +145,7 @@ public class UserGraphQLController {
 
         addAccessCookie(httpResp, accessToken);
         addRefreshCookie(httpResp, refreshToken);
-        return new AuthResponse(true);
+        return new AuthResponse(true, isFirstConnection);
     }
 
     @PreAuthorize("permitAll()")
@@ -167,6 +168,13 @@ public class UserGraphQLController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
         userService.changePassword(email, input.currentPassword(), input.newPassword());
+        
+        // Mark first login complete
+        var user = userService.findByEmail(email);
+        if (user.isPresent()) {
+            userService.completeFirstLogin(user.get().getId());
+        }
+        
         return new AuthResponse(true);
     }
 

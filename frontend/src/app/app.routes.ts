@@ -17,6 +17,12 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/login/login').then(m => m.LoginComponent),
     },
 
+    // First login reset
+    {
+        path: 'first-login-reset',
+        loadComponent: () => import('./pages/first-login-reset/first-login-reset').then(m => m.FirstLoginResetComponent),
+    },
+
     // Callback to microsoft connection
     {
       path: "auth/callback",

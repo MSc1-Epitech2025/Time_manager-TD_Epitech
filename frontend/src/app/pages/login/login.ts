@@ -85,6 +85,13 @@ export class LoginComponent implements OnInit {
         const remember = !!this.form.value.remember;
 
         const session = await this.auth.login(email, password, remember);
+        
+        // Check first connection
+        if (session.user.firstConnection) {
+          this.router.navigate(['/first-login-reset']);
+          return;
+        }
+
         const roles = session.user.roles ?? [];
         const has = (role: Role) => roles.includes(role);
 
@@ -100,7 +107,7 @@ export class LoginComponent implements OnInit {
         }
 
       } catch (e) {
-        this.notify.error('Identifiants invalides ou service indisponible.');
+        this.notify.error('Invalid credentials or service unavailable.');
         console.error(e);
       } finally {
         this.loading.set(false);

@@ -15,6 +15,7 @@ export interface SessionUser {
   fullName?: string;
   poste?: string;
   phone?: string;
+  firstConnection?: boolean;
 }
 
 export type Session = {
@@ -115,6 +116,7 @@ export class AuthService {
       mutation Login($input: AuthRequestInput!) {
         login(input: $input) {
           ok
+          firstConnection
         }
       }
     `;
@@ -132,6 +134,7 @@ export class AuthService {
 
     const result = await response.json();
     const ok = result.data?.login?.ok;
+    const firstConnection = result.data?.login?.firstConnection ?? false;
 
     if (!ok) throw new Error("Server did not confirm the connection");
 
@@ -150,6 +153,7 @@ export class AuthService {
         fullName: profile?.fullName,
         poste: profile?.poste,
         phone: profile?.phone,
+        firstConnection: firstConnection,
       }),
     };
 
@@ -244,6 +248,7 @@ export class AuthService {
       fullName: displayName,
       poste: user.poste,
       phone: user.phone,
+      firstConnection: user.firstConnection ?? false,
     };
   }
 
@@ -431,5 +436,125 @@ export class AuthService {
     this.startTokenExpiryMonitoring();
 
     console.log(`Token refreshed (${updatedSession.refreshCount}/${MAX_REFRESH_COUNT})`);
+  }
+
+  async resetPasswordFirstLogin(currentPassword: string, newPassword: string): Promise<void> {
+    const sess = this.session;
+    if (!sess) throw new Error('No active session');
+
+    const query = `
+      mutation ChangeMyPassword($input: ChangePasswordInput!) {
+        changeMyPassword(input: $input) {
+          ok
+        }
+      }
+    `;
+
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        query,
+        variables: {
+          input: {
+            currentPassword: currentPassword,
+            newPassword: newPassword
+          }
+        }
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Password update failed');
+    }
+
+    const result = await response.json();
+    const ok = result.data?.changeMyPassword?.ok;
+
+    if (!ok) {
+      throw new Error('Password update was not successful');
+    }
+
+    // Update session
+    const updatedSession: Session = {
+      ...sess,
+      user: {
+        ...sess.user,
+        firstConnection: false,
+      },
+    };
+
+    this.session$.next(updatedSession);
+    this.persistSession(updatedSession, this.shouldRemember());
+  }
+
+  async requestPasswordReset(email: string): Promise<void> {
+    const query = `
+      mutation RequestPasswordReset($input: ResetPasswordRequestInput!) {
+        requestPasswordReset(input: $input) {
+          ok
+        }
+      }
+    `;
+
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        query,
+        variables: {
+          input: { email }
+        }
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Password reset request failed');
+    }
+
+    const result = await response.json();
+    const ok = result.data?.requestPasswordReset?.ok;
+
+    if (!ok) {
+      throw new Error('Password reset request was not successful');
+    }
+  }
+
+  async resetPasswordWithToken(token: string, newPassword: string): Promise<void> {
+    const query = `
+      mutation ResetPassword($input: ResetPasswordInput!) {
+        resetPassword(input: $input) {
+          ok
+        }
+      }
+    `;
+
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        query,
+        variables: {
+          input: {
+            token,
+            newPassword
+          }
+        }
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Password reset failed');
+    }
+
+    const result = await response.json();
+    const ok = result.data?.resetPassword?.ok;
+
+    if (!ok) {
+      throw new Error('Password reset was not successful');
+    }
   }
 }

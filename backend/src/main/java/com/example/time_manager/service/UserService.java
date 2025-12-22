@@ -131,12 +131,18 @@ public User updateUser(String id, UpdateUserInput in) {
     }
 
     public void markFirstConnection(String userId) {
+        // First connection flag starts as TRUE for new users
+        // It stays TRUE until the user changes their password
+        // No action needed here - just used for tracking
+    }
+
+    public void completeFirstLogin(String userId) {
         User u = findByIdOrThrow(userId);
-            if (!u.isFirstConnection()) {
-                u.setFirstConnection(true);
-                userRepository.save(u);
-            }
-}
+        if (u.isFirstConnection()) {
+            u.setFirstConnection(false);
+            userRepository.save(u);
+        }
+    }
 
     /* ================== DELETE ================== */
 
