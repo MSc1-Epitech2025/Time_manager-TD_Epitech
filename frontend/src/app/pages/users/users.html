@@ -103,8 +103,13 @@
 
               <mat-form-field appearance="outline">
                 <mat-label>Email</mat-label>
-                <input matInput type="email" [(ngModel)]="formData.email" name="email" required />
+                <input matInput type="email" [(ngModel)]="formData.email" name="email" 
+                  required email pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" #emailField="ngModel" />
                 <mat-icon matPrefix>email</mat-icon>
+                <mat-error *ngIf="emailField.invalid && emailField.touched">
+                  <span *ngIf="emailField.errors?.['required']">Email is required</span>
+                  <span *ngIf="emailField.errors?.['email'] || emailField.errors?.['pattern']">Please enter a valid email (address@mail.domain)</span>
+                </mat-error>
               </mat-form-field>
 
               <mat-form-field appearance="outline">
