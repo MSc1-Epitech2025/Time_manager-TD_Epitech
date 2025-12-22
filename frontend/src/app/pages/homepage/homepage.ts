@@ -9,7 +9,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatRippleModule } from '@angular/material/core';
 
 // Shared components
-import { AnimatedBubblesComponent } from '../../shared/components/animated-bubbles/animated-bubbles';
+import { AnimatedBubblesComponent } from '@shared/components/animated-bubbles/animated-bubbles';
 
 @Component({
   selector: 'app-homepage',

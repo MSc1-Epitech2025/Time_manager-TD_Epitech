@@ -130,12 +130,6 @@ public User updateUser(String id, UpdateUserInput in) {
                 .orElse(false);
     }
 
-    public void markFirstConnection(String userId) {
-        // First connection flag starts as TRUE for new users
-        // It stays TRUE until the user changes their password
-        // No action needed here - just used for tracking
-    }
-
     public void completeFirstLogin(String userId) {
         User u = findByIdOrThrow(userId);
         if (u.isFirstConnection()) {

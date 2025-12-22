@@ -15,13 +15,13 @@ import { MatRippleModule } from '@angular/material/core';
 import { MatDialog } from '@angular/material/dialog';
 
 // auth service
-import { AuthService, Role } from '../../core/services/auth';
+import { AuthService, Role } from '@core/services/auth';
 import { ActivatedRoute, Router } from '@angular/router';
-import { environment } from '../../../environments/environment';
+import { environment } from '@environments/environment';
 import { NotificationService } from '@core/services/notification';
 
 // Shared components
-import { AnimatedBubblesComponent } from '../../shared/components/animated-bubbles/animated-bubbles';
+import { AnimatedBubblesComponent } from '@shared/components/animated-bubbles/animated-bubbles';
 
 // Modals
 import { ForgotPasswordModalComponent } from '@modal/forgot-password-modal/forgot-password-modal';
