@@ -12,6 +12,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRippleModule } from '@angular/material/core';
+import { MatDialog } from '@angular/material/dialog';
 
 // auth service
 import { AuthService, Role } from '../../core/services/auth';
@@ -21,6 +22,9 @@ import { NotificationService } from '@core/services/notification';
 
 // Shared components
 import { AnimatedBubblesComponent } from '../../shared/components/animated-bubbles/animated-bubbles';
+
+// Modals
+import { ForgotPasswordModalComponent } from '@modal/forgot-password-modal/forgot-password-modal';
 
 @Component({
   selector: 'app-login',
@@ -70,6 +74,7 @@ export class LoginComponent implements OnInit {
   private auth = inject(AuthService);
   private notify = inject(NotificationService);
   private router = inject(Router);
+  private dialog = inject(MatDialog);
 
   submit() {
     if (this.form.invalid) {
@@ -122,6 +127,14 @@ export class LoginComponent implements OnInit {
   loginWithMicrosoft() {
     window.location.href = `${environment.AZURE_URL}/oauth2/authorization/azure-dev`;
   }
+  openForgotPasswordModal() {
+    this.dialog.open(ForgotPasswordModalComponent, {
+      maxWidth: '90vw',
+      panelClass: 'forgot-password-dialog',
+      disableClose: false
+    });
+  }
+
 
 }
 

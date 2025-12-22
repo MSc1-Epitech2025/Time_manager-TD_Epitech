@@ -65,6 +65,7 @@ type Mutation {
     register(input: CreateUserInput!): User!
 
     requestPasswordReset(input: ResetPasswordRequestInput!): AuthResponse
+    requestPasswordResetWithTemp(input: ResetPasswordRequestInput!): AuthResponse
     resetPassword(input: ResetPasswordInput!): AuthResponse
     changeMyPassword(input: ChangePasswordInput!): AuthResponse
 

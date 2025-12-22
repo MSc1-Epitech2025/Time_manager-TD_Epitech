@@ -5,6 +5,7 @@ import com.example.time_manager.model.PasswordResetToken;
 import com.example.time_manager.repository.UserRepository;
 import com.example.time_manager.repository.PasswordResetTokenRepository;
 import com.example.time_manager.service.mail.MailService;
+import com.example.time_manager.security.PasswordGenerator;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -66,6 +67,24 @@ public class PasswordResetService {
         User u = userRepo.findByEmail(email).orElse(null);
         if (u == null) return;
         sendSetPasswordEmailFor(u);
+    }
+
+    public void requestResetWithTempPassword(String email) {
+        User u = userRepo.findByEmail(email).orElse(null);
+        if (u == null) return;
+        
+        // Generate temp password
+        String tempPassword = PasswordGenerator.generate(14);
+        
+        // Reset password
+        u.setPassword(encoder.encode(tempPassword));
+        
+        // Reset first connection
+        u.setFirstConnection(true);
+        userRepo.save(u);
+        
+        // Send email
+        sendSetPasswordEmailFor(u, tempPassword);
     }
 
     public void resetPassword(String token, String newPassword) {

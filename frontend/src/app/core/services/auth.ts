@@ -522,6 +522,39 @@ export class AuthService {
     }
   }
 
+  async requestPasswordResetWithTemp(email: string): Promise<void> {
+    const query = `
+      mutation RequestPasswordResetWithTemp($input: ResetPasswordRequestInput!) {
+        requestPasswordResetWithTemp(input: $input) {
+          ok
+        }
+      }
+    `;
+
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        query,
+        variables: {
+          input: { email }
+        }
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Password reset request failed');
+    }
+
+    const result = await response.json();
+    const ok = result.data?.requestPasswordResetWithTemp?.ok;
+
+    if (!ok) {
+      throw new Error('Password reset request was not successful');
+    }
+  }
+
   async resetPasswordWithToken(token: string, newPassword: string): Promise<void> {
     const query = `
       mutation ResetPassword($input: ResetPasswordInput!) {

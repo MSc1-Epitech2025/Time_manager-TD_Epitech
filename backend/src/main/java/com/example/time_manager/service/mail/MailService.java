@@ -28,6 +28,7 @@ public class MailService {
         try {
             Context ctx = new Context();
             ctx.setVariable("firstName", firstName);
+            ctx.setVariable("email", to);
             ctx.setVariable("resetUrl", resetUrl);
             ctx.setVariable("minutes", minutes);
             ctx.setVariable("tempPassword", tempPassword);
