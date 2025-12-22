@@ -11,6 +11,7 @@ type User {
 
 type AuthResponse {
   ok: Boolean!
+  firstConnection: Boolean
 }
 
 input AuthRequestInput {
@@ -25,7 +26,6 @@ input CreateUserInput {
     phone: String
     role: String
     poste: String
-    password: String!
     avatarUrl: String
 }
 
@@ -41,6 +41,19 @@ input UpdateUserInput {
   password: String
 }
 
+input ChangePasswordInput {
+  currentPassword: String!
+  newPassword: String!
+}
+
+input ResetPasswordRequestInput {
+  email: String!
+}
+
+input ResetPasswordInput {
+  token: String!
+  newPassword: String!
+}
 
 type Query {
     users: [User!]!
@@ -50,6 +63,13 @@ type Query {
 type Mutation {
     login(input: AuthRequestInput!): AuthResponse
     register(input: CreateUserInput!): User!
+
+    requestPasswordReset(input: ResetPasswordRequestInput!): AuthResponse
+    requestPasswordResetWithTemp(input: ResetPasswordRequestInput!): AuthResponse
+    resetPassword(input: ResetPasswordInput!): AuthResponse
+    changeMyPassword(input: ChangePasswordInput!): AuthResponse
+
+
     updateUserAvatar(id: ID!, avatarUrl: String!): User!
     updateUser(input: UpdateUserInput!): User!
     deleteUser(id: ID!): Boolean!

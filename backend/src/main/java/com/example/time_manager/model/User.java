@@ -13,6 +13,7 @@ public class User {
 
 
     @Id
+    @Column(columnDefinition = "CHAR(36)")
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
@@ -29,6 +30,8 @@ public class User {
     @Column(name = "avatar_url", length = 500)
     private String avatarUrl;
     private String azureOid;
+    @Column(name = "first_connection", nullable = false)
+    private boolean firstConnection = true;
 
     public User() {
     }
@@ -64,6 +67,9 @@ public class User {
 
     public String getAzureOid() { return azureOid; }
     public void setAzureOid(String azureOid) { this.azureOid = azureOid; }
+
+    public boolean isFirstConnection() { return firstConnection; }
+    public void setFirstConnection(boolean firstConnection) { this.firstConnection = firstConnection; }
 
 
 }

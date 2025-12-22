@@ -32,7 +32,6 @@ export type CreateUserInput = {
   firstName: string;
   lastName: string;
   email: string;
-  password: string;
   phone?: string;
   role?: string;
   poste?: string;
@@ -46,7 +45,6 @@ export type UpdateUserInput = {
   phone?: string;
   role?: string;
   poste?: string;
-  password?: string;
 };
 
 type AllUsersPayload = { users: User[] };

@@ -47,7 +47,6 @@ export class UsersComponent implements OnInit {
     firstName: '',
     lastName: '',
     email: '',
-    password: '',
     phone: '',
     role: 'EMPLOYEE',
     poste: '',
@@ -105,7 +104,6 @@ export class UsersComponent implements OnInit {
       firstName: '',
       lastName: '',
       email: '',
-      password: '',
       phone: '',
       role: 'EMPLOYEE',
       poste: '',
@@ -121,7 +119,6 @@ export class UsersComponent implements OnInit {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
-      password: '',
       phone: user.phone ?? '',
       role: user.role ?? 'EMPLOYEE',
       poste: user.poste ?? '',
@@ -136,7 +133,6 @@ export class UsersComponent implements OnInit {
       firstName: '',
       lastName: '',
       email: '',
-      password: '',
       phone: '',
       role: 'EMPLOYEE',
       poste: '',
@@ -144,8 +140,8 @@ export class UsersComponent implements OnInit {
   }
 
   createUser(): void {
-    if (!this.formData.firstName || !this.formData.lastName || !this.formData.email || !this.formData.password) {
-      alert('Please fill in all required fields (First Name, Last Name, Email, Password)');
+    if (!this.formData.firstName || !this.formData.lastName || !this.formData.email) {
+      alert('Please fill in all required fields (First Name, Last Name, Email)');
       return;
     }
 
@@ -153,7 +149,6 @@ export class UsersComponent implements OnInit {
       firstName: this.formData.firstName,
       lastName: this.formData.lastName,
       email: this.formData.email,
-      password: this.formData.password,
       phone: this.formData.phone || undefined,
       role: this.formData.role || undefined,
       poste: this.formData.poste || undefined,

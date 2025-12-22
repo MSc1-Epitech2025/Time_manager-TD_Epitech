@@ -12,15 +12,19 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRippleModule } from '@angular/material/core';
+import { MatDialog } from '@angular/material/dialog';
 
 // auth service
-import { AuthService, Role } from '../../core/services/auth';
+import { AuthService, Role } from '@core/services/auth';
 import { ActivatedRoute, Router } from '@angular/router';
-import { environment } from '../../../environments/environment';
+import { environment } from '@environments/environment';
 import { NotificationService } from '@core/services/notification';
 
 // Shared components
-import { AnimatedBubblesComponent } from '../../shared/components/animated-bubbles/animated-bubbles';
+import { AnimatedBubblesComponent } from '@shared/components/animated-bubbles/animated-bubbles';
+
+// Modals
+import { ForgotPasswordModalComponent } from '@modal/forgot-password-modal/forgot-password-modal';
 
 @Component({
   selector: 'app-login',
@@ -70,6 +74,7 @@ export class LoginComponent implements OnInit {
   private auth = inject(AuthService);
   private notify = inject(NotificationService);
   private router = inject(Router);
+  private dialog = inject(MatDialog);
 
   submit() {
     if (this.form.invalid) {
@@ -85,6 +90,13 @@ export class LoginComponent implements OnInit {
         const remember = !!this.form.value.remember;
 
         const session = await this.auth.login(email, password, remember);
+        
+        // Check first connection
+        if (session.user.firstConnection) {
+          this.router.navigate(['/first-login-reset']);
+          return;
+        }
+
         const roles = session.user.roles ?? [];
         const has = (role: Role) => roles.includes(role);
 
@@ -100,7 +112,7 @@ export class LoginComponent implements OnInit {
         }
 
       } catch (e) {
-        this.notify.error('Identifiants invalides ou service indisponible.');
+        this.notify.error('Invalid credentials or service unavailable.');
         console.error(e);
       } finally {
         this.loading.set(false);
@@ -115,6 +127,14 @@ export class LoginComponent implements OnInit {
   loginWithMicrosoft() {
     window.location.href = `${environment.AZURE_URL}/oauth2/authorization/azure-dev`;
   }
+  openForgotPasswordModal() {
+    this.dialog.open(ForgotPasswordModalComponent, {
+      maxWidth: '90vw',
+      panelClass: 'forgot-password-dialog',
+      disableClose: false
+    });
+  }
+
 
 }
 

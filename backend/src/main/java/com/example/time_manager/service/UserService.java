@@ -130,6 +130,14 @@ public User updateUser(String id, UpdateUserInput in) {
                 .orElse(false);
     }
 
+    public void completeFirstLogin(String userId) {
+        User u = findByIdOrThrow(userId);
+        if (u.isFirstConnection()) {
+            u.setFirstConnection(false);
+            userRepository.save(u);
+        }
+    }
+
     /* ================== DELETE ================== */
 
     public void deleteById(String id) {

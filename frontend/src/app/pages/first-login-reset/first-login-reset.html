@@ -1,0 +1,124 @@
+<div class="first-login-container">
+  <app-animated-bubbles [widthFactor]="1" [bubbleCount]="8" [enableMouseInteraction]="true"></app-animated-bubbles>
+
+  <div class="content-wrapper">
+    <mat-card class="reset-card">
+      <mat-card-header class="card-header">
+        <div class="header-icon">
+          <mat-icon>lock_reset</mat-icon>
+        </div>
+        <h1 class="card-title">First Login - Password Reset Required</h1>
+        <p class="card-subtitle">Please set a new password for your account</p>
+      </mat-card-header>
+
+      <mat-card-content class="card-content">
+        <form [formGroup]="form" (ngSubmit)="submit()">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Temporary Password</mat-label>
+            <input 
+              matInput 
+              [type]="hideCurrentPwd() ? 'password' : 'text'"
+              formControlName="currentPassword"
+              placeholder="Enter temporary password from email"
+              autocomplete="current-password"
+            />
+            <button 
+              mat-icon-button 
+              matSuffix 
+              type="button"
+              (click)="hideCurrentPwd.set(!hideCurrentPwd())"
+              [attr.aria-label]="'Hide password'"
+            >
+              <mat-icon>{{ hideCurrentPwd() ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            @if (currentPassword?.hasError('required') && currentPassword?.touched) {
+              <mat-error>Temporary password is required</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>New Password</mat-label>
+            <input 
+              matInput 
+              [type]="hideNewPwd() ? 'password' : 'text'"
+              formControlName="newPassword"
+              placeholder="Enter new password"
+              autocomplete="new-password"
+            />
+            <button 
+              mat-icon-button 
+              matSuffix 
+              type="button"
+              (click)="hideNewPwd.set(!hideNewPwd())"
+              [attr.aria-label]="'Hide password'"
+            >
+              <mat-icon>{{ hideNewPwd() ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            @if (newPassword?.hasError('required') && newPassword?.touched) {
+              <mat-error>Password is required</mat-error>
+            }
+            @if (newPassword?.hasError('minlength') && newPassword?.touched) {
+              <mat-error>Password must be at least 8 characters</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Confirm Password</mat-label>
+            <input 
+              matInput 
+              [type]="hideConfirmPwd() ? 'password' : 'text'"
+              formControlName="confirmPassword"
+              placeholder="Confirm new password"
+              autocomplete="new-password"
+            />
+            <button 
+              mat-icon-button 
+              matSuffix 
+              type="button"
+              (click)="hideConfirmPwd.set(!hideConfirmPwd())"
+              [attr.aria-label]="'Hide password'"
+            >
+              <mat-icon>{{ hideConfirmPwd() ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            @if (confirmPassword?.hasError('required') && confirmPassword?.touched) {
+              <mat-error>Please confirm your password</mat-error>
+            }
+            @if (form.hasError('passwordMismatch') && confirmPassword?.touched) {
+              <mat-error>Passwords do not match</mat-error>
+            }
+          </mat-form-field>
+
+          <div class="actions">
+            <button 
+              mat-raised-button 
+              color="primary" 
+              type="submit"
+              [disabled]="loading()"
+              class="submit-btn"
+            >
+              @if (loading()) {
+                <mat-spinner diameter="20"></mat-spinner>
+              } @else {
+                <ng-container>
+                  <mat-icon>check</mat-icon>
+                  <span>Update Password</span>
+                </ng-container>
+              }
+            </button>
+
+            <button 
+              mat-button 
+              type="button"
+              (click)="logout()"
+              [disabled]="loading()"
+              class="logout-btn"
+            >
+              <mat-icon>logout</mat-icon>
+              <span>Logout</span>
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
