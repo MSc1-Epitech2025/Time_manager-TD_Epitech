@@ -70,8 +70,8 @@ public class PasswordResetService {
     }
 
     public void requestResetWithTempPassword(String email) {
-        User u = userRepo.findByEmail(email).orElse(null);
-        if (u == null) return;
+        User u = userRepo.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("No account found with this email address"));
         
         // Generate temp password
         String tempPassword = PasswordGenerator.generate(14);

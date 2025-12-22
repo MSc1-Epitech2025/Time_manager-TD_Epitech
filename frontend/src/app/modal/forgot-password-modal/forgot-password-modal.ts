@@ -34,6 +34,7 @@ export class ForgotPasswordModalComponent {
 
   loading = signal(false);
   submitted = signal(false);
+  errorMessage = signal<string | null>(null);
 
   form = this.fb.group({
     email: ['', [Validators.required, Validators.email]]
@@ -46,6 +47,7 @@ export class ForgotPasswordModalComponent {
     }
 
     this.loading.set(true);
+    this.errorMessage.set(null);
 
     try {
       const email = this.form.value.email!;
@@ -56,8 +58,13 @@ export class ForgotPasswordModalComponent {
       setTimeout(() => {
         this.dialogRef.close(true);
       }, 2000);
-    } catch (error) {
-      this.notify.error('Failed to send reset email');
+    } catch (error: any) {
+      const errorMsg = error?.message || 'Unexpected error';
+      if (errorMsg.includes('No account') || errorMsg.includes('email address') || errorMsg.includes('not found')) {
+        this.errorMessage.set('No account with this email address');
+      } else {
+        this.errorMessage.set('No account with this email address');
+      }
       console.error(error);
       this.loading.set(false);
     }

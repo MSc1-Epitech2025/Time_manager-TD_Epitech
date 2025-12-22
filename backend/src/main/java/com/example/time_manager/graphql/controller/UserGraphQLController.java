@@ -158,8 +158,12 @@ public class UserGraphQLController {
     @PreAuthorize("permitAll()")
     @MutationMapping
     public AuthResponse requestPasswordResetWithTemp(@Argument("input") ResetPasswordRequestInput input) {
-        passwordResetService.requestResetWithTempPassword(input.email());
-        return new AuthResponse(true);
+        try {
+            passwordResetService.requestResetWithTempPassword(input.email());
+            return new AuthResponse(true);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException(e.getMessage());
+        }
     }
 
     @PreAuthorize("permitAll()")

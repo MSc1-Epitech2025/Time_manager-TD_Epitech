@@ -489,6 +489,32 @@ export class AuthService {
     this.persistSession(updatedSession, this.shouldRemember());
   }
 
+  private async executeGraphQLMutation<T = any>(
+    query: string,
+    variables: any,
+    mutationName: string
+  ): Promise<T> {
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ query, variables }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`${mutationName} request failed`);
+    }
+
+    const result = await response.json();
+    
+    // Check for GraphQL errors
+    if (result.errors?.length) {
+      throw new Error(result.errors[0].message || `${mutationName} failed`);
+    }
+
+    return result.data;
+  }
+
   async requestPasswordReset(email: string): Promise<void> {
     const query = `
       mutation RequestPasswordReset($input: ResetPasswordRequestInput!) {
@@ -498,26 +524,13 @@ export class AuthService {
       }
     `;
 
-    const response = await fetch(GRAPHQL_ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({
-        query,
-        variables: {
-          input: { email }
-        }
-      }),
-    });
+    const data = await this.executeGraphQLMutation(
+      query,
+      { input: { email } },
+      'Password reset'
+    );
 
-    if (!response.ok) {
-      throw new Error('Password reset request failed');
-    }
-
-    const result = await response.json();
-    const ok = result.data?.requestPasswordReset?.ok;
-
-    if (!ok) {
+    if (!data?.requestPasswordReset?.ok) {
       throw new Error('Password reset request was not successful');
     }
   }
@@ -531,26 +544,13 @@ export class AuthService {
       }
     `;
 
-    const response = await fetch(GRAPHQL_ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({
-        query,
-        variables: {
-          input: { email }
-        }
-      }),
-    });
+    const data = await this.executeGraphQLMutation(
+      query,
+      { input: { email } },
+      'Password reset'
+    );
 
-    if (!response.ok) {
-      throw new Error('Password reset request failed');
-    }
-
-    const result = await response.json();
-    const ok = result.data?.requestPasswordResetWithTemp?.ok;
-
-    if (!ok) {
+    if (!data?.requestPasswordResetWithTemp?.ok) {
       throw new Error('Password reset request was not successful');
     }
   }
@@ -564,29 +564,13 @@ export class AuthService {
       }
     `;
 
-    const response = await fetch(GRAPHQL_ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({
-        query,
-        variables: {
-          input: {
-            token,
-            newPassword
-          }
-        }
-      }),
-    });
+    const data = await this.executeGraphQLMutation(
+      query,
+      { input: { token, newPassword } },
+      'Password reset'
+    );
 
-    if (!response.ok) {
-      throw new Error('Password reset failed');
-    }
-
-    const result = await response.json();
-    const ok = result.data?.resetPassword?.ok;
-
-    if (!ok) {
+    if (!data?.resetPassword?.ok) {
       throw new Error('Password reset was not successful');
     }
   }
