@@ -48,6 +48,11 @@ public class UserService {
         return userRepository.save(user);
     }
 
+//    function for save a user without password for microsoft connection
+    public User saveUserRaw(User user) {
+        return userRepository.save(user);
+    }
+
     public User updateAvatar(String id, String avatarUrl) {
         User user = findByIdOrThrow(id);
         user.setAvatarUrl(avatarUrl);
@@ -125,9 +130,10 @@ public User updateUser(String id, UpdateUserInput in) {
     }
 
     public boolean validateUser(String email, String password) {
-        return userRepository.findByEmail(email)
-                .map(user -> passwordEncoder.matches(password, user.getPassword()))
-                .orElse(false);
+        var user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) return false;
+        if (user.getPassword() == null || user.getPassword().isBlank()) return false;
+        return passwordEncoder.matches(password, user.getPassword());
     }
 
     public void completeFirstLogin(String userId) {

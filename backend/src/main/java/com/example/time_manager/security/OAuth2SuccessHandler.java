@@ -46,15 +46,15 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
             u.setEmail(email);
             u.setFirstName(principal.getGivenName());
             u.setLastName(principal.getFamilyName());
-            u.setPassword("oauth2");
+            u.setPassword(null);
             u.setRole("[\"employee\"]");
             u.setAzureOid(azureOid);
-            return userService.saveUser(u);
+            return userService.saveUserRaw(u);
         });
 
         if (user.getAzureOid() == null || user.getAzureOid().isBlank()) {
             user.setAzureOid(azureOid);
-            userService.saveUser(user);
+            userService.saveUserRaw(user);
         }
 
         String accessToken = jwtUtil.generateAccessToken(

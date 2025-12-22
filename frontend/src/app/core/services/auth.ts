@@ -60,6 +60,12 @@ const USER_BY_EMAIL_QUERY = `
   }
 `;
 
+const LOGOUT_MUTATION = `
+  mutation Logout {
+    logout
+  }
+`;
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private session$ = new BehaviorSubject<Session | null>(null);
