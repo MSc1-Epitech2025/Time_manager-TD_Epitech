@@ -31,7 +31,7 @@ public class User {
     private String avatarUrl;
     private String azureOid;
     @Column(name = "first_connection", nullable = false)
-    private boolean firstConnection = false;
+    private boolean firstConnection = true;
 
     public User() {
     }
