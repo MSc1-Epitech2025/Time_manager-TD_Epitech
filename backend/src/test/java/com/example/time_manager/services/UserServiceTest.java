@@ -440,4 +440,49 @@ class UserServiceTestTest {
         verify(encoder, never()).encode(anyString());
     }
 
+    @Test
+    void completeFirstLogin_shouldSetFirstConnectionFalse_whenTrue() {
+        UserRepository userRepository = mock(UserRepository.class);
+        UserService userService = new UserService(userRepository, mock(PasswordEncoder.class));
+
+        User u = new User();
+        u.setId("userId");
+        u.setFirstConnection(true);
+
+        when(userRepository.findById("userId")).thenReturn(Optional.of(u));
+        when(userRepository.save(u)).thenReturn(u);
+
+        userService.completeFirstLogin("userId");
+
+        assertThat(u.isFirstConnection()).isFalse();
+        verify(userRepository).save(u);
+    }
+
+    @Test
+    void completeFirstLogin_shouldNotSave_whenFirstConnectionAlreadyFalse() {
+        UserRepository userRepository = mock(UserRepository.class);
+        UserService userService = new UserService(userRepository, mock(PasswordEncoder.class));
+
+        User u = new User();
+        u.setId("userId");
+        u.setFirstConnection(false);
+
+        when(userRepository.findById("userId")).thenReturn(Optional.of(u));
+
+        userService.completeFirstLogin("userId");
+
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void completeFirstLogin_shouldThrow_whenUserNotFound() {
+        UserRepository userRepository = mock(UserRepository.class);
+        UserService userService = new UserService(userRepository, mock(PasswordEncoder.class));
+
+        when(userRepository.findById("unknown")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userService.completeFirstLogin("unknown"))
+                .isInstanceOf(EntityNotFoundException.class);
+        verify(userRepository, never()).save(any());
+    }
 }

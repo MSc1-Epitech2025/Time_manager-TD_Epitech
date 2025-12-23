@@ -8,6 +8,7 @@ import com.example.time_manager.service.leave.LeaveAccountService;
 import org.junit.jupiter.api.*;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.security.core.Authentication;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -170,5 +171,35 @@ class LeaveAccountControllerTest {
 
         assertTrue(result);
         verify(service).delete(55L);
+    }
+
+    @Test
+    void testMyLeaveAccounts_Success() {
+        String email = "user@example.com";
+        List<LeaveAccount> accounts = List.of(new LeaveAccount());
+
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getName()).thenReturn(email);
+        when(service.listByUserEmail(email)).thenReturn(accounts);
+
+        List<LeaveAccount> result = controller.myLeaveAccounts(authentication);
+
+        assertEquals(1, result.size());
+        verify(authentication).getName();
+        verify(service).listByUserEmail(email);
+    }
+
+    @Test
+    void testMyLeaveAccounts_EmptyList() {
+        String email = "user@example.com";
+
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getName()).thenReturn(email);
+        when(service.listByUserEmail(email)).thenReturn(List.of());
+
+        List<LeaveAccount> result = controller.myLeaveAccounts(authentication);
+
+        assertTrue(result.isEmpty());
+        verify(service).listByUserEmail(email);
     }
 }
