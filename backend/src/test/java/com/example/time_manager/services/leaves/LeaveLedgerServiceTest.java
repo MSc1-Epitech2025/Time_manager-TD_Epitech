@@ -176,4 +176,31 @@ class LeaveLedgerServiceTest {
         List<LeaveLedger> result = service.listByAccountBetween(accountId, from, to);
         assertEquals(1, result.size());
     }
+
+    @Test
+    void testListByUserEmail() {
+        String email = "test@example.com";
+        List<LeaveLedger> list = List.of(new LeaveLedger());
+        when(repo.findByAccount_User_EmailOrderByEntryDateAsc(email)).thenReturn(list);
+
+        List<LeaveLedger> result = service.listByUserEmail(email);
+
+        assertEquals(1, result.size());
+        verify(repo).findByAccount_User_EmailOrderByEntryDateAsc(email);
+    }
+
+    @Test
+    void testListByUserEmailBetween() {
+        String email = "test@example.com";
+        LocalDate from = LocalDate.of(2024, 1, 1);
+        LocalDate to = LocalDate.of(2024, 12, 31);
+        List<LeaveLedger> list = List.of(new LeaveLedger());
+        when(repo.findByAccount_User_EmailAndEntryDateBetweenOrderByEntryDateAsc(email, from, to))
+                .thenReturn(list);
+
+        List<LeaveLedger> result = service.listByUserEmailBetween(email, from, to);
+
+        assertEquals(1, result.size());
+        verify(repo).findByAccount_User_EmailAndEntryDateBetweenOrderByEntryDateAsc(email, from, to);
+    }
 }
