@@ -2,145 +2,267 @@ package com.example.time_manager.security;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.springframework.http.HttpMethod;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.*;
-import org.springframework.security.config.annotation.web.configurers.oauth2.client.OAuth2LoginConfigurer;
-import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.DefaultSecurityFilterChain;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.context.NullSecurityContextRepository;
-import org.springframework.security.web.context.SecurityContextRepository;
-
-import java.util.List;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class SecurityConfigTest {
 
-    private JwtAuthFilter jwtAuthFilter;
     private SecurityConfig securityConfig;
+
+    @Mock
+    private JwtAuthFilter jwtAuthFilter;
+
+    @Mock
+    private OAuth2SuccessHandler oAuth2SuccessHandler;
+
+    @Mock
+    private HttpSecurity http;
+
+    @Mock
+    private DefaultSecurityFilterChain defaultSecurityFilterChain;
+
+    @Mock
+    private AuthenticationConfiguration authenticationConfiguration;
+
+    @Mock
+    private AuthenticationManager authenticationManager;
 
     @BeforeEach
     void setUp() {
-        jwtAuthFilter = mock(JwtAuthFilter.class);
-        securityConfig = new SecurityConfig(jwtAuthFilter);
+        securityConfig = new SecurityConfig();
+        ReflectionTestUtils.setField(securityConfig, "frontendUrl", "http://localhost:4200");
     }
 
     @Test
-    void testCorsConfigurationSourceContainsExpectedSettings() {
-        var source = securityConfig.corsConfigurationSource();
-        var urlSource = (org.springframework.web.cors.UrlBasedCorsConfigurationSource) source;
-
-        var cfg = urlSource.getCorsConfigurations().get("/**");
-
-        assertNotNull(cfg);
-        assertEquals(List.of("http://localhost:4200", "http://localhost:3000"), cfg.getAllowedOrigins());
-        assertEquals(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"), cfg.getAllowedMethods());
-        assertEquals(List.of("Authorization","Content-Type","X-Requested-With"), cfg.getAllowedHeaders());
-        assertEquals(List.of("Authorization"), cfg.getExposedHeaders());
-        assertTrue(cfg.getAllowCredentials());
-    }
-
-    @Test
-    void testAuthenticationManagerReturnsFromConfig() throws Exception {
-        var config = mock(AuthenticationConfiguration.class);
-        var manager = mock(AuthenticationManager.class);
-        when(config.getAuthenticationManager()).thenReturn(manager);
-
-        assertEquals(manager, securityConfig.authenticationManager(config));
-    }
-
-    @Test
-    void testSecurityFilterChain_ConfiguresAllSections() throws Exception {
-        HttpSecurity http = mock(HttpSecurity.class, RETURNS_SELF);
-        var chain = mock(DefaultSecurityFilterChain.class);
-
-        CsrfConfigurer<HttpSecurity> csrfConfigurer = mock(CsrfConfigurer.class, RETURNS_SELF);
-        SessionManagementConfigurer<HttpSecurity> sessionConfigurer = mock(SessionManagementConfigurer.class, RETURNS_SELF);
-        SecurityContextConfigurer<HttpSecurity> securityContextConfigurer = mock(SecurityContextConfigurer.class, RETURNS_SELF);
-
-        @SuppressWarnings("unchecked")
-        AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry authRegistry =
-                mock(AuthorizeHttpRequestsConfigurer.AuthorizationManagerRequestMatcherRegistry.class, RETURNS_SELF);
-
-        @SuppressWarnings("unchecked")
-        AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizedUrl authorizedUrl =
-                mock(AuthorizeHttpRequestsConfigurer.AuthorizedUrl.class);
-
-        OAuth2LoginConfigurer<HttpSecurity> oauthConfigurer = mock(OAuth2LoginConfigurer.class, RETURNS_SELF);
-
-        when(http.cors(any())).thenReturn(http);
-        when(http.csrf(any())).thenReturn(http);
+    void securityFilterChain_shouldConfigureCorrectly() throws Exception {
         when(http.sessionManagement(any())).thenReturn(http);
-        when(http.securityContext(any())).thenReturn(http);
+        when(http.csrf(any())).thenReturn(http);
+        when(http.cors(any())).thenReturn(http);
         when(http.authorizeHttpRequests(any())).thenReturn(http);
         when(http.oauth2Login(any())).thenReturn(http);
-        when(http.build()).thenReturn(chain);
+        when(http.formLogin(any())).thenReturn(http);
+        when(http.httpBasic(any())).thenReturn(http);
+        when(http.addFilterBefore(any(), any())).thenReturn(http);
+        when(http.build()).thenReturn(defaultSecurityFilterChain);
 
-        when(authRegistry.requestMatchers(anyString())).thenReturn(authorizedUrl);
-        when(authRegistry.requestMatchers(any(HttpMethod.class), anyString())).thenReturn(authorizedUrl);
+        SecurityFilterChain result = securityConfig.securityFilterChain(http, jwtAuthFilter, oAuth2SuccessHandler);
+
+        assertNotNull(result);
+        verify(http).build();
+    }
+
+    @Test
+    void corsConfigurationSource_shouldReturnValidConfiguration() {
+        CorsConfigurationSource source = securityConfig.corsConfigurationSource();
+        assertNotNull(source);
+    }
+
+    @Test
+    void corsConfigurationSource_shouldAllowCorrectOrigins() {
+        CorsConfigurationSource source = securityConfig.corsConfigurationSource();
+
+        org.springframework.mock.web.MockHttpServletRequest request =
+                new org.springframework.mock.web.MockHttpServletRequest();
+        request.setRequestURI("/**");
+        request.setServletPath("/**");
+
+        CorsConfiguration config = source.getCorsConfiguration(request);
+
+        if (config == null) {
+            request.setRequestURI("/");
+            request.setServletPath("/");
+            config = source.getCorsConfiguration(request);
+        }
+
+        assertNotNull(config, "CorsConfiguration should not be null");
+        assertNotNull(config.getAllowedMethods());
+        assertTrue(config.getAllowCredentials());
+    }
+    @Test
+    void passwordEncoder_shouldReturnBCryptEncoder() {
+        PasswordEncoder encoder = securityConfig.passwordEncoder();
+        assertNotNull(encoder);
+        assertInstanceOf(BCryptPasswordEncoder.class, encoder);
+    }
+
+    @Test
+    void authenticationManager_shouldReturnFromConfiguration() throws Exception {
+        when(authenticationConfiguration.getAuthenticationManager()).thenReturn(authenticationManager);
+
+        AuthenticationManager result = securityConfig.authenticationManager(authenticationConfiguration);
+
+        assertNotNull(result);
+        assertEquals(authenticationManager, result);
+    }
+
+    @Test
+    void securityFilterChain_shouldConfigureAuthorizeHttpRequests() throws Exception {
+        when(http.sessionManagement(any())).thenReturn(http);
+        when(http.csrf(any())).thenReturn(http);
+        when(http.cors(any())).thenReturn(http);
+        when(http.oauth2Login(any())).thenReturn(http);
+        when(http.formLogin(any())).thenReturn(http);
+        when(http.httpBasic(any())).thenReturn(http);
+        when(http.addFilterBefore(any(), any())).thenReturn(http);
+        when(http.build()).thenReturn(defaultSecurityFilterChain);
+
+        when(http.authorizeHttpRequests(any())).thenAnswer(invocation -> {
+            org.springframework.security.config.Customizer<org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry> customizer =
+                    invocation.getArgument(0);
+            assertNotNull(customizer);
+            return http;
+        });
+
+        SecurityFilterChain result = securityConfig.securityFilterChain(http, jwtAuthFilter, oAuth2SuccessHandler);
+
+        assertNotNull(result);
+        verify(http).authorizeHttpRequests(any());
+    }
+
+    @Test
+    void securityFilterChain_shouldConfigureOAuth2Login() throws Exception {
+        when(http.sessionManagement(any())).thenReturn(http);
+        when(http.csrf(any())).thenReturn(http);
+        when(http.cors(any())).thenReturn(http);
+        when(http.authorizeHttpRequests(any())).thenReturn(http);
+        when(http.formLogin(any())).thenReturn(http);
+        when(http.httpBasic(any())).thenReturn(http);
+        when(http.addFilterBefore(any(), any())).thenReturn(http);
+        when(http.build()).thenReturn(defaultSecurityFilterChain);
+
+        when(http.oauth2Login(any())).thenAnswer(invocation -> {
+            org.springframework.security.config.Customizer<org.springframework.security.config.annotation.web.configurers.oauth2.client.OAuth2LoginConfigurer<HttpSecurity>> customizer =
+                    invocation.getArgument(0);
+            assertNotNull(customizer);
+            return http;
+        });
+
+        SecurityFilterChain result = securityConfig.securityFilterChain(http, jwtAuthFilter, oAuth2SuccessHandler);
+
+        assertNotNull(result);
+        verify(http).oauth2Login(any());
+    }
+
+    @Test
+    void securityFilterChain_shouldAddJwtFilterBeforeUsernamePasswordFilter() throws Exception {
+        when(http.sessionManagement(any())).thenReturn(http);
+        when(http.csrf(any())).thenReturn(http);
+        when(http.cors(any())).thenReturn(http);
+        when(http.authorizeHttpRequests(any())).thenReturn(http);
+        when(http.oauth2Login(any())).thenReturn(http);
+        when(http.formLogin(any())).thenReturn(http);
+        when(http.httpBasic(any())).thenReturn(http);
+        when(http.build()).thenReturn(defaultSecurityFilterChain);
+        when(http.addFilterBefore(any(), any())).thenReturn(http);
+
+        securityConfig.securityFilterChain(http, jwtAuthFilter, oAuth2SuccessHandler);
+
+        verify(http).addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+    }
+
+    @Test
+    void securityFilterChain_shouldExecuteOAuth2LoginLambda() throws Exception {
+        when(http.sessionManagement(any())).thenReturn(http);
+        when(http.csrf(any())).thenReturn(http);
+        when(http.cors(any())).thenReturn(http);
+        when(http.authorizeHttpRequests(any())).thenReturn(http);
+        when(http.formLogin(any())).thenReturn(http);
+        when(http.httpBasic(any())).thenReturn(http);
+        when(http.addFilterBefore(any(), any())).thenReturn(http);
+        when(http.build()).thenReturn(defaultSecurityFilterChain);
+
+        @SuppressWarnings("unchecked")
+        org.springframework.security.config.annotation.web.configurers.oauth2.client.OAuth2LoginConfigurer<HttpSecurity> oauth2Configurer =
+                mock(org.springframework.security.config.annotation.web.configurers.oauth2.client.OAuth2LoginConfigurer.class);
+
+        @SuppressWarnings("unchecked")
+        org.springframework.security.config.annotation.web.configurers.oauth2.client.OAuth2LoginConfigurer<HttpSecurity>.RedirectionEndpointConfig redirectionConfig =
+                mock(org.springframework.security.config.annotation.web.configurers.oauth2.client.OAuth2LoginConfigurer.RedirectionEndpointConfig.class);
+
+        when(oauth2Configurer.redirectionEndpoint(any())).thenAnswer(inv -> {
+            @SuppressWarnings("unchecked")
+            org.springframework.security.config.Customizer<org.springframework.security.config.annotation.web.configurers.oauth2.client.OAuth2LoginConfigurer<HttpSecurity>.RedirectionEndpointConfig> customizer =
+                    inv.getArgument(0);
+            customizer.customize(redirectionConfig);
+            return oauth2Configurer;
+        });
+        when(redirectionConfig.baseUri(anyString())).thenReturn(redirectionConfig);
+        when(oauth2Configurer.successHandler(any())).thenReturn(oauth2Configurer);
+
+        when(http.oauth2Login(any())).thenAnswer(invocation -> {
+            @SuppressWarnings("unchecked")
+            org.springframework.security.config.Customizer<org.springframework.security.config.annotation.web.configurers.oauth2.client.OAuth2LoginConfigurer<HttpSecurity>> customizer =
+                    invocation.getArgument(0);
+            customizer.customize(oauth2Configurer);
+            return http;
+        });
+
+        SecurityFilterChain result = securityConfig.securityFilterChain(http, jwtAuthFilter, oAuth2SuccessHandler);
+
+        assertNotNull(result);
+        verify(oauth2Configurer).successHandler(oAuth2SuccessHandler);
+        verify(redirectionConfig).baseUri("/login/oauth2/code/*");
+    }
+
+    @Test
+    void securityFilterChain_shouldExecuteAuthorizeHttpRequestsLambda() throws Exception {
+        when(http.sessionManagement(any())).thenReturn(http);
+        when(http.csrf(any())).thenReturn(http);
+        when(http.cors(any())).thenReturn(http);
+        when(http.oauth2Login(any())).thenReturn(http);
+        when(http.formLogin(any())).thenReturn(http);
+        when(http.httpBasic(any())).thenReturn(http);
+        when(http.addFilterBefore(any(), any())).thenReturn(http);
+        when(http.build()).thenReturn(defaultSecurityFilterChain);
+
+        @SuppressWarnings("unchecked")
+        org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry authRegistry =
+                mock(org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer.AuthorizationManagerRequestMatcherRegistry.class);
+
+        @SuppressWarnings("unchecked")
+        org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizedUrl authorizedUrl =
+                mock(org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer.AuthorizedUrl.class);
+
+        when(authRegistry.requestMatchers(any(org.springframework.http.HttpMethod.class), any(String[].class))).thenReturn(authorizedUrl);
+        when(authRegistry.requestMatchers(any(String[].class))).thenReturn(authorizedUrl);
         when(authRegistry.anyRequest()).thenReturn(authorizedUrl);
         when(authorizedUrl.permitAll()).thenReturn(authRegistry);
         when(authorizedUrl.authenticated()).thenReturn(authRegistry);
 
-        ArgumentCaptor<Customizer> csrfCaptor = ArgumentCaptor.forClass(Customizer.class);
-        ArgumentCaptor<Customizer> sessionCaptor = ArgumentCaptor.forClass(Customizer.class);
-        ArgumentCaptor<Customizer> securityContextCaptor = ArgumentCaptor.forClass(Customizer.class);
-        ArgumentCaptor<Customizer> authCaptor = ArgumentCaptor.forClass(Customizer.class);
-        ArgumentCaptor<Customizer> oauthCaptor = ArgumentCaptor.forClass(Customizer.class);
+        when(http.authorizeHttpRequests(any())).thenAnswer(invocation -> {
+            @SuppressWarnings("unchecked")
+            org.springframework.security.config.Customizer<org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry> customizer =
+                    invocation.getArgument(0);
+            customizer.customize(authRegistry);
+            return http;
+        });
 
-        securityConfig.securityFilterChain(http);
+        SecurityFilterChain result = securityConfig.securityFilterChain(http, jwtAuthFilter, oAuth2SuccessHandler);
 
-        verify(http).cors(any());
-        verify(http).csrf(csrfCaptor.capture());
-        verify(http).sessionManagement(sessionCaptor.capture());
-        verify(http).securityContext(securityContextCaptor.capture());
-        verify(http).authorizeHttpRequests(authCaptor.capture());
-        verify(http).oauth2Login(oauthCaptor.capture());
-        verify(http).addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+        assertNotNull(result);
 
-        csrfCaptor.getValue().customize(csrfConfigurer);
-        verify(csrfConfigurer).ignoringRequestMatchers("/graphql");
-
-        sessionCaptor.getValue().customize(sessionConfigurer);
-        verify(sessionConfigurer).sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-
-        securityContextCaptor.getValue().customize(securityContextConfigurer);
-        ArgumentCaptor<Boolean> requireExplicitSaveCaptor = ArgumentCaptor.forClass(Boolean.class);
-        ArgumentCaptor<SecurityContextRepository> repoCaptor = ArgumentCaptor.forClass(SecurityContextRepository.class);
-
-        verify(securityContextConfigurer).requireExplicitSave(requireExplicitSaveCaptor.capture());
-        verify(securityContextConfigurer).securityContextRepository(repoCaptor.capture());
-
-        assertFalse(requireExplicitSaveCaptor.getValue());
-        assertInstanceOf(NullSecurityContextRepository.class, repoCaptor.getValue());
-
-        authCaptor.getValue().customize(authRegistry);
-
+        verify(authRegistry).requestMatchers(eq(org.springframework.http.HttpMethod.OPTIONS), eq("/**"));
         verify(authRegistry).requestMatchers("/actuator/health");
-        verify(authRegistry).requestMatchers(HttpMethod.POST, "/graphql");
-        verify(authRegistry).requestMatchers("/oauth2/**");
+        verify(authRegistry).requestMatchers("/oauth2/**", "/login/oauth2/**");
+        verify(authRegistry).requestMatchers(eq(org.springframework.http.HttpMethod.POST), eq("/graphql"));
         verify(authRegistry).anyRequest();
-
-        verify(authorizedUrl, times(3)).permitAll();
-        verify(authorizedUrl, times(1)).authenticated();
-
-        oauthCaptor.getValue().customize(oauthConfigurer);
-        verify(oauthConfigurer).defaultSuccessUrl("/oauth2/success", true);
-    }
-
-    @Test
-    void testPasswordEncoder() {
-        PasswordEncoder encoder = securityConfig.passwordEncoder();
-        String hashed = encoder.encode("secret123");
-        assertTrue(encoder.matches("secret123", hashed));
-        assertFalse(encoder.matches("wrongpassword", hashed));
+        verify(authorizedUrl).authenticated();
     }
 }

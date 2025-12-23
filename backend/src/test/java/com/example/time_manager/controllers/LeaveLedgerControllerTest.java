@@ -9,6 +9,7 @@ import com.example.time_manager.service.leave.LeaveLedgerService;
 import org.junit.jupiter.api.*;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.security.core.Authentication;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -213,5 +214,64 @@ class LeaveLedgerControllerTest {
 
         assertEquals(1, result.size());
         verify(service).listByAccount(10L);
+    }
+
+    @Test
+    void testMyLeaveLedger_WithDateRange() {
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getName()).thenReturn("john@test.com");
+
+        List<LeaveLedger> mockList = List.of(new LeaveLedger(), new LeaveLedger());
+        LocalDate from = LocalDate.of(2024, 1, 1);
+        LocalDate to = LocalDate.of(2024, 12, 31);
+
+        when(service.listByUserEmailBetween("john@test.com", from, to)).thenReturn(mockList);
+
+        List<LeaveLedger> result = controller.myLeaveLedger(authentication, "2024-01-01", "2024-12-31");
+
+        assertEquals(2, result.size());
+        verify(service).listByUserEmailBetween("john@test.com", from, to);
+    }
+
+    @Test
+    void testMyLeaveLedger_WithoutDateRange() {
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getName()).thenReturn("john@test.com");
+
+        List<LeaveLedger> mockList = List.of(new LeaveLedger());
+        when(service.listByUserEmail("john@test.com")).thenReturn(mockList);
+
+        List<LeaveLedger> result = controller.myLeaveLedger(authentication, null, null);
+
+        assertEquals(1, result.size());
+        verify(service).listByUserEmail("john@test.com");
+    }
+
+    @Test
+    void testMyLeaveLedger_FromOnly_NoDateRange() {
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getName()).thenReturn("john@test.com");
+
+        List<LeaveLedger> mockList = List.of(new LeaveLedger());
+        when(service.listByUserEmail("john@test.com")).thenReturn(mockList);
+
+        List<LeaveLedger> result = controller.myLeaveLedger(authentication, "2024-01-01", null);
+
+        assertEquals(1, result.size());
+        verify(service).listByUserEmail("john@test.com");
+    }
+
+    @Test
+    void testMyLeaveLedger_ToOnly_NoDateRange() {
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getName()).thenReturn("john@test.com");
+
+        List<LeaveLedger> mockList = List.of(new LeaveLedger());
+        when(service.listByUserEmail("john@test.com")).thenReturn(mockList);
+
+        List<LeaveLedger> result = controller.myLeaveLedger(authentication, null, "2024-12-31");
+
+        assertEquals(1, result.size());
+        verify(service).listByUserEmail("john@test.com");
     }
 }
