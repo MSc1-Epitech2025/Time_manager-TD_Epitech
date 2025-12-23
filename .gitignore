@@ -62,6 +62,7 @@ backend/out/
 /frontend/.angular
 
 copilot_instruction.md
+node_modules
 
 /frontend/dist
 
