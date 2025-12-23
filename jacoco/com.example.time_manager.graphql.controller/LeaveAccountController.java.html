@@ -35,8 +35,8 @@ public class LeaveAccountController {
 
   @QueryMapping
   public List&lt;LeaveAccount&gt; myLeaveAccounts(Authentication authentication) {
-<span class="nc" id="L38">  String email = authentication.getName();</span>
-<span class="nc" id="L39">  return service.listByUserEmail(email);</span>
+<span class="fc" id="L38">  String email = authentication.getName();</span>
+<span class="fc" id="L39">  return service.listByUserEmail(email);</span>
   }
 
 

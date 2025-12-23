@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SecurityConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">time-manager</a> &gt; <a href="index.source.html" class="el_package">com.example.time_manager.security</a> &gt; <span class="el_source">SecurityConfig.java</span></div><h1>SecurityConfig.java</h1><pre class="source lang-java linenums">package com.example.time_manager.security;
 
-import java.util.List;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -15,66 +13,73 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.context.NullSecurityContextRepository;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.beans.factory.annotation.Value;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
-public class SecurityConfig {
+<span class="fc" id="L26">public class SecurityConfig {</span>
 
-  private final JwtAuthFilter jwtAuthFilter;
+    @Value(&quot;${FRONTEND_URL}&quot;)
+    private String frontendUrl;
 
-<span class="fc" id="L30">  public SecurityConfig(JwtAuthFilter jwtAuthFilter) {</span>
-<span class="fc" id="L31">    this.jwtAuthFilter = jwtAuthFilter;</span>
-<span class="fc" id="L32">  }</span>
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                            JwtAuthFilter jwtAuthFilter,
+                                            OAuth2SuccessHandler oAuth2SuccessHandler) throws Exception {
 
-  @Bean
-  SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-<span class="fc" id="L36">      http</span>
-<span class="pc" id="L37">          .cors(cors -&gt; cors.configurationSource(corsConfigurationSource()))</span>
-<span class="fc" id="L38">          .csrf(csrf -&gt; csrf.ignoringRequestMatchers(&quot;/graphql&quot;))</span>
-<span class="fc" id="L39">          .sessionManagement(sm -&gt; sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))</span>
-<span class="fc" id="L40">          .securityContext(sc -&gt; sc</span>
-<span class="fc" id="L41">              .requireExplicitSave(false)</span>
-<span class="fc" id="L42">              .securityContextRepository(new NullSecurityContextRepository())</span>
-          )
-<span class="fc" id="L44">          .authorizeHttpRequests(auth -&gt; auth</span>
-<span class="fc" id="L45">              .requestMatchers(&quot;/actuator/health&quot;).permitAll()</span>
-<span class="fc" id="L46">              .requestMatchers(HttpMethod.POST, &quot;/graphql&quot;).permitAll()</span>
-<span class="fc" id="L47">              .requestMatchers(&quot;/oauth2/**&quot;).permitAll()</span>
-<span class="fc" id="L48">              .anyRequest().authenticated()</span>
-          )
-<span class="fc" id="L50">          .oauth2Login(oauth -&gt; oauth.defaultSuccessUrl(&quot;/oauth2/success&quot;, true))</span>
-<span class="fc" id="L51">          .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);</span>
+<span class="fc" id="L36">        http</span>
+<span class="pc" id="L37">                .sessionManagement(sm -&gt; sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))</span>
+<span class="pc" id="L38">                .csrf(csrf -&gt; csrf.disable())</span>
+<span class="pc" id="L39">                .cors(cors -&gt; cors.configurationSource(corsConfigurationSource()))</span>
 
-<span class="fc" id="L53">      return http.build();</span>
-  }
+<span class="fc" id="L41">                .authorizeHttpRequests(auth -&gt; auth</span>
+<span class="fc" id="L42">                        .requestMatchers(HttpMethod.OPTIONS, &quot;/**&quot;).permitAll()</span>
+<span class="fc" id="L43">                        .requestMatchers(&quot;/actuator/health&quot;).permitAll()</span>
+<span class="fc" id="L44">                        .requestMatchers(&quot;/oauth2/**&quot;, &quot;/login/oauth2/**&quot;).permitAll()</span>
+<span class="fc" id="L45">                        .requestMatchers(HttpMethod.POST, &quot;/graphql&quot;).permitAll()</span>
+<span class="fc" id="L46">                        .anyRequest().authenticated()</span>
+                )
 
-  @Bean
-  CorsConfigurationSource corsConfigurationSource() {
-<span class="fc" id="L58">    CorsConfiguration cfg = new CorsConfiguration();</span>
-<span class="fc" id="L59">    cfg.setAllowedOrigins(List.of(&quot;http://localhost:4200&quot;, &quot;http://localhost:3000&quot;));</span>
-<span class="fc" id="L60">    cfg.setAllowedMethods(List.of(&quot;GET&quot;,&quot;POST&quot;,&quot;PUT&quot;,&quot;PATCH&quot;,&quot;DELETE&quot;,&quot;OPTIONS&quot;));</span>
-<span class="fc" id="L61">    cfg.setAllowedHeaders(List.of(&quot;Authorization&quot;,&quot;Content-Type&quot;,&quot;X-Requested-With&quot;));</span>
-<span class="fc" id="L62">    cfg.setExposedHeaders(List.of(&quot;Authorization&quot;));</span>
-<span class="fc" id="L63">    cfg.setAllowCredentials(true);</span>
+<span class="fc" id="L49">                .oauth2Login(oauth -&gt; oauth</span>
+<span class="fc" id="L50">                        .redirectionEndpoint(red -&gt; red.baseUri(&quot;/login/oauth2/code/*&quot;))</span>
+<span class="fc" id="L51">                        .successHandler(oAuth2SuccessHandler)</span>
+                )
 
-<span class="fc" id="L65">    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();</span>
-<span class="fc" id="L66">    source.registerCorsConfiguration(&quot;/**&quot;, cfg);</span>
-<span class="fc" id="L67">    return source;</span>
-  }
+<span class="pc" id="L54">                .formLogin(form -&gt; form.disable())</span>
+<span class="pc" id="L55">                .httpBasic(basic -&gt; basic.disable())</span>
 
-  @Bean
-  PasswordEncoder passwordEncoder() {
-<span class="fc" id="L72">    return new BCryptPasswordEncoder();</span>
-  }
+<span class="fc" id="L57">                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);</span>
 
-  @Bean
-  AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
-<span class="fc" id="L77">    return configuration.getAuthenticationManager();</span>
-  }
+<span class="fc" id="L59">        return http.build();</span>
+    }
+
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+<span class="fc" id="L64">        CorsConfiguration cfg = new CorsConfiguration();</span>
+<span class="fc" id="L65">        cfg.setAllowedOrigins(List.of(frontendUrl));</span>
+<span class="fc" id="L66">        cfg.setAllowedMethods(List.of(&quot;GET&quot;,&quot;POST&quot;,&quot;PUT&quot;,&quot;PATCH&quot;,&quot;DELETE&quot;,&quot;OPTIONS&quot;));</span>
+<span class="fc" id="L67">        cfg.setAllowedHeaders(List.of(&quot;Authorization&quot;,&quot;Content-Type&quot;,&quot;X-Requested-With&quot;));</span>
+<span class="fc" id="L68">        cfg.setAllowCredentials(true);</span>
+
+<span class="fc" id="L70">        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();</span>
+<span class="fc" id="L71">        source.registerCorsConfiguration(&quot;/**&quot;, cfg);</span>
+<span class="fc" id="L72">        return source;</span>
+    }
+
+    @Bean
+    PasswordEncoder passwordEncoder() {
+<span class="fc" id="L77">        return new BCryptPasswordEncoder();</span>
+    }
+
+    @Bean
+    AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+<span class="fc" id="L82">        return configuration.getAuthenticationManager();</span>
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

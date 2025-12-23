@@ -85,9 +85,9 @@ public class LeaveAccountService {
   }
 
   public List&lt;LeaveAccount&gt; listByUserEmail(String email) {
-<span class="nc" id="L88">  User user = userRepo.findByEmail(email)</span>
-<span class="nc" id="L89">    .orElseThrow(() -&gt; new IllegalArgumentException(&quot;User not found with email: &quot; + email));</span>
-<span class="nc" id="L90">  return repo.findByUser_Id(user.getId());</span>
+<span class="fc" id="L88">  User user = userRepo.findByEmail(email)</span>
+<span class="fc" id="L89">    .orElseThrow(() -&gt; new IllegalArgumentException(&quot;User not found with email: &quot; + email));</span>
+<span class="fc" id="L90">  return repo.findByUser_Id(user.getId());</span>
 }
 
 }

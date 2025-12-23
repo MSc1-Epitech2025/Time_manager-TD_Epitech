@@ -35,12 +35,12 @@ public class LeaveLedgerController {
   public List&lt;LeaveLedger&gt; myLeaveLedger(Authentication authentication,
                                          @Argument String from,
                                          @Argument String to) {
-<span class="nc" id="L38">    String email = authentication.getName();</span>
+<span class="fc" id="L38">    String email = authentication.getName();</span>
 
-<span class="nc bnc" id="L40" title="All 4 branches missed.">    if (from != null &amp;&amp; to != null) {</span>
-<span class="nc" id="L41">      return service.listByUserEmailBetween(email, LocalDate.parse(from), LocalDate.parse(to));</span>
+<span class="fc bfc" id="L40" title="All 4 branches covered.">    if (from != null &amp;&amp; to != null) {</span>
+<span class="fc" id="L41">      return service.listByUserEmailBetween(email, LocalDate.parse(from), LocalDate.parse(to));</span>
     }
-<span class="nc" id="L43">    return service.listByUserEmail(email);</span>
+<span class="fc" id="L43">    return service.listByUserEmail(email);</span>
   }
 
 

@@ -31,11 +31,11 @@ public class LeaveLedgerService {
 <span class="fc" id="L31">  }</span>
 
   public List&lt;LeaveLedger&gt; listByUserEmail(String email) {
-<span class="nc" id="L34">    return repo.findByAccount_User_EmailOrderByEntryDateAsc(email);</span>
+<span class="fc" id="L34">    return repo.findByAccount_User_EmailOrderByEntryDateAsc(email);</span>
   }
 
   public List&lt;LeaveLedger&gt; listByUserEmailBetween(String email, LocalDate from, LocalDate to) {
-<span class="nc" id="L38">    return repo.findByAccount_User_EmailAndEntryDateBetweenOrderByEntryDateAsc(email, from, to);</span>
+<span class="fc" id="L38">    return repo.findByAccount_User_EmailAndEntryDateBetweenOrderByEntryDateAsc(email, from, to);</span>
   }
 
 

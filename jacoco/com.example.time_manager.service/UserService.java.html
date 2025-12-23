@@ -130,13 +130,21 @@ public User updateUser(String id, UpdateUserInput in) {
 <span class="fc" id="L130">                .orElse(false);</span>
     }
 
+    public void completeFirstLogin(String userId) {
+<span class="fc" id="L134">        User u = findByIdOrThrow(userId);</span>
+<span class="fc bfc" id="L135" title="All 2 branches covered.">        if (u.isFirstConnection()) {</span>
+<span class="fc" id="L136">            u.setFirstConnection(false);</span>
+<span class="fc" id="L137">            userRepository.save(u);</span>
+        }
+<span class="fc" id="L139">    }</span>
+
     /* ================== DELETE ================== */
 
     public void deleteById(String id) {
-<span class="fc bfc" id="L136" title="All 2 branches covered.">        if (!userRepository.existsById(id)) {</span>
-<span class="fc" id="L137">            throw new EntityNotFoundException(&quot;User not found: &quot; + id);</span>
+<span class="fc bfc" id="L144" title="All 2 branches covered.">        if (!userRepository.existsById(id)) {</span>
+<span class="fc" id="L145">            throw new EntityNotFoundException(&quot;User not found: &quot; + id);</span>
         }
-<span class="fc" id="L139">        userRepository.deleteById(id);</span>
-<span class="fc" id="L140">    }</span>
+<span class="fc" id="L147">        userRepository.deleteById(id);</span>
+<span class="fc" id="L148">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

@@ -343,7 +343,7 @@ public class KpiService {
                 &quot;WHERE plan_start IS NOT NULL AND first_in IS NOT NULL AND TIME(first_in) &gt; plan_start&quot;,
 <span class="fc" id="L344">                Number.class, start, end, userId.toString(), userId.toString());</span>
 
-<span class="pc bpc" id="L346" title="1 of 2 branches missed.">        BigDecimal avgDelay = (avgDelayMin == null ? null : nz(avgDelayMin));</span>
+<span class="fc bfc" id="L346" title="All 2 branches covered.">        BigDecimal avgDelay = (avgDelayMin == null ? null : nz(avgDelayMin));</span>
 <span class="fc" id="L347">        k.setPunctuality(new PunctualityStats(lateRate, avgDelay));</span>
 
 <span class="fc" id="L349">        Number absDays = jdbc.queryForObject(</span>
