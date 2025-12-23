@@ -6,6 +6,7 @@ import com.example.time_manager.repository.UserRepository;
 import com.example.time_manager.repository.PasswordResetTokenRepository;
 import com.example.time_manager.service.mail.MailService;
 import com.example.time_manager.security.PasswordGenerator;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +23,9 @@ public class PasswordResetService {
     private final PasswordResetTokenRepository tokenRepo;
     private final PasswordEncoder encoder;
     private final MailService mailService;
-    private final String frontBaseUrl = "https://localhost:4200";
+
+    @Value("${FRONTEND_URL}")
+    private String frontBaseUrl;
 
     private static final Duration TOKEN_TTL = Duration.ofMinutes(30);
 
