@@ -198,4 +198,35 @@ class LeaveAccountServiceTest {
         BigDecimal result = service.computeCurrentBalance(accountId);
         assertEquals(BigDecimal.ZERO, result);
     }
+    @Test
+    void testListByUserEmail_Success() {
+        String email = "test@example.com";
+        User user = new User();
+        user.setId(userId);
+        user.setEmail(email);
+
+        List<LeaveAccount> accounts = List.of(new LeaveAccount());
+
+        when(userRepo.findByEmail(email)).thenReturn(Optional.of(user));
+        when(repo.findByUser_Id(userId)).thenReturn(accounts);
+
+        List<LeaveAccount> result = service.listByUserEmail(email);
+
+        assertEquals(1, result.size());
+        verify(userRepo).findByEmail(email);
+        verify(repo).findByUser_Id(userId);
+    }
+
+    @Test
+    void testListByUserEmail_UserNotFound_Throws() {
+        String email = "unknown@example.com";
+
+        when(userRepo.findByEmail(email)).thenReturn(Optional.empty());
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+                service.listByUserEmail(email));
+
+        assertTrue(ex.getMessage().contains("User not found with email"));
+        verify(repo, never()).findByUser_Id(any());
+    }
 }
