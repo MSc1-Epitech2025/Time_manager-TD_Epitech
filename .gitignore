@@ -62,8 +62,7 @@ backend/out/
 /frontend/.angular
 
 copilot_instruction.md
-node_modules
-
+/frontend/coverage
 /frontend/dist
 
 # Generated environment files

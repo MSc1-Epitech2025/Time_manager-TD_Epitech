@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { KpiBarChartComponent, BarChartData } from './kpi-bar-chart';
 import { SimpleChange } from '@angular/core';
 import { Chart } from 'chart.js';
@@ -97,6 +97,11 @@ describe('KpiBarChartComponent', () => {
     it('should return pink (#f472b6) for productivity', () => {
       component.selectedKpi = 'productivity';
       expect(component.getBarColor()).toBe('#f472b6');
+    });
+
+    it('should return default purple (#a78bfa) for unknown kpi', () => {
+      component.selectedKpi = 'unknown' as unknown as any;
+      expect(component.getBarColor()).toBe('#a78bfa');
     });
   });
 
@@ -254,6 +259,76 @@ describe('KpiBarChartComponent', () => {
       component.renderChart();
 
       expect(component.chart).toBeUndefined();
+    });
+
+    it('tooltip label callback returns "0" when parsed.y is null', () => {
+      component.chartRef = { nativeElement: { getContext: jest.fn().mockReturnValue({}) } } as unknown as typeof component.chartRef;
+      component.data = mockData;
+      component.selectedKpi = 'attendance';
+
+      component.renderChart();
+
+      const chartMock = Chart as unknown as jest.Mock;
+      const config = chartMock.mock.calls.at(-1)[1];
+      const labelCb = config.options.plugins.tooltip.callbacks.label;
+
+      expect(labelCb({ parsed: { y: null } })).toBe('0');
+    });
+
+    it('tooltip label callback formats productivity with one decimal and "h"', () => {
+      component.chartRef = { nativeElement: { getContext: jest.fn().mockReturnValue({}) } } as unknown as typeof component.chartRef;
+      component.data = mockData;
+      component.selectedKpi = 'productivity';
+
+      component.renderChart();
+
+      const chartMock = Chart as unknown as jest.Mock;
+      const config = chartMock.mock.calls.at(-1)[1];
+      const labelCb = config.options.plugins.tooltip.callbacks.label;
+
+      expect(labelCb({ parsed: { y: 3.14159 } })).toBe('3.1h');
+    });
+
+    it('tooltip label callback returns plain string for non-productivity numeric values', () => {
+      component.chartRef = { nativeElement: { getContext: jest.fn().mockReturnValue({}) } } as unknown as typeof component.chartRef;
+      component.data = mockData;
+      component.selectedKpi = 'attendance';
+
+      component.renderChart();
+
+      const chartMock = Chart as unknown as jest.Mock;
+      const config = chartMock.mock.calls.at(-1)[1];
+      const labelCb = config.options.plugins.tooltip.callbacks.label;
+
+      expect(labelCb({ parsed: { y: 7 } })).toBe('7');
+    });
+
+    it('y-axis tick callback appends "h" for productivity', () => {
+      component.chartRef = { nativeElement: { getContext: jest.fn().mockReturnValue({}) } } as unknown as typeof component.chartRef;
+      component.data = mockData;
+      component.selectedKpi = 'productivity';
+
+      component.renderChart();
+
+      const chartMock = Chart as unknown as jest.Mock;
+      const config = chartMock.mock.calls.at(-1)[1];
+      const tickCb = config.options.scales.y.ticks.callback;
+
+      expect(tickCb(8)).toBe('8h');
+    });
+
+    it('y-axis tick callback returns value for non-productivity', () => {
+      component.chartRef = { nativeElement: { getContext: jest.fn().mockReturnValue({}) } } as unknown as typeof component.chartRef;
+      component.data = mockData;
+      component.selectedKpi = 'attendance';
+
+      component.renderChart();
+
+      const chartMock = Chart as unknown as jest.Mock;
+      const config = chartMock.mock.calls.at(-1)[1];
+      const tickCb = config.options.scales.y.ticks.callback;
+
+      expect(tickCb(8)).toBe(8);
     });
   });
 
