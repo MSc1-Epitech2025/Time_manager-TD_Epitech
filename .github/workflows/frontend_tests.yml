@@ -1,22 +1,21 @@
+
 name: Frontend Tests
 
 on:
   push:
-    branches: [ "**" ]
+    branches: ["**"]
   pull_request:
     branches: ["**"]
 
 jobs:
-  test:
+  test-frontend:
     runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: ./frontend
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -26,14 +25,81 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
+        working-directory: frontend
         run: npm ci
 
       - name: Run tests with coverage
+        working-directory: frontend
         run: npm test -- --coverage --ci
 
-      - name: Upload coverage report
+      - name: Debug coverage report path
+        run: |
+          echo "=== Vérification du contenu du dossier coverage ==="
+          ls -R frontend/coverage || true
+
+      - name: Publish coverage summary
+        run: |
+          REPORT="frontend/coverage/lcov-report/index.html"
+
+          echo "## 🧪 Résumé de la couverture Jest" >> $GITHUB_STEP_SUMMARY
+
+          if [ ! -f "frontend/coverage/coverage-summary.json" ]; then
+            echo "⚠️ Rapport de couverture introuvable" >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+
+          COV_LINES=$(cat frontend/coverage/coverage-summary.json | jq '.total.lines.pct')
+          COV_STATEMENTS=$(cat frontend/coverage/coverage-summary.json | jq '.total.statements.pct')
+          COV_FUNCTIONS=$(cat frontend/coverage/coverage-summary.json | jq '.total.functions.pct')
+          COV_BRANCHES=$(cat frontend/coverage/coverage-summary.json | jq '.total.branches.pct')
+
+          if (( $(echo "$COV_LINES < 50" | bc -l) )); then COLOR="🔴"
+          elif (( $(echo "$COV_LINES < 80" | bc -l) )); then COLOR="🟠"
+          else COLOR="🟢"; fi
+
+          echo "**Couverture globale :** ${COLOR} ${COV_LINES}% (lignes)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Type | Couverture |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|-------------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Statements | ${COV_STATEMENTS}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| Lignes | ${COV_LINES}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| Fonctions | ${COV_FUNCTIONS}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| Branches | ${COV_BRANCHES}% |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload coverage HTML report as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report
-          path: frontend/coverage/
-          retention-days: 7
+          name: jest-coverage-report
+          path: frontend/coverage/lcov-report
+
+  publish-coverage:
+    needs: test-frontend
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download coverage artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: jest-coverage-report
+          path: jest-coverage-report
+
+      - name: Deploy coverage report to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: jest-coverage-report
+          destination_dir: coverage-frontend
+          keep_files: true
+
+      - name: Add link to report in summary
+        run: |
+          echo "## 📊 Rapport de couverture Frontend publié" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 [Ouvrir le rapport complet Jest (HTML)](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/coverage-frontend/index.html)" >> $GITHUB_STEP_SUMMARY
