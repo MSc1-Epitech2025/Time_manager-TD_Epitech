@@ -105,7 +105,7 @@ services:
     container_name: sonar-scan-backend
     environment:
       - SONAR_HOST_URL=${SONAR_HOST_URL}
-      - SONAR_TOKEN=${SONAR_TOKEN}
+      - BACKEND_SONAR_TOKEN=${BACKEND_SONAR_TOKEN}
     volumes:
       - ./backend:/usr/src/app/backend:ro
       - ./sonarqube/backend/sonar-project.properties:/usr/src/app/sonar-project.properties
@@ -114,20 +114,21 @@ services:
     command: >
       sonar-scanner
         -Dsonar.projectBaseDir=/usr/src/app
-# Setup when units test are ready on frontend
-#  sonar-scan-frontend:
-#    build:
-#      context: .
-#      dockerfile: sonarqube/frontend/Dockerfile.sonar
-#    environment:
-#      - SONAR_HOST_URL=${SONAR_HOST_URL}
-#      - SONAR_TOKEN=${SONAR_TOKEN}
-#    volumes:
-#      - ./sonarqube/frontend/sonar-project.properties:/usr/src/app/sonar-project.properties
-#    command: >
-#      -Dsonar.host.url=${SONAR_HOST_URL}
-#      -Dsonar.token=${SONAR_TOKEN}
 
+  sonar-scan-frontend:
+    image: sonarsource/sonar-scanner-cli:latest
+    container_name: sonar-scan-frontend
+    environment:
+      - SONAR_HOST_URL=${SONAR_HOST_URL}
+      - SONAR_TOKEN=${FRONTEND_SONAR_TOKEN}
+    volumes:
+      - ./frontend:/usr/src/app/frontend:ro
+      - ./sonarqube/frontend/sonar-project.properties:/usr/src/app/sonar-project.properties
+      - ./frontend/coverage:/usr/src/app/frontend/coverage:ro
+    working_dir: /usr/src/app
+    command: >
+      sonar-scanner
+        -Dsonar.projectBaseDir=/usr/src/app
 
 volumes:
   mariadb_data:
