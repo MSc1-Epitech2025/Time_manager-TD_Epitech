@@ -16,13 +16,12 @@ export interface BarChartData {
 export class KpiBarChartComponent implements AfterViewInit, OnChanges {
 
   @ViewChild('barChart', { static: false }) chartRef!: ElementRef<HTMLCanvasElement>;
-
   @Input() data: BarChartData[] = [];
   @Input() selectedKpi: 'absenteeism' | 'attendance' | 'productivity' = 'absenteeism';
 
   chart?: Chart;
   title = '';
-  
+
   ngAfterViewInit() {
     this.updateTitle();
     this.renderChart();
