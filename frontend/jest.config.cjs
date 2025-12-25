@@ -4,6 +4,8 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/setup-jest.ts'],
   testMatch: ['**/*.spec.ts'],
   moduleNameMapper: {
-    '^src/(.*)$': '<rootDir>/src/$1'
-  }
+    '^@shared/(.*)$': '<rootDir>/src/app/shared/$1',
+    '^@core/(.*)$': '<rootDir>/src/app/core/$1',
+    '^@environments/(.*)$': '<rootDir>/src/environments/$1',
+  },
 };
