@@ -12,11 +12,9 @@ public class ReportResponse {
   private String targetUserId;
   private String targetEmail;
 
-  // nouveau
   private String subjectUserId;
   private String subjectEmail;
 
-  // nouveau
   private String type;
   private String severity;
 
