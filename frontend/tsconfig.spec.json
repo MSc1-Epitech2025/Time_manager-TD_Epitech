@@ -6,7 +6,13 @@
     "module": "CommonJS",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "allowJs": true
+    "allowJs": true,
+    "baseUrl": "./",
+    "paths": {
+      "@shared/*": ["src/app/shared/*"],
+      "@core/*": ["src/app/core/*"],
+      "@environments/*": ["src/environments/*"]
+    }
   },
   "include": [
     "src/**/*.spec.ts",
