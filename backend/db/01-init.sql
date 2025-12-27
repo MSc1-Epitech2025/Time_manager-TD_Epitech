@@ -13,6 +13,11 @@ CREATE TABLE
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );
 
+INSERT INTO users (id, first_name, last_name, email, phone, role, poste, password)
+VALUES
+  (UUID(), 'System', 'Bot', 'system@time-manager.local', NULL, JSON_ARRAY('admin'), 'SYSTEM', '$2b$12$AiWFHiPzTeqWJhKtjMj5B.6ldZgGY0hcHJ3sn.o2wmoPgcXLGENDS');
+
+
 CREATE TABLE
   teams (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -42,17 +47,34 @@ CREATE TABLE
 
 DROP TABLE IF EXISTS reports;
 
-CREATE TABLE
-  reports (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    author_id CHAR(36) NOT NULL,
-    target_user_id CHAR(36) NOT NULL,
-    title VARCHAR(255) NOT NULL,
-    body TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_reports_author FOREIGN KEY (author_id) REFERENCES users (id) ON DELETE CASCADE,
-    CONSTRAINT fk_reports_target FOREIGN KEY (target_user_id) REFERENCES users (id) ON DELETE CASCADE
-  );
+CREATE TABLE reports (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+
+  author_id CHAR(36) NOT NULL,
+  target_user_id CHAR(36) NOT NULL,
+  subject_user_id CHAR(36) NULL,
+
+  type VARCHAR(64) NOT NULL DEFAULT 'MANUAL',
+  severity VARCHAR(16) NOT NULL DEFAULT 'INFO',
+
+  rule_key VARCHAR(160) UNIQUE,
+
+  title VARCHAR(255) NOT NULL,
+  body TEXT,
+
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_reports_author
+    FOREIGN KEY (author_id) REFERENCES users (id) ON DELETE CASCADE,
+
+  CONSTRAINT fk_reports_target
+    FOREIGN KEY (target_user_id) REFERENCES users (id) ON DELETE CASCADE,
+
+  CONSTRAINT fk_reports_subject
+    FOREIGN KEY (subject_user_id) REFERENCES users (id) ON DELETE SET NULL
+);
+
 
 CREATE TABLE
   work_schedules (

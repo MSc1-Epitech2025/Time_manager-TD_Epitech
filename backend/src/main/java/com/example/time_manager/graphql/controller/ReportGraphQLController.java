@@ -20,62 +20,64 @@ import jakarta.validation.Valid;
 @Controller
 public class ReportGraphQLController {
 
-    private final ReportService reportService;
+  private final ReportService reportService;
 
-    public ReportGraphQLController(ReportService reportService) {
-        this.reportService = reportService;
-    }
+  public ReportGraphQLController(ReportService reportService) {
+    this.reportService = reportService;
+  }
 
-    /* ======================== QUERIES ======================== */
+  /* ======================== QUERIES ======================== */
 
-    @QueryMapping
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public List<ReportResponse> reports() {
-        return reportService.listAll();
-    }
+  /** ADMIN only : all reports */
+  @QueryMapping
+  @PreAuthorize("hasAuthority('ADMIN')")
+  public List<ReportResponse> reports(Authentication auth) {
+    return reportService.listAllForAdmin(auth.getName());
+  }
 
-    @QueryMapping
-    public List<ReportResponse> myReports(Authentication auth) {
-        String email = auth.getName();
-        return reportService.listMineByEmail(email);
-    }
+  /** Reports I created */
+  @QueryMapping
+  public List<ReportResponse> myReports(Authentication auth) {
+    return reportService.listAuthoredByEmail(auth.getName());
+  }
 
-    @QueryMapping
-    public List<ReportResponse> reportsForMe(Authentication auth) {
-        String email = auth.getName();
-        return reportService.listReceivedByEmail(email);
-    }
+  /** Reports where I am the target */
+  @QueryMapping
+  public List<ReportResponse> reportsForMe(Authentication auth) {
+    return reportService.listReceivedByEmail(auth.getName());
+  }
 
-    @QueryMapping
-    public ReportResponse report(@Argument Long id, Authentication auth) {
-        String email = auth.getName();
-        return reportService.loadVisibleByEmail(email, id);
-    }
+  /** Single report (visible if admin / author / target) */
+  @QueryMapping
+  public ReportResponse report(@Argument Long id, Authentication auth) {
+    return reportService.getVisibleTo(auth.getName(), id);
+  }
 
-    /* ======================== MUTATIONS ======================== */
+  /* ======================== MUTATIONS ======================== */
 
-    @MutationMapping
-    public ReportResponse createReport(
-        @Argument("input") @Valid ReportCreateRequest input,
-        Authentication auth
-    ) {
-        String email = auth.getName();
-        return reportService.create(email, input);
-    }
+  /** Manual report creation */
+  @MutationMapping
+  public ReportResponse createReport(
+      @Argument("input") @Valid ReportCreateRequest input,
+      Authentication auth
+  ) {
+    return reportService.createForAuthorEmail(auth.getName(), input);
+  }
 
-    @MutationMapping
-    public ReportResponse updateReport(
-        @Argument("id") Long id,                            
-        @Argument("input") @Valid ReportUpdateRequest input,
-        Authentication auth
-    ) {
-        String email = auth.getName();
-        return reportService.update(email, id, input);
-    }
-    @MutationMapping
-    public Boolean deleteReport(@Argument Long id, Authentication auth) {
-        String email = auth.getName();
-        reportService.delete(email, id);
-        return true;
-    }
+  /** Update report (admin or author) */
+  @MutationMapping
+  public ReportResponse updateReport(
+      @Argument Long id,
+      @Argument("input") @Valid ReportUpdateRequest input,
+      Authentication auth
+  ) {
+    return reportService.updateVisibleTo(auth.getName(), id, input);
+  }
+
+  /** Delete report (admin or author) */
+  @MutationMapping
+  public Boolean deleteReport(@Argument Long id, Authentication auth) {
+    reportService.deleteVisibleTo(auth.getName(), id);
+    return true;
+  }
 }

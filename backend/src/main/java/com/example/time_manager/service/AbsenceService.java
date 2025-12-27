@@ -37,17 +37,20 @@ public class AbsenceService {
   private final UserRepository userRepo;
   private final TeamMemberRepository teamMemberRepo;
   private final LeaveAccountingBridge leaveAccountingBridge; 
-  
+  private final AutoReportService autoReportService;
+
   public AbsenceService(AbsenceRepository absenceRepo,
                         AbsenceDayRepository dayRepo,
                         UserRepository userRepo,
                         TeamMemberRepository teamMemberRepo,
-                        LeaveAccountingBridge leaveAccountingBridge) { 
+                        LeaveAccountingBridge leaveAccountingBridge,
+                        AutoReportService autoReportService) { 
     this.absenceRepo = absenceRepo;
     this.dayRepo = dayRepo;
     this.userRepo = userRepo;
     this.teamMemberRepo = teamMemberRepo;
     this.leaveAccountingBridge = leaveAccountingBridge; 
+    this.autoReportService = autoReportService;
   }
 
   /* =================== CREATE =================== */
@@ -68,6 +71,7 @@ public class AbsenceService {
     a.setStatus(AbsenceStatus.PENDING);
 
     a = absenceRepo.save(a);
+    autoReportService.onAbsenceRequested(a);
 
     generateDays(a, req.getPeriodByDate());
     var days = dayRepo.findByAbsenceIdOrderByAbsenceDateAsc(a.getId());
@@ -237,11 +241,12 @@ public List<AbsenceResponse> listTeamAbsences(String managerEmail, Long teamId) 
     if (req.getStatus() == AbsenceStatus.PENDING) {
       throw new IllegalArgumentException("Status must be APPROVED or REJECTED");
     }
-
+    AbsenceStatus prev = a.getStatus();
     a.setStatus(req.getStatus());
     a.setApprovedBy(approver.getId());
     a.setApprovedAt(LocalDateTime.now());
     a = absenceRepo.save(a);
+    autoReportService.onAbsenceStatusChanged(approverEmail, a, prev);
     switch (a.getStatus()) {
       case APPROVED -> leaveAccountingBridge.ensureDebitForApprovedAbsence(a);
       case REJECTED -> leaveAccountingBridge.removeDebitForAbsence(a.getId());

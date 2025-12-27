@@ -32,23 +32,23 @@ class ReportGraphQLControllerTest {
     @Test
     void testReports_AdminListAll() {
         List<ReportResponse> mockList = List.of(new ReportResponse(), new ReportResponse());
-        when(reportService.listAll()).thenReturn(mockList);
+        when(reportService.listAllForAdmin("john@example.com")).thenReturn(mockList);
 
-        List<ReportResponse> result = controller.reports();
+        List<ReportResponse> result = controller.reports(auth);
 
         assertEquals(2, result.size());
-        verify(reportService).listAll();
+        verify(reportService).listAllForAdmin("john@example.com");
     }
 
     @Test
     void testMyReports_ReturnsList() {
         List<ReportResponse> mockList = List.of(new ReportResponse());
-        when(reportService.listMineByEmail("john@example.com")).thenReturn(mockList);
+        when(reportService.listAuthoredByEmail("john@example.com")).thenReturn(mockList);
 
         List<ReportResponse> result = controller.myReports(auth);
 
         assertEquals(1, result.size());
-        verify(reportService).listMineByEmail("john@example.com");
+        verify(reportService).listAuthoredByEmail("john@example.com");
     }
 
     @Test
@@ -65,12 +65,12 @@ class ReportGraphQLControllerTest {
     @Test
     void testReport_ReturnsById() {
         ReportResponse mockReport = new ReportResponse();
-        when(reportService.loadVisibleByEmail("john@example.com", 5L)).thenReturn(mockReport);
+        when(reportService.getVisibleTo("john@example.com", 5L)).thenReturn(mockReport);
 
         ReportResponse result = controller.report(5L, auth);
 
         assertNotNull(result);
-        verify(reportService).loadVisibleByEmail("john@example.com", 5L);
+        verify(reportService).getVisibleTo("john@example.com", 5L);
     }
 
     @Test
@@ -78,12 +78,12 @@ class ReportGraphQLControllerTest {
         ReportCreateRequest input = new ReportCreateRequest();
         ReportResponse expected = new ReportResponse();
 
-        when(reportService.create("john@example.com", input)).thenReturn(expected);
+        when(reportService.createForAuthorEmail("john@example.com", input)).thenReturn(expected);
 
         ReportResponse result = controller.createReport(input, auth);
 
-        assertEquals(expected, result);
-        verify(reportService).create("john@example.com", input);
+        assertSame(expected, result);
+        verify(reportService).createForAuthorEmail("john@example.com", input);
     }
 
     @Test
@@ -91,12 +91,12 @@ class ReportGraphQLControllerTest {
         ReportUpdateRequest input = new ReportUpdateRequest();
         ReportResponse expected = new ReportResponse();
 
-        when(reportService.update("john@example.com", 10L, input)).thenReturn(expected);
+        when(reportService.updateVisibleTo("john@example.com", 10L, input)).thenReturn(expected);
 
         ReportResponse result = controller.updateReport(10L, input, auth);
 
-        assertEquals(expected, result);
-        verify(reportService).update("john@example.com", 10L, input);
+        assertSame(expected, result);
+        verify(reportService).updateVisibleTo("john@example.com", 10L, input);
     }
 
     @Test
@@ -104,28 +104,29 @@ class ReportGraphQLControllerTest {
         Boolean result = controller.deleteReport(3L, auth);
 
         assertTrue(result);
-        verify(reportService).delete("john@example.com", 3L);
+        verify(reportService).deleteVisibleTo("john@example.com", 3L);
     }
 
     @Test
     void testReport_ServiceThrowsException_Propagates() {
-        when(reportService.loadVisibleByEmail("john@example.com", 5L))
+        when(reportService.getVisibleTo("john@example.com", 5L))
                 .thenThrow(new RuntimeException("Not allowed"));
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> controller.report(5L, auth));
 
         assertEquals("Not allowed", ex.getMessage());
-        verify(reportService).loadVisibleByEmail("john@example.com", 5L);
+        verify(reportService).getVisibleTo("john@example.com", 5L);
     }
 
     @Test
     void testCreateReport_ServiceThrowsException_Propagates() {
         ReportCreateRequest req = new ReportCreateRequest();
-        when(reportService.create("john@example.com", req)).thenThrow(new RuntimeException("Create error"));
+        when(reportService.createForAuthorEmail("john@example.com", req))
+                .thenThrow(new RuntimeException("Create error"));
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> controller.createReport(req, auth));
 
         assertEquals("Create error", ex.getMessage());
-        verify(reportService).create("john@example.com", req);
+        verify(reportService).createForAuthorEmail("john@example.com", req);
     }
 }

@@ -1,11 +1,14 @@
 package com.example.time_manager.repository;
 
-import com.example.time_manager.model.Report;
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import java.util.List;
 
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.example.time_manager.model.Report;
+
 public interface ReportRepository extends JpaRepository<Report, Long> {
+
+  boolean existsByRuleKey(String ruleKey);
 
   List<Report> findAllByOrderByCreatedAtDesc();
 

@@ -240,27 +240,48 @@ INSERT INTO clocks (user_id, kind, `at`) VALUES
 -- ==========================================================
 -- REPORTS (manager notifications)
 -- ==========================================================
-INSERT INTO reports (author_id, target_user_id, title, body)
+INSERT INTO reports (author_id, target_user_id, subject_user_id, type, severity, rule_key, title, body)
 VALUES
-  ((SELECT id FROM users WHERE email = 'gaspard.malmon@epitech.eu'),
-   (SELECT id FROM users WHERE email = 'clement.hamimi@epitech.eu'),
-   'Absence report: Clément sick leave',
-   'Clément was on sick leave on 13/10/2025.'),
-
-  ((SELECT id FROM users WHERE email = 'gaspard.malmon@epitech.eu'),
-   (SELECT id FROM users WHERE email = 'armand.braud@epitech.eu'),
-   'Partial absence: Armand personal errand',
-   'Armand was absent on the afternoon of 10/10/2025 for a personal appointment.'),
-
-  ((SELECT id FROM users WHERE email = 'gaspard.malmon@epitech.eu'),
-   (SELECT id FROM users WHERE email = 'alex.fraioli@epitech.eu'),
-   'Alex vacation planning',
-   'Alex is on vacation from 20/10/2025 to 22/10/2025.'),
-
-  ((SELECT id FROM users WHERE email = 'alex.fraioli@epitech.eu'),
-   (SELECT id FROM users WHERE email = 'gaspard.malmon@epitech.eu'),
-   'Reminder: approve pending leaves',
-   'Please review and approve remaining pending leave requests for October.');
+  (
+    (SELECT id FROM users WHERE email = 'gaspard.malmon@epitech.eu'),
+    (SELECT id FROM users WHERE email = 'clement.hamimi@epitech.eu'),
+    (SELECT id FROM users WHERE email = 'clement.hamimi@epitech.eu'),
+    'MANUAL',
+    'INFO',
+    NULL,
+    'Absence report: Clément sick leave',
+    'Clément was on sick leave on 13/10/2025.'
+  ),
+  (
+    (SELECT id FROM users WHERE email = 'gaspard.malmon@epitech.eu'),
+    (SELECT id FROM users WHERE email = 'armand.braud@epitech.eu'),
+    (SELECT id FROM users WHERE email = 'armand.braud@epitech.eu'),
+    'MANUAL',
+    'INFO',
+    NULL,
+    'Partial absence: Armand personal errand',
+    'Armand was absent on the afternoon of 10/10/2025 for a personal appointment.'
+  ),
+  (
+    (SELECT id FROM users WHERE email = 'gaspard.malmon@epitech.eu'),
+    (SELECT id FROM users WHERE email = 'alex.fraioli@epitech.eu'),
+    (SELECT id FROM users WHERE email = 'alex.fraioli@epitech.eu'),
+    'MANUAL',
+    'INFO',
+    NULL,
+    'Alex vacation planning',
+    'Alex is on vacation from 20/10/2025 to 22/10/2025.'
+  ),
+  (
+    (SELECT id FROM users WHERE email = 'alex.fraioli@epitech.eu'),
+    (SELECT id FROM users WHERE email = 'gaspard.malmon@epitech.eu'),
+    (SELECT id FROM users WHERE email = 'gaspard.malmon@epitech.eu'),
+    'MANUAL',
+    'INFO',
+    NULL,
+    'Reminder: approve pending leaves',
+    'Please review and approve remaining pending leave requests for October.'
+  );
 
 -- ==========================================================
 -- LEAVE TYPES
