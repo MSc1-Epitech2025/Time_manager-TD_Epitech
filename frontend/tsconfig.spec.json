@@ -7,11 +7,17 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "allowJs": true,
-    "baseUrl": "./",
+
+    "baseUrl": "src",
+
     "paths": {
-      "@shared/*": ["src/app/shared/*"],
-      "@core/*": ["src/app/core/*"],
-      "@environments/*": ["src/environments/*"]
+      "@core/*": ["app/core/*"],
+      "@shared/*": ["app/shared/*"],
+      "@kpi/*": ["app/kpi/*"],
+      "@modal/*": ["app/modal/*"],
+      "@auth/*": ["app/auth/*"],
+      "@pages/*": ["app/pages/*"],
+      "@environments/*": ["environments/*"]
     }
   },
   "include": [

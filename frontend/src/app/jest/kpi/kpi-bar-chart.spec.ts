@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { KpiBarChartComponent, BarChartData } from './kpi-bar-chart';
+import { KpiBarChartComponent, BarChartData } from '../../kpi/kpi-bar-chart/kpi-bar-chart';
 import { SimpleChange } from '@angular/core';
 import { Chart } from 'chart.js';
 

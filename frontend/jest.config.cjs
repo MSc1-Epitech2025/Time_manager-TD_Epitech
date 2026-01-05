@@ -6,6 +6,10 @@ module.exports = {
   moduleNameMapper: {
     '^@shared/(.*)$': '<rootDir>/src/app/shared/$1',
     '^@core/(.*)$': '<rootDir>/src/app/core/$1',
+    '^@modal/(.*)$': '<rootDir>/src/app/modal/$1',
+    '^@kpi/(.*)$': '<rootDir>/src/app/kpi/$1',
+    '^@auth/(.*)$': '<rootDir>/src/app/auth/$1',
+    '^@pages/(.*)$': '<rootDir>/src/app/pages/$1',
     '^@environments/(.*)$': '<rootDir>/src/environments/$1',
   },
 };
