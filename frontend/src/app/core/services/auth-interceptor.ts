@@ -7,12 +7,13 @@ import { Router } from '@angular/router';
 import { AuthService } from './auth';
 import { environment } from '@environments/environment';
 
+// todo: remove this and use environment variable directly
 const BACKEND_HOSTS = new Set([
   'http://localhost:8030',
   'https://localhost:8030',
 ]);
 
-const MAX_REFRESH_COUNT = environment.MAX_REFRESH_COUNT; 
+const MAX_REFRESH_COUNT = environment.MAX_REFRESH_COUNT;
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
@@ -31,7 +32,7 @@ export class AuthInterceptor implements HttpInterceptor {
           const session = this.auth.session;
           const refreshCount = session?.refreshCount ?? 0;
 
-          if (session && refreshCount < MAX_REFRESH_COUNT) { 
+          if (session && refreshCount < MAX_REFRESH_COUNT) {
             return from(this.auth.refreshToken()).pipe(
               switchMap(() => {
                 const retryReq = authReq.clone({ withCredentials: true });
