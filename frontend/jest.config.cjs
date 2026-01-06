@@ -11,7 +11,10 @@ module.exports = {
     '^@auth/(.*)$': '<rootDir>/src/app/auth/$1',
     '^@app/(.*)$': '<rootDir>/src/app/$1',
     '^@pages/(.*)$': '<rootDir>/src/app/pages/$1',
-    '^@environments/(.*)$': '<rootDir>/src/environments/$1',
+    '^@environments/environment$':
+      '<rootDir>/src/environments/environment.ts',
+    '^@environments/(.*)$':
+      '<rootDir>/src/environments/$1',
     '^lodash-es$': 'lodash',
   },
   transformIgnorePatterns: [
