@@ -19,20 +19,6 @@ spring:
     graphiql:
       enabled: true
       path: /graphiql
-      init:
-        tabs:
-          - name: "Login"
-            query: "mutation Login {\n  login(input: {email: \"user@example.com\", password: \"password\"}) {\n    ok\n    firstConnection\n  }\n}"
-          - name: "Create Absence"
-            query: "mutation CreateAbsence($input: AbsenceCreateInput!) {\n  createAbsence(input: $input) {\n    id\n    type\n    status\n    startDate\n    endDate\n  }\n}"
-          - name: "Clock In/Out"
-            query: "mutation CreateClockForMe($input: ClockCreateInput!) {\n  createClockForMe(input: $input) {\n    id\n    userId\n    checkInTime\n    checkOutTime\n  }\n}"
-          - name: "Work Schedule"
-            query: "mutation UpsertMyWorkSchedule($input: WorkScheduleInput!) {\n  upsertMyWorkSchedule(input: $input) {\n    id\n    date\n    startTime\n    endTime\n  }\n}"
-          - name: "My Absences"
-            query: "query MyAbsences {\n  myAbsences {\n    id\n    type\n    status\n    startDate\n    endDate\n  }\n}"
-          - name: "My KPI"
-            query: "query MyKpi {\n  myKpi {\n    leaveType\n    openingBalance\n    currentBalance\n  }\n}"
     schema:
       locations: classpath:graphql/**
   security:
