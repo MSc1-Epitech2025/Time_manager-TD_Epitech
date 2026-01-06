@@ -10,6 +10,7 @@ import com.example.time_manager.repository.AbsenceRepository;
 import com.example.time_manager.repository.TeamMemberRepository;
 import com.example.time_manager.repository.UserRepository;
 import com.example.time_manager.service.AbsenceService;
+import com.example.time_manager.service.AutoReportService;
 import com.example.time_manager.service.leave.LeaveAccountingBridge;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.*;
@@ -31,8 +32,17 @@ class AbsenceServiceReadTest {
     UserRepository userRepo = mock(UserRepository.class);
     TeamMemberRepository teamMemberRepo = mock(TeamMemberRepository.class);
     LeaveAccountingBridge bridge = mock(LeaveAccountingBridge.class);
+    AutoReportService autoReportService = mock(AutoReportService.class);
 
-    AbsenceService service = new AbsenceService(absenceRepo, dayRepo, userRepo, teamMemberRepo, bridge);
+    AbsenceService service =
+            new AbsenceService(
+                    absenceRepo,
+                    dayRepo,
+                    userRepo,
+                    teamMemberRepo,
+                    bridge,
+                    autoReportService
+            );
 
     @BeforeEach
     void setupContext() {
