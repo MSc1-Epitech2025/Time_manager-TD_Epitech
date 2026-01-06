@@ -3,6 +3,7 @@ FROM node:20-alpine
 WORKDIR /app
 
 COPY package*.json ./
+COPY .npmrc .npmrc
 
 RUN npm install
 RUN npm install -g @angular/cli
