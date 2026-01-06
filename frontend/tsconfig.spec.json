@@ -18,7 +18,8 @@
       "@modal/*": ["app/modal/*"],
       "@auth/*": ["app/auth/*"],
       "@pages/*": ["app/pages/*"],
-      "@environments/*": ["environments/*"]
+      "@environments/*": ["environments/*"],
+      "@environments/environment": ["environments/environment.test.ts"]
     }
   },
   "include": [
