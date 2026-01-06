@@ -42,6 +42,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
+                        .requestMatchers("/graphiql", "/graphiql/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/graphql").permitAll()
                         .anyRequest().authenticated()
                 )
