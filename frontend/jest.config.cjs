@@ -1,7 +1,7 @@
 /** @type {import('jest').Config} */
 module.exports = {
   preset: 'jest-preset-angular',
-  setupFilesAfterEnv: ['<rootDir>/setup-jest.ts'],
+  setupFilesAfterEnv: ['<rootDir>/frontend/setup-jest.ts'],
   testMatch: ['**/*.spec.ts'],
   moduleNameMapper: {
     '^@shared/(.*)$': '<rootDir>/src/app/shared/$1',
