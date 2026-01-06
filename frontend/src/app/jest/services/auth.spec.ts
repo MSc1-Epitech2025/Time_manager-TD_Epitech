@@ -171,19 +171,22 @@ describe('AuthService (100% coverage)', () => {
     expect(startSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('logout: clears timer/session/storage and navigates to /login?reason=expired', () => {
+  it('logout: clears timer/session/storage and navigates to /login?reason=expired', async () => {
     (service as any).tokenExpiryTimer = setTimeout(() => {}, 999999);
     (service as any).session$.next(makeSession());
     localStorage.setItem('tm.session', JSON.stringify(makeSession()));
     sessionStorage.setItem('tm.session', JSON.stringify(makeSession()));
 
-    service.logout();
+    await service.logout('expired');
 
     expect(service.session).toBeNull();
     expect((service as any).tokenExpiryTimer).toBeNull();
     expect(localStorage.getItem('tm.session')).toBeNull();
     expect(sessionStorage.getItem('tm.session')).toBeNull();
-    expect(router.navigate).toHaveBeenCalledWith(['/login'], { queryParams: { reason: 'expired' } });
+    expect(router.navigate).toHaveBeenCalledWith(
+      ['/'],
+      { queryParams: { reason: 'expired' } }
+    );
   });
 
   it('normalizeUser: fullName > first+last > email local part', () => {

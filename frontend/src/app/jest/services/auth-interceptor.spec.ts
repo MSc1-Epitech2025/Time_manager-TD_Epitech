@@ -241,11 +241,24 @@ describe('AuthInterceptor', () => {
     });
 
     it('should retry request with withCredentials after successful refresh', (done) => {
-      authService.session = { refreshCount: 1 };
+      httpHandler.handle.mockReset();
+
+      authService.session = {
+        refreshCount: 0,
+        accessToken: null,
+        refreshToken: null,
+        expiresAt: null,
+        user: {
+          id: 'u1',
+          email: 'a@test.com',
+          roles: ['EMPLOYEE'],
+        },
+      };
+
       authService.refreshToken.mockResolvedValue(undefined);
 
       const req = new HttpRequest('GET', 'http://localhost:8030/api/data');
-      const error = new HttpErrorResponse({ status: 403, statusText: 'Forbidden' });
+      const error = new HttpErrorResponse({ status: 403 });
       const successResponse = new HttpResponse({ status: 200 });
 
       httpHandler.handle
@@ -254,10 +267,15 @@ describe('AuthInterceptor', () => {
 
       interceptor.intercept(req, httpHandler).subscribe({
         next: () => {
+          expect(authService.refreshToken).toHaveBeenCalledTimes(1);
+          expect(httpHandler.handle).toHaveBeenCalledTimes(2);
+
           const retryReq = httpHandler.handle.mock.calls[1][0] as HttpRequest<any>;
           expect(retryReq.withCredentials).toBe(true);
+
           done();
         },
+        error: (err) => done(err),
       });
     });
   });
