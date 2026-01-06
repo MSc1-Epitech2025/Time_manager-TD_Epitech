@@ -3,7 +3,7 @@ import { setupZoneTestEnv } from 'jest-preset-angular/setup-env/zone';
 setupZoneTestEnv();
 
 jest.mock('@environments/environment', () => ({
-  environment = {
+  environment: {
     production: false,
     GRAPHQL_ENDPOINT: 'http://localhost:8030/graphql',
     JWT_EXP_MINUTES: 15,
