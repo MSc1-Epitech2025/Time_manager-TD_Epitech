@@ -364,4 +364,109 @@ class UserGraphQLControllerTest {
 
         assertEquals("Invalid credentials", ex.getMessage());
     }
+
+    @Test
+    void testRequestPasswordReset_Success() {
+        com.example.time_manager.dto.auth.ResetPasswordRequestInput input =
+                new com.example.time_manager.dto.auth.ResetPasswordRequestInput("john@test.com");
+
+        AuthResponse resp = controller.requestPasswordReset(input);
+
+        assertTrue(resp.ok);
+        verify(passwordResetService).requestResetByEmail("john@test.com");
+    }
+
+    @Test
+    void testRequestPasswordResetWithTemp_Success() {
+        com.example.time_manager.dto.auth.ResetPasswordRequestInput input =
+                new com.example.time_manager.dto.auth.ResetPasswordRequestInput("john@test.com");
+
+        AuthResponse resp = controller.requestPasswordResetWithTemp(input);
+
+        assertTrue(resp.ok);
+        verify(passwordResetService).requestResetWithTempPassword("john@test.com");
+    }
+
+    @Test
+    void testRequestPasswordResetWithTemp_ThrowsIllegalArgument() {
+        com.example.time_manager.dto.auth.ResetPasswordRequestInput input =
+                new com.example.time_manager.dto.auth.ResetPasswordRequestInput("unknown@test.com");
+
+        doThrow(new IllegalArgumentException("User not found"))
+                .when(passwordResetService).requestResetWithTempPassword("unknown@test.com");
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> controller.requestPasswordResetWithTemp(input));
+
+        assertEquals("User not found", ex.getMessage());
+    }
+
+    @Test
+    void testResetPassword_Success() {
+        com.example.time_manager.dto.auth.ResetPasswordInput input =
+                new com.example.time_manager.dto.auth.ResetPasswordInput("TOKEN123", "newPassword");
+
+        AuthResponse resp = controller.resetPassword(input);
+
+        assertTrue(resp.ok);
+        verify(passwordResetService).resetPassword("TOKEN123", "newPassword");
+    }
+
+    @Test
+    void testChangeMyPassword_Success() {
+        com.example.time_manager.dto.auth.ChangePasswordInput input =
+                new com.example.time_manager.dto.auth.ChangePasswordInput("oldPwd", "newPwd");
+
+        org.springframework.security.core.Authentication auth = mock(org.springframework.security.core.Authentication.class);
+        when(auth.getName()).thenReturn("john@test.com");
+
+        org.springframework.security.core.context.SecurityContext securityContext =
+                mock(org.springframework.security.core.context.SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(auth);
+
+        try (MockedStatic<org.springframework.security.core.context.SecurityContextHolder> holder =
+                     mockStatic(org.springframework.security.core.context.SecurityContextHolder.class)) {
+
+            holder.when(org.springframework.security.core.context.SecurityContextHolder::getContext)
+                    .thenReturn(securityContext);
+
+            User u = new User();
+            u.setId("ID1");
+            when(userService.findByEmail("john@test.com")).thenReturn(Optional.of(u));
+
+            AuthResponse resp = controller.changeMyPassword(input);
+
+            assertTrue(resp.ok);
+            verify(userService).changePassword("john@test.com", "oldPwd", "newPwd");
+            verify(userService).completeFirstLogin("ID1");
+        }
+    }
+
+    @Test
+    void testChangeMyPassword_UserNotPresent_NoCompleteFirstLogin() {
+        com.example.time_manager.dto.auth.ChangePasswordInput input =
+                new com.example.time_manager.dto.auth.ChangePasswordInput("oldPwd", "newPwd");
+
+        org.springframework.security.core.Authentication auth = mock(org.springframework.security.core.Authentication.class);
+        when(auth.getName()).thenReturn("john@test.com");
+
+        org.springframework.security.core.context.SecurityContext securityContext =
+                mock(org.springframework.security.core.context.SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(auth);
+
+        try (MockedStatic<org.springframework.security.core.context.SecurityContextHolder> holder =
+                     mockStatic(org.springframework.security.core.context.SecurityContextHolder.class)) {
+
+            holder.when(org.springframework.security.core.context.SecurityContextHolder::getContext)
+                    .thenReturn(securityContext);
+
+            when(userService.findByEmail("john@test.com")).thenReturn(Optional.empty());
+
+            AuthResponse resp = controller.changeMyPassword(input);
+
+            assertTrue(resp.ok);
+            verify(userService).changePassword("john@test.com", "oldPwd", "newPwd");
+            verify(userService, never()).completeFirstLogin(any());
+        }
+    }
 }

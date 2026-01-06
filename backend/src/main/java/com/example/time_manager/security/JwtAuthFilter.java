@@ -34,12 +34,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         return
                 path.startsWith("/oauth2/")
                         || path.startsWith("/login/oauth2/")
-                        || path.equals("/oauth2/success")
-
                         || path.startsWith("/actuator/")
                         || path.startsWith("/favicon")
                         || path.startsWith("/resources/");
     }
+
 
     private String extractToken(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();

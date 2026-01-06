@@ -604,4 +604,91 @@ class KpiServiceTest {
 
         assertNull(k.getApprovalDelayHours());
     }
+    @Test
+    void testGetUser_avgDelayMinNull_shouldSetNullAvgDelay() {
+        UUID uid = UUID.randomUUID();
+        LocalDate start = LocalDate.of(2024, 1, 1);
+        LocalDate end = LocalDate.of(2024, 1, 31);
+
+        when(jdbc.queryForMap(contains("FROM users WHERE id"), any()))
+                .thenReturn(Map.of("full_name", "Alice Smith"));
+
+        when(jdbc.queryForObject(contains("DISTINCT DATE"), eq(Number.class), any(), any(), any()))
+                .thenReturn(5);
+
+        when(jdbc.queryForObject(contains("WITH RECURSIVE d"), eq(Number.class), any(), any(), any()))
+                .thenReturn(10);
+
+        when(jdbc.queryForObject(contains("SUM(TIMESTAMPDIFF"), eq(Number.class), any(), any(), any()))
+                .thenReturn(600);
+
+        when(jdbc.queryForObject(startsWith("SELECT COUNT(*) FROM ("), eq(Number.class), any(), any(), any()))
+                .thenReturn(10);
+
+        when(jdbc.queryForObject(contains("SUM(CASE period"), eq(Number.class), any(), any(), any()))
+                .thenReturn(5);
+
+        when(jdbc.queryForObject(contains("TIME(first_in) > plan_start"), eq(Number.class), any(), any(), any(), any()))
+                .thenReturn(2);
+
+        when(jdbc.queryForObject(contains("AVG(TIMESTAMPDIFF(MINUTE, plan_start"), eq(Number.class), any(), any(), any(), any()))
+                .thenReturn(null);
+
+        when(jdbc.query(anyString(), any(RowMapper.class), any(), any(), any()))
+                .thenReturn(Collections.emptyList());
+
+        when(jdbc.queryForObject(contains("author_id"), eq(Integer.class), any(), any(), any()))
+                .thenReturn(2);
+
+        when(jdbc.queryForObject(contains("target_user_id"), eq(Integer.class), any(), any(), any()))
+                .thenReturn(1);
+
+        UserKpiSummary k = service.getUser(uid, start, end);
+
+        assertNull(k.getPunctuality().getAvgDelayMinutes());
+    }
+
+    @Test
+    void testGetUser_avgDelayMinNotNull_shouldSetAvgDelay() {
+        UUID uid = UUID.randomUUID();
+        LocalDate start = LocalDate.of(2024, 1, 1);
+        LocalDate end = LocalDate.of(2024, 1, 31);
+
+        when(jdbc.queryForMap(contains("FROM users WHERE id"), any()))
+                .thenReturn(Map.of("full_name", "Alice Smith"));
+
+        when(jdbc.queryForObject(contains("DISTINCT DATE"), eq(Number.class), any(), any(), any()))
+                .thenReturn(5);
+
+        when(jdbc.queryForObject(contains("WITH RECURSIVE d"), eq(Number.class), any(), any(), any()))
+                .thenReturn(10);
+
+        when(jdbc.queryForObject(contains("SUM(TIMESTAMPDIFF"), eq(Number.class), any(), any(), any()))
+                .thenReturn(600);
+
+        when(jdbc.queryForObject(startsWith("SELECT COUNT(*) FROM ("), eq(Number.class), any(), any(), any()))
+                .thenReturn(10);
+
+        when(jdbc.queryForObject(contains("SUM(CASE period"), eq(Number.class), any(), any(), any()))
+                .thenReturn(5);
+
+        when(jdbc.queryForObject(contains("TIME(first_in) > plan_start"), eq(Number.class), any(), any(), any(), any()))
+                .thenReturn(2);
+
+        when(jdbc.queryForObject(contains("AVG(TIMESTAMPDIFF(MINUTE, plan_start"), eq(Number.class), any(), any(), any(), any()))
+                .thenReturn(15);
+
+        when(jdbc.query(anyString(), any(RowMapper.class), any(), any(), any()))
+                .thenReturn(Collections.emptyList());
+
+        when(jdbc.queryForObject(contains("author_id"), eq(Integer.class), any(), any(), any()))
+                .thenReturn(2);
+
+        when(jdbc.queryForObject(contains("target_user_id"), eq(Integer.class), any(), any(), any()))
+                .thenReturn(1);
+
+        UserKpiSummary k = service.getUser(uid, start, end);
+
+        assertEquals(new BigDecimal("15"), k.getPunctuality().getAvgDelayMinutes());
+    }
 }
