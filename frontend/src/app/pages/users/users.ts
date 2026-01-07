@@ -12,7 +12,6 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatDialog } from '@angular/material/dialog';
 import { UserService, User, CreateUserInput, UpdateUserInput } from '@core/services/user';
 import { DeleteUserModalComponent } from '@modal/delete-user-modal/delete-user-modal';
-import { matchesSearch } from '../../shared/utils/formatting.utils';
 
 @Component({
   selector: 'app-users',
@@ -86,7 +85,9 @@ export class UsersComponent implements OnInit {
       this.filteredUsers = [...this.users];
     } else {
       this.filteredUsers = this.users.filter(
-        (user) => matchesSearch(`${user.firstName} ${user.lastName}`, term) || matchesSearch(user.email, term)
+        (user) =>
+          `${user.firstName} ${user.lastName}`.toLowerCase().includes(term) ||
+          user.email.toLowerCase().includes(term)
       );
     }
   }

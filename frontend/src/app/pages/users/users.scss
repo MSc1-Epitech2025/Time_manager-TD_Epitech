@@ -1,5 +1,16 @@
-@use '../../shared/styles/variables';
-@use '../../shared/styles/mixins';
+// colors variables
+:root {
+  --c-bg: #1e1e28;
+  --c-text: #f9fafb;
+  --c-card: #2a2a3c;
+  --c-border: #3b3b4f;
+  --c-primary: #7c3aed;
+  --c-accent: #f472b6;
+  --c-muted: #9ca3af;
+  --c-success: #22c55e;
+  --c-warning: #f59e0b;
+  --c-danger: #ef4444;
+}
 
 // main layout
 .users-page {
@@ -101,7 +112,33 @@
 
 // header card
 .header-card {
-  @include header-card;
+  background: linear-gradient(135deg, #a78bfa 0%, #f472b6 100%);
+  border: none ;
+
+  .header-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #fff;
+  }
+
+  .header-info {
+    flex: 1;
+
+    .page-title {
+      margin: 0 0 0.5rem 0;
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .page-subtitle {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 500;
+      opacity: 0.95;
+    }
+  }
 }
 
 // content wrapper
@@ -164,11 +201,43 @@
   }
 
   .loading-spinner {
-    @include loading-spinner;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    color: var(--c-muted);
+
+    mat-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+
+      &.spin {
+        animation: spin 1s linear infinite;
+      }
+    }
+
+    p {
+      margin: 0;
+    }
   }
 
   .error-state {
-    @include error-state;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    color: var(--c-danger);
+
+    mat-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+    }
+
+    p {
+      margin: 0;
+    }
   }
 }
 
@@ -188,11 +257,36 @@
     flex: 1;
     overflow-y: auto;
     padding: 1rem;
-    @include custom-scrollbar;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: var(--c-border);
+      border-radius: 3px;
+    }
   }
 
   .empty-state {
-    @include empty-state;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    color: var(--c-muted);
+    padding: 3rem;
+
+    mat-icon {
+      font-size: 64px;
+      width: 64px;
+      height: 64px;
+    }
+
+    p {
+      margin: 0;
+      font-size: 1.1rem;
+    }
   }
 }
 
@@ -266,7 +360,15 @@
     flex: 1;
     overflow-y: auto;
     padding: 1.5rem ;
-    @include custom-scrollbar;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: var(--c-border);
+      border-radius: 3px;
+    }
   }
 
   .close-btn {
