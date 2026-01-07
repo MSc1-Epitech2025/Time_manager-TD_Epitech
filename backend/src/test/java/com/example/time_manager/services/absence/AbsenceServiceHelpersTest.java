@@ -4,6 +4,7 @@ import com.example.time_manager.model.User;
 import com.example.time_manager.model.absence.*;
 import com.example.time_manager.repository.*;
 import com.example.time_manager.service.AbsenceService;
+import com.example.time_manager.service.AutoReportService;
 import com.example.time_manager.service.leave.LeaveAccountingBridge;
 import org.junit.jupiter.api.*;
 import org.springframework.security.authentication.TestingAuthenticationToken;
@@ -27,8 +28,17 @@ class AbsenceServiceHelpersTest {
     UserRepository userRepo = mock(UserRepository.class);
     TeamMemberRepository teamMemberRepo = mock(TeamMemberRepository.class);
     LeaveAccountingBridge bridge = mock(LeaveAccountingBridge.class);
+    AutoReportService autoReportService = mock(AutoReportService.class);
 
-    AbsenceService service = new AbsenceService(absenceRepo, dayRepo, userRepo, teamMemberRepo, bridge);
+    AbsenceService service =
+            new AbsenceService(
+                    absenceRepo,
+                    dayRepo,
+                    userRepo,
+                    teamMemberRepo,
+                    bridge,
+                    autoReportService
+            );
 
     @Test
     void hasRole_shouldReturnTrue_forMatchingRole() throws Exception {

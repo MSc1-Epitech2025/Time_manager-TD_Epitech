@@ -5,6 +5,7 @@ import com.example.time_manager.model.User;
 import com.example.time_manager.model.absence.*;
 import com.example.time_manager.repository.*;
 import com.example.time_manager.service.AbsenceService;
+import com.example.time_manager.service.AutoReportService;
 import com.example.time_manager.service.leave.LeaveAccountingBridge;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
@@ -24,8 +25,17 @@ class AbsenceServiceCreateTest {
     UserRepository userRepo = mock(UserRepository.class);
     TeamMemberRepository teamMemberRepo = mock(TeamMemberRepository.class);
     LeaveAccountingBridge bridge = mock(LeaveAccountingBridge.class);
+    AutoReportService autoReportService = mock(AutoReportService.class);
 
-    AbsenceService service = new AbsenceService(absenceRepo, dayRepo, userRepo, teamMemberRepo, bridge);
+    AbsenceService service =
+            new AbsenceService(
+                    absenceRepo,
+                    dayRepo,
+                    userRepo,
+                    teamMemberRepo,
+                    bridge,
+                    autoReportService
+            );
 
     @Test
     void createForEmail_shouldCreateAbsence_withFullDayDefaults() {

@@ -10,6 +10,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import com.example.time_manager.service.AutoReportService;
 
 import java.util.*;
 
@@ -23,8 +24,17 @@ class AbsenceServiceDeleteAndStatusTest {
     UserRepository userRepo = mock(UserRepository.class);
     TeamMemberRepository teamMemberRepo = mock(TeamMemberRepository.class);
     LeaveAccountingBridge bridge = mock(LeaveAccountingBridge.class);
+    AutoReportService autoReportService = mock(AutoReportService.class);
 
-    AbsenceService service = new AbsenceService(absenceRepo, dayRepo, userRepo, teamMemberRepo, bridge);
+    AbsenceService service =
+            new AbsenceService(
+                    absenceRepo,
+                    dayRepo,
+                    userRepo,
+                    teamMemberRepo,
+                    bridge,
+                    autoReportService
+            );
 
     @Test
     void setStatus_shouldApprove_andDebit() {
