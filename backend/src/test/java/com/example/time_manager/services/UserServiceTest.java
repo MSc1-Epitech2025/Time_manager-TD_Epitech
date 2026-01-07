@@ -16,7 +16,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-class UserServiceTestTest {
+class UserServiceTest {
 
     @Test
     void findAllUsers_shouldReturnListFromRepository() {
@@ -484,5 +484,61 @@ class UserServiceTestTest {
         assertThatThrownBy(() -> userService.completeFirstLogin("unknown"))
                 .isInstanceOf(EntityNotFoundException.class);
         verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void saveUserRaw_shouldSaveWithoutEncodingPassword() {
+        UserRepository userRepository = mock(UserRepository.class);
+        PasswordEncoder encoder = mock(PasswordEncoder.class);
+        UserService userService = new UserService(userRepository, encoder);
+
+        User user = new User();
+        user.setId("123");
+        user.setPassword("plainPassword");
+
+        when(userRepository.save(user)).thenReturn(user);
+
+        User result = userService.saveUserRaw(user);
+
+        assertThat(result).isEqualTo(user);
+        assertThat(result.getPassword()).isEqualTo("plainPassword");
+        verify(userRepository).save(user);
+        verify(encoder, never()).encode(anyString());
+    }
+
+    @Test
+    void validateUser_shouldReturnFalse_whenPasswordIsNull() {
+        UserRepository userRepository = mock(UserRepository.class);
+        PasswordEncoder encoder = mock(PasswordEncoder.class);
+        UserService userService = new UserService(userRepository, encoder);
+
+        User u = new User();
+        u.setEmail("a@b.com");
+        u.setPassword(null);
+
+        when(userRepository.findByEmail("a@b.com")).thenReturn(Optional.of(u));
+
+        boolean result = userService.validateUser("a@b.com", "pwd");
+
+        assertThat(result).isFalse();
+        verify(encoder, never()).matches(anyString(), anyString());
+    }
+
+    @Test
+    void validateUser_shouldReturnFalse_whenPasswordIsBlank() {
+        UserRepository userRepository = mock(UserRepository.class);
+        PasswordEncoder encoder = mock(PasswordEncoder.class);
+        UserService userService = new UserService(userRepository, encoder);
+
+        User u = new User();
+        u.setEmail("a@b.com");
+        u.setPassword("   ");
+
+        when(userRepository.findByEmail("a@b.com")).thenReturn(Optional.of(u));
+
+        boolean result = userService.validateUser("a@b.com", "pwd");
+
+        assertThat(result).isFalse();
+        verify(encoder, never()).matches(anyString(), anyString());
     }
 }
