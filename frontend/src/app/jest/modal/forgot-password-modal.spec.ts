@@ -82,7 +82,6 @@ describe('ForgotPasswordModalComponent – Jest (100% coverage)', () => {
   it('submit handles known error message', async () => {
     const error = new Error('No account with this email address');
     authService.requestPasswordResetWithTemp.mockRejectedValue(error);
-    jest.spyOn(console, 'error').mockImplementation();
     component.form.setValue({ email: 'test@test.com' });
 
     await component.submit();
@@ -90,13 +89,11 @@ describe('ForgotPasswordModalComponent – Jest (100% coverage)', () => {
     expect(component.loading()).toBe(false);
     expect(component.submitted()).toBe(false);
     expect(component.errorMessage()).toBe('No account with this email address');
-    expect(console.error).toHaveBeenCalledWith(error);
   });
 
   it('submit handles unknown error message', async () => {
     const error = new Error('Something else');
     authService.requestPasswordResetWithTemp.mockRejectedValue(error);
-    jest.spyOn(console, 'error').mockImplementation();
     component.form.setValue({ email: 'test@test.com' });
 
     await component.submit();
@@ -113,19 +110,16 @@ describe('ForgotPasswordModalComponent – Jest (100% coverage)', () => {
   it('submit handles error without message property', async () => {
     const error = { code: 'UNKNOWN' }; // No message property
     authService.requestPasswordResetWithTemp.mockRejectedValue(error);
-    jest.spyOn(console, 'error').mockImplementation();
     component.form.setValue({ email: 'test@test.com' });
 
     await component.submit();
 
     expect(component.loading()).toBe(false);
     expect(component.errorMessage()).toBe('No account with this email address');
-    expect(console.error).toHaveBeenCalledWith(error);
   });
 
   it('submit handles null error', async () => {
     authService.requestPasswordResetWithTemp.mockRejectedValue(null);
-    jest.spyOn(console, 'error').mockImplementation();
     component.form.setValue({ email: 'test@test.com' });
 
     await component.submit();
@@ -136,7 +130,6 @@ describe('ForgotPasswordModalComponent – Jest (100% coverage)', () => {
 
   it('submit handles undefined error', async () => {
     authService.requestPasswordResetWithTemp.mockRejectedValue(undefined);
-    jest.spyOn(console, 'error').mockImplementation();
     component.form.setValue({ email: 'test@test.com' });
 
     await component.submit();

@@ -103,13 +103,14 @@ describe('EditTeamModalComponent', () => {
     });
 
     it('should handle error when loading users fails', () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-      teamServiceMock.getAllUsers.mockReturnValue(throwError(() => new Error('Network error')));
+      teamServiceMock.getAllUsers.mockReturnValue(
+        throwError(() => new Error('Network error'))
+      );
 
       fixture.detectChanges();
 
-      expect(consoleSpy).toHaveBeenCalledWith('Error loading users:', expect.any(Error));
-      consoleSpy.mockRestore();
+      expect(component.allUsers).toEqual([]);
+      expect(component.filteredUsers).toBeNull();
     });
   });
 

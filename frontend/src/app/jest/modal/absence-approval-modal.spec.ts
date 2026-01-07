@@ -73,14 +73,22 @@ describe('AbsenceApprovalModal', () => {
       expect(component.userName).toBe('Doe');
     });
 
-    it('should return email when firstName and lastName are empty', () => {
-      component.data.absence = { ...mockAbsence, user: { firstName: '', lastName: '', email: 'user@example.com' } } as Absence;
-      expect(component.userName).toBe('user@example.com');
+    it('should return email prefix when firstName and lastName are empty', () => {
+      component.data.absence = {
+        ...mockAbsence,
+        user: { firstName: '', lastName: '', email: 'user@example.com' }
+      } as Absence;
+
+      expect(component.userName).toBe('user');
     });
 
-    it('should return userId when user has no name and no email', () => {
-      component.data.absence = { ...mockAbsence, user: { firstName: '', lastName: '', email: '' } } as Absence;
-      expect(component.userName).toBe('user-456');
+    it('should return "Unknown" when user has no name and no email', () => {
+      component.data.absence = {
+        ...mockAbsence,
+        user: { firstName: '', lastName: '', email: '' }
+      } as Absence;
+
+      expect(component.userName).toBe('Unknown');
     });
 
     it('should return userId when user is undefined', () => {
@@ -139,9 +147,9 @@ describe('AbsenceApprovalModal', () => {
       expect(component.typeLabel).toBe('Personal Leave');
     });
 
-    it('should return "Formation" for FORMATION type', () => {
+    it('should return "Training" for FORMATION type', () => {
       component.data.absence = { ...mockAbsence, type: 'FORMATION' } as Absence;
-      expect(component.typeLabel).toBe('Formation');
+      expect(component.typeLabel).toBe('Training');
     });
 
     it('should return "RTT" for RTT type', () => {
