@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
@@ -20,73 +22,84 @@ public class ClockService {
 
     private final ClockRepository clockRepo;
     private final UserRepository userRepo;
+    private final AutoReportService autoReportService;
 
-<span class="fc" id="L24">    public ClockService(ClockRepository clockRepo, UserRepository userRepo) {</span>
-<span class="fc" id="L25">        this.clockRepo = clockRepo;</span>
-<span class="fc" id="L26">        this.userRepo = userRepo;</span>
-<span class="fc" id="L27">    }</span>
+<span class="fc" id="L27">    public ClockService(ClockRepository clockRepo, UserRepository userRepo, AutoReportService autoReportService) {</span>
+<span class="fc" id="L28">        this.clockRepo = clockRepo;</span>
+<span class="fc" id="L29">        this.userRepo = userRepo;</span>
+<span class="fc" id="L30">        this.autoReportService = autoReportService;</span>
+<span class="fc" id="L31">    }</span>
+
 
     /* ======================= CREATE ======================= */
 
     public ClockResponse createForMe(String email, ClockCreateRequest req) {
-<span class="fc" id="L32">        return punch(email, req.kind(), null, req.at());</span>
+<span class="fc" id="L37">        return punch(email, req.kind(), null, req.at());</span>
     }
 
     public ClockResponse createForUser(String userId, ClockCreateRequest req) {
-<span class="fc" id="L36">        return punch(null, req.kind(), userId, req.at());</span>
+<span class="fc" id="L41">        return punch(null, req.kind(), userId, req.at());</span>
     }
 
     private ClockResponse punch(String email, ClockKind kind, String explicitUserId, Instant at) {
-<span class="fc bfc" id="L40" title="All 2 branches covered.">        final User user = (explicitUserId != null)</span>
-<span class="fc" id="L41">                ? userRepo.findById(explicitUserId)</span>
-<span class="fc" id="L42">                .orElseThrow(() -&gt; new EntityNotFoundException(&quot;User not found: &quot; + explicitUserId))</span>
-<span class="fc" id="L43">                : userRepo.findByEmail(email)</span>
-<span class="fc" id="L44">                .orElseThrow(() -&gt; new EntityNotFoundException(&quot;User not found: &quot; + email));</span>
+<span class="fc bfc" id="L45" title="All 2 branches covered.">        final User user = (explicitUserId != null)</span>
+<span class="fc" id="L46">                ? userRepo.findById(explicitUserId)</span>
+<span class="fc" id="L47">                .orElseThrow(() -&gt; new EntityNotFoundException(&quot;User not found: &quot; + explicitUserId))</span>
+<span class="fc" id="L48">                : userRepo.findByEmail(email)</span>
+<span class="fc" id="L49">                .orElseThrow(() -&gt; new EntityNotFoundException(&quot;User not found: &quot; + email));</span>
 
-<span class="fc" id="L46">        var last = clockRepo.findTopByUserIdOrderByAtDesc(user.getId());</span>
-<span class="fc bfc" id="L47" title="All 4 branches covered.">        if (last.isPresent() &amp;&amp; last.get().getKind() == kind) {</span>
-<span class="fc" id="L48">            throw new IllegalStateException(&quot;Cannot punch &quot; + kind + &quot; twice in a row&quot;);</span>
+<span class="fc" id="L51">        var last = clockRepo.findTopByUser_IdOrderByAtDescIdDesc(user.getId());</span>
+<span class="fc bfc" id="L52" title="All 4 branches covered.">        if (last.isPresent() &amp;&amp; last.get().getKind() == kind) {</span>
+<span class="fc" id="L53">            throw new IllegalStateException(&quot;Cannot punch &quot; + kind + &quot; twice in a row&quot;);</span>
         }
 
-<span class="fc" id="L51">        Clock c = new Clock();</span>
-<span class="fc" id="L52">        c.setUser(user);</span>
-<span class="fc" id="L53">        c.setKind(kind);</span>
-<span class="fc bfc" id="L54" title="All 2 branches covered.">        c.setAt(at != null ? at : Instant.now());</span>
+<span class="fc" id="L56">        Clock c = new Clock();</span>
+<span class="fc" id="L57">        c.setUser(user);</span>
+<span class="fc" id="L58">        c.setKind(kind);</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        c.setAt(at != null ? at : Instant.now());</span>
 
-<span class="fc" id="L56">        c = clockRepo.save(c);</span>
-<span class="fc" id="L57">        return toDto(c);</span>
+<span class="fc" id="L61">        c = clockRepo.save(c);</span>
+<span class="fc" id="L62">        ZoneId zone = ZoneId.systemDefault();</span>
+<span class="fc" id="L63">        LocalDate day = c.getAt().atZone(zone).toLocalDate();</span>
+<span class="fc" id="L64">        Instant dayStart = day.atStartOfDay(zone).toInstant();</span>
+<span class="fc" id="L65">        Instant dayEnd = day.plusDays(1).atStartOfDay(zone).toInstant();</span>
+
+<span class="fc" id="L67">        List&lt;ClockResponse&gt; dayClocks = listForUser(user.getId(), dayStart, dayEnd);</span>
+<span class="fc" id="L68">        autoReportService.onClockCreated(user.getId(), c.getKind(), c.getAt(), dayClocks);</span>
+
+<span class="fc" id="L70">        return toDto(c);</span>
     }
 
     /* ======================= READ ======================= */
 
     @Transactional(readOnly = true)
     public List&lt;ClockResponse&gt; listForEmail(String email, Instant from, Instant to) {
-<span class="fc" id="L64">        String userId = userRepo.findByEmail(email)</span>
-<span class="fc" id="L65">                .orElseThrow(() -&gt; new EntityNotFoundException(&quot;User not found: &quot; + email))</span>
-<span class="fc" id="L66">                .getId();</span>
-<span class="fc" id="L67">        return listForUser(userId, from, to);</span>
+<span class="fc" id="L77">        String userId = userRepo.findByEmail(email)</span>
+<span class="fc" id="L78">                .orElseThrow(() -&gt; new EntityNotFoundException(&quot;User not found: &quot; + email))</span>
+<span class="fc" id="L79">                .getId();</span>
+<span class="fc" id="L80">        return listForUser(userId, from, to);</span>
     }
 
     @Transactional(readOnly = true)
     public List&lt;ClockResponse&gt; listForUser(String userId, Instant from, Instant to) {
         List&lt;Clock&gt; rows;
-<span class="fc bfc" id="L73" title="All 4 branches covered.">        if (from != null &amp;&amp; to != null) {</span>
-<span class="fc" id="L74">            rows = clockRepo.findByUserIdAndAtBetweenOrderByAtAsc(userId, from, to);</span>
+<span class="fc bfc" id="L86" title="All 4 branches covered.">        if (from != null &amp;&amp; to != null) {</span>
+<span class="fc" id="L87">            rows = clockRepo.findByUser_IdAndAtBetweenOrderByAtAsc(userId, from, to);</span>
         } else {
-<span class="fc" id="L76">            rows = clockRepo.findByUserIdOrderByAtDesc(userId);</span>
+<span class="fc" id="L89">            rows = clockRepo.findByUser_IdOrderByAtDesc(userId);</span>
         }
-<span class="fc" id="L78">        return rows.stream().map(this::toDto).toList();</span>
+<span class="fc" id="L91">        return rows.stream().map(this::toDto).toList();</span>
     }
 
     /* ======================= MAPPER ======================= */
 
     private ClockResponse toDto(Clock c) {
-<span class="fc" id="L84">        ClockResponse r = new ClockResponse();</span>
-<span class="fc" id="L85">        r.id = c.getId();</span>
-<span class="fc" id="L86">        r.userId = c.getUser().getId();</span>
-<span class="fc" id="L87">        r.kind = c.getKind();</span>
-<span class="fc" id="L88">        r.at = c.getAt();</span>
-<span class="fc" id="L89">        return r;</span>
+<span class="fc" id="L97">        ClockResponse r = new ClockResponse();</span>
+<span class="fc" id="L98">        r.id = c.getId();</span>
+<span class="fc" id="L99">        r.userId = c.getUser().getId();</span>
+<span class="fc" id="L100">        r.kind = c.getKind();</span>
+<span class="fc" id="L101">        r.at = c.getAt();</span>
+<span class="fc" id="L102">        return r;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

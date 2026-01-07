@@ -48,103 +48,109 @@ public class UserService {
 <span class="fc" id="L48">        return userRepository.save(user);</span>
     }
 
+//    function for save a user without password for microsoft connection
+    public User saveUserRaw(User user) {
+<span class="nc" id="L53">        return userRepository.save(user);</span>
+    }
+
     public User updateAvatar(String id, String avatarUrl) {
-<span class="fc" id="L52">        User user = findByIdOrThrow(id);</span>
-<span class="fc" id="L53">        user.setAvatarUrl(avatarUrl);</span>
-<span class="fc" id="L54">        return userRepository.save(user);</span>
+<span class="fc" id="L57">        User user = findByIdOrThrow(id);</span>
+<span class="fc" id="L58">        user.setAvatarUrl(avatarUrl);</span>
+<span class="fc" id="L59">        return userRepository.save(user);</span>
     }
 
     public User updateRole(String id, String newRole) {
-<span class="fc" id="L58">        User user = findByIdOrThrow(id);</span>
-<span class="fc" id="L59">        user.setRole(newRole);</span>
-<span class="fc" id="L60">        return userRepository.save(user);</span>
+<span class="fc" id="L63">        User user = findByIdOrThrow(id);</span>
+<span class="fc" id="L64">        user.setRole(newRole);</span>
+<span class="fc" id="L65">        return userRepository.save(user);</span>
     }
 
     public User updateEmail(String id, String newEmail) {
-<span class="fc" id="L64">        User user = findByIdOrThrow(id);</span>
-<span class="fc" id="L65">        user.setEmail(newEmail);</span>
-<span class="fc" id="L66">        return userRepository.save(user);</span>
+<span class="fc" id="L69">        User user = findByIdOrThrow(id);</span>
+<span class="fc" id="L70">        user.setEmail(newEmail);</span>
+<span class="fc" id="L71">        return userRepository.save(user);</span>
     }
 
     public User updateName(String id, String newFirstName, String newLastName) {
-<span class="fc" id="L70">        User user = findByIdOrThrow(id);</span>
-<span class="fc" id="L71">        user.setFirstName(newFirstName);</span>
-<span class="fc" id="L72">        user.setLastName(newLastName);</span>
-<span class="fc" id="L73">        return userRepository.save(user);</span>
+<span class="fc" id="L75">        User user = findByIdOrThrow(id);</span>
+<span class="fc" id="L76">        user.setFirstName(newFirstName);</span>
+<span class="fc" id="L77">        user.setLastName(newLastName);</span>
+<span class="fc" id="L78">        return userRepository.save(user);</span>
     }
 
     public User updatePhone(String id, String newPhone) {
-<span class="fc" id="L77">        User user = findByIdOrThrow(id);</span>
-<span class="fc" id="L78">        user.setPhone(newPhone);</span>
-<span class="fc" id="L79">        return userRepository.save(user);</span>
+<span class="fc" id="L82">        User user = findByIdOrThrow(id);</span>
+<span class="fc" id="L83">        user.setPhone(newPhone);</span>
+<span class="fc" id="L84">        return userRepository.save(user);</span>
     }
 
     public User createUser(String email, String password, String firstName, String lastName) {
-<span class="fc" id="L83">        User user = new User();</span>
-<span class="fc" id="L84">        user.setEmail(email);</span>
-<span class="fc" id="L85">        user.setPassword(passwordEncoder.encode(password));</span>
-<span class="fc" id="L86">        user.setFirstName(firstName);</span>
-<span class="fc" id="L87">        user.setLastName(lastName);</span>
-<span class="fc" id="L88">        return userRepository.save(user);</span>
+<span class="fc" id="L88">        User user = new User();</span>
+<span class="fc" id="L89">        user.setEmail(email);</span>
+<span class="fc" id="L90">        user.setPassword(passwordEncoder.encode(password));</span>
+<span class="fc" id="L91">        user.setFirstName(firstName);</span>
+<span class="fc" id="L92">        user.setLastName(lastName);</span>
+<span class="fc" id="L93">        return userRepository.save(user);</span>
     }
     
     public User deleteUser(String id) {
-<span class="fc" id="L92">        User user = findByIdOrThrow(id);</span>
-<span class="fc" id="L93">        userRepository.delete(user);</span>
-<span class="fc" id="L94">        return user;</span>
+<span class="fc" id="L97">        User user = findByIdOrThrow(id);</span>
+<span class="fc" id="L98">        userRepository.delete(user);</span>
+<span class="fc" id="L99">        return user;</span>
     }
     /* ================== MODIFY ================== */
 
 public User updateUser(String id, UpdateUserInput in) {
-<span class="fc" id="L99">    User u = findByIdOrThrow(id);</span>
+<span class="fc" id="L104">    User u = findByIdOrThrow(id);</span>
 
-<span class="fc bfc" id="L101" title="All 2 branches covered.">    if (in.firstName() != null) u.setFirstName(in.firstName());</span>
-<span class="fc bfc" id="L102" title="All 2 branches covered.">    if (in.lastName()  != null) u.setLastName(in.lastName());</span>
-<span class="fc bfc" id="L103" title="All 2 branches covered.">    if (in.email()     != null) u.setEmail(in.email());</span>
-<span class="fc bfc" id="L104" title="All 2 branches covered.">    if (in.phone()     != null) u.setPhone(in.phone());</span>
-<span class="fc bfc" id="L105" title="All 2 branches covered.">    if (in.role()      != null) u.setRole(in.role());</span>
-<span class="fc bfc" id="L106" title="All 2 branches covered.">    if (in.poste()     != null) u.setPoste(in.poste());</span>
-<span class="fc bfc" id="L107" title="All 2 branches covered.">    if (in.avatarUrl() != null) u.setAvatarUrl(in.avatarUrl());</span>
-<span class="fc bfc" id="L108" title="All 4 branches covered.">    if (in.password()  != null &amp;&amp; !in.password().isBlank()) {</span>
-<span class="fc" id="L109">        u.setPassword(passwordEncoder.encode(in.password()));</span>
+<span class="fc bfc" id="L106" title="All 2 branches covered.">    if (in.firstName() != null) u.setFirstName(in.firstName());</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">    if (in.lastName()  != null) u.setLastName(in.lastName());</span>
+<span class="fc bfc" id="L108" title="All 2 branches covered.">    if (in.email()     != null) u.setEmail(in.email());</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">    if (in.phone()     != null) u.setPhone(in.phone());</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">    if (in.role()      != null) u.setRole(in.role());</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">    if (in.poste()     != null) u.setPoste(in.poste());</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">    if (in.avatarUrl() != null) u.setAvatarUrl(in.avatarUrl());</span>
+<span class="fc bfc" id="L113" title="All 4 branches covered.">    if (in.password()  != null &amp;&amp; !in.password().isBlank()) {</span>
+<span class="fc" id="L114">        u.setPassword(passwordEncoder.encode(in.password()));</span>
     }
 
-<span class="fc" id="L112">    return userRepository.save(u);</span>
+<span class="fc" id="L117">    return userRepository.save(u);</span>
 }
 
 
     public void changePassword(String email, String currentPwd, String newPwd) {
-<span class="fc" id="L117">        var user = userRepository.findByEmail(email).orElseThrow(</span>
-<span class="fc" id="L118">            () -&gt; new EntityNotFoundException(&quot;User not found by email: &quot; + email)</span>
+<span class="fc" id="L122">        var user = userRepository.findByEmail(email).orElseThrow(</span>
+<span class="fc" id="L123">            () -&gt; new EntityNotFoundException(&quot;User not found by email: &quot; + email)</span>
         );
-<span class="fc bfc" id="L120" title="All 2 branches covered.">        if (!passwordEncoder.matches(currentPwd, user.getPassword())) {</span>
-<span class="fc" id="L121">            throw new BadCredentialsException(&quot;Invalid current password&quot;);</span>
+<span class="fc bfc" id="L125" title="All 2 branches covered.">        if (!passwordEncoder.matches(currentPwd, user.getPassword())) {</span>
+<span class="fc" id="L126">            throw new BadCredentialsException(&quot;Invalid current password&quot;);</span>
         }
-<span class="fc" id="L123">        user.setPassword(passwordEncoder.encode(newPwd));</span>
-<span class="fc" id="L124">        userRepository.save(user);</span>
-<span class="fc" id="L125">    }</span>
+<span class="fc" id="L128">        user.setPassword(passwordEncoder.encode(newPwd));</span>
+<span class="fc" id="L129">        userRepository.save(user);</span>
+<span class="fc" id="L130">    }</span>
 
     public boolean validateUser(String email, String password) {
-<span class="fc" id="L128">        return userRepository.findByEmail(email)</span>
-<span class="fc" id="L129">                .map(user -&gt; passwordEncoder.matches(password, user.getPassword()))</span>
-<span class="fc" id="L130">                .orElse(false);</span>
+<span class="fc" id="L133">        var user = userRepository.findByEmail(email).orElse(null);</span>
+<span class="fc bfc" id="L134" title="All 2 branches covered.">        if (user == null) return false;</span>
+<span class="pc bpc" id="L135" title="2 of 4 branches missed.">        if (user.getPassword() == null || user.getPassword().isBlank()) return false;</span>
+<span class="fc" id="L136">        return passwordEncoder.matches(password, user.getPassword());</span>
     }
 
     public void completeFirstLogin(String userId) {
-<span class="fc" id="L134">        User u = findByIdOrThrow(userId);</span>
-<span class="fc bfc" id="L135" title="All 2 branches covered.">        if (u.isFirstConnection()) {</span>
-<span class="fc" id="L136">            u.setFirstConnection(false);</span>
-<span class="fc" id="L137">            userRepository.save(u);</span>
+<span class="fc" id="L140">        User u = findByIdOrThrow(userId);</span>
+<span class="fc bfc" id="L141" title="All 2 branches covered.">        if (u.isFirstConnection()) {</span>
+<span class="fc" id="L142">            u.setFirstConnection(false);</span>
+<span class="fc" id="L143">            userRepository.save(u);</span>
         }
-<span class="fc" id="L139">    }</span>
+<span class="fc" id="L145">    }</span>
 
     /* ================== DELETE ================== */
 
     public void deleteById(String id) {
-<span class="fc bfc" id="L144" title="All 2 branches covered.">        if (!userRepository.existsById(id)) {</span>
-<span class="fc" id="L145">            throw new EntityNotFoundException(&quot;User not found: &quot; + id);</span>
+<span class="fc bfc" id="L150" title="All 2 branches covered.">        if (!userRepository.existsById(id)) {</span>
+<span class="fc" id="L151">            throw new EntityNotFoundException(&quot;User not found: &quot; + id);</span>
         }
-<span class="fc" id="L147">        userRepository.deleteById(id);</span>
-<span class="fc" id="L148">    }</span>
+<span class="fc" id="L153">        userRepository.deleteById(id);</span>
+<span class="fc" id="L154">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

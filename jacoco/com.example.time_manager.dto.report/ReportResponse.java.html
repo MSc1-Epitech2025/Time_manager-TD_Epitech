@@ -2,17 +2,67 @@
 
 import java.time.Instant;
 
-<span class="fc" id="L5">public class ReportResponse {</span>
-  public Long id;
+public class ReportResponse {
 
-  public String authorId;
-  public String authorEmail;
+  private Long id;
 
-  public String targetUserId;
-  public String targetEmail;
+  private String authorId;
+  private String authorEmail;
 
-  public String title;
-  public String body;
-  public Instant createdAt;
+  private String targetUserId;
+  private String targetEmail;
+
+  private String subjectUserId;
+  private String subjectEmail;
+
+  private String type;
+  private String severity;
+
+  private String title;
+  private String body;
+
+  private Instant createdAt;
+  private Instant updatedAt;
+
+<span class="fc" id="L27">  public ReportResponse() {}</span>
+
+<span class="fc" id="L29">  public Long getId() { return id; }</span>
+<span class="fc" id="L30">  public void setId(Long id) { this.id = id; }</span>
+
+<span class="nc" id="L32">  public String getAuthorId() { return authorId; }</span>
+<span class="fc" id="L33">  public void setAuthorId(String authorId) { this.authorId = authorId; }</span>
+
+<span class="fc" id="L35">  public String getAuthorEmail() { return authorEmail; }</span>
+<span class="fc" id="L36">  public void setAuthorEmail(String authorEmail) { this.authorEmail = authorEmail; }</span>
+
+<span class="fc" id="L38">  public String getTargetUserId() { return targetUserId; }</span>
+<span class="fc" id="L39">  public void setTargetUserId(String targetUserId) { this.targetUserId = targetUserId; }</span>
+
+<span class="nc" id="L41">  public String getTargetEmail() { return targetEmail; }</span>
+<span class="fc" id="L42">  public void setTargetEmail(String targetEmail) { this.targetEmail = targetEmail; }</span>
+
+<span class="nc" id="L44">  public String getSubjectUserId() { return subjectUserId; }</span>
+<span class="fc" id="L45">  public void setSubjectUserId(String subjectUserId) { this.subjectUserId = subjectUserId; }</span>
+
+<span class="nc" id="L47">  public String getSubjectEmail() { return subjectEmail; }</span>
+<span class="fc" id="L48">  public void setSubjectEmail(String subjectEmail) { this.subjectEmail = subjectEmail; }</span>
+
+<span class="nc" id="L50">  public String getType() { return type; }</span>
+<span class="fc" id="L51">  public void setType(String type) { this.type = type; }</span>
+
+<span class="nc" id="L53">  public String getSeverity() { return severity; }</span>
+<span class="fc" id="L54">  public void setSeverity(String severity) { this.severity = severity; }</span>
+
+<span class="fc" id="L56">  public String getTitle() { return title; }</span>
+<span class="fc" id="L57">  public void setTitle(String title) { this.title = title; }</span>
+
+<span class="fc" id="L59">  public String getBody() { return body; }</span>
+<span class="fc" id="L60">  public void setBody(String body) { this.body = body; }</span>
+
+<span class="nc" id="L62">  public Instant getCreatedAt() { return createdAt; }</span>
+<span class="fc" id="L63">  public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }</span>
+
+<span class="nc" id="L65">  public Instant getUpdatedAt() { return updatedAt; }</span>
+<span class="fc" id="L66">  public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

@@ -42,44 +42,45 @@ import java.util.List;
 <span class="fc" id="L42">                        .requestMatchers(HttpMethod.OPTIONS, &quot;/**&quot;).permitAll()</span>
 <span class="fc" id="L43">                        .requestMatchers(&quot;/actuator/health&quot;).permitAll()</span>
 <span class="fc" id="L44">                        .requestMatchers(&quot;/oauth2/**&quot;, &quot;/login/oauth2/**&quot;).permitAll()</span>
-<span class="fc" id="L45">                        .requestMatchers(HttpMethod.POST, &quot;/graphql&quot;).permitAll()</span>
-<span class="fc" id="L46">                        .anyRequest().authenticated()</span>
+<span class="fc" id="L45">                        .requestMatchers(&quot;/graphiql&quot;, &quot;/graphiql/**&quot;).permitAll()</span>
+<span class="fc" id="L46">                        .requestMatchers(HttpMethod.POST, &quot;/graphql&quot;).permitAll()</span>
+<span class="fc" id="L47">                        .anyRequest().authenticated()</span>
                 )
 
-<span class="fc" id="L49">                .oauth2Login(oauth -&gt; oauth</span>
-<span class="fc" id="L50">                        .redirectionEndpoint(red -&gt; red.baseUri(&quot;/login/oauth2/code/*&quot;))</span>
-<span class="fc" id="L51">                        .successHandler(oAuth2SuccessHandler)</span>
+<span class="fc" id="L50">                .oauth2Login(oauth -&gt; oauth</span>
+<span class="fc" id="L51">                        .redirectionEndpoint(red -&gt; red.baseUri(&quot;/login/oauth2/code/*&quot;))</span>
+<span class="fc" id="L52">                        .successHandler(oAuth2SuccessHandler)</span>
                 )
 
-<span class="pc" id="L54">                .formLogin(form -&gt; form.disable())</span>
-<span class="pc" id="L55">                .httpBasic(basic -&gt; basic.disable())</span>
+<span class="pc" id="L55">                .formLogin(form -&gt; form.disable())</span>
+<span class="pc" id="L56">                .httpBasic(basic -&gt; basic.disable())</span>
 
-<span class="fc" id="L57">                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);</span>
+<span class="fc" id="L58">                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);</span>
 
-<span class="fc" id="L59">        return http.build();</span>
+<span class="fc" id="L60">        return http.build();</span>
     }
 
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
-<span class="fc" id="L64">        CorsConfiguration cfg = new CorsConfiguration();</span>
-<span class="fc" id="L65">        cfg.setAllowedOrigins(List.of(frontendUrl));</span>
-<span class="fc" id="L66">        cfg.setAllowedMethods(List.of(&quot;GET&quot;,&quot;POST&quot;,&quot;PUT&quot;,&quot;PATCH&quot;,&quot;DELETE&quot;,&quot;OPTIONS&quot;));</span>
-<span class="fc" id="L67">        cfg.setAllowedHeaders(List.of(&quot;Authorization&quot;,&quot;Content-Type&quot;,&quot;X-Requested-With&quot;));</span>
-<span class="fc" id="L68">        cfg.setAllowCredentials(true);</span>
+<span class="fc" id="L65">        CorsConfiguration cfg = new CorsConfiguration();</span>
+<span class="fc" id="L66">        cfg.setAllowedOrigins(List.of(frontendUrl));</span>
+<span class="fc" id="L67">        cfg.setAllowedMethods(List.of(&quot;GET&quot;,&quot;POST&quot;,&quot;PUT&quot;,&quot;PATCH&quot;,&quot;DELETE&quot;,&quot;OPTIONS&quot;));</span>
+<span class="fc" id="L68">        cfg.setAllowedHeaders(List.of(&quot;Authorization&quot;,&quot;Content-Type&quot;,&quot;X-Requested-With&quot;));</span>
+<span class="fc" id="L69">        cfg.setAllowCredentials(true);</span>
 
-<span class="fc" id="L70">        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();</span>
-<span class="fc" id="L71">        source.registerCorsConfiguration(&quot;/**&quot;, cfg);</span>
-<span class="fc" id="L72">        return source;</span>
+<span class="fc" id="L71">        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();</span>
+<span class="fc" id="L72">        source.registerCorsConfiguration(&quot;/**&quot;, cfg);</span>
+<span class="fc" id="L73">        return source;</span>
     }
 
     @Bean
     PasswordEncoder passwordEncoder() {
-<span class="fc" id="L77">        return new BCryptPasswordEncoder();</span>
+<span class="fc" id="L78">        return new BCryptPasswordEncoder();</span>
     }
 
     @Bean
     AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
-<span class="fc" id="L82">        return configuration.getAuthenticationManager();</span>
+<span class="fc" id="L83">        return configuration.getAuthenticationManager();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

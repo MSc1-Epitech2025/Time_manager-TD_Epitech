@@ -20,63 +20,65 @@ import jakarta.validation.Valid;
 @Controller
 public class ReportGraphQLController {
 
-    private final ReportService reportService;
+  private final ReportService reportService;
 
-<span class="fc" id="L25">    public ReportGraphQLController(ReportService reportService) {</span>
-<span class="fc" id="L26">        this.reportService = reportService;</span>
-<span class="fc" id="L27">    }</span>
+<span class="fc" id="L25">  public ReportGraphQLController(ReportService reportService) {</span>
+<span class="fc" id="L26">    this.reportService = reportService;</span>
+<span class="fc" id="L27">  }</span>
 
-    /* ======================== QUERIES ======================== */
+  /* ======================== QUERIES ======================== */
 
-    @QueryMapping
-    @PreAuthorize(&quot;hasAuthority('ADMIN')&quot;)
-    public List&lt;ReportResponse&gt; reports() {
-<span class="fc" id="L34">        return reportService.listAll();</span>
-    }
+  /** ADMIN only : all reports */
+  @QueryMapping
+  @PreAuthorize(&quot;hasAuthority('ADMIN')&quot;)
+  public List&lt;ReportResponse&gt; reports(Authentication auth) {
+<span class="fc" id="L35">    return reportService.listAllForAdmin(auth.getName());</span>
+  }
 
-    @QueryMapping
-    public List&lt;ReportResponse&gt; myReports(Authentication auth) {
-<span class="fc" id="L39">        String email = auth.getName();</span>
-<span class="fc" id="L40">        return reportService.listMineByEmail(email);</span>
-    }
+  /** Reports I created */
+  @QueryMapping
+  public List&lt;ReportResponse&gt; myReports(Authentication auth) {
+<span class="fc" id="L41">    return reportService.listAuthoredByEmail(auth.getName());</span>
+  }
 
-    @QueryMapping
-    public List&lt;ReportResponse&gt; reportsForMe(Authentication auth) {
-<span class="fc" id="L45">        String email = auth.getName();</span>
-<span class="fc" id="L46">        return reportService.listReceivedByEmail(email);</span>
-    }
+  /** Reports where I am the target */
+  @QueryMapping
+  public List&lt;ReportResponse&gt; reportsForMe(Authentication auth) {
+<span class="fc" id="L47">    return reportService.listReceivedByEmail(auth.getName());</span>
+  }
 
-    @QueryMapping
-    public ReportResponse report(@Argument Long id, Authentication auth) {
-<span class="fc" id="L51">        String email = auth.getName();</span>
-<span class="fc" id="L52">        return reportService.loadVisibleByEmail(email, id);</span>
-    }
+  /** Single report (visible if admin / author / target) */
+  @QueryMapping
+  public ReportResponse report(@Argument Long id, Authentication auth) {
+<span class="fc" id="L53">    return reportService.getVisibleTo(auth.getName(), id);</span>
+  }
 
-    /* ======================== MUTATIONS ======================== */
+  /* ======================== MUTATIONS ======================== */
 
-    @MutationMapping
-    public ReportResponse createReport(
-        @Argument(&quot;input&quot;) @Valid ReportCreateRequest input,
-        Authentication auth
-    ) {
-<span class="fc" id="L62">        String email = auth.getName();</span>
-<span class="fc" id="L63">        return reportService.create(email, input);</span>
-    }
+  /** Manual report creation */
+  @MutationMapping
+  public ReportResponse createReport(
+      @Argument(&quot;input&quot;) @Valid ReportCreateRequest input,
+      Authentication auth
+  ) {
+<span class="fc" id="L64">    return reportService.createForAuthorEmail(auth.getName(), input);</span>
+  }
 
-    @MutationMapping
-    public ReportResponse updateReport(
-        @Argument(&quot;id&quot;) Long id,                            
-        @Argument(&quot;input&quot;) @Valid ReportUpdateRequest input,
-        Authentication auth
-    ) {
-<span class="fc" id="L72">        String email = auth.getName();</span>
-<span class="fc" id="L73">        return reportService.update(email, id, input);</span>
-    }
-    @MutationMapping
-    public Boolean deleteReport(@Argument Long id, Authentication auth) {
-<span class="fc" id="L77">        String email = auth.getName();</span>
-<span class="fc" id="L78">        reportService.delete(email, id);</span>
-<span class="fc" id="L79">        return true;</span>
-    }
+  /** Update report (admin or author) */
+  @MutationMapping
+  public ReportResponse updateReport(
+      @Argument Long id,
+      @Argument(&quot;input&quot;) @Valid ReportUpdateRequest input,
+      Authentication auth
+  ) {
+<span class="fc" id="L74">    return reportService.updateVisibleTo(auth.getName(), id, input);</span>
+  }
+
+  /** Delete report (admin or author) */
+  @MutationMapping
+  public Boolean deleteReport(@Argument Long id, Authentication auth) {
+<span class="fc" id="L80">    reportService.deleteVisibleTo(auth.getName(), id);</span>
+<span class="fc" id="L81">    return true;</span>
+  }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

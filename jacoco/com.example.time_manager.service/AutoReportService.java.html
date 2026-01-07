@@ -1,0 +1,415 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AutoReportService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">time-manager</a> &gt; <a href="index.source.html" class="el_package">com.example.time_manager.service</a> &gt; <span class="el_source">AutoReportService.java</span></div><h1>AutoReportService.java</h1><pre class="source lang-java linenums">package com.example.time_manager.service;
+
+import java.time.DayOfWeek;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.example.time_manager.dto.clock.ClockResponse;
+import com.example.time_manager.dto.work_schedule.WorkScheduleResponse;
+import com.example.time_manager.model.ClockKind;
+import com.example.time_manager.model.Report;
+import com.example.time_manager.model.User;
+import com.example.time_manager.model.WorkDay;
+import com.example.time_manager.model.absence.Absence;
+import com.example.time_manager.model.absence.AbsenceStatus;
+import com.example.time_manager.repository.ReportRepository;
+import com.example.time_manager.repository.TeamMemberRepository;
+import com.example.time_manager.repository.UserRepository;
+
+import jakarta.persistence.EntityNotFoundException;
+
+@Service
+@Transactional
+public class AutoReportService {
+
+  private static final String SYSTEM_EMAIL = &quot;system@time-manager.local&quot;;
+  private static final int LATE_GRACE_MIN = 5;
+  private static final int OVERWORK_GRACE_MIN = 30;
+
+  private final UserRepository userRepo;
+  private final TeamMemberRepository teamMemberRepo;
+  private final ReportRepository reportRepo;
+  private final WorkScheduleService workScheduleService;
+
+  public AutoReportService(
+      UserRepository userRepo,
+      TeamMemberRepository teamMemberRepo,
+      ReportRepository reportRepo,
+      WorkScheduleService workScheduleService
+<span class="nc" id="L51">  ) {</span>
+<span class="nc" id="L52">    this.userRepo = userRepo;</span>
+<span class="nc" id="L53">    this.teamMemberRepo = teamMemberRepo;</span>
+<span class="nc" id="L54">    this.reportRepo = reportRepo;</span>
+<span class="nc" id="L55">    this.workScheduleService = workScheduleService;</span>
+<span class="nc" id="L56">  }</span>
+
+  /* ==========================================================
+   * ABSENCE: employee -&gt; manager(s)
+   * ========================================================== */
+
+  public void onAbsenceRequested(Absence absence) {
+<span class="nc bnc" id="L63" title="All 2 branches missed.">    if (absence == null) return;</span>
+
+<span class="nc" id="L65">    User employee = requireUser(absence.getUserId());</span>
+<span class="nc" id="L66">    Set&lt;User&gt; managers = managersOfUserTeams(employee.getId());</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">    if (managers.isEmpty()) {</span>
+<span class="nc" id="L68">      managers = new java.util.HashSet&lt;&gt;(admins());</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">      if (managers.isEmpty()) return;</span>
+    }
+
+<span class="nc" id="L72">    String title = &quot;Absence Request : &quot; + employee.getEmail();</span>
+<span class="nc" id="L73">    String body =</span>
+<span class="nc" id="L74">        &quot;Employee : &quot; + employee.getEmail() + &quot;\n&quot; +</span>
+<span class="nc" id="L75">        &quot;Period : &quot; + absence.getStartDate() + &quot; -&gt; &quot; + absence.getEndDate() + &quot;\n&quot; +</span>
+<span class="nc" id="L76">        &quot;Type : &quot; + absence.getType() + &quot;\n&quot; +</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">        (absence.getReason() != null ? (&quot;Reason : &quot; + absence.getReason() + &quot;\n&quot;) : &quot;&quot;);</span>
+
+<span class="nc bnc" id="L79" title="All 2 branches missed.">    for (User manager : managers) {</span>
+<span class="nc" id="L80">      String ruleKey = &quot;ABSENCE_REQUEST:&quot; + absence.getId() + &quot;:&quot; + manager.getId();</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">      if (reportRepo.existsByRuleKey(ruleKey)) continue;</span>
+
+<span class="nc" id="L83">      Report r = new Report();</span>
+<span class="nc" id="L84">      r.setAuthor(employee); </span>
+<span class="nc" id="L85">      r.setTarget(manager);</span>
+<span class="nc" id="L86">      r.setSubject(employee);</span>
+
+<span class="nc" id="L88">      r.setType(&quot;ABSENCE_REQUEST&quot;);</span>
+<span class="nc" id="L89">      r.setSeverity(&quot;INFO&quot;);</span>
+<span class="nc" id="L90">      r.setRuleKey(ruleKey);</span>
+
+<span class="nc" id="L92">      r.setTitle(title);</span>
+<span class="nc" id="L93">      r.setBody(body);</span>
+
+<span class="nc" id="L95">      reportRepo.save(r);</span>
+<span class="nc" id="L96">    }</span>
+<span class="nc" id="L97">  }</span>
+
+  /* ==========================================================
+   * ABSENCE: manager/admin -&gt; employee
+   * ========================================================== */
+
+  public void onAbsenceStatusChanged(String changerEmail, Absence absence, AbsenceStatus previous) {
+<span class="nc bnc" id="L104" title="All 2 branches missed.">    if (absence == null) return;</span>
+<span class="nc bnc" id="L105" title="All 4 branches missed.">    if (previous != null &amp;&amp; previous == absence.getStatus()) return;</span>
+
+<span class="nc" id="L107">    User changer = userByEmail(changerEmail);</span>
+<span class="nc" id="L108">    User employee = requireUser(absence.getUserId());</span>
+
+<span class="nc" id="L110">    String newStatus = String.valueOf(absence.getStatus());</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">    String severity = &quot;REJECTED&quot;.equalsIgnoreCase(newStatus) ? &quot;WARN&quot; : &quot;INFO&quot;;</span>
+
+<span class="nc" id="L113">    String title = &quot;Absence &quot; + newStatus + &quot; : &quot; + employee.getEmail();</span>
+<span class="nc" id="L114">    String body =</span>
+<span class="nc" id="L115">        &quot;Employé : &quot; + employee.getEmail() + &quot;\n&quot; +</span>
+<span class="nc" id="L116">        &quot;Par : &quot; + changer.getEmail() + &quot;\n&quot; +</span>
+<span class="nc" id="L117">        &quot;Période : &quot; + absence.getStartDate() + &quot; -&gt; &quot; + absence.getEndDate() + &quot;\n&quot; +</span>
+<span class="nc" id="L118">        &quot;Type : &quot; + absence.getType() + &quot;\n&quot; +</span>
+        &quot;Ancien statut : &quot; + previous + &quot;\n&quot; +
+<span class="nc" id="L120">        &quot;Nouveau statut : &quot; + absence.getStatus() + &quot;\n&quot;;</span>
+
+<span class="nc" id="L122">    String ruleKey = &quot;ABSENCE_STATUS:&quot; + absence.getId() + &quot;:&quot; + newStatus + &quot;:&quot; + employee.getId();</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">    if (reportRepo.existsByRuleKey(ruleKey)) return;</span>
+
+<span class="nc" id="L125">    Report r = new Report();</span>
+<span class="nc" id="L126">    r.setAuthor(changer);      // manager/admin -&gt; employee</span>
+<span class="nc" id="L127">    r.setTarget(employee);</span>
+<span class="nc" id="L128">    r.setSubject(employee);</span>
+
+<span class="nc" id="L130">    r.setType(&quot;ABSENCE_STATUS&quot;);</span>
+<span class="nc" id="L131">    r.setSeverity(severity);</span>
+<span class="nc" id="L132">    r.setRuleKey(ruleKey);</span>
+
+<span class="nc" id="L134">    r.setTitle(title);</span>
+<span class="nc" id="L135">    r.setBody(body);</span>
+
+<span class="nc" id="L137">    reportRepo.save(r);</span>
+<span class="nc" id="L138">  }</span>
+
+  /* ==========================================================
+   * CLOCK: late + overwork (pause-safe)
+   * ========================================================== */
+
+  /**
+   * @param dayClocks
+   */
+  public void onClockCreated(String userId, ClockKind kind, Instant at, List&lt;ClockResponse&gt; dayClocks) {
+<span class="nc bnc" id="L148" title="All 8 branches missed.">    if (userId == null || at == null || dayClocks == null || dayClocks.isEmpty()) return;</span>
+
+<span class="nc" id="L150">    ZoneId zone = ZoneId.systemDefault();</span>
+<span class="nc" id="L151">    LocalDate day = at.atZone(zone).toLocalDate();</span>
+
+<span class="nc" id="L153">    var clocks = dayClocks.stream()</span>
+<span class="nc" id="L154">        .sorted(Comparator.comparing(c -&gt; c.at))</span>
+<span class="nc" id="L155">        .toList();</span>
+
+<span class="nc bnc" id="L157" title="All 2 branches missed.">    if (kind == ClockKind.IN) {</span>
+<span class="nc" id="L158">      handleFirstInLateRule(userId, at, day, zone, clocks);</span>
+<span class="nc" id="L159">      return;</span>
+    }
+
+<span class="nc bnc" id="L162" title="All 2 branches missed.">    if (kind == ClockKind.OUT) {</span>
+<span class="nc" id="L163">      handleOutEndOfDayRules(userId, at, day, zone, clocks);</span>
+    }
+<span class="nc" id="L165">  }</span>
+
+  private void handleFirstInLateRule(String userId, Instant at, LocalDate day, ZoneId zone, List&lt;ClockResponse&gt; clocks) {
+<span class="nc" id="L168">    var firstIn = clocks.stream()</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">        .filter(c -&gt; c.kind == ClockKind.IN)</span>
+<span class="nc" id="L170">        .min(Comparator.comparing(c -&gt; c.at))</span>
+<span class="nc" id="L171">        .orElse(null);</span>
+
+<span class="nc bnc" id="L173" title="All 2 branches missed.">    if (firstIn == null) return;</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">    if (!firstIn.at.equals(at)) return;</span>
+
+<span class="nc" id="L176">    ScheduleWindow w = scheduleWindow(userId, day);</span>
+<span class="nc bnc" id="L177" title="All 4 branches missed.">    if (w == null || w.expectedStart == null) return;</span>
+
+<span class="nc" id="L179">    LocalTime actual = at.atZone(zone).toLocalTime();</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">    if (!actual.isAfter(w.expectedStart.plusMinutes(LATE_GRACE_MIN))) return;</span>
+
+<span class="nc" id="L182">    User subject = requireUser(userId);</span>
+<span class="nc" id="L183">    boolean subjectIsManager = hasRole(subject, &quot;manager&quot;);</span>
+
+<span class="nc bnc" id="L185" title="All 2 branches missed.">    if (subjectIsManager) {</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">      for (User admin : admins()) createLateReport(admin, subject, day, w.expectedStart, actual, &quot;WARN&quot;);</span>
+    } else {
+<span class="nc bnc" id="L188" title="All 2 branches missed.">      for (User manager : managersOfUserTeams(userId)) createLateReport(manager, subject, day, w.expectedStart, actual, &quot;INFO&quot;);</span>
+    }
+<span class="nc" id="L190">  }</span>
+
+  private void handleOutEndOfDayRules(String userId, Instant at, LocalDate day, ZoneId zone, List&lt;ClockResponse&gt; clocks) {
+<span class="nc bnc" id="L193" title="All 2 branches missed.">    if (clocks.isEmpty()) return;</span>
+
+<span class="nc" id="L195">    var last = clocks.get(clocks.size() - 1);</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">    if (!last.at.equals(at)) return;</span>
+
+<span class="nc" id="L198">    ScheduleWindow w = scheduleWindow(userId, day);</span>
+<span class="nc bnc" id="L199" title="All 2 branches missed.">    if (w == null) return;</span>
+
+<span class="nc" id="L201">    LocalTime outTime = at.atZone(zone).toLocalTime();</span>
+
+   
+<span class="nc bnc" id="L204" title="All 2 branches missed.">    if (w.pmEnd != null) {</span>
+<span class="nc" id="L205">      LocalTime threshold = w.pmEnd.minusMinutes(10);</span>
+<span class="nc bnc" id="L206" title="All 2 branches missed.">      if (outTime.isBefore(threshold)) return;</span>
+    }
+
+<span class="nc" id="L209">    int worked = workedMinutes(clocks);</span>
+<span class="nc" id="L210">    int expected = w.expectedMinutes();</span>
+
+<span class="nc bnc" id="L212" title="All 4 branches missed.">    if (expected &gt; 0 &amp;&amp; worked &gt; expected + OVERWORK_GRACE_MIN) {</span>
+<span class="nc" id="L213">      User subject = requireUser(userId);</span>
+<span class="nc" id="L214">      boolean subjectIsManager = hasRole(subject, &quot;manager&quot;);</span>
+<span class="nc" id="L215">      int extra = worked - expected;</span>
+
+<span class="nc bnc" id="L217" title="All 2 branches missed.">      if (subjectIsManager) {</span>
+<span class="nc bnc" id="L218" title="All 2 branches missed.">        for (User admin : admins()) createOverworkReport(admin, subject, day, worked, expected, extra);</span>
+      } else {
+<span class="nc bnc" id="L220" title="All 2 branches missed.">        for (User manager : managersOfUserTeams(userId)) createOverworkReport(manager, subject, day, worked, expected, extra);</span>
+      }
+    }
+<span class="nc" id="L223">  }</span>
+
+  private void createLateReport(User recipient, User subject, LocalDate day,
+                                LocalTime expectedStart, LocalTime actual, String severity) {
+<span class="nc" id="L227">    String type = &quot;LATE_ARRIVAL&quot;;</span>
+<span class="nc" id="L228">    String ruleKey = type + &quot;:&quot; + day + &quot;:&quot; + subject.getId() + &quot;-&gt;&quot; + recipient.getId();</span>
+<span class="nc bnc" id="L229" title="All 2 branches missed.">    if (reportRepo.existsByRuleKey(ruleKey)) return;</span>
+
+<span class="nc" id="L231">    Report r = new Report();</span>
+<span class="nc" id="L232">    r.setAuthor(systemUser());</span>
+<span class="nc" id="L233">    r.setTarget(recipient);</span>
+<span class="nc" id="L234">    r.setSubject(subject);</span>
+
+<span class="nc" id="L236">    r.setType(type);</span>
+<span class="nc" id="L237">    r.setSeverity(severity);</span>
+<span class="nc" id="L238">    r.setRuleKey(ruleKey);</span>
+
+<span class="nc" id="L240">    r.setTitle(&quot;Retard détecté : &quot; + subject.getEmail());</span>
+<span class="nc" id="L241">    r.setBody(</span>
+<span class="nc" id="L242">        &quot;Utilisateur : &quot; + subject.getEmail() + &quot;\n&quot; +</span>
+        &quot;Date : &quot; + day + &quot;\n&quot; +
+        &quot;Prévu : &quot; + expectedStart + &quot; (+&quot; + LATE_GRACE_MIN + &quot; min)\n&quot; +
+        &quot;Réel : &quot; + actual + &quot;\n&quot;
+    );
+
+<span class="nc" id="L248">    reportRepo.save(r);</span>
+<span class="nc" id="L249">  }</span>
+
+  private void createOverworkReport(User recipient, User subject, LocalDate day,
+                                    int workedMin, int expectedMin, int extraMin) {
+<span class="nc" id="L253">    String type = &quot;OVERWORK&quot;;</span>
+<span class="nc" id="L254">    String ruleKey = type + &quot;:&quot; + day + &quot;:&quot; + subject.getId() + &quot;-&gt;&quot; + recipient.getId();</span>
+<span class="nc bnc" id="L255" title="All 2 branches missed.">    if (reportRepo.existsByRuleKey(ruleKey)) return;</span>
+
+<span class="nc" id="L257">    Report r = new Report();</span>
+<span class="nc" id="L258">    r.setAuthor(systemUser());</span>
+<span class="nc" id="L259">    r.setTarget(recipient);</span>
+<span class="nc" id="L260">    r.setSubject(subject);</span>
+
+<span class="nc" id="L262">    r.setType(type);</span>
+<span class="nc" id="L263">    r.setSeverity(&quot;WARN&quot;);</span>
+<span class="nc" id="L264">    r.setRuleKey(ruleKey);</span>
+
+<span class="nc" id="L266">    r.setTitle(&quot;Temps de travail élevé : &quot; + subject.getEmail());</span>
+<span class="nc" id="L267">    r.setBody(</span>
+<span class="nc" id="L268">        &quot;Utilisateur : &quot; + subject.getEmail() + &quot;\n&quot; +</span>
+        &quot;Date : &quot; + day + &quot;\n&quot; +
+<span class="nc" id="L270">        &quot;Attendu : &quot; + fmtMinutes(expectedMin) + &quot;\n&quot; +</span>
+<span class="nc" id="L271">        &quot;Travaillé : &quot; + fmtMinutes(workedMin) + &quot;\n&quot; +</span>
+<span class="nc" id="L272">        &quot;Dépassement : &quot; + fmtMinutes(extraMin) + &quot; (seuil +&quot; + OVERWORK_GRACE_MIN + &quot; min)\n&quot;</span>
+    );
+
+<span class="nc" id="L275">    reportRepo.save(r);</span>
+<span class="nc" id="L276">  }</span>
+
+  private int workedMinutes(List&lt;ClockResponse&gt; clocks) {
+<span class="nc" id="L279">    Instant currentIn = null;</span>
+<span class="nc" id="L280">    long totalSeconds = 0;</span>
+
+<span class="nc bnc" id="L282" title="All 2 branches missed.">    for (var c : clocks) {</span>
+<span class="nc bnc" id="L283" title="All 2 branches missed.">      if (c.kind == ClockKind.IN) {</span>
+<span class="nc bnc" id="L284" title="All 2 branches missed.">        if (currentIn == null) currentIn = c.at;</span>
+      } else {
+<span class="nc bnc" id="L286" title="All 4 branches missed.">        if (currentIn != null &amp;&amp; c.at.isAfter(currentIn)) {</span>
+<span class="nc" id="L287">          totalSeconds += Duration.between(currentIn, c.at).getSeconds();</span>
+<span class="nc" id="L288">          currentIn = null;</span>
+        }
+      }
+<span class="nc" id="L291">    }</span>
+<span class="nc" id="L292">    return (int) (totalSeconds / 60);</span>
+  }
+
+  private String fmtMinutes(int minutes) {
+<span class="nc" id="L296">    int h = minutes / 60;</span>
+<span class="nc" id="L297">    int m = minutes % 60;</span>
+<span class="nc" id="L298">    return String.format(&quot;%dh%02d&quot;, h, m);</span>
+  }
+
+  /* ========================= SCHEDULE WINDOW ========================= */
+
+  private static class ScheduleWindow {
+    LocalTime expectedStart;
+    LocalTime pmEnd;
+    Integer expectedMinutes;
+<span class="nc bnc" id="L307" title="All 2 branches missed.">    int expectedMinutes() { return expectedMinutes == null ? 0 : expectedMinutes; }</span>
+  }
+
+  private ScheduleWindow scheduleWindow(String userId, LocalDate day) {
+<span class="nc" id="L311">    WorkDay wd = toWorkDay(day.getDayOfWeek());</span>
+<span class="nc" id="L312">    List&lt;WorkScheduleResponse&gt; slots = workScheduleService.listForUser(userId);</span>
+
+<span class="nc" id="L314">    List&lt;WorkScheduleResponse&gt; today = slots.stream()</span>
+<span class="nc bnc" id="L315" title="All 2 branches missed.">        .filter(s -&gt; s.dayOfWeek() == wd)</span>
+<span class="nc" id="L316">        .toList();</span>
+
+<span class="nc bnc" id="L318" title="All 2 branches missed.">    if (today.isEmpty()) return null;</span>
+
+<span class="nc" id="L320">    ScheduleWindow w = new ScheduleWindow();</span>
+
+<span class="nc" id="L322">    w.expectedStart = today.stream()</span>
+<span class="nc" id="L323">        .map(WorkScheduleResponse::startTime)</span>
+<span class="nc" id="L324">        .filter(Objects::nonNull)</span>
+<span class="nc" id="L325">        .map(this::parseTime)</span>
+<span class="nc" id="L326">        .min(LocalTime::compareTo)</span>
+<span class="nc" id="L327">        .orElse(null);</span>
+
+<span class="nc" id="L329">    w.pmEnd = today.stream()</span>
+<span class="nc" id="L330">        .filter(s -&gt; &quot;PM&quot;.equalsIgnoreCase(String.valueOf(s.period())))</span>
+<span class="nc" id="L331">        .map(WorkScheduleResponse::endTime)</span>
+<span class="nc" id="L332">        .filter(Objects::nonNull)</span>
+<span class="nc" id="L333">        .map(this::parseTime)</span>
+<span class="nc" id="L334">        .max(LocalTime::compareTo)</span>
+<span class="nc" id="L335">        .orElse(null);</span>
+
+<span class="nc" id="L337">    int sum = 0;</span>
+<span class="nc bnc" id="L338" title="All 2 branches missed.">    for (var s : today) {</span>
+<span class="nc" id="L339">      LocalTime st = parseTime(s.startTime());</span>
+<span class="nc" id="L340">      LocalTime en = parseTime(s.endTime());</span>
+<span class="nc bnc" id="L341" title="All 6 branches missed.">      if (st != null &amp;&amp; en != null &amp;&amp; en.isAfter(st)) {</span>
+<span class="nc" id="L342">        sum += (int) Duration.between(st, en).toMinutes();</span>
+      }
+<span class="nc" id="L344">    }</span>
+<span class="nc" id="L345">    w.expectedMinutes = sum;</span>
+<span class="nc" id="L346">    return w;</span>
+  }
+
+  private LocalTime parseTime(String t) {
+<span class="nc bnc" id="L350" title="All 2 branches missed.">    if (t == null) return null;</span>
+<span class="nc bnc" id="L351" title="All 2 branches missed.">    if (t.length() &gt;= 8) return LocalTime.parse(t.substring(0, 8));</span>
+<span class="nc" id="L352">    return LocalTime.parse(t);</span>
+  }
+
+  private WorkDay toWorkDay(DayOfWeek dow) {
+<span class="nc bnc" id="L356" title="All 7 branches missed.">    return switch (dow) {</span>
+<span class="nc" id="L357">      case MONDAY -&gt; WorkDay.MON;</span>
+<span class="nc" id="L358">      case TUESDAY -&gt; WorkDay.TUE;</span>
+<span class="nc" id="L359">      case WEDNESDAY -&gt; WorkDay.WED;</span>
+<span class="nc" id="L360">      case THURSDAY -&gt; WorkDay.THU;</span>
+<span class="nc" id="L361">      case FRIDAY -&gt; WorkDay.FRI;</span>
+<span class="nc" id="L362">      case SATURDAY -&gt; WorkDay.SAT;</span>
+<span class="nc" id="L363">      case SUNDAY -&gt; WorkDay.SUN;</span>
+    };
+  }
+
+  /* ========================= RECIPIENTS / ROLES ========================= */
+
+  private Set&lt;User&gt; managersOfUserTeams(String userId) {
+<span class="nc" id="L370">    List&lt;Long&gt; teamIds = teamMemberRepo.findTeamIdsByUserId(userId);</span>
+<span class="nc bnc" id="L371" title="All 4 branches missed.">    if (teamIds == null || teamIds.isEmpty()) return Set.of();</span>
+
+<span class="nc" id="L373">    Set&lt;User&gt; managers = new HashSet&lt;&gt;();</span>
+<span class="nc bnc" id="L374" title="All 2 branches missed.">    for (Long teamId : teamIds) {</span>
+<span class="nc" id="L375">      List&lt;User&gt; users = teamMemberRepo.findUsersByTeamId(teamId);</span>
+<span class="nc bnc" id="L376" title="All 2 branches missed.">      if (users == null) continue;</span>
+<span class="nc bnc" id="L377" title="All 2 branches missed.">      for (User u : users) {</span>
+<span class="nc bnc" id="L378" title="All 2 branches missed.">        if (hasRole(u, &quot;manager&quot;)) managers.add(u);</span>
+<span class="nc" id="L379">      }</span>
+<span class="nc" id="L380">    }</span>
+<span class="nc" id="L381">    return managers;</span>
+  }
+
+  private List&lt;User&gt; admins() {
+<span class="nc" id="L385">    return userRepo.findAll().stream()</span>
+<span class="nc" id="L386">        .filter(u -&gt; hasRole(u, &quot;admin&quot;))</span>
+<span class="nc" id="L387">        .collect(Collectors.toList());</span>
+  }
+
+  private User systemUser() {
+<span class="nc" id="L391">    return userRepo.findByEmail(SYSTEM_EMAIL)</span>
+<span class="nc" id="L392">        .orElseThrow(() -&gt; new EntityNotFoundException(&quot;SYSTEM user missing: &quot; + SYSTEM_EMAIL));</span>
+  }
+
+  private User requireUser(String id) {
+<span class="nc" id="L396">    return userRepo.findById(id)</span>
+<span class="nc" id="L397">        .orElseThrow(() -&gt; new EntityNotFoundException(&quot;User not found: &quot; + id));</span>
+  }
+
+  private User userByEmail(String email) {
+<span class="nc" id="L401">    return userRepo.findByEmail(email)</span>
+<span class="nc" id="L402">        .orElseThrow(() -&gt; new EntityNotFoundException(&quot;User not found: &quot; + email));</span>
+  }
+
+  private boolean hasRole(User u, String roleLower) {
+<span class="nc" id="L406">    String raw = u.getRole();</span>
+<span class="nc bnc" id="L407" title="All 2 branches missed.">    if (raw == null) return false;</span>
+<span class="nc" id="L408">    String normalized = raw.replace(&quot;[&quot;, &quot;&quot;).replace(&quot;]&quot;, &quot;&quot;).replace(&quot;\&quot;&quot;, &quot;&quot;).toLowerCase();</span>
+<span class="nc bnc" id="L409" title="All 2 branches missed.">    for (String part : normalized.split(&quot;,&quot;)) {</span>
+<span class="nc bnc" id="L410" title="All 2 branches missed.">      if (part.trim().contains(roleLower)) return true;</span>
+    }
+<span class="nc" id="L412">    return false;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

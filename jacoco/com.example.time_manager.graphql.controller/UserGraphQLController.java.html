@@ -195,84 +195,88 @@ public class UserGraphQLController {
 <span class="fc" id="L195">        return userService.updateUser(input.id(), input);</span>
     }
 
-    @PreAuthorize(&quot;permitAll()&quot;)
-    @MutationMapping
-    public Boolean logout() {
-<span class="fc" id="L201">        HttpServletResponse httpResp = currentResponse();</span>
-<span class="fc" id="L202">        expireCookie(httpResp, &quot;access_token&quot;, &quot;/&quot;);</span>
-<span class="fc" id="L203">        expireCookie(httpResp, &quot;access_token&quot;, &quot;/graphql&quot;);</span>
-<span class="fc" id="L204">        expireCookie(httpResp, &quot;refresh_token&quot;, &quot;/graphql&quot;);</span>
-<span class="fc" id="L205">        return true;</span>
-    }
-
     @PreAuthorize(&quot;hasAuthority('ADMIN')&quot;)
     @QueryMapping
     public java.util.List&lt;User&gt; users() {
-<span class="fc" id="L211">        var list = userService.findAllUsers();</span>
-<span class="fc bfc" id="L212" title="All 2 branches covered.">        return (list != null) ? list : java.util.Collections.emptyList();</span>
+<span class="fc" id="L201">        var list = userService.findAllUsers();</span>
+<span class="fc bfc" id="L202" title="All 2 branches covered.">        return (list != null) ? list : java.util.Collections.emptyList();</span>
     }
 
     @PreAuthorize(&quot;isAuthenticated()&quot;)
     @QueryMapping
     public User userByEmail(@Argument(&quot;email&quot;) String email) {
-<span class="fc" id="L218">        return userService.findByEmail(email).orElse(null);</span>
+<span class="fc" id="L208">        return userService.findByEmail(email).orElse(null);</span>
+    }
+
+    @PreAuthorize(&quot;permitAll()&quot;)
+    @MutationMapping
+    public Boolean logout() {
+<span class="fc" id="L214">        HttpServletResponse httpResp = currentResponse();</span>
+
+<span class="fc" id="L216">        expireCookie(httpResp, &quot;access_token&quot;, &quot;/graphql&quot;);</span>
+<span class="fc" id="L217">        expireCookie(httpResp, &quot;refresh_token&quot;, &quot;/graphql&quot;);</span>
+
+<span class="fc" id="L219">        expireCookie(httpResp, &quot;access_token&quot;, &quot;/&quot;);</span>
+<span class="fc" id="L220">        expireCookie(httpResp, &quot;refresh_token&quot;, &quot;/&quot;);</span>
+
+<span class="fc" id="L222">        return true; </span>
     }
 
     private static HttpServletRequest currentRequest() {
-<span class="fc" id="L222">        var attrs = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();</span>
-<span class="fc" id="L223">        return attrs.getRequest();</span>
+<span class="fc" id="L226">        var attrs = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();</span>
+<span class="fc" id="L227">        return attrs.getRequest();</span>
     }
 
     private static HttpServletResponse currentResponse() {
-<span class="fc" id="L227">        var attrs = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();</span>
-<span class="fc" id="L228">        HttpServletResponse resp = attrs.getResponse();</span>
-<span class="fc bfc" id="L229" title="All 2 branches covered.">        if (resp == null) {</span>
-<span class="fc" id="L230">            throw new IllegalStateException(&quot;No HttpServletResponse available&quot;);</span>
+<span class="fc" id="L231">        var attrs = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();</span>
+<span class="fc" id="L232">        HttpServletResponse resp = attrs.getResponse();</span>
+<span class="fc bfc" id="L233" title="All 2 branches covered.">        if (resp == null) {</span>
+<span class="fc" id="L234">            throw new IllegalStateException(&quot;No HttpServletResponse available&quot;);</span>
         }
-<span class="fc" id="L232">        return resp;</span>
+<span class="fc" id="L236">        return resp;</span>
     }
 
     private static void addAccessCookie(HttpServletResponse response, String token) {
-<span class="fc" id="L236">        ResponseCookie cookie = ResponseCookie.from(&quot;access_token&quot;, token)</span>
-<span class="fc" id="L237">                .httpOnly(true)</span>
-<span class="fc" id="L238">                .secure(COOKIE_SECURE)</span>
-<span class="fc" id="L239">                .sameSite(COOKIE_SAMESITE)</span>
-<span class="fc" id="L240">                .path(&quot;/graphql&quot;)</span>
-<span class="fc" id="L241">                .maxAge(ACCESS_MAX_AGE)</span>
-<span class="fc" id="L242">                .build();</span>
-<span class="fc" id="L243">        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());</span>
-<span class="fc" id="L244">    }</span>
+<span class="fc" id="L240">        ResponseCookie cookie = ResponseCookie.from(&quot;access_token&quot;, token)</span>
+<span class="fc" id="L241">                .httpOnly(true)</span>
+<span class="fc" id="L242">                .secure(COOKIE_SECURE)</span>
+<span class="fc" id="L243">                .sameSite(COOKIE_SAMESITE)</span>
+<span class="fc" id="L244">                .path(&quot;/graphql&quot;)</span>
+<span class="fc" id="L245">                .maxAge(ACCESS_MAX_AGE)</span>
+<span class="fc" id="L246">                .build();</span>
+<span class="fc" id="L247">        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());</span>
+<span class="fc" id="L248">    }</span>
 
     private static void expireCookie(HttpServletResponse response, String name, String path) {
-<span class="fc" id="L247">        ResponseCookie cookie = ResponseCookie.from(name, &quot;&quot;)</span>
-<span class="fc" id="L248">                .httpOnly(true)</span>
-<span class="fc" id="L249">                .secure(COOKIE_SECURE)</span>
-<span class="fc" id="L250">                .sameSite(COOKIE_SAMESITE)</span>
-<span class="fc" id="L251">                .path(path)</span>
-<span class="fc" id="L252">                .maxAge(Duration.ZERO)</span>
-<span class="fc" id="L253">                .build();</span>
-<span class="fc" id="L254">        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());</span>
-<span class="fc" id="L255">    }</span>
+<span class="fc" id="L251">        ResponseCookie cookie = ResponseCookie.from(name, &quot;&quot;)</span>
+<span class="fc" id="L252">                .httpOnly(true)</span>
+<span class="fc" id="L253">                .secure(COOKIE_SECURE)</span>
+<span class="fc" id="L254">                .sameSite(COOKIE_SAMESITE)</span>
+<span class="fc" id="L255">                .path(path)</span>
+<span class="fc" id="L256">                .maxAge(Duration.ZERO)</span>
+<span class="fc" id="L257">                .build();</span>
+<span class="fc" id="L258">        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());</span>
+<span class="fc" id="L259">    }</span>
 
     private static void addRefreshCookie(HttpServletResponse response, String token) {
-<span class="fc" id="L258">        ResponseCookie cookie = ResponseCookie.from(&quot;refresh_token&quot;, token)</span>
-<span class="fc" id="L259">                .httpOnly(true).secure(COOKIE_SECURE).sameSite(COOKIE_SAMESITE)</span>
-<span class="fc" id="L260">                .path(&quot;/graphql&quot;)</span>
-<span class="fc" id="L261">                .maxAge(REFRESH_MAX_AGE).build();</span>
-<span class="fc" id="L262">        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());</span>
-<span class="fc" id="L263">    }</span>
+<span class="fc" id="L262">        ResponseCookie cookie = ResponseCookie.from(&quot;refresh_token&quot;, token)</span>
+<span class="fc" id="L263">                .httpOnly(true).secure(COOKIE_SECURE).sameSite(COOKIE_SAMESITE)</span>
+<span class="fc" id="L264">                .path(&quot;/graphql&quot;)</span>
+<span class="fc" id="L265">                .maxAge(REFRESH_MAX_AGE).build();</span>
+<span class="fc" id="L266">        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());</span>
+<span class="fc" id="L267">    }</span>
 
     private static String readCookie(HttpServletRequest request, String name) {
-<span class="fc" id="L266">        Cookie[] cookies = request.getCookies();</span>
-<span class="fc bfc" id="L267" title="All 2 branches covered.">        if (cookies == null) {</span>
-<span class="fc" id="L268">            return null;</span>
+<span class="fc" id="L270">        Cookie[] cookies = request.getCookies();</span>
+<span class="fc bfc" id="L271" title="All 2 branches covered.">        if (cookies == null) {</span>
+<span class="fc" id="L272">            return null;</span>
         }
-<span class="fc bfc" id="L270" title="All 2 branches covered.">        for (Cookie c : cookies) {</span>
-<span class="fc bfc" id="L271" title="All 2 branches covered.">            if (name.equals(c.getName())) {</span>
-<span class="fc" id="L272">                return c.getValue();</span>
+<span class="fc bfc" id="L274" title="All 2 branches covered.">        for (Cookie c : cookies) {</span>
+<span class="fc bfc" id="L275" title="All 2 branches covered.">            if (name.equals(c.getName())) {</span>
+<span class="fc" id="L276">                return c.getValue();</span>
             }
         }
-<span class="fc" id="L275">        return null;</span>
+<span class="fc" id="L279">        return null;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

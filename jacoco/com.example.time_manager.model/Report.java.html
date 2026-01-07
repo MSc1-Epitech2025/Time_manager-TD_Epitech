@@ -4,20 +4,40 @@ import jakarta.persistence.*;
 import java.time.Instant;
 
 @Entity
-@Table(name = &quot;reports&quot;)
-<span class="fc" id="L8">public class Report {</span>
+@Table(
+  name = &quot;reports&quot;,
+  indexes = {
+    @Index(name = &quot;idx_reports_target_created&quot;, columnList = &quot;target_user_id,created_at&quot;),
+    @Index(name = &quot;idx_reports_subject_created&quot;, columnList = &quot;subject_user_id,created_at&quot;),
+    @Index(name = &quot;idx_reports_type_created&quot;, columnList = &quot;type,created_at&quot;)
+  }
+)
+<span class="fc" id="L15">public class Report {</span>
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @ManyToOne(optional = false)
-  @JoinColumn(name = &quot;author_id&quot;, nullable = false)  
+  @ManyToOne(optional = false, fetch = FetchType.LAZY)
+  @JoinColumn(name = &quot;author_id&quot;, nullable = false)
   private User author;
 
-  @ManyToOne(optional = false)
-  @JoinColumn(name = &quot;target_user_id&quot;, nullable = false) 
+  @ManyToOne(optional = false, fetch = FetchType.LAZY)
+  @JoinColumn(name = &quot;target_user_id&quot;, nullable = false)
   private User target;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = &quot;subject_user_id&quot;)
+  private User subject;
+
+<span class="fc" id="L33">  @Column(nullable = false, length = 64)</span>
+  private String type = &quot;MANUAL&quot;;
+
+<span class="fc" id="L36">  @Column(nullable = false, length = 16)</span>
+  private String severity = &quot;INFO&quot;;
+
+  @Column(name = &quot;rule_key&quot;, length = 160, unique = true)
+  private String ruleKey;
 
   @Column(nullable = false, length = 255)
   private String title;
@@ -25,29 +45,54 @@ import java.time.Instant;
   @Lob
   private String body;
 
-  @Column(name = &quot;created_at&quot;, nullable = false, updatable = false,
-          columnDefinition = &quot;TIMESTAMP DEFAULT CURRENT_TIMESTAMP&quot;)
+  @Column(
+    name = &quot;created_at&quot;,
+    nullable = false,
+    updatable = false,
+    columnDefinition = &quot;TIMESTAMP DEFAULT CURRENT_TIMESTAMP&quot;
+  )
   private Instant createdAt;
+
+  @Column(
+    name = &quot;updated_at&quot;,
+    insertable = false,
+    updatable = false,
+    columnDefinition = &quot;TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP&quot;
+  )
+  private Instant updatedAt;
 
   /* getters/setters */
 
-<span class="fc" id="L34">  public Long getId() { return id; }</span>
-<span class="fc" id="L35">  public void setId(Long id) { this.id = id; }</span>
+<span class="fc" id="L66">  public Long getId() { return id; }</span>
+<span class="fc" id="L67">  public void setId(Long id) { this.id = id; }</span>
 
-<span class="fc" id="L37">  public User getAuthor() { return author; }</span>
-<span class="fc" id="L38">  public void setAuthor(User author) { this.author = author; }</span>
+<span class="fc" id="L69">  public User getAuthor() { return author; }</span>
+<span class="fc" id="L70">  public void setAuthor(User author) { this.author = author; }</span>
 
-<span class="fc" id="L40">  public User getTarget() { return target; }</span>
-<span class="fc" id="L41">  public void setTarget(User target) { this.target = target; }</span>
+<span class="fc" id="L72">  public User getTarget() { return target; }</span>
+<span class="fc" id="L73">  public void setTarget(User target) { this.target = target; }</span>
 
-<span class="fc" id="L43">  public String getTitle() { return title; }</span>
-<span class="fc" id="L44">  public void setTitle(String title) { this.title = title; }</span>
+<span class="fc" id="L75">  public User getSubject() { return subject; }</span>
+<span class="nc" id="L76">  public void setSubject(User subject) { this.subject = subject; }</span>
 
-<span class="fc" id="L46">  public String getBody() { return body; }</span>
-<span class="fc" id="L47">  public void setBody(String body) { this.body = body; }</span>
+<span class="fc" id="L78">  public String getType() { return type; }</span>
+<span class="fc" id="L79">  public void setType(String type) { this.type = type; }</span>
 
-<span class="fc" id="L49">  public Instant getCreatedAt() { return createdAt; }</span>
-<span class="fc" id="L50">  public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }</span>
-  
+<span class="fc" id="L81">  public String getSeverity() { return severity; }</span>
+<span class="fc" id="L82">  public void setSeverity(String severity) { this.severity = severity; }</span>
+
+<span class="nc" id="L84">  public String getRuleKey() { return ruleKey; }</span>
+<span class="fc" id="L85">  public void setRuleKey(String ruleKey) { this.ruleKey = ruleKey; }</span>
+
+<span class="fc" id="L87">  public String getTitle() { return title; }</span>
+<span class="fc" id="L88">  public void setTitle(String title) { this.title = title; }</span>
+
+<span class="fc" id="L90">  public String getBody() { return body; }</span>
+<span class="fc" id="L91">  public void setBody(String body) { this.body = body; }</span>
+
+<span class="fc" id="L93">  public Instant getCreatedAt() { return createdAt; }</span>
+<span class="fc" id="L94">  public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }</span>
+
+<span class="fc" id="L96">  public Instant getUpdatedAt() { return updatedAt; }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>
