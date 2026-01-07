@@ -80,9 +80,6 @@ export class UserService {
         { withCredentials: true }
       )
       .pipe(
-        tap((response) => {
-          console.debug('[UserService] getAllUsers response', response);
-        }),
         map((response) => {
           if (response.errors?.length) {
             throw new Error(response.errors.map((e: GraphqlError) => e.message).join(', '));
@@ -118,9 +115,6 @@ export class UserService {
         { withCredentials: true }
       )
       .pipe(
-        tap((response) => {
-          console.debug('[UserService] createUser response', response);
-        }),
         map((response) => {
           if (response.errors?.length) {
             throw new Error(response.errors.map((e: GraphqlError) => e.message).join(', '));
@@ -159,9 +153,6 @@ export class UserService {
         { withCredentials: true }
       )
       .pipe(
-        tap((response) => {
-          console.debug('[UserService] updateUser response', response);
-        }),
         map((response) => {
           if (response.errors?.length) {
             throw new Error(response.errors.map((e: GraphqlError) => e.message).join(', '));
@@ -192,9 +183,6 @@ export class UserService {
         { withCredentials: true }
       )
       .pipe(
-        tap((response) => {
-          console.debug('[UserService] deleteUser response', response);
-        }),
         map((response) => {
           if (response.errors?.length) {
             throw new Error(response.errors.map((e: GraphqlError) => e.message).join(', '));

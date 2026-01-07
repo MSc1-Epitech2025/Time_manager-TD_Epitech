@@ -91,11 +91,6 @@ export class TeamManagement implements OnInit {
   refreshTeams(): void {
     this.isLoading = true;
     this.lastError = null;
-    console.debug('[TeamManagement] refreshTeams start', {
-      roles: this.auth.session?.user?.roles,
-      isAdmin: this.isAdminUser,
-      isManager: this.isManagerUser,
-    });
     this.loadTeamsForCurrentUser()
       .pipe(
         switchMap((teams) =>

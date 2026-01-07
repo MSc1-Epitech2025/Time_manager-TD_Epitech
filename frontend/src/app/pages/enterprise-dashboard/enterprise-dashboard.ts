@@ -247,7 +247,6 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
   }
 
   async ngOnInit(): Promise<void> {
-    console.log('Enterprise Dashboard initialized.');
     this.loading = true;
 
     try {

@@ -147,9 +147,7 @@ export class ManagerDashboard implements OnInit {
   }
   exportPdf() {
     if (this.employeeKpiData) {
-      const user = this.employeeKpiData; 
-      console.log("Selected Employee:", user);
-      console.log("Employee user:", this.selectedEmployee);
+      const user = this.employeeKpiData;
       
         const employee: ReportableEmployee = {
           name: user.fullName,

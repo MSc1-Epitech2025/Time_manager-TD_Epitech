@@ -34,8 +34,6 @@ export class AuthCallbackComponent implements OnInit {
       const lastName = params.get("lastName");
       const role = params.get("role");
 
-      console.log("Query Params reçus :", { id, email, firstName, lastName, role });
-
       if (!id || !email) {
         console.error("Paramètres manquants dans la redirection OAuth.");
         this.router.navigate(['/login']);

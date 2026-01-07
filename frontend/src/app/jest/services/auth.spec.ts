@@ -84,7 +84,6 @@ describe('AuthService (100% coverage)', () => {
     httpMock.verify();
     jest.useRealTimers();
     (console.warn as jest.Mock).mockRestore?.();
-    (console.log as jest.Mock).mockRestore?.();
     (console.error as jest.Mock).mockRestore?.();
   });
 

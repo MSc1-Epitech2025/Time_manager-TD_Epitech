@@ -380,7 +380,6 @@ export class AuthService {
     }
 
     const timeUntilExpiry = JWT_EXP_MS - 2000;
-    console.log(`Token will expire in ${timeUntilExpiry / 1000}s (refresh ${refreshCount}/${MAX_REFRESH_COUNT})`);
 
     this.tokenExpiryTimer = setTimeout(() => {
       this.handleTokenExpiry();
@@ -400,7 +399,6 @@ export class AuthService {
 
     const refreshCount = sess.refreshCount ?? 0;
     if (refreshCount >= MAX_REFRESH_COUNT) {
-      console.log('Token expired and max refresh reached, logging out');
       this.logout();
       return;
     }
@@ -457,8 +455,6 @@ export class AuthService {
     this.session$.next(updatedSession);
     this.persistSession(updatedSession, this.shouldRemember());
     this.startTokenExpiryMonitoring();
-
-    console.log(`Token refreshed (${updatedSession.refreshCount}/${MAX_REFRESH_COUNT})`);
   }
 
   async resetPasswordFirstLogin(currentPassword: string, newPassword: string): Promise<void> {

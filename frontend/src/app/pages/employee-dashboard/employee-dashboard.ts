@@ -175,7 +175,6 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
     this.actionPending = true;
     try {
       const result = await firstValueFrom(this.clockService.createClock('IN'));
-      console.log('Clock in result:', result);
       this.notify.success('Clock in recorded');
       await this.refreshDashboard();
     } catch (err: any) {
@@ -189,7 +188,6 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
     this.actionPending = true;
     try {
       const result = await firstValueFrom(this.clockService.createClock('OUT'));
-      console.log('Clock out result:', result);
       this.notify.success('Clock out recorded');
       await this.refreshDashboard();
     } catch (err: any) {
