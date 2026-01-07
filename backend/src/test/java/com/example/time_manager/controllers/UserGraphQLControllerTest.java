@@ -192,7 +192,7 @@ class UserGraphQLControllerTest {
     void testLogout() {
         assertTrue(controller.logout());
         List<String> cookies = response.getHeaders("Set-Cookie");
-        assertEquals(3, cookies.size());
+        assertEquals(4, cookies.size());
     }
 
     @Test

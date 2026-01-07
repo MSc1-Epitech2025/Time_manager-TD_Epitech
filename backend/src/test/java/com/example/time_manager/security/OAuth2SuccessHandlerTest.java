@@ -92,7 +92,7 @@ class OAuth2SuccessHandlerTest {
         when(oidcUser.getGivenName()).thenReturn("Jane");
         when(oidcUser.getFamilyName()).thenReturn("Smith");
         when(userService.findByEmail("new@example.com")).thenReturn(Optional.empty());
-        when(userService.saveUser(any(User.class))).thenReturn(newUser);
+        when(userService.saveUserRaw(any(User.class))).thenReturn(newUser);
         when(jwtUtil.generateAccessToken(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn("access-token");
         when(jwtUtil.generateRefreshToken(anyString(), anyString()))
@@ -100,7 +100,7 @@ class OAuth2SuccessHandlerTest {
 
         handler.onAuthenticationSuccess(request, response, authentication);
 
-        verify(userService).saveUser(any(User.class));
+        verify(userService).saveUserRaw(any(User.class));
         verify(response).sendRedirect(anyString());
     }
 
@@ -117,8 +117,9 @@ class OAuth2SuccessHandlerTest {
         when(authentication.getPrincipal()).thenReturn(oidcUser);
         when(oidcUser.getEmail()).thenReturn("test@example.com");
         when(oidcUser.getClaim("oid")).thenReturn("azure-oid-123");
-        when(userService.findByEmail("test@example.com")).thenReturn(Optional.of(existingUser));
-        when(userService.saveUser(any(User.class))).thenReturn(existingUser);
+        when(userService.findByEmail("test@example.com"))
+                .thenReturn(Optional.of(existingUser));
+        when(userService.saveUserRaw(any(User.class))).thenReturn(existingUser);
         when(jwtUtil.generateAccessToken(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn("access-token");
         when(jwtUtil.generateRefreshToken(anyString(), anyString()))
@@ -126,7 +127,7 @@ class OAuth2SuccessHandlerTest {
 
         handler.onAuthenticationSuccess(request, response, authentication);
 
-        verify(userService).saveUser(existingUser);
+        verify(userService).saveUserRaw(existingUser);
         assertThat(existingUser.getAzureOid()).isEqualTo("azure-oid-123");
     }
 
@@ -144,7 +145,7 @@ class OAuth2SuccessHandlerTest {
         when(oidcUser.getEmail()).thenReturn("test@example.com");
         when(oidcUser.getClaim("oid")).thenReturn("azure-oid-123");
         when(userService.findByEmail("test@example.com")).thenReturn(Optional.of(existingUser));
-        when(userService.saveUser(any(User.class))).thenReturn(existingUser);
+        when(userService.saveUserRaw(any(User.class))).thenReturn(existingUser);
         when(jwtUtil.generateAccessToken(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn("access-token");
         when(jwtUtil.generateRefreshToken(anyString(), anyString()))
@@ -152,7 +153,7 @@ class OAuth2SuccessHandlerTest {
 
         handler.onAuthenticationSuccess(request, response, authentication);
 
-        verify(userService).saveUser(existingUser);
+        verify(userService).saveUserRaw(existingUser);
     }
 
     @Test

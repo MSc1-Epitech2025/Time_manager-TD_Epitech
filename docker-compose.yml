@@ -105,7 +105,7 @@ services:
     container_name: sonar-scan-backend
     environment:
       - SONAR_HOST_URL=${SONAR_HOST_URL}
-      - BACKEND_SONAR_TOKEN=${BACKEND_SONAR_TOKEN}
+      - SONAR_TOKEN=${BACKEND_SONAR_TOKEN}
     volumes:
       - ./backend:/usr/src/app/backend:ro
       - ./sonarqube/backend/sonar-project.properties:/usr/src/app/sonar-project.properties
