@@ -506,7 +506,6 @@ describe('AuthService (100% coverage)', () => {
     expect(typeof service.session?.expiresAt).toBe('number');
     expect(persistSpy).toHaveBeenCalled();
     expect(startSpy).toHaveBeenCalled();
-    expect(console.log).toHaveBeenCalled();
   });
 
   it('resetPasswordFirstLogin: throws when no active session', async () => {

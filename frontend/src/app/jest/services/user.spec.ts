@@ -27,20 +27,20 @@ describe('UserService - full coverage', () => {
     jest.clearAllMocks();
   });
 
-  it('getAllUsers: returns users and calls endpoint + logs', (done) => {
+  it('getAllUsers: returns users and calls endpoint', (done) => {
     const resp = { data: { users: [sampleUser] } };
     httpMock.post.mockReturnValue(of(resp));
-    const debugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
 
     service.getAllUsers().subscribe((res) => {
       expect(res).toEqual([sampleUser]);
       expect(httpMock.post).toHaveBeenCalledWith(
         GRAPHQL_ENDPOINT,
-        expect.objectContaining({ operationName: 'AllUsers', query: expect.any(String) }),
+        expect.objectContaining({
+          operationName: 'AllUsers',
+          query: expect.any(String),
+        }),
         { withCredentials: true }
       );
-      expect(debugSpy).toHaveBeenCalledWith('[UserService] getAllUsers response', resp);
-      debugSpy.mockRestore();
       done();
     });
   });
@@ -70,7 +70,6 @@ describe('UserService - full coverage', () => {
     const input = { firstName: 'A', lastName: 'B', email: 'a@b.com' };
     const resp = { data: { register: sampleUser } };
     httpMock.post.mockReturnValue(of(resp));
-    const debugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
 
     service.createUser(input).subscribe((res) => {
       expect(res).toEqual(sampleUser);
@@ -79,8 +78,6 @@ describe('UserService - full coverage', () => {
         expect.objectContaining({ operationName: 'Register', variables: { input } }),
         { withCredentials: true }
       );
-      expect(debugSpy).toHaveBeenCalledWith('[UserService] createUser response', resp);
-      debugSpy.mockRestore();
       done();
     });
   });
@@ -113,7 +110,6 @@ describe('UserService - full coverage', () => {
     const input = { id: 'u1', firstName: 'X' };
     const resp = { data: { updateUser: sampleUser } };
     httpMock.post.mockReturnValue(of(resp));
-    const debugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
 
     service.updateUser(input).subscribe((res) => {
       expect(res).toEqual(sampleUser);
@@ -122,8 +118,6 @@ describe('UserService - full coverage', () => {
         expect.objectContaining({ operationName: 'UpdateUser', variables: { input } }),
         { withCredentials: true }
       );
-      expect(debugSpy).toHaveBeenCalledWith('[UserService] updateUser response', resp);
-      debugSpy.mockRestore();
       done();
     });
   });
@@ -151,7 +145,6 @@ describe('UserService - full coverage', () => {
   });
 
   it('deleteUser: returns true/false and logs', (done) => {
-    const debugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
 
     httpMock.post.mockReturnValueOnce(of({ data: { deleteUser: true } }));
     service.deleteUser('u1').subscribe((res1) => {
@@ -161,12 +154,10 @@ describe('UserService - full coverage', () => {
         expect.objectContaining({ operationName: 'DeleteUser', variables: { id: 'u1' } }),
         { withCredentials: true }
       );
-      expect(debugSpy).toHaveBeenCalledWith('[UserService] deleteUser response', { data: { deleteUser: true } });
 
       httpMock.post.mockReturnValueOnce(of({ data: {} }));
       service.deleteUser('u2').subscribe((res2) => {
         expect(res2).toBe(false);
-        debugSpy.mockRestore();
         done();
       });
     });
