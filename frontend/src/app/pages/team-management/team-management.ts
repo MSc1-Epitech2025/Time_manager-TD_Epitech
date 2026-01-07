@@ -82,26 +82,18 @@ export class TeamManagement implements OnInit {
         this.allUsers = users;
         this.updateFilteredUsers();
       },
-      error: (err) => {
-        console.error('[TeamManagement] Error loading users:', err);
-      },
+      error: (err) => {},
     });
   }
 
   refreshTeams(): void {
     this.isLoading = true;
     this.lastError = null;
-    console.debug('[TeamManagement] refreshTeams start', {
-      roles: this.auth.session?.user?.roles,
-      isAdmin: this.isAdminUser,
-      isManager: this.isManagerUser,
-    });
     this.loadTeamsForCurrentUser()
       .pipe(
         switchMap((teams) =>
           this.teamService.populateTeamsWithMembers(teams).pipe(
             catchError((error) => {
-              console.warn('[TeamManagement] populateTeamsWithMembers failed, keeping bare teams', error);
               return of(teams);
             })
           )
@@ -109,13 +101,11 @@ export class TeamManagement implements OnInit {
       )
       .subscribe({
         next: (teams) => {
-          console.debug('[TeamManagement] refreshTeams success', { teams });
           this.teams = teams;
           this.applyFilter();
           this.isLoading = false;
         },
         error: (error) => {
-          console.error('[TeamManagement] Error fetching teams:', error);
           this.teams = [];
           this.filteredTeams = [];
           this.isLoading = false;
@@ -164,7 +154,7 @@ export class TeamManagement implements OnInit {
         this.newMemberInput = '';
         this.scrollFormToTop();
       },
-      error: (error) => console.error('[TeamManagement] Error loading team details:', error),
+      error: (error) => {},
     });
   }
 
@@ -208,7 +198,6 @@ export class TeamManagement implements OnInit {
             forkJoin(addMemberOps)
               .pipe(
                 catchError((error) => {
-                  console.error('[TeamManagement] Error adding members to new team:', error);
                   return of(null);
                 })
               )
@@ -222,7 +211,6 @@ export class TeamManagement implements OnInit {
           }
         },
         error: (error) => {
-          console.error('[TeamManagement] Error creating team:', error);
           this.isLoading = false;
           alert(`Error creating team: ${error?.message ?? 'Unknown error'}`);
         },
@@ -267,7 +255,6 @@ export class TeamManagement implements OnInit {
     forkJoin(filteredOps)
       .pipe(
         catchError((error) => {
-          console.error('[TeamManagement] Error updating team details:', error);
           this.isLoading = false;
           alert(`Error updating team: ${error?.message ?? 'Unknown error'}`);
           return of(null);
@@ -302,7 +289,6 @@ export class TeamManagement implements OnInit {
             this.cancelForm();
           },
           error: (error) => {
-            console.error('[TeamManagement] Error deleting team:', error);
             this.isLoading = false;
             alert(`Error deleting team: ${error?.message ?? 'Unknown error'}`);
           },
@@ -381,13 +367,13 @@ export class TeamManagement implements OnInit {
               if (updatedTeam?.isDestroyed) {
                 this.teamService.deleteTeam(String(updatedTeam.id)).subscribe({
                   next: () => this.refreshTeams(),
-                  error: (error) => console.error('[TeamManagement] Error deleting team:', error),
+                  error: (error) => {},
                 });
               }
             }
           );
       },
-      error: (error) => console.error('Error loading team details:', error),
+      error: (error) => {},
     });
   }
 
@@ -420,23 +406,16 @@ export class TeamManagement implements OnInit {
       return forkJoin({
         fallback: this.teamService.listTeams().pipe(
           catchError((error) => {
-            console.warn('[TeamManagement] teams() query failed, returning empty array', error);
             return of<Team[]>([]);
           })
         ),
         admin: this.teamService.listAllTeams().pipe(
           catchError((error) => {
-            if (isGraphqlAuthorizationError(error)) {
-              console.info('[TeamManagement] allTeams not permitted, keeping scoped team list');
-              return of<Team[]>([]);
-            }
-            console.warn('[TeamManagement] allTeams query failed, keeping fallback result', error);
             return of<Team[]>([]);
           })
         ),
       }).pipe(
         map(({ fallback, admin }) => {
-          console.debug('[TeamManagement] merged results', { fallback, admin });
           if (!admin.length) return fallback;
           if (!fallback.length) return admin;
           const merged = new Map<string, Team>();
@@ -447,15 +426,9 @@ export class TeamManagement implements OnInit {
       );
     }
     if (this.isManagerUser) {
-      console.debug('[TeamManagement] Manager detected, loading my team members');
-      return this.teamService.listMyTeamMembers().pipe(
-        tap((result) => console.debug('[TeamManagement] myTeamMembers result', { count: result.length, result }))
-      );
+      return this.teamService.listMyTeamMembers();
     }
-    console.debug('[TeamManagement] Default branch (myTeams)');
-    return this.teamService.listMyTeams().pipe(
-      tap((result) => console.debug('[TeamManagement] myTeams result', { count: result.length, result }))
-    );
+    return this.teamService.listMyTeams();
   }
 
   private buildMemberChangeOperations(

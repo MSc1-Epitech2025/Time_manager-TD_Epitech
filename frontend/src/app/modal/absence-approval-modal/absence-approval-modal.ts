@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { Absence } from '@core/services/absence';
+import { formatAbsenceType, formatUserName } from '@shared/utils/formatting.utils';
 
 export interface AbsenceApprovalData {
   absence: Absence;
@@ -32,11 +33,9 @@ export class AbsenceApprovalModal {
   }
 
   get userName(): string {
-    const user = this.absence.user;
-    if (user) {
-      return [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email || this.absence.userId;
-    }
-    return this.absence.userId;
+    return this.absence.user
+      ? formatUserName(this.absence.user)
+      : this.absence.userId;
   }
 
   get dateRange(): string {
@@ -59,15 +58,7 @@ export class AbsenceApprovalModal {
   }
 
   get typeLabel(): string {
-    const typeMap: Record<string, string> = {
-      SICK: 'Sick Leave',
-      VACATION: 'Vacation',
-      PERSONAL: 'Personal Leave',
-      FORMATION: 'Formation',
-      RTT: 'RTT',
-      OTHER: 'Other',
-    };
-    return typeMap[this.absence.type] || this.absence.type;
+    return formatAbsenceType(this.absence.type);
   }
 
   onCancel(): void {

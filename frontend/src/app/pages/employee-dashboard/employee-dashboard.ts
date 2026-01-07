@@ -83,6 +83,11 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
     email: '',
   };
 
+  get userAvatar(): string {
+    const name = this.user.name || 'User';
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=A78BFA&color=fff&size=128&bold=true`;
+  }
+
   loadingStats = false;
   loadingAbsences = false;
   loadingLeaveBalance = false;
@@ -175,11 +180,9 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
     this.actionPending = true;
     try {
       const result = await firstValueFrom(this.clockService.createClock('IN'));
-      console.log('Clock in result:', result);
       this.notify.success('Clock in recorded');
       await this.refreshDashboard();
     } catch (err: any) {
-      console.error('Start work error:', err);
       this.notify.error(err.message || 'Unable to start work session');
       this.actionPending = false;
     }
@@ -189,11 +192,9 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
     this.actionPending = true;
     try {
       const result = await firstValueFrom(this.clockService.createClock('OUT'));
-      console.log('Clock out result:', result);
       this.notify.success('Clock out recorded');
       await this.refreshDashboard();
     } catch (err: any) {
-      console.error('Stop work error:', err);
       this.notify.error(err.message || 'Unable to pause the session');
       this.actionPending = false;
     }
@@ -219,7 +220,6 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
 
       this.computeMetrics();
     } catch (err) {
-      console.error(err);
       this.notify.error('Impossible to get your work data');
     } finally {
       this.loadingStats = false;
@@ -329,7 +329,6 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
         .sort((a, b) => new Date(a.endDate).getTime() - new Date(b.endDate).getTime())
         .slice(0, 5);
     } catch (err) {
-      console.error('Failed to load absences:', err);
     } finally {
       this.loadingAbsences = false;
     }
@@ -345,7 +344,6 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
         this.leaveAccountService.getLeaveAccountsByUser(session.user.id)
       );
     } catch (err) {
-      console.error('Failed to load leave balance:', err);
     } finally {
       this.loadingLeaveBalance = false;
     }
@@ -362,7 +360,6 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
         this.kpiService.getMyKpi(startDate, endDate)
       );
     } catch (err) {
-      console.error('Failed to load KPI data:', err);
     } finally {
       this.loadingKpi = false;
     }
@@ -393,7 +390,6 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
       await this.loadLeaveBalance();
       await this.refreshDashboard();
     } catch (err) {
-      console.error('Failed to create absence', err);
       this.notify.error('Failed to submit absence request');
     }
   }

@@ -55,7 +55,7 @@ export class UsersComponent implements OnInit {
   constructor(
     private readonly userService: UserService,
     private readonly dialog: MatDialog
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.refreshUsers();
@@ -71,7 +71,6 @@ export class UsersComponent implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('[UsersComponent] Error fetching users:', error);
         this.users = [];
         this.filteredUsers = [];
         this.isLoading = false;
@@ -157,12 +156,10 @@ export class UsersComponent implements OnInit {
     this.isLoading = true;
     this.userService.createUser(input).subscribe({
       next: (newUser) => {
-        console.log('[UsersComponent] User created:', newUser);
         this.refreshUsers();
         this.cancelForm();
       },
       error: (error) => {
-        console.error('[UsersComponent] Error creating user:', error);
         this.isLoading = false;
         alert(`Error creating user: ${error?.message ?? 'Unknown error'}`);
       },
@@ -190,12 +187,10 @@ export class UsersComponent implements OnInit {
     this.isLoading = true;
     this.userService.updateUser(input).subscribe({
       next: (updatedUser) => {
-        console.log('[UsersComponent] User updated:', updatedUser);
         this.refreshUsers();
         this.cancelForm();
       },
       error: (error) => {
-        console.error('[UsersComponent] Error updating user:', error);
         this.isLoading = false;
         alert(`Error updating user: ${error?.message ?? 'Unknown error'}`);
       },
@@ -223,12 +218,10 @@ export class UsersComponent implements OnInit {
       this.isLoading = true;
       this.userService.deleteUser(this.selectedUser.id).subscribe({
         next: (success) => {
-          console.log('[UsersComponent] User deleted:', success);
           this.refreshUsers();
           this.cancelForm();
         },
         error: (error) => {
-          console.error('[UsersComponent] Error deleting user:', error);
           this.isLoading = false;
           alert(`Error deleting user: ${error?.message ?? 'Unknown error'}`);
         },

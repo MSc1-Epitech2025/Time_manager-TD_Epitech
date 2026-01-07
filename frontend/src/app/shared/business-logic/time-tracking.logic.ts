@@ -13,7 +13,7 @@ export interface SessionAnalysis {
   firstInPerDay: Map<string, Date>;
 }
 
-// Session building
+// sessions
 export function buildSessions(clocks: ClockRecord[]): SessionAnalysis {
   const sorted = [...clocks].sort((a, b) => Date.parse(a.at) - Date.parse(b.at));
   const sessions: ClockSession[] = [];
@@ -39,7 +39,7 @@ export function buildSessions(clocks: ClockRecord[]): SessionAnalysis {
   return { sessions, openSession, firstInPerDay };
 }
 
-// Time overlap calculations
+// time overlap
 export function overlapSeconds(
   start: Date,
   end: Date,
@@ -52,7 +52,7 @@ export function overlapSeconds(
   return e > s ? Math.floor((e - s) / 1000) : 0;
 }
 
-// Late days counting
+// late check
 export function countLateDays(firstInPerDay: Map<string, Date>): number {
   const thresholdMinutes = 9 * 60 + 5;
   let late = 0;
@@ -65,7 +65,7 @@ export function countLateDays(firstInPerDay: Map<string, Date>): number {
   return late;
 }
 
-// Absence hours calculation
+// absence calc
 export function computeAbsenceHours(
   events: PlanningEvent[],
   range: { from: Date; to: Date }
@@ -92,7 +92,7 @@ export function computeAbsenceHours(
   return units * 8;
 }
 
-// Metrics calculation
+// metrics
 export interface TimeMetrics {
   baseTodaySeconds: number;
   totalWorkedSeconds: number;
@@ -151,7 +151,7 @@ export function computeTimeMetrics(
   };
 }
 
-// Chart data normalization
+// chart normalize
 export function normalizeChartData(
   presencePct: number,
   absencePct: number,

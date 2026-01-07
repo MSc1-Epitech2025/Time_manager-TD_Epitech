@@ -15,14 +15,14 @@ import { ChartConfiguration, ChartOptions } from 'chart.js';
 import { ActivatedRoute, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
-// Services
+// services
 import { ManagerService, EmployeeSummary } from '@core/services/manager';
 import { ReportService } from '@core/services/report';
 import { AuthService } from '@core/services/auth';
 import { TeamService, Team } from '@core/services/team';
 import { KpiService } from '@core/services/kpi';
 
-// Models & Utils
+// utils
 import { UserKpiSummary, TeamKpiSummary } from '@shared/models/graphql.types';
 import { currentWeekRange, getCurrentQuarter, getYearRange, formatDateToYYYYMMDD } from '@shared/utils/date.utils';
 import { ReportPdfService , ReportableEmployee } from '@app/core/services/reportPdf';
@@ -147,9 +147,7 @@ export class ManagerDashboard implements OnInit {
   }
   exportPdf() {
     if (this.employeeKpiData) {
-      const user = this.employeeKpiData; 
-      console.log("Selected Employee:", user);
-      console.log("Employee user:", this.selectedEmployee);
+      const user = this.employeeKpiData;
       
         const employee: ReportableEmployee = {
           name: user.fullName,
@@ -177,11 +175,10 @@ export class ManagerDashboard implements OnInit {
     try {
       this.teamData = await firstValueFrom(this.teamService.getTeam(this.selectedTeamId));
     } catch (err) {
-      console.error('Failed to load team data:', err);
     }
   }
 
-  // Load KPI for all employees
+  // load KPIs
   private async loadAllEmployeesKpi() {
     for (const employee of this.employees) {
       this.loadEmployeeKpiToCache(employee.id);
@@ -202,7 +199,6 @@ export class ManagerDashboard implements OnInit {
         this.employeeKpiCache.set(employeeId, kpi);
       }
     } catch (err) {
-      console.error(`Failed to load KPI for employee ${employeeId}:`, err);
     }
   }
 
@@ -218,7 +214,6 @@ export class ManagerDashboard implements OnInit {
         this.kpiService.getUserKpi(employeeId, startDate, endDate)
       );
     } catch (err) {
-      console.error('Failed to load employee KPI data:', err);
     } finally {
       this.loadingKpi = false;
     }
@@ -238,14 +233,9 @@ export class ManagerDashboard implements OnInit {
         this.kpiService.getTeamKpi(this.selectedTeamId, startDate, endDate)
       );
     } catch (err) {
-      console.error('Failed to load team KPI data:', err);
     } finally {
       this.loadingTeamKpi = false;
     }
-  }
-
-  private formatDateToYYYYMMDD(date: Date): string {
-    return formatDateToYYYYMMDD(date);
   }
 
   getEmployeeKpiFromCache(employeeId: string): UserKpiSummary | undefined {
@@ -264,7 +254,6 @@ export class ManagerDashboard implements OnInit {
           this.loadAllEmployeesKpi();
         },
         error: (err) => {
-          console.error('Failed to load team employees', err);
           this.loadingEmployees = false;
           this.employees = [];
           this.filteredEmployees = [];
@@ -280,7 +269,6 @@ export class ManagerDashboard implements OnInit {
           this.loadAllEmployeesKpi();
         },
         error: (err) => {
-          console.error('Failed to load employees', err);
           this.loadingEmployees = false;
           this.employees = [];
           this.filteredEmployees = [];

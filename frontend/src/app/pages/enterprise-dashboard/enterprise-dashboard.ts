@@ -14,6 +14,8 @@ import { ChartOptions } from 'chart.js';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '@environments/environment';
+import { formatTimeHHMM, formatHoursMinutes } from '@shared/utils/formatting.utils';
+import { formatDateToYYYYMMDD } from '@shared/utils/date.utils';
 
 // Services
 import {
@@ -200,30 +202,6 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
     return kpi.absenceDays || 0;
   }
 
-  private toMinutes(t: string | undefined): number {
-    if (!t) return 0;
-    const match = t.match(/(\d+)h\s*(\d+)m/);
-    if (!match) return 0;
-    const hours = Number(match[1]);
-    const minutes = Number(match[2]);
-    return hours * 60 + minutes;
-  }
-
-  private fromMinutes(total: number): string {
-    const h = Math.floor(total / 60);
-    const m = total % 60;
-
-    return `${h.toString().padStart(2, '0')}:${m
-      .toString()
-      .padStart(2, '0')}`;
-  }
-
-  private normalizeTime(t: string | undefined): string {
-    if (!t) return '-';
-    const minutes = this.toMinutes(t);
-    return this.fromMinutes(minutes);
-  }
-
   getPresence(userId: string): boolean | null {
     const kpi = this.allUsersKpi.find(k => k?.userId === userId);
     if (!kpi) return null;
@@ -247,14 +225,12 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
   }
 
   async ngOnInit(): Promise<void> {
-    console.log('Enterprise Dashboard initialized.');
     this.loading = true;
 
     try {
       await this.loadTeamsAndUsers();
       await this.loadAllKpiData();
     } catch (error) {
-      console.error('Error loading dashboard data:', error);
     } finally {
       this.loading = false;
     }
@@ -317,7 +293,6 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
         this.updateFilteredUsers();
       }
     } catch (error) {
-      console.error('Error loading teams:', error);
     }
   }
 
@@ -332,7 +307,6 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
       this.updateFilteredByPeriod();
       this.loadKpiData();
     } catch (error) {
-      console.error('Error loading KPI data:', error);
     }
   }
 
@@ -373,7 +347,6 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
 
       return response?.data?.userKpi || null;
     } catch (error) {
-      console.error(`Error loading KPI for user ${userId}:`, error);
       return null;
     }
   }
@@ -406,13 +379,9 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
     }
 
     return {
-      startDate: this.formatDate(startDate),
-      endDate: this.formatDate(endDate)
+      startDate: formatDateToYYYYMMDD(startDate),
+      endDate: formatDateToYYYYMMDD(endDate)
     };
-  }
-
-  private formatDate(date: Date): string {
-    return date.toISOString().split('T')[0];
   }
 
   get presentCount(): number {
@@ -782,7 +751,6 @@ exportReportEmployeePdf() {
   const kpi = this.allUsersKpi.find(k => k?.userId === user.id);
 
   if (!kpi) {
-    console.warn("Aucun KPI trouvé pour cet utilisateur :", user.nom);
     return;
   }
 

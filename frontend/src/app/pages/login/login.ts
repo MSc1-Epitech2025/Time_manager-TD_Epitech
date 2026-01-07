@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { CommonModule, NgIf } from '@angular/common';
 
-// Angular Material
+// material
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -14,16 +14,16 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRippleModule } from '@angular/material/core';
 import { MatDialog } from '@angular/material/dialog';
 
-// auth service
+// services
 import { AuthService, Role } from '@core/services/auth';
 import { ActivatedRoute, Router } from '@angular/router';
 import { environment } from '@environments/environment';
 import { NotificationService } from '@core/services/notification';
 
-// Shared components
+// components
 import { AnimatedBubblesComponent } from '@shared/components/animated-bubbles/animated-bubbles';
 
-// Modals
+// modals
 import { ForgotPasswordModalComponent } from '@modal/forgot-password-modal/forgot-password-modal';
 
 @Component({
@@ -91,7 +91,7 @@ export class LoginComponent implements OnInit {
 
         const session = await this.auth.login(email, password, remember);
         
-        // Check first connection
+        // first login
         if (session.user.firstConnection) {
           this.router.navigate(['/first-login-reset']);
           return;
@@ -108,12 +108,10 @@ export class LoginComponent implements OnInit {
           this.router.navigate(['/app/employee']);
         } else {
           this.router.navigate(['/']);
-          console.error('Unknown user roles:', roles);
         }
 
       } catch (e) {
         this.notify.error('Invalid credentials or service unavailable.');
-        console.error(e);
       } finally {
         this.loading.set(false);
       }

@@ -10,6 +10,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { AbsenceType, AbsencePeriod } from '@core/services/absence';
+import { formatDateToYYYYMMDD } from '@shared/utils/date.utils';
 
 export interface AbsenceRequestData {
   startDate?: Date;
@@ -131,8 +132,8 @@ export class AbsenceRequestModal implements OnInit {
     }
 
     const result: AbsenceRequestResult = {
-      startDate: this.formatDate(this.startDate),
-      endDate: this.formatDate(this.endDate),
+      startDate: formatDateToYYYYMMDD(this.startDate),
+      endDate: formatDateToYYYYMMDD(this.endDate),
       type: this.absenceType,
       reason: this.reason.trim() || undefined,
     };
@@ -140,19 +141,12 @@ export class AbsenceRequestModal implements OnInit {
     if (this.isSingleDay && this.period !== 'FULL_DAY') {
       result.periodByDate = [
         {
-          date: this.formatDate(this.startDate),
+          date: formatDateToYYYYMMDD(this.startDate),
           period: this.period,
         },
       ];
     }
 
     this.dialogRef.close(result);
-  }
-
-  private formatDate(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
   }
 }

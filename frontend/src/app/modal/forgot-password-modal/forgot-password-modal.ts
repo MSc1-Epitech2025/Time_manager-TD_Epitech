@@ -65,7 +65,6 @@ export class ForgotPasswordModalComponent {
       } else {
         this.errorMessage.set('No account with this email address');
       }
-      console.error(error);
       this.loading.set(false);
     }
   }

@@ -533,12 +533,12 @@ describe('TeamService', () => {
       req.flush({ data: { allTeams: [teamWithMember] } });
     });
 
-    it('should use id when email has no @ symbol', (done) => {
+    it('should use email as name when email has no @ symbol', (done) => {
       const memberBadEmail = { id: '123', firstName: null, lastName: null, email: 'invalid' };
       const teamWithMember = { ...mockGraphqlTeam, members: [memberBadEmail] };
 
       service.listAllTeams().subscribe((teams) => {
-        expect(teams[0].members[0].name).toBe('123');
+        expect(teams[0].members[0].name).toBe('invalid');
         done();
       });
 

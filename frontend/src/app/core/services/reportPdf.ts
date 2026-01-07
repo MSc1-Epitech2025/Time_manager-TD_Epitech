@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import jsPDF from 'jspdf';
 import { saveAs } from 'file-saver';
 import autoTable from 'jspdf-autotable';
+import { buildFileName } from '@shared/utils/formatting.utils';
 
 export type ReportableEmployee = {
   name: string;
@@ -26,11 +27,6 @@ declare module 'jspdf' {
 
 @Injectable({ providedIn: 'root' })
 export class ReportPdfService {
-
-    private buildFileName(base: string, ext: string): string {
-    const date = new Date().toISOString().slice(0, 10);
-    return `Document-${base}-${date}.${ext}`;
-  }
 
  private generateHeader(doc: jsPDF, title: string, subtitle?: string) {
   const width = 210;  
@@ -240,7 +236,7 @@ doc.setTextColor(130, 120, 200);
   });
 
   this.addFooter(doc);
-  doc.save(this.buildFileName(`report-${employee.name}`, 'pdf'));
+  doc.save(buildFileName(`report-${employee.name}`, 'pdf'));
 }
 
 // ========================================================================
@@ -448,6 +444,6 @@ analysisLines.forEach(line => {
   lineY += 7;
 });
   this.addFooter(doc);
-  doc.save(this.buildFileName(`rapport-team-${teamName}`, 'pdf'));
+  doc.save(buildFileName(`rapport-team-${teamName}`, 'pdf'));
   }
 }

@@ -56,15 +56,14 @@ describe('AuthCallbackComponent', () => {
 
   it('should redirect to login when id is missing', async () => {
     mockWindowLocation('?email=test@test.com');
-    jest.spyOn(console, 'error').mockImplementation();
 
     createComponent();
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(console.error).toHaveBeenCalledWith('Paramètres manquants dans la redirection OAuth.');
     expect(router.navigate).toHaveBeenCalledWith(['/login']);
   });
+
 
   it('should redirect to login when email is missing', async () => {
     mockWindowLocation('?id=123');
@@ -74,7 +73,6 @@ describe('AuthCallbackComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(console.error).toHaveBeenCalledWith('Paramètres manquants dans la redirection OAuth.');
     expect(router.navigate).toHaveBeenCalledWith(['/login']);
   });
 
@@ -194,7 +192,6 @@ describe('AuthCallbackComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(console.error).toHaveBeenCalledWith('Erreur callback OAuth', error);
     expect(router.navigate).toHaveBeenCalledWith(['/login']);
   });
 

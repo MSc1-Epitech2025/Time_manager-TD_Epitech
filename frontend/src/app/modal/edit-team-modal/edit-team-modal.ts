@@ -53,9 +53,7 @@ export class EditTeamModalComponent implements OnInit {
         this.allUsers = users;
         this.updateFilteredUsers();
       },
-      error: (err) => {
-        console.error('Error loading users:', err);
-      },
+      error: (err) => {},
     });
   }
 

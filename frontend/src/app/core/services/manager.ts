@@ -11,7 +11,8 @@ import {
 
 import { AuthService } from './auth';
 import { environment } from '@environments/environment';
-import { currentWeekRange } from '@shared/utils/date.utils';
+import { currentWeekRange, countWeekdays, toDayKey, parseDate } from '@shared/utils/date.utils';
+import { formatUserName } from '@shared/utils/formatting.utils';
 
 const GRAPHQL_ENDPOINT = environment.GRAPHQL_ENDPOINT;
 type ClockKind = 'IN' | 'OUT';
@@ -179,7 +180,7 @@ export class ManagerService {
       map((entries) =>
         entries.map((entry) => ({
           id: entry.member.id,
-          name: buildDisplayName(entry.member),
+          name: formatUserName(entry.member),
           team: entry.teamName,
         }))
       )
@@ -235,7 +236,7 @@ export class ManagerService {
 
         return {
           id: member.id,
-          name: buildDisplayName(member),
+          name: formatUserName(member),
           email: member.email,
           poste: member.poste,
           team: teamName,
@@ -408,13 +409,6 @@ const TEAM_MEMBERS_BY_ID_QUERY = `
   }
 `;
 
-function buildDisplayName(user: GraphqlUser ): string {
-  const first = user.firstName?.trim() ?? '';
-  const last = user.lastName?.trim() ?? '';
-  const full = `${first} ${last}`.trim();
-  return full || user.email?.split('@')[0] || user.id;
-}
-
 function dedupeById<T>(items: T[], pickId: (item: T) => string): T[] {
   const map = new Map<string, T>();
   for (const item of items) {
@@ -432,32 +426,6 @@ function startOfWeek(date: Date): Date {
   if (day !== 1) d.setDate(d.getDate() - day + 1);
   d.setHours(0, 0, 0, 0);
   return d;
-}
-
-function countWeekdays(from: Date, to: Date): number {
-  const start = new Date(from);
-  const end = new Date(to);
-  let count = 0;
-  while (start < end) {
-    const day = start.getDay();
-    if (day !== 0 && day !== 6) count += 1;
-    start.setDate(start.getDate() + 1);
-  }
-  return count;
-}
-
-function toDayKey(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
-function parseDateOnly(value: string | null | undefined): Date | null {
-  if (!value) return null;
-  const [y, m, d] = value.split('-').map((part) => Number(part));
-  if ([y, m, d].some((part) => Number.isNaN(part))) return null;
-  return new Date(y!, m! - 1, d!, 0, 0, 0, 0);
 }
 
 function computeClockStats(clocks: GraphqlClock[]) {
@@ -522,7 +490,7 @@ function computeAbsenceStats(
 
     if (absence.days && absence.days.length) {
       for (const day of absence.days) {
-        const date = parseDateOnly(day.absenceDate);
+        const date = parseDate(day.absenceDate);
         if (!date) continue;
         const time = date.getTime();
         if (time < windowStart || time >= windowEnd) continue;
@@ -541,8 +509,8 @@ function computeAbsenceStats(
       continue;
     }
 
-    const start = parseDateOnly(absence.startDate);
-    const end = parseDateOnly(absence.endDate);
+    const start = parseDate(absence.startDate);
+    const end = parseDate(absence.endDate);
     if (!start) continue;
     const last = end ?? start;
     const cursor = new Date(start);
