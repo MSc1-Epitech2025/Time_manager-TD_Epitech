@@ -78,4 +78,27 @@ export class ReportApiService {
       catchError(() => of([]))
     );
   }
+
+  getAllReports(): Observable<Report[]> {
+    const query = `
+      query Reports {
+        reports {
+          id
+          authorId
+          authorEmail
+          targetUserId
+          targetEmail
+          title
+          body
+          createdAt
+        }
+      }
+    `;
+    return this.http.post<GraphqlPayload<{ reports: Report[] }>>(this.api, {
+      query
+    }).pipe(
+      map((res: GraphqlPayload<{ reports: Report[] }>) => res.data.reports),
+      catchError(() => of([]))
+    );
+  }
 }

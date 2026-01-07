@@ -61,6 +61,13 @@ public class Report {
   )
   private Instant updatedAt;
 
+  @PrePersist
+  protected void onCreate() {
+    if (createdAt == null) {
+      createdAt = Instant.now();
+    }
+  }
+
   /* getters/setters */
 
   public Long getId() { return id; }

@@ -90,6 +90,13 @@ export const routes: Routes = [
                     .then(m => m.UsersComponent),
             },
 
+            // Reports
+            {
+                path: 'reports',
+                loadComponent: () => import('./pages/reports/reports')
+                    .then(m => m.ReportsComponent),
+            },
+
             // Default
             { path: '', pathMatch: 'full', redirectTo: 'employee' },
         ]
