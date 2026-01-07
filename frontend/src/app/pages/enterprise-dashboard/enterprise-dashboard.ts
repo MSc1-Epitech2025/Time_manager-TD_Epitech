@@ -253,7 +253,6 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
       await this.loadTeamsAndUsers();
       await this.loadAllKpiData();
     } catch (error) {
-      console.error('Error loading dashboard data:', error);
     } finally {
       this.loading = false;
     }
@@ -316,7 +315,6 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
         this.updateFilteredUsers();
       }
     } catch (error) {
-      console.error('Error loading teams:', error);
     }
   }
 
@@ -331,7 +329,6 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
       this.updateFilteredByPeriod();
       this.loadKpiData();
     } catch (error) {
-      console.error('Error loading KPI data:', error);
     }
   }
 
@@ -372,7 +369,6 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
 
       return response?.data?.userKpi || null;
     } catch (error) {
-      console.error(`Error loading KPI for user ${userId}:`, error);
       return null;
     }
   }
@@ -781,7 +777,6 @@ exportReportEmployeePdf() {
   const kpi = this.allUsersKpi.find(k => k?.userId === user.id);
 
   if (!kpi) {
-    console.warn("Aucun KPI trouvé pour cet utilisateur :", user.nom);
     return;
   }
 

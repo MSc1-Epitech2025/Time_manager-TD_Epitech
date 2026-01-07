@@ -83,7 +83,6 @@ export class FirstLoginResetComponent {
       }
     } catch (error) {
       this.notify.error('Failed to update password');
-      console.error(error);
     } finally {
       this.loading.set(false);
     }

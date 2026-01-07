@@ -71,7 +71,6 @@ export class UsersComponent implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('[UsersComponent] Error fetching users:', error);
         this.users = [];
         this.filteredUsers = [];
         this.isLoading = false;
@@ -161,7 +160,6 @@ export class UsersComponent implements OnInit {
         this.cancelForm();
       },
       error: (error) => {
-        console.error('[UsersComponent] Error creating user:', error);
         this.isLoading = false;
         alert(`Error creating user: ${error?.message ?? 'Unknown error'}`);
       },
@@ -193,7 +191,6 @@ export class UsersComponent implements OnInit {
         this.cancelForm();
       },
       error: (error) => {
-        console.error('[UsersComponent] Error updating user:', error);
         this.isLoading = false;
         alert(`Error updating user: ${error?.message ?? 'Unknown error'}`);
       },
@@ -225,7 +222,6 @@ export class UsersComponent implements OnInit {
           this.cancelForm();
         },
         error: (error) => {
-          console.error('[UsersComponent] Error deleting user:', error);
           this.isLoading = false;
           alert(`Error deleting user: ${error?.message ?? 'Unknown error'}`);
         },

@@ -108,12 +108,10 @@ export class LoginComponent implements OnInit {
           this.router.navigate(['/app/employee']);
         } else {
           this.router.navigate(['/']);
-          console.error('Unknown user roles:', roles);
         }
 
       } catch (e) {
         this.notify.error('Invalid credentials or service unavailable.');
-        console.error(e);
       } finally {
         this.loading.set(false);
       }

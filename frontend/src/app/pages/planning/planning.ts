@@ -139,7 +139,6 @@ export class PlanningComponent implements OnInit {
         await this.loadAbsencesForTeam(this.selectedTeamId);
       }
     } catch (err) {
-      console.error('Failed to load teams', err);
       this.notify.error('Failed to load teams');
     } finally {
       this.loading = false;
@@ -159,7 +158,6 @@ export class PlanningComponent implements OnInit {
       await this.enrichAbsencesWithUserNames();
       this.refreshEvents();
     } catch (err) {
-      console.error('Failed to load team absences', err);
       this.notify.error('Failed to load team absences');
       this.absences = [];
       this.refreshEvents();
@@ -184,7 +182,6 @@ export class PlanningComponent implements OnInit {
       await this.enrichAbsencesWithUserNames();
       this.refreshEvents();
     } catch (err) {
-      console.error('Failed to load absences', err);
       this.notify.error('Failed to load absences');
       this.absences = [];
       this.refreshEvents();
@@ -215,7 +212,6 @@ export class PlanningComponent implements OnInit {
         return absence;
       });
     } catch (err) {
-      console.error('Failed to enrich absences with user names', err);
     }
   }
 
@@ -365,7 +361,6 @@ export class PlanningComponent implements OnInit {
         await this.loadAbsences();
       }
     } catch (err) {
-      console.error('Failed to create absence', err);
       this.notify.error('Failed to create absence request');
     }
   }
@@ -382,7 +377,6 @@ export class PlanningComponent implements OnInit {
         await this.loadAbsences();
       }
     } catch (err) {
-      console.error('Failed to approve absence', err);
       this.notify.error('Failed to approve absence');
     }
   }
@@ -399,7 +393,6 @@ export class PlanningComponent implements OnInit {
         await this.loadAbsences();
       }
     } catch (err) {
-      console.error('Failed to reject absence', err);
       this.notify.error('Failed to reject absence');
     }
   }

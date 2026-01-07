@@ -175,7 +175,6 @@ export class ManagerDashboard implements OnInit {
     try {
       this.teamData = await firstValueFrom(this.teamService.getTeam(this.selectedTeamId));
     } catch (err) {
-      console.error('Failed to load team data:', err);
     }
   }
 
@@ -200,7 +199,6 @@ export class ManagerDashboard implements OnInit {
         this.employeeKpiCache.set(employeeId, kpi);
       }
     } catch (err) {
-      console.error(`Failed to load KPI for employee ${employeeId}:`, err);
     }
   }
 
@@ -216,7 +214,6 @@ export class ManagerDashboard implements OnInit {
         this.kpiService.getUserKpi(employeeId, startDate, endDate)
       );
     } catch (err) {
-      console.error('Failed to load employee KPI data:', err);
     } finally {
       this.loadingKpi = false;
     }
@@ -236,7 +233,6 @@ export class ManagerDashboard implements OnInit {
         this.kpiService.getTeamKpi(this.selectedTeamId, startDate, endDate)
       );
     } catch (err) {
-      console.error('Failed to load team KPI data:', err);
     } finally {
       this.loadingTeamKpi = false;
     }
@@ -262,7 +258,6 @@ export class ManagerDashboard implements OnInit {
           this.loadAllEmployeesKpi();
         },
         error: (err) => {
-          console.error('Failed to load team employees', err);
           this.loadingEmployees = false;
           this.employees = [];
           this.filteredEmployees = [];
@@ -278,7 +273,6 @@ export class ManagerDashboard implements OnInit {
           this.loadAllEmployeesKpi();
         },
         error: (err) => {
-          console.error('Failed to load employees', err);
           this.loadingEmployees = false;
           this.employees = [];
           this.filteredEmployees = [];
