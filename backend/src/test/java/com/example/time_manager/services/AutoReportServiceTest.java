@@ -819,9 +819,164 @@ class AutoReportServiceTest {
         verify(reportRepo, never()).save(any());
     }
 
+    @Test
+    void scheduleWindow_expectedMinutes_shouldReturnZero_whenNull_andValue_whenNotNull() throws Exception {
 
+        Class<?> swClass = Class.forName(
+                "com.example.time_manager.service.AutoReportService$ScheduleWindow"
+        );
 
+        var ctor = swClass.getDeclaredConstructor();
+        ctor.setAccessible(true);
+        Object sw = ctor.newInstance();
 
+        var field = swClass.getDeclaredField("expectedMinutes");
+        field.setAccessible(true);
+
+        var method = swClass.getDeclaredMethod("expectedMinutes");
+        method.setAccessible(true);
+
+        field.set(sw, null);
+        int resultNull = (int) method.invoke(sw);
+        assertThat(resultNull).isEqualTo(0);
+
+        field.set(sw, 120);
+        int resultValue = (int) method.invoke(sw);
+        assertThat(resultValue).isEqualTo(120);
+    }
+
+    @Test
+    void workedMinutes_shouldCountDuration_whenInThenOutAndOutAfterIn() throws Exception {
+
+        var method = AutoReportService.class
+                .getDeclaredMethod("workedMinutes", List.class);
+        method.setAccessible(true);
+
+        Instant in = Instant.parse("2025-01-06T09:00:00Z");
+        Instant out = Instant.parse("2025-01-06T10:30:00Z");
+
+        List<ClockResponse> clocks = List.of(
+                clock(ClockKind.IN, in),
+                clock(ClockKind.OUT, out)
+        );
+
+        int minutes = (int) method.invoke(service, clocks);
+
+        assertThat(minutes).isEqualTo(90);
+    }
+
+    @Test
+    void workedMinutes_shouldIgnoreOutBeforeIn_whenCurrentInExists() throws Exception {
+
+        var method = AutoReportService.class
+                .getDeclaredMethod("workedMinutes", List.class);
+        method.setAccessible(true);
+
+        Instant in = Instant.parse("2025-01-06T10:00:00Z");
+        Instant outBefore = Instant.parse("2025-01-06T09:00:00Z");
+
+        List<ClockResponse> clocks = List.of(
+                clock(ClockKind.IN, in),
+                clock(ClockKind.OUT, outBefore)
+        );
+
+        int minutes = (int) method.invoke(service, clocks);
+
+        assertThat(minutes).isEqualTo(0);
+    }
+
+    @Test
+    void handleOutEndOfDayRules_shouldPassEmptyCheck_whenClocksNotEmpty() {
+
+        User employee = makeUser("U1", "emp@test.com", "[\"EMPLOYEE\"]");
+
+        Instant in = Instant.parse("2025-01-06T09:00:00Z");
+        Instant out = Instant.parse("2025-01-06T17:00:00Z");
+        Instant differentOut = Instant.parse("2025-01-06T16:00:00Z");
+
+        when(userRepo.findById(employee.getId())).thenReturn(Optional.of(employee));
+
+        service.onClockCreated(
+                employee.getId(),
+                ClockKind.OUT,
+                out,
+                List.of(
+                        clock(ClockKind.IN, in),
+                        clock(ClockKind.OUT, differentOut)
+                )
+        );
+
+        verify(reportRepo, never()).save(any());
+    }
+
+    @Test
+    void handleOutEndOfDayRules_shouldCoverEmptyAndNonEmptyClocks() throws Exception {
+
+        var method = AutoReportService.class.getDeclaredMethod(
+                "handleOutEndOfDayRules",
+                String.class,
+                Instant.class,
+                LocalDate.class,
+                ZoneId.class,
+                List.class
+        );
+        method.setAccessible(true);
+
+        String userId = "U1";
+        Instant at = Instant.parse("2025-01-06T17:00:00Z");
+        LocalDate day = LocalDate.of(2025, 1, 6);
+        ZoneId zone = ZoneId.of("UTC");
+
+        method.invoke(service, userId, at, day, zone, List.of());
+
+        method.invoke(
+                service,
+                userId,
+                at,
+                day,
+                zone,
+                List.of(clock(ClockKind.OUT, at))
+        );
+    }
+
+    @Test
+    void onClockCreated_shouldEvaluateOutConditionToFalse() {
+
+        User employee = makeUser("U1", "emp@test.com", "[\"EMPLOYEE\"]");
+
+        Instant in = Instant.parse("2025-01-06T09:00:00Z");
+
+        when(userRepo.findById(employee.getId())).thenReturn(Optional.of(employee));
+        when(workScheduleService.listForUser(employee.getId())).thenReturn(List.of());
+
+        service.onClockCreated(
+                employee.getId(),
+                ClockKind.IN,
+                in,
+                List.of(clock(ClockKind.IN, in))
+        );
+
+        verifyNoInteractions(reportRepo);
+    }
+
+    @Test
+    void onClockCreated_shouldEvaluateOutConditionToFalse_whenKindIsNull() {
+
+        User employee = makeUser("U1", "emp@test.com", "[\"EMPLOYEE\"]");
+
+        Instant at = Instant.parse("2025-01-06T17:00:00Z");
+
+        when(userRepo.findById(employee.getId())).thenReturn(Optional.of(employee));
+
+        service.onClockCreated(
+                employee.getId(),
+                null,
+                at,
+                List.of(clock(ClockKind.OUT, at))
+        );
+
+        verifyNoInteractions(reportRepo);
+    }
 
     private static User makeUser(String id, String email, String role) {
         User u = new User();
