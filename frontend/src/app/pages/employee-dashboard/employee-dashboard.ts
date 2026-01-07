@@ -83,6 +83,11 @@ export class EmployeeDashboard implements OnInit, OnDestroy {
     email: '',
   };
 
+  get userAvatar(): string {
+    const name = this.user.name || 'User';
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=A78BFA&color=fff&size=128&bold=true`;
+  }
+
   loadingStats = false;
   loadingAbsences = false;
   loadingLeaveBalance = false;

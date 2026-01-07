@@ -9,7 +9,7 @@
             <p class="user-role">{{ user.poste || 'Position not set' }}</p>
             <span class="user-email">{{ user.email }}</span>
           </div>
-          <img src="assets/profile-placeholder.png" alt="Profile" class="profile-img" />
+          <img [src]="userAvatar" alt="Profile" class="profile-img" />
         </div>
       </mat-card-content>
     </mat-card>
