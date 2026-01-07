@@ -2,41 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, tap, catchError, throwError, of } from 'rxjs';
 import { environment } from '@environments/environment';
-
-type GraphqlError = {
-  message: string;
-  extensions?: {
-    code?: string;
-    classification?: string;
-    [key: string]: unknown;
-  };
-};
-
-type GraphqlResponse<T> = {
-  data: T;
-  errors?: GraphqlError[];
-};
-
-export class GraphqlRequestError extends Error {
-  constructor(
-    public readonly operationName: string | undefined,
-    public readonly errors: GraphqlError[]
-  ) {
-    super(GraphqlRequestError.composeMessage(operationName, errors));
-    this.name = 'GraphqlRequestError';
-  }
-
-  private readonly GRAPHQL_ENDPOINT = environment.GRAPHQL_ENDPOINT;
-
-  private static composeMessage(operationName: string | undefined, errors: GraphqlError[]): string {
-    const prefix = `[GraphQL:${operationName ?? 'unknown'}]`;
-    const message = errors
-      .map((error) => error.message)
-      .filter((msg) => typeof msg === 'string' && msg.trim().length > 0)
-      .join(', ');
-    return `${prefix} ${message || 'Unexpected error'}`;
-  }
-}
+import { GraphqlError, GraphqlResponse, GraphqlRequestError } from '@shared/utils/graphql.utils';
 
 export type AbsenceType = 'SICK' | 'VACATION' | 'PERSONAL' | 'FORMATION' | 'OTHER' | 'RTT';
 export type AbsenceStatus = 'PENDING' | 'APPROVED' | 'REJECTED';

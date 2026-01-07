@@ -13,6 +13,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { ReportApiService } from '@core/services/report-api';
 import { AuthService, Role } from '@core/services/auth';
 import { Report } from '@shared/models/graphql.types';
+import { formatDateTime, formatDateGroup } from '@shared/utils/date.utils';
 
 interface ReportGroup {
   date: string;
@@ -179,28 +180,9 @@ export class ReportsComponent implements OnInit {
       const date = new Date(dateKey);
       return {
         date: dateKey,
-        displayDate: this.formatDateGroup(date),
+        displayDate: formatDateGroup(date),
         reports: reports
       };
-    });
-  }
-
-  formatDateGroup(date: Date): string {
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    
-    const dateStr = date.toISOString().split('T')[0];
-    const todayStr = today.toISOString().split('T')[0];
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
-    
-    if (dateStr === todayStr) return 'Today';
-    if (dateStr === yesterdayStr) return 'Yesterday';
-    
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
     });
   }
 
@@ -213,15 +195,7 @@ export class ReportsComponent implements OnInit {
   }
 
   formatDate(dateStr?: string): string {
-    if (!dateStr) return 'N/A';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    return formatDateTime(dateStr);
   }
 
   getReportTypeChip(title?: string): string {

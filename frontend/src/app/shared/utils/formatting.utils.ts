@@ -50,6 +50,12 @@ export function formatUserName(user: { firstName?: string | null; lastName?: str
   return String(user.id ?? 'Unknown');
 }
 
+// search helpers
+export function matchesSearch(text: string | undefined | null, searchTerm: string): boolean {
+  if (!text) return false;
+  return text.toLowerCase().includes(searchTerm.toLowerCase());
+}
+
 // file names
 export function buildFileName(base: string, ext: string): string {
   const date = new Date().toISOString().slice(0, 10);

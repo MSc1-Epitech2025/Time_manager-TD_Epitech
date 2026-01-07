@@ -15,8 +15,10 @@ import { Router } from '@angular/router';
 import { Observable, forkJoin, map, of, tap, switchMap } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { DeleteTeamModalComponent } from '@modal/delete-team-modal/delete-team-modal';
-import { TeamService, Team, TeamMember, isGraphqlAuthorizationError } from '@core/services/team';
+import { TeamService, Team, TeamMember } from '@core/services/team';
 import { AuthService, Role } from '@core/services/auth';
+import { isGraphqlAuthorizationError } from '@shared/utils/graphql.utils';
+import { matchesSearch } from '../../shared/utils/formatting.utils';
 
 @Component({
   selector: 'app-team-management',
@@ -172,7 +174,7 @@ export class TeamManagement implements OnInit {
   private applyFilter(): void {
     const term = this.searchTerm.trim().toLowerCase();
     this.filteredTeams = term
-      ? this.teams.filter((team) => team.name.toLowerCase().includes(term))
+      ? this.teams.filter((team) => matchesSearch(team.name, term))
       : [...this.teams];
   }
 
