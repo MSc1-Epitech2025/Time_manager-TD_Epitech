@@ -55,7 +55,7 @@ export class UsersComponent implements OnInit {
   constructor(
     private readonly userService: UserService,
     private readonly dialog: MatDialog
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.refreshUsers();
@@ -156,6 +156,10 @@ export class UsersComponent implements OnInit {
 
     this.isLoading = true;
     this.userService.createUser(input).subscribe({
+      next: (newUser) => {
+        this.refreshUsers();
+        this.cancelForm();
+      },
       error: (error) => {
         console.error('[UsersComponent] Error creating user:', error);
         this.isLoading = false;
@@ -184,6 +188,10 @@ export class UsersComponent implements OnInit {
 
     this.isLoading = true;
     this.userService.updateUser(input).subscribe({
+      next: (updatedUser) => {
+        this.refreshUsers();
+        this.cancelForm();
+      },
       error: (error) => {
         console.error('[UsersComponent] Error updating user:', error);
         this.isLoading = false;
@@ -212,6 +220,10 @@ export class UsersComponent implements OnInit {
 
       this.isLoading = true;
       this.userService.deleteUser(this.selectedUser.id).subscribe({
+        next: (success) => {
+          this.refreshUsers();
+          this.cancelForm();
+        },
         error: (error) => {
           console.error('[UsersComponent] Error deleting user:', error);
           this.isLoading = false;

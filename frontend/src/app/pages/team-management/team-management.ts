@@ -104,7 +104,6 @@ export class TeamManagement implements OnInit {
       )
       .subscribe({
         next: (teams) => {
-          console.debug('[TeamManagement] refreshTeams success', { teams });
           this.teams = teams;
           this.applyFilter();
           this.isLoading = false;
@@ -431,7 +430,6 @@ export class TeamManagement implements OnInit {
         ),
       }).pipe(
         map(({ fallback, admin }) => {
-          console.debug('[TeamManagement] merged results', { fallback, admin });
           if (!admin.length) return fallback;
           if (!fallback.length) return admin;
           const merged = new Map<string, Team>();
@@ -442,15 +440,9 @@ export class TeamManagement implements OnInit {
       );
     }
     if (this.isManagerUser) {
-      console.debug('[TeamManagement] Manager detected, loading my team members');
-      return this.teamService.listMyTeamMembers().pipe(
-        tap((result) => console.debug('[TeamManagement] myTeamMembers result', { count: result.length, result }))
-      );
+      return this.teamService.listMyTeamMembers();
     }
-    console.debug('[TeamManagement] Default branch (myTeams)');
-    return this.teamService.listMyTeams().pipe(
-      tap((result) => console.debug('[TeamManagement] myTeams result', { count: result.length, result }))
-    );
+    return this.teamService.listMyTeams();
   }
 
   private buildMemberChangeOperations(
