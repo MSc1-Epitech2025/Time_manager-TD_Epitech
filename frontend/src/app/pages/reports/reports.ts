@@ -9,9 +9,16 @@ import { MatInputModule } from '@angular/material/input';
 import { MatListModule } from '@angular/material/list';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { ReportApiService } from '@core/services/report-api';
 import { AuthService, Role } from '@core/services/auth';
 import { Report } from '@shared/models/graphql.types';
+
+interface ReportGroup {
+  date: string;
+  displayDate: string;
+  reports: Report[];
+}
 
 @Component({
   selector: 'app-reports',
@@ -27,6 +34,7 @@ import { Report } from '@shared/models/graphql.types';
     MatListModule,
     MatDividerModule,
     MatChipsModule,
+    MatExpansionModule,
   ],
   templateUrl: './reports.html',
   styleUrl: './reports.scss',
@@ -35,6 +43,7 @@ export class ReportsComponent implements OnInit {
   searchTerm = '';
   reports: Report[] = [];
   filteredReports: Report[] = [];
+  groupedReports: ReportGroup[] = [];
   isLoading = false;
   lastError: string | null = null;
   selectedReport: Report | null = null;
@@ -139,6 +148,60 @@ export class ReportsComponent implements OnInit {
           report.targetEmail?.toLowerCase().includes(term)
       );
     }
+    
+    // sort by date desc
+    this.filteredReports.sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateB - dateA;
+    });
+    
+    // group by date
+    this.groupedReports = this.groupReportsByDate(this.filteredReports);
+  }
+
+  groupReportsByDate(reports: Report[]): ReportGroup[] {
+    const groups = new Map<string, Report[]>();
+    
+    reports.forEach(report => {
+      if (!report.createdAt) return;
+      
+      const date = new Date(report.createdAt);
+      const dateKey = date.toISOString().split('T')[0];
+      
+      if (!groups.has(dateKey)) {
+        groups.set(dateKey, []);
+      }
+      groups.get(dateKey)!.push(report);
+    });
+    
+    return Array.from(groups.entries()).map(([dateKey, reports]) => {
+      const date = new Date(dateKey);
+      return {
+        date: dateKey,
+        displayDate: this.formatDateGroup(date),
+        reports: reports
+      };
+    });
+  }
+
+  formatDateGroup(date: Date): string {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const dateStr = date.toISOString().split('T')[0];
+    const todayStr = today.toISOString().split('T')[0];
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    
+    if (dateStr === todayStr) return 'Today';
+    if (dateStr === yesterdayStr) return 'Yesterday';
+    
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
   }
 
   searchReports(): void {

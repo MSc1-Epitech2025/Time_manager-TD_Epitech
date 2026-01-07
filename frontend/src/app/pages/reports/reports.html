@@ -51,37 +51,51 @@
         <!-- Reports list -->
         <mat-card class="reports-list-card" appearance="outlined" *ngIf="!isLoading && !lastError">
           <mat-card-content class="reports-list-content">
-            <mat-list *ngIf="filteredReports.length > 0" class="reports-list">
-              <mat-list-item *ngFor="let report of filteredReports; let last = last" class="report-item"
-                [class.selected]="selectedReport?.id === report.id" (click)="selectReport(report)">
-                <div matListItemTitle class="report-item-content">
-                  <div class="report-header">
-                    <div class="report-title">
-                      <mat-chip [class]="'chip-' + getReportTypeChip(report.title)">
-                        {{ report.title || 'Untitled' }}
-                      </mat-chip>
-                    </div>
-                    <div class="report-date">{{ formatDate(report.createdAt) }}</div>
-                  </div>
-                  <div class="report-meta">
-                    <div class="report-from">
-                      <mat-icon>person</mat-icon>
-                      <span>From: {{ report.authorEmail || 'Unknown' }}</span>
-                    </div>
-                    <div class="report-to">
-                      <mat-icon>arrow_forward</mat-icon>
-                      <span>To: {{ report.targetEmail || 'Unknown' }}</span>
-                    </div>
-                  </div>
-                  <div class="report-body-preview" *ngIf="report.body">
-                    {{ report.body.substring(0, 100) }}{{ report.body.length > 100 ? '...' : '' }}
-                  </div>
-                </div>
-                <mat-divider *ngIf="!last"></mat-divider>
-              </mat-list-item>
-            </mat-list>
+            <div *ngIf="groupedReports.length > 0" class="reports-groups">
+              <mat-accordion multi>
+                <mat-expansion-panel *ngFor="let group of groupedReports" [expanded]="true" class="date-group">
+                  <mat-expansion-panel-header>
+                    <mat-panel-title class="group-title">
+                      <mat-icon>calendar_today</mat-icon>
+                      <span>{{ group.displayDate }}</span>
+                      <span class="report-count">({{ group.reports.length }})</span>
+                    </mat-panel-title>
+                  </mat-expansion-panel-header>
+                  
+                  <mat-list class="reports-list">
+                    <mat-list-item *ngFor="let report of group.reports; let last = last" class="report-item"
+                      [class.selected]="selectedReport?.id === report.id" (click)="selectReport(report)">
+                      <div matListItemTitle class="report-item-content">
+                        <div class="report-header">
+                          <div class="report-title">
+                            <mat-chip [class]="'chip-' + getReportTypeChip(report.title)">
+                              {{ report.title || 'Untitled' }}
+                            </mat-chip>
+                          </div>
+                          <div class="report-date">{{ formatDate(report.createdAt) }}</div>
+                        </div>
+                        <div class="report-meta">
+                          <div class="report-from">
+                            <mat-icon>person</mat-icon>
+                            <span>From: {{ report.authorEmail || 'Unknown' }}</span>
+                          </div>
+                          <div class="report-to">
+                            <mat-icon>arrow_forward</mat-icon>
+                            <span>To: {{ report.targetEmail || 'Unknown' }}</span>
+                          </div>
+                        </div>
+                        <div class="report-body-preview" *ngIf="report.body">
+                          {{ report.body.substring(0, 100) }}{{ report.body.length > 100 ? '...' : '' }}
+                        </div>
+                      </div>
+                      <mat-divider *ngIf="!last"></mat-divider>
+                    </mat-list-item>
+                  </mat-list>
+                </mat-expansion-panel>
+              </mat-accordion>
+            </div>
 
-            <div *ngIf="filteredReports.length === 0" class="empty-state">
+            <div *ngIf="groupedReports.length === 0" class="empty-state">
               <mat-icon>folder_off</mat-icon>
               <p>No reports to display</p>
             </div>
