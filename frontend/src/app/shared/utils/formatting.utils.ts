@@ -35,3 +35,23 @@ export function getWeatherIcon(code: number, isDay: boolean): string {
   if (code <= 99) return 'thunderstorm';
   return 'wb_sunny';
 }
+
+// User name formatting
+export function formatUserName(user: { firstName?: string | null; lastName?: string | null; email?: string | null; id?: string | number | null }): string {
+  const first = user.firstName?.trim() ?? '';
+  const last = user.lastName?.trim() ?? '';
+  const full = `${first} ${last}`.trim();
+  if (full) return full;
+  if (user.email) {
+    const atIndex = user.email.indexOf('@');
+    if (atIndex > 0) return user.email.substring(0, atIndex);
+    return user.email;
+  }
+  return String(user.id ?? 'Unknown');
+}
+
+// File name formatting
+export function buildFileName(base: string, ext: string): string {
+  const date = new Date().toISOString().slice(0, 10);
+  return `Document-${base}-${date}.${ext}`;
+}

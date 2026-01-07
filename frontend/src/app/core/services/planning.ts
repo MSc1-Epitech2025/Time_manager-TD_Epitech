@@ -4,6 +4,8 @@ import { Observable, catchError, forkJoin, map, of } from 'rxjs';
 
 import { AuthService } from './auth';
 import { environment } from '@environments/environment';
+import { parseDate, toDayKey } from '@shared/utils/date.utils';
+import { formatUserName } from '@shared/utils/formatting.utils';
 
 const GRAPHQL_ENDPOINT = environment.GRAPHQL_ENDPOINT;
 
@@ -112,7 +114,7 @@ export class PlanningService {
             if (!memberMap.has(member.id)) {
               memberMap.set(member.id, {
                 id: member.id,
-                name: buildDisplayName(member.firstName, member.lastName, member.id),
+                name: formatUserName(member),
                 teamId: team.id,
                 teamName: team.name,
               });
@@ -221,10 +223,10 @@ function expandAbsence(absence: AbsenceResponse, userName: string): PlanningEven
   const cursor = new Date(start);
   while (cursor <= end) {
     events.push({
-      id: `${absence.id}_${toDateKey(cursor)}`,
+      id: `${absence.id}_${toDayKey(cursor)}`,
       userId: absence.userId,
       userName,
-      date: toDateKey(cursor),
+      date: toDayKey(cursor),
       period: 'FULL_DAY',
       status: absence.status,
       type: absence.type,
@@ -234,25 +236,3 @@ function expandAbsence(absence: AbsenceResponse, userName: string): PlanningEven
   }
   return events;
 }
-
-function parseDate(value: string | null | undefined): Date | null {
-  if (!value) return null;
-  const parts = value.split('-').map((part) => Number(part));
-  if (parts.length !== 3 || parts.some((part) => Number.isNaN(part))) return null;
-  return new Date(parts[0], parts[1] - 1, parts[2], 0, 0, 0, 0);
-}
-
-function toDateKey(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
-function buildDisplayName(first: string | undefined, last: string | undefined, fallback: string): string {
-  const fn = first?.trim() ?? '';
-  const ln = last?.trim() ?? '';
-  const full = `${fn} ${ln}`.trim();
-  return full || fallback;
-}
-

@@ -238,10 +238,6 @@ export class ManagerDashboard implements OnInit {
     }
   }
 
-  private formatDateToYYYYMMDD(date: Date): string {
-    return formatDateToYYYYMMDD(date);
-  }
-
   getEmployeeKpiFromCache(employeeId: string): UserKpiSummary | undefined {
     return this.employeeKpiCache.get(employeeId);
   }

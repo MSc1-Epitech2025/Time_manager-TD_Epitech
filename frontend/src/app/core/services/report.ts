@@ -1,6 +1,7 @@
 import * as XLSX from 'xlsx';
 import { Injectable } from '@angular/core';
 import { saveAs } from 'file-saver';
+import { buildFileName } from '@shared/utils/formatting.utils';
 
 // -----------------------------
 // TYPES
@@ -28,11 +29,6 @@ declare module 'jspdf' {
 
 @Injectable({ providedIn: 'root' })
 export class ReportService {
-
-  private buildFileName(base: string, ext: string): string {
-    const date = new Date().toISOString().slice(0, 10);
-    return `Document-${base}-${date}.${ext}`;
-  }
 
  
   exportEmployeeKpiReport(kpiData: any) {
@@ -172,7 +168,7 @@ export class ReportService {
     const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
     saveAs(
       new Blob([buffer], { type: 'application/octet-stream' }),
-      this.buildFileName(`report-${employee.name}`, 'xlsx')
+      buildFileName(`report-${employee.name}`, 'xlsx')
     );
   }
 
@@ -259,7 +255,7 @@ export class ReportService {
 
   saveAs(
     new Blob([buffer]),
-    this.buildFileName('rapport-employes', 'xlsx')
+    buildFileName('rapport-employes', 'xlsx')
   );
 }
 }

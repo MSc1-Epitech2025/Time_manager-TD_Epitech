@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, tap, catchError, throwError, forkJoin, of } from 'rxjs';
 import { environment } from '@environments/environment';
+import { formatUserName } from '@shared/utils/formatting.utils';
 
 const GRAPHQL_ENDPOINT = environment.GRAPHQL_ENDPOINT;
 
@@ -215,7 +216,7 @@ export class TeamService {
         const members = payload?.teamMembers ?? [];
         return members.map((member) => ({
           id: String(member.id),
-          name: this.buildMemberName(member),
+          name: formatUserName(member),
           email: member.email ?? undefined,
         }));
       })
@@ -291,7 +292,7 @@ export class TeamService {
         const users = payload?.users ?? [];
         return users.map((user) => ({
           id: String(user.id),
-          name: this.buildMemberName(user),
+          name: formatUserName(user),
           email: user.email ?? undefined,
         }));
       })
@@ -308,7 +309,7 @@ export class TeamService {
           description: undefined,
           members: (group.members || []).map((member) => ({
             id: String(member.id),
-            name: this.buildMemberName(member),
+            name: formatUserName(member),
             email: member.email ?? undefined,
           })),
         }));
@@ -373,23 +374,10 @@ export class TeamService {
       description: team.description ?? undefined,
       members: members.map((member) => ({
         id: String(member.id),
-        name: this.buildMemberName(member),
+        name: formatUserName(member),
         email: member.email ?? undefined,
       })),
     };
-  }
-
-  private buildMemberName(member: GraphqlUser): string {
-    const first = member.firstName?.trim() ?? '';
-    const last = member.lastName?.trim() ?? '';
-    const full = `${first} ${last}`.trim();
-    if (full) return full;
-
-    const email = member.email ?? '';
-    if (email.includes('@')) {
-      return email.split('@')[0] ?? email;
-    }
-    return String(member.id);
   }
 }
 

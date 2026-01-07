@@ -21,6 +21,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { AbsenceRequestModal } from '@modal/absence-request-modal/absence-request-modal';
 import { AbsenceApprovalModal } from '@modal/absence-approval-modal/absence-approval-modal';
 import { NotificationService } from '@core/services/notification';
+import { formatAbsenceType, formatUserName } from '@shared/utils/formatting.utils';
 
 interface TeamOption {
   id: string;
@@ -235,12 +236,12 @@ export class PlanningComponent implements OnInit {
 
   private absenceToEvents(absence: Absence): EventInput[] {
     const isOwnAbsence = absence.userId === this.currentUserId;
-    const userName = this.getUserName(absence);
+    const userName = absence.user ? formatUserName(absence.user) : absence.userId;
     
     return absence.days.map((day) => {
       const color = this.getEventColor(absence, isOwnAbsence);
       const title = isOwnAbsence
-        ? `${this.getTypeLabel(absence.type)}`
+        ? formatAbsenceType(absence.type)
         : userName;
 
       return {
@@ -281,29 +282,6 @@ export class PlanningComponent implements OnInit {
     }
     
     return edge === 'start' ? `${base}08:00:00` : `${base}17:30:00`;
-  }
-
-  private getUserName(absence: Absence): string {
-    const user = absence.user;
-    if (user && (user.firstName || user.lastName)) {
-      return [user.firstName, user.lastName].filter(Boolean).join(' ');
-    }
-    if (user?.email) {
-      return user.email;
-    }
-    return 'Unknown User';
-  }
-
-  private getTypeLabel(type: string): string {
-    const typeMap: Record<string, string> = {
-      SICK: 'Sick',
-      VACATION: 'Vacation',
-      PERSONAL: 'Personal',
-      FORMATION: 'Formation',
-      RTT: 'RTT',
-      OTHER: 'Other',
-    };
-    return typeMap[type] || type;
   }
 
   handleDateSelect(selectInfo: DateSelectArg) {
