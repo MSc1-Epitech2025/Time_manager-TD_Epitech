@@ -407,6 +407,7 @@ class ReportServiceTest {
     @Test
     void hasRole_shouldMatchAdminWithPrefix() {
         User admin = makeUser("A1", "a@test.com", "[\"SUPER_ADMIN\"]");
+
         when(userRepo.findByEmail("a@test.com")).thenReturn(Optional.of(admin));
         when(reportRepo.findAllByOrderByCreatedAtDesc()).thenReturn(List.of());
 
@@ -501,6 +502,29 @@ class ReportServiceTest {
                 .isInstanceOf(AccessDeniedException.class);
     }
 
+    @Test
+    void hasRole_shouldCoverAllContainsBranches_viaReflection() throws Exception {
+        ReportService svc = new ReportService(reportRepo, userRepo);
+
+        var m = ReportService.class
+                .getDeclaredMethod("hasRole", User.class, String.class);
+        m.setAccessible(true);
+
+        User manager = makeUser("M1", "m@test.com", "[\"TEAM_MANAGER_LEAD\"]");
+        User notManager = makeUser("X1", "x@test.com", "[\"EMPLOYEE\"]");
+
+        User employee = makeUser("E1", "e@test.com", "[\"JUNIOR_EMPLOYEE\"]");
+        User notEmployee = makeUser("Y1", "y@test.com", "[\"MANAGER\"]");
+
+        User admin = makeUser("A1", "a@test.com", "[\"SUPER_ADMIN\"]");
+
+        assertThat((boolean) m.invoke(svc, manager, "MANAGER")).isTrue();
+        assertThat((boolean) m.invoke(svc, employee, "EMPLOYEE")).isTrue();
+        assertThat((boolean) m.invoke(svc, admin, "ADMIN")).isTrue();
+
+        assertThat((boolean) m.invoke(svc, notManager, "MANAGER")).isFalse();
+        assertThat((boolean) m.invoke(svc, notEmployee, "EMPLOYEE")).isFalse();
+    }
 
     private static User makeUser(String id, String email, String role) {
         User u = new User();
