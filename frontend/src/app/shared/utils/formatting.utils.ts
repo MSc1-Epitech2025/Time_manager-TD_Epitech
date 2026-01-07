@@ -1,4 +1,4 @@
-// Absence type formatting
+// absence types
 export function formatAbsenceType(type: string): string {
   const typeMap: Record<string, string> = {
     SICK: 'Sick Leave',
@@ -11,7 +11,7 @@ export function formatAbsenceType(type: string): string {
   return typeMap[type] || type;
 }
 
-// Time formatting
+// time helpers
 export function formatTimeHHMM(seconds: number): string {
   const minutes = Math.floor(seconds / 60) % 60;
   const hours = Math.floor(seconds / 3600);
@@ -25,7 +25,7 @@ export function formatHoursMinutes(totalSeconds: number): { hours: number; minut
   };
 }
 
-// Weather icon mapping
+// weather icons
 export function getWeatherIcon(code: number, isDay: boolean): string {
   if (code === 0) return isDay ? 'wb_sunny' : 'nights_stay';
   if (code <= 3) return isDay ? 'wb_cloudy' : 'cloud';
@@ -36,7 +36,7 @@ export function getWeatherIcon(code: number, isDay: boolean): string {
   return 'wb_sunny';
 }
 
-// User name formatting
+// user display
 export function formatUserName(user: { firstName?: string | null; lastName?: string | null; email?: string | null; id?: string | number | null }): string {
   const first = user.firstName?.trim() ?? '';
   const last = user.lastName?.trim() ?? '';
@@ -50,7 +50,7 @@ export function formatUserName(user: { firstName?: string | null; lastName?: str
   return String(user.id ?? 'Unknown');
 }
 
-// File name formatting
+// file names
 export function buildFileName(base: string, ext: string): string {
   const date = new Date().toISOString().slice(0, 10);
   return `Document-${base}-${date}.${ext}`;

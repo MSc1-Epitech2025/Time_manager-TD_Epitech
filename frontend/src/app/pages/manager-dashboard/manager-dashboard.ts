@@ -15,14 +15,14 @@ import { ChartConfiguration, ChartOptions } from 'chart.js';
 import { ActivatedRoute, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
-// Services
+// services
 import { ManagerService, EmployeeSummary } from '@core/services/manager';
 import { ReportService } from '@core/services/report';
 import { AuthService } from '@core/services/auth';
 import { TeamService, Team } from '@core/services/team';
 import { KpiService } from '@core/services/kpi';
 
-// Models & Utils
+// utils
 import { UserKpiSummary, TeamKpiSummary } from '@shared/models/graphql.types';
 import { currentWeekRange, getCurrentQuarter, getYearRange, formatDateToYYYYMMDD } from '@shared/utils/date.utils';
 import { ReportPdfService , ReportableEmployee } from '@app/core/services/reportPdf';
@@ -178,7 +178,7 @@ export class ManagerDashboard implements OnInit {
     }
   }
 
-  // Load KPI for all employees
+  // load KPIs
   private async loadAllEmployeesKpi() {
     for (const employee of this.employees) {
       this.loadEmployeeKpiToCache(employee.id);
