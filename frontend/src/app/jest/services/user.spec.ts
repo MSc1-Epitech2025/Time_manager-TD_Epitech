@@ -51,7 +51,7 @@ describe('UserService - full coverage', () => {
       next: () => done(new Error('Expected error')),
       error: (err) => {
         expect(err).toBeInstanceOf(Error);
-        expect(err.message).toBe('Err1');
+        expect(err.message).toContain('Err1');
         done();
       },
     });
@@ -88,7 +88,7 @@ describe('UserService - full coverage', () => {
       next: () => done(new Error('Expected error')),
       error: (err) => {
         expect(err).toBeInstanceOf(Error);
-        expect(err.message).toBe('Cerr');
+        expect(err.message).toContain('Cerr');
         done();
       },
     });
@@ -100,7 +100,7 @@ describe('UserService - full coverage', () => {
       next: () => done(new Error('Expected error')),
       error: (err) => {
         expect(err).toBeInstanceOf(Error);
-        expect(err.message).toBe('Failed to create user');
+        expect(err.message).toContain('Failed to create user');
         done();
       },
     });
@@ -127,7 +127,7 @@ describe('UserService - full coverage', () => {
     service.updateUser({ id: 'u1' }).subscribe({
       next: () => done(new Error('Expected error')),
       error: (err) => {
-        expect(err.message).toBe('Uerr');
+        expect(err.message).toContain('Uerr');
         done();
       },
     });
@@ -138,7 +138,7 @@ describe('UserService - full coverage', () => {
     service.updateUser({ id: 'u1' }).subscribe({
       next: () => done(new Error('Expected error')),
       error: (err) => {
-        expect(err.message).toBe('Failed to update user');
+        expect(err.message).toContain('Failed to update user');
         done();
       },
     });
@@ -168,7 +168,7 @@ describe('UserService - full coverage', () => {
     service.deleteUser('u1').subscribe({
       next: () => done(new Error('Expected error')),
       error: (err) => {
-        expect(err.message).toBe('Derr');
+        expect(err.message).toContain('Derr');
         done();
       },
     });

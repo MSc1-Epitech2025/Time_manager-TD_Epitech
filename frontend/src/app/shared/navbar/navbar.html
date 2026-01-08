@@ -36,6 +36,12 @@
             <mat-icon>calendar_month</mat-icon>
             Calendar
         </button>
+
+        <!-- reports -->
+        <button class="menu-btn" [routerLink]="['/app/reports']" routerLinkActive="active">
+            <mat-icon>description</mat-icon>
+            Reports
+        </button>
     </nav>
 
     <button class="logout-btn" (click)="logout()">

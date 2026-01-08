@@ -59,3 +59,20 @@ export interface LeaveAccount {
     label: string;
   };
 }
+
+export interface Report {
+  id: string;
+  authorId?: string;
+  authorEmail?: string;
+  targetUserId?: string;
+  targetEmail?: string;
+  title: string;
+  body?: string;
+  createdAt?: string;
+}
+
+export interface ReportCreateInput {
+  targetUserId: string;
+  title: string;
+  body?: string;
+}

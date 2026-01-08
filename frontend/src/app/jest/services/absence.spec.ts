@@ -1,4 +1,5 @@
-import { AbsenceService, GraphqlRequestError, Absence } from '@core/services/absence';
+import { AbsenceService, Absence } from '@core/services/absence';
+import { GraphqlRequestError } from '@shared/utils/graphql.utils';
 import { HttpClient } from '@angular/common/http';
 import { of, throwError } from 'rxjs';
 

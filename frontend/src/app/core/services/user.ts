@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, tap } from 'rxjs';
 import { environment } from '@environments/environment';
+import { GraphqlRequestError } from '@shared/utils/graphql.utils';
 
 type GraphqlError = {
   message: string;
@@ -82,7 +83,7 @@ export class UserService {
       .pipe(
         map((response) => {
           if (response.errors?.length) {
-            throw new Error(response.errors.map((e: GraphqlError) => e.message).join(', '));
+            throw new GraphqlRequestError('AllUsers', response.errors);
           }
           return response.data?.users ?? [];
         })
@@ -117,10 +118,10 @@ export class UserService {
       .pipe(
         map((response) => {
           if (response.errors?.length) {
-            throw new Error(response.errors.map((e: GraphqlError) => e.message).join(', '));
+            throw new GraphqlRequestError('Register', response.errors);
           }
           if (!response.data?.register) {
-            throw new Error('Failed to create user');
+            throw new GraphqlRequestError('Register', [{ message: 'Failed to create user' }]);
           }
           return response.data.register;
         })
@@ -155,10 +156,10 @@ export class UserService {
       .pipe(
         map((response) => {
           if (response.errors?.length) {
-            throw new Error(response.errors.map((e: GraphqlError) => e.message).join(', '));
+            throw new GraphqlRequestError('UpdateUser', response.errors);
           }
           if (!response.data?.updateUser) {
-            throw new Error('Failed to update user');
+            throw new GraphqlRequestError('UpdateUser', [{ message: 'Failed to update user' }]);
           }
           return response.data.updateUser;
         })
@@ -185,7 +186,7 @@ export class UserService {
       .pipe(
         map((response) => {
           if (response.errors?.length) {
-            throw new Error(response.errors.map((e: GraphqlError) => e.message).join(', '));
+            throw new GraphqlRequestError('DeleteUser', response.errors);
           }
           return response.data?.deleteUser ?? false;
         })
