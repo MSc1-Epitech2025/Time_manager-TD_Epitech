@@ -1,6 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { NotificationService } from '@core/services/notification';
+import { ReportApiService } from '@core/services/report-api';
+import { AuthService } from '@core/services/auth';
 
 describe('NotificationService', () => {
   let service: NotificationService;
@@ -11,10 +13,22 @@ describe('NotificationService', () => {
       open: jest.fn(),
     } as unknown as jest.Mocked<MatSnackBar>;
 
+    const reportApiMock = {
+      createReport: jest.fn().mockReturnValue({ subscribe: jest.fn() }),
+    };
+
+    const authMock = {
+      session: {
+        user: { id: 'user-1' },
+      },
+    };
+
     TestBed.configureTestingModule({
       providers: [
         NotificationService,
         { provide: MatSnackBar, useValue: snackBarSpy },
+        { provide: ReportApiService, useValue: reportApiMock },
+        { provide: AuthService, useValue: authMock },
       ],
     });
 
