@@ -6,9 +6,11 @@ import {
   TeamMember,
   CreateTeamInput,
   UpdateTeamInput,
+} from '@core/services/team';
+import {
   GraphqlRequestError,
   isGraphqlAuthorizationError,
-} from '@core/services/team';
+} from '@shared/utils/graphql.utils';
 import { environment } from '@environments/environment';
 
 const GRAPHQL_ENDPOINT = environment.GRAPHQL_ENDPOINT;
@@ -647,10 +649,10 @@ describe('TeamService', () => {
       });
     });
 
-    it('should detect authorization error with not allowed message', (done) => {
+    it('should NOT detect authorization error with not allowed message', (done) => {
       service.listAllTeams().subscribe({
         error: (error) => {
-          expect(error.isAuthorizationError).toBe(true);
+          expect(error.isAuthorizationError).toBe(false);
           done();
         },
       });
@@ -864,41 +866,40 @@ describe('TeamService', () => {
 
   describe('GraphqlRequestError', () => {
     it('should create error with operation name', () => {
-      const error = new GraphqlRequestError('TestOp', [{ message: 'Test error' }], false);
+      const error = new GraphqlRequestError('TestOp', [{ message: 'Test error' }]);
       expect(error.name).toBe('GraphqlRequestError');
       expect(error.operationName).toBe('TestOp');
       expect(error.message).toContain('[GraphQL:TestOp]');
     });
 
     it('should create error without operation name', () => {
-      const error = new GraphqlRequestError(undefined, [{ message: 'Test error' }], false);
+      const error = new GraphqlRequestError(undefined, [{ message: 'Test error' }]);
       expect(error.message).toContain('[GraphQL:unknown]');
     });
 
     it('should create error with multiple messages', () => {
       const error = new GraphqlRequestError(
         'Op',
-        [{ message: 'Error 1' }, { message: 'Error 2' }],
-        false
+        [{ message: 'Error 1' }, { message: 'Error 2' }]
       );
       expect(error.message).toContain('Error 1');
       expect(error.message).toContain('Error 2');
     });
 
     it('should create error with empty messages', () => {
-      const error = new GraphqlRequestError('Op', [{ message: '' }, { message: '' }], false);
+      const error = new GraphqlRequestError('Op', [{ message: '' }, { message: '' }]);
       expect(error.message).toContain('Unexpected error');
     });
   });
 
   describe('isGraphqlAuthorizationError', () => {
     it('should return true for GraphqlRequestError with isAuthorizationError', () => {
-      const error = new GraphqlRequestError('Op', [{ message: 'Forbidden' }], true);
+      const error = new GraphqlRequestError('Op', [{ message: 'Forbidden' }]);
       expect(isGraphqlAuthorizationError(error)).toBe(true);
     });
 
     it('should return false for GraphqlRequestError without isAuthorizationError', () => {
-      const error = new GraphqlRequestError('Op', [{ message: 'Error' }], false);
+      const error = new GraphqlRequestError('Op', [{ message: 'Error' }]);
       expect(isGraphqlAuthorizationError(error)).toBe(false);
     });
 
