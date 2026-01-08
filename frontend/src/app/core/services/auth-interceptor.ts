@@ -7,12 +7,19 @@ import { Router } from '@angular/router';
 import { AuthService } from './auth';
 import { environment } from '@environments/environment';
 
-// todo: remove this and use environment variable directly
-const BACKEND_HOSTS = new Set([
-  'http://localhost:8030',
-  'https://localhost:8030',
-]);
+const getBackendHosts = (): Set<string> => {
+  try {
+    const url = new URL(environment.GRAPHQL_ENDPOINT);
+    return new Set([
+      `${url.protocol}//${url.host}`,
+      url.protocol === 'http:' ? `https://${url.host}` : `http://${url.host}`,
+    ]);
+  } catch {
+    return new Set();
+  }
+};
 
+const BACKEND_HOSTS = getBackendHosts();
 const MAX_REFRESH_COUNT = environment.MAX_REFRESH_COUNT;
 
 @Injectable()
