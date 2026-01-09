@@ -11,6 +11,7 @@ import {
 import { AuthService } from './core/services/auth';
 import { TimerService } from './core/services/timer';
 import { AuthInterceptor } from './core/services/auth-interceptor';
+import { CsrfInterceptor } from './core/services/csrf-interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -20,6 +21,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptorsFromDi()),
 
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
+    { provide: HTTP_INTERCEPTORS, useClass: CsrfInterceptor, multi: true },
 
     {
       provide: APP_INITIALIZER,
