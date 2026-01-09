@@ -19,6 +19,7 @@ import { TeamService, Team, TeamMember } from '@core/services/team';
 import { AuthService, Role } from '@core/services/auth';
 import { isGraphqlAuthorizationError } from '@shared/utils/graphql.utils';
 import { matchesSearch } from '../../shared/utils/formatting.utils';
+import { SecurityValidationService } from '@core/services/security-validation';
 
 @Component({
   selector: 'app-team-management',
@@ -64,7 +65,8 @@ export class TeamManagement implements OnInit {
     private readonly modal: MatDialog,
     private readonly teamService: TeamService,
     private readonly auth: AuthService,
-    private readonly router: Router
+    private readonly router: Router,
+    private readonly security: SecurityValidationService
   ) {}
 
   ngOnInit(): void {
@@ -185,6 +187,16 @@ export class TeamManagement implements OnInit {
       return;
     }
 
+    try {
+      this.security.validateTeam({
+        name: this.formData.name,
+        description: this.formData.description
+      });
+    } catch (err: any) {
+      alert(err?.message || 'Invalid input detected');
+      return;
+    }
+
     this.isLoading = true;
     this.teamService
       .createTeam({ 
@@ -223,6 +235,16 @@ export class TeamManagement implements OnInit {
     if (!this.isAdminUser || !this.selectedTeam) return;
     if (!this.formData.name.trim()) {
       alert('Please fill in the team name');
+      return;
+    }
+
+    try {
+      this.security.validateTeam({
+        name: this.formData.name,
+        description: this.formData.description
+      });
+    } catch (err: any) {
+      alert(err?.message || 'Invalid input detected');
       return;
     }
 

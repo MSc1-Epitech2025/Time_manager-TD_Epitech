@@ -11,6 +11,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { AbsenceType, AbsencePeriod } from '@core/services/absence';
 import { formatDateToYYYYMMDD } from '@shared/utils/date.utils';
+import { SecurityValidationService } from '@core/services/security-validation';
 
 export interface AbsenceRequestData {
   startDate?: Date;
@@ -72,6 +73,7 @@ export class AbsenceRequestModal implements OnInit {
 
   constructor(
     private readonly dialogRef: MatDialogRef<AbsenceRequestModal>,
+    private readonly security: SecurityValidationService,
     @Inject(MAT_DIALOG_DATA) public data?: AbsenceRequestData
   ) {}
 
@@ -137,6 +139,13 @@ export class AbsenceRequestModal implements OnInit {
       type: this.absenceType,
       reason: this.reason.trim() || undefined,
     };
+
+    try {
+      this.security.validateAbsenceRequest(result);
+    } catch (err: any) {
+      alert(err?.message || 'Invalid input detected');
+      return;
+    }
 
     if (this.isSingleDay && this.period !== 'FULL_DAY') {
       result.periodByDate = [

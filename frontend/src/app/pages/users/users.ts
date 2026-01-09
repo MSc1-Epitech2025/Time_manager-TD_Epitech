@@ -183,6 +183,13 @@ export class UsersComponent implements OnInit {
       return;
     }
 
+    try {
+      this.security.validateUserUpdate(this.formData);
+    } catch (err: any) {
+      alert(err?.message || 'Invalid input detected');
+      return;
+    }
+
     const input: UpdateUserInput = {
       id: this.selectedUser.id,
       firstName: this.formData.firstName,

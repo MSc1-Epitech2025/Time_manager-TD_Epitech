@@ -9,6 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { Observable } from 'rxjs';
 import { TeamService, TeamMember } from '@core/services/team';
+import { SecurityValidationService } from '@core/services/security-validation';
 
 @Component({
   selector: 'app-edit-team-modal',
@@ -38,7 +39,8 @@ export class EditTeamModalComponent implements OnInit {
   constructor(
     private readonly dialogRef: MatDialogRef<EditTeamModalComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any,
-    private readonly teamService: TeamService
+    private readonly teamService: TeamService,
+    private readonly security: SecurityValidationService
   ) {
     this.team = { ...data.team, members: [...(data.team.members || [])] };
   }
@@ -110,6 +112,16 @@ export class EditTeamModalComponent implements OnInit {
   }
 
   onSave(): void {
+    try {
+      this.security.validateTeam({
+        name: this.team.name,
+        description: this.team.description
+      });
+    } catch (err: any) {
+      alert(err?.message || 'Invalid input detected');
+      return;
+    }
+    
     this.dialogRef.close(this.team);
     this.name = this.team.name;
     this.description = this.team.description;
