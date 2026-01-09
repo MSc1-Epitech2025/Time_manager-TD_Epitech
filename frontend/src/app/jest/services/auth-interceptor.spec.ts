@@ -10,6 +10,7 @@ import { Router } from '@angular/router';
 import { of, throwError, Observable } from 'rxjs';
 import { AuthInterceptor } from '@core/services/auth-interceptor';
 import { AuthService } from '@core/services/auth';
+import { environment } from '@environments/environment';
 
 describe('AuthInterceptor', () => {
   let interceptor: AuthInterceptor;
