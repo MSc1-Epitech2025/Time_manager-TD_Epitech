@@ -87,6 +87,7 @@ services:
       FRONTEND_PORT: ${FRONTEND_PORT}
       BACKEND_CONTAINER_NAME: ${BACKEND_CONTAINER_NAME}
       BACKEND_PORT: ${BACKEND_PORT}
+      FRONTEND_URL: ${FRONTEND_URL}
     restart: always
 
   sonarqube:
