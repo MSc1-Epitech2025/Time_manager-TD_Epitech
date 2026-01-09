@@ -85,9 +85,11 @@ npm run sonar:all
 |---------------------------|------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
 | **Frontend (Angular)**    | [http://localhost:4200](http://localhost:4200) | Angular web app (dev mode with live reload)                                                                              |
 | **Backend (Spring Boot)** | [http://localhost:8080](http://localhost:8080) | REST or GRAPHQL API server                                                                                               |
+| **GraphQL Playground**    | [http://localhost:8080/graphiql](http://localhost:8080/graphiql) | Interactive GraphQL API documentation and playground.                                                                    |
+
 | **Database (MariaDB)**    | `localhost:3307`                               | SQL access (user: `root`, password: `root`)                                                                              |
-| **Reverse proxy (Nginx)** | [http://localhost:3030](http://localhost:3030) | Reserve proxy for secure api call make by client                                                                         |
-| **SonarQube**             | [http://localhost:9000](http://localhost:3030) | SonarQube for analyze all code in the project.<br/>More détails here [➡️ Documentation SonarQube](./sonarqube/README.md) |
+| **Reverse proxy (Nginx)** | [http://localhost:3030](http://localhost:3030) | Reserve proxy for secure api call make by client               |                                                           |
+| **SonarQube**             | [http://localhost:9000](http://localhost:9000) | SonarQube for analyze all code in the project.<br/>More détails here [➡️ Documentation SonarQube](./sonarqube/README.md) |
 ---
 
 ## 🧱 Project Structure
@@ -141,6 +143,9 @@ FRONTEND_PORT=xxxxxxxxxxxxxxxxxxxx
 FRONTEND_CONTAINER_NAME=xxxxxxxxxxxxxxxxxxxx
 FRONTEND_CONTEXT=./xxxxxxxxxxxxxxxxxxxx
 FRONTEND_DOCKERFILE=xxxxxxxxxxxxxxxxxxxx
+FRONTEND_URL=http://localhost:4200/
+GRAPHQL_ENDPOINT=http://localhost:8030/graphql
+
 
 # ⚙️ Backend
 BACKEND_PORT=8085
@@ -148,6 +153,12 @@ BACKEND_CONTAINER_NAME=xxxxxxxxxxxxxxxxxxxx
 BACKEND_CONTEXT=./xxxxxxxxxxxxxxxxxxxx
 BACKEND_DOCKERFILE=xxxxxxxxxxxxxxxxxxxx
 SPRING_PROFILES_ACTIVE=xxxxxxxxxxxxxxxxxxxx
+
+SECURITY_JWT_SECRET=xxxxxxxxxxxxxxxxxxxx
+SECURITY_JWT_ISSUER=xxxxxxxxxxxxxxxxxxxx
+SECURITY_JWT_EXPMINUTES=xxxxxxxxxxxxxxxxxxxx
+SECURITY_JWT_REFRESH_SECRET=xxxxxxxxxxxxxxxxxxxx
+SECURITY_JWT_REFRESH_DAYS=xxxxxxxxxxxxxxxxxxxx
 
 # JWT
 SECURITY_JWT_SECRET=xxxxxxxxxxxxxxxxxxxx
@@ -171,10 +182,25 @@ CHOKIDAR_USEPOLLING=xxxxxxxxxxxxxxxxxxxx
 SONAR_HOST_URL=http://sonarqube:9000
 SONAR_TOKEN=xxxxxxxxxxxxxxxxxxxx
 
+#SonarQube
+SONAR_HOST_URL=http://sonarqube:9000/
+BACKEND_SONAR_TOKEN=sqp_2960016f5afbfdc7bdf3d03618ec93573c1797a7
+FRONTEND_SONAR_TOKEN=sqp_2826e32b7be647f57f741e34ca7b0b17d5ea1ea1
+
 #Azure
 AZURE_CLIENT_SECRET=Yzxxxxxxxxxxxxxxxxxxxx
 AZURE_TENANT_ID=90xxxxxxxxxxxxxxxxxxxx
 AZURE_CLIENT_ID=axxxxxxxxxxxxxxxxxxxx
+AZURE_URL=http://localhost:8080/
+
+# 📧 SMTP Mail Configuration
+SMTP_HOST=xxxxxxxxxxxxxxxxxxxx
+SMTP_PORT=xxxxxxxxxxxxxxxxxxxx
+SMTP_USERNAME=xxxxxxxxxxxxxxxxxxxx
+SMTP_PASSWORD=xxxxxxxxxxxxxxxxxxxx
+SMTP_AUTH=xxxxxxxxxxxxxxxxxxxx
+SMTP_STARTTLS=xxxxxxxxxxxxxxxxxxxx
+
 ```
 
 ---
