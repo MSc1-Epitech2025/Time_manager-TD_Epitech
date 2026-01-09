@@ -448,6 +448,19 @@ VALUES
     '2026-01-06 17:15:00'
   ),
 
+  -- Armand — Personal leave AM — 15/01/2026
+  (
+    (SELECT id FROM users WHERE email='gaspard.malmon@epitech.eu'),
+    (SELECT id FROM users WHERE email='armand.braud@epitech.eu'),
+    (SELECT id FROM users WHERE email='armand.braud@epitech.eu'),
+    'MANUAL',
+    'INFO',
+    NULL,
+    'Partial absence: Armand administrative appointment',
+    'Armand was absent on the morning of 15/01/2026 for an administrative appointment.',
+    '2026-01-15 12:30:00'
+  ),
+
   -- Clément — Sick leave — 19 → 20/01/2026
   (
     (SELECT id FROM users WHERE email='gaspard.malmon@epitech.eu'),
@@ -475,6 +488,235 @@ VALUES
   )
 ;
 
+-- ==========================================================
+-- REPORTS (manager notifications)
+-- ==========================================================
+-- ==========================================================
+-- REPORTS — Dec 2025 → Jan 2026 (associated with the new absences)
+-- ==========================================================
+INSERT INTO reports (author_id, target_user_id, subject_user_id, type, severity, rule_key, title, body, created_at)
+VALUES
+  -- Clément — RTT PM — 04/12/2025
+  (
+    (SELECT id FROM users WHERE email='gaspard.malmon@epitech.eu'),
+    (SELECT id FROM users WHERE email='clement.hamimi@epitech.eu'),
+    (SELECT id FROM users WHERE email='clement.hamimi@epitech.eu'),
+    'MANUAL',
+    'INFO',
+    NULL,
+    'Partial absence: Clément RTT afternoon',
+    'Clément was on RTT on the afternoon of 04/12/2025.',
+    '2025-12-04 17:15:00'
+  ),
+
+  -- Armand — Personal leave FULL DAY — 10/12/2025
+  (
+    (SELECT id FROM users WHERE email='gaspard.malmon@epitech.eu'),
+    (SELECT id FROM users WHERE email='armand.braud@epitech.eu'),
+    (SELECT id FROM users WHERE email='armand.braud@epitech.eu'),
+    'MANUAL',
+    'INFO',
+    NULL,
+    'Absence report: Armand personal leave',
+    'Armand was absent for a personal appointment on 10/12/2025.',
+    '2025-12-10 17:30:00'
+  ),
+
+  -- Alex — Vacation — 15 → 19/12/2025
+  (
+    (SELECT id FROM users WHERE email='gaspard.malmon@epitech.eu'),
+    (SELECT id FROM users WHERE email='alex.fraioli@epitech.eu'),
+    (SELECT id FROM users WHERE email='alex.fraioli@epitech.eu'),
+    'MANUAL',
+    'INFO',
+    NULL,
+    'Alex vacation planning',
+    'Alex is on paid vacation from 15/12/2025 to 19/12/2025.',
+    '2025-12-15 09:05:00'
+  ),
+
+  -- Gaspard — Other leave AM — 18/12/2025
+  (
+    (SELECT id FROM users WHERE email='alex.fraioli@epitech.eu'),
+    (SELECT id FROM users WHERE email='gaspard.malmon@epitech.eu'),
+    (SELECT id FROM users WHERE email='gaspard.malmon@epitech.eu'),
+    'MANUAL',
+    'INFO',
+    NULL,
+    'Partial absence: Gaspard doctor appointment',
+    'Gaspard was absent on the morning of 18/12/2025 for a doctor appointment.',
+    '2025-12-18 13:00:00'
+  )
+;
+
+INSERT INTO reports (author_id, target_user_id, subject_user_id, type, severity, rule_key, title, body, created_at)
+VALUES
+  -- Armand — Sick leave FULL DAY — 06/01/2026
+  (
+    (SELECT id FROM users WHERE email='gaspard.malmon@epitech.eu'),
+    (SELECT id FROM users WHERE email='armand.braud@epitech.eu'),
+    (SELECT id FROM users WHERE email='armand.braud@epitech.eu'),
+    'MANUAL',
+    'INFO',
+    NULL,
+    'Absence report: Armand sick leave',
+    'Armand was on sick leave on 06/01/2026.',
+    '2026-01-06 17:15:00'
+  ),
+
+  -- Armand — Personal leave AM — 15/01/2026
+  (
+    (SELECT id FROM users WHERE email='gaspard.malmon@epitech.eu'),
+    (SELECT id FROM users WHERE email='armand.braud@epitech.eu'),
+    (SELECT id FROM users WHERE email='armand.braud@epitech.eu'),
+    'MANUAL',
+    'INFO',
+    NULL,
+    'Partial absence: Armand administrative appointment',
+    'Armand was absent on the morning of 15/01/2026 for an administrative appointment.',
+    '2026-01-15 12:30:00'
+  ),
+
+  -- Clément — Sick leave — 19 → 20/01/2026
+  (
+    (SELECT id FROM users WHERE email='gaspard.malmon@epitech.eu'),
+    (SELECT id FROM users WHERE email='clement.hamimi@epitech.eu'),
+    (SELECT id FROM users WHERE email='clement.hamimi@epitech.eu'),
+    'MANUAL',
+    'INFO',
+    NULL,
+    'Absence report: Clément sick leave',
+    'Clément was on sick leave from 19/01/2026 to 20/01/2026.',
+    '2026-01-20 17:20:00'
+  ),
+
+  -- Gaspard — Vacation — 26 → 30/01/2026
+  (
+    (SELECT id FROM users WHERE email='alex.fraioli@epitech.eu'),
+    (SELECT id FROM users WHERE email='gaspard.malmon@epitech.eu'),
+    (SELECT id FROM users WHERE email='gaspard.malmon@epitech.eu'),
+    'MANUAL',
+    'INFO',
+    NULL,
+    'Gaspard vacation planning',
+    'Gaspard is on paid vacation from 26/01/2026 to 30/01/2026.',
+    '2026-01-26 09:10:00'
+  )
+;
+
+
+-- ==========================================================
+-- REPORTS (manager notifications)
+-- ==========================================================
+-- ==========================================================
+-- REPORTS — Dec 2025 → Jan 2026 (associated with the new absences)
+-- ==========================================================
+INSERT INTO reports (author_id, target_user_id, subject_user_id, type, severity, rule_key, title, body, created_at)
+VALUES
+  -- Clément reports on Armand's absence (Clément as author)
+  (
+    (SELECT id FROM users WHERE email='clement.hamimi@epitech.eu'),
+    (SELECT id FROM users WHERE email='armand.braud@epitech.eu'),
+    (SELECT id FROM users WHERE email='armand.braud@epitech.eu'),
+    'MANUAL',
+    'INFO',
+    NULL,
+    'Colleague notice: Armand absent',
+    'Armand was absent on 10/12/2025 for a personal appointment.',
+    '2025-12-10 18:00:00'
+  ),
+
+  -- Armand reports on Clément's RTT (Armand as author)
+  (
+    (SELECT id FROM users WHERE email='armand.braud@epitech.eu'),
+    (SELECT id FROM users WHERE email='clement.hamimi@epitech.eu'),
+    (SELECT id FROM users WHERE email='clement.hamimi@epitech.eu'),
+    'MANUAL',
+    'INFO',
+    NULL,
+    'Colleague notice: Clément RTT',
+    'Clément was on RTT in the afternoon on 04/12/2025.',
+    '2025-12-04 18:00:00'
+  ),
+
+  -- Clément reports on Gaspard's absence (Clément as author)
+  (
+    (SELECT id FROM users WHERE email='clement.hamimi@epitech.eu'),
+    (SELECT id FROM users WHERE email='gaspard.malmon@epitech.eu'),
+    (SELECT id FROM users WHERE email='gaspard.malmon@epitech.eu'),
+    'MANUAL',
+    'INFO',
+    NULL,
+    'Manager absence: Gaspard doctor appointment',
+    'Gaspard was absent on the morning of 18/12/2025.',
+    '2025-12-18 14:00:00'
+  ),
+
+  -- Armand reports on Clément's sick leave (Armand as author)
+  (
+    (SELECT id FROM users WHERE email='armand.braud@epitech.eu'),
+    (SELECT id FROM users WHERE email='clement.hamimi@epitech.eu'),
+    (SELECT id FROM users WHERE email='clement.hamimi@epitech.eu'),
+    'MANUAL',
+    'INFO',
+    NULL,
+    'Colleague notice: Clément sick leave',
+    'Clément was on sick leave from 19/01/2026 to 20/01/2026.',
+    '2026-01-20 18:00:00'
+  ),
+
+  -- Clément reports on Armand's sick leave (Clément as author)
+  (
+    (SELECT id FROM users WHERE email='clement.hamimi@epitech.eu'),
+    (SELECT id FROM users WHERE email='armand.braud@epitech.eu'),
+    (SELECT id FROM users WHERE email='armand.braud@epitech.eu'),
+    'MANUAL',
+    'INFO',
+    NULL,
+    'Colleague notice: Armand sick',
+    'Armand was on sick leave on 06/01/2026.',
+    '2026-01-06 18:00:00'
+  ),
+
+  -- Armand reports on Clément's report (Armand as author)
+  (
+    (SELECT id FROM users WHERE email='armand.braud@epitech.eu'),
+    (SELECT id FROM users WHERE email='clement.hamimi@epitech.eu'),
+    (SELECT id FROM users WHERE email='armand.braud@epitech.eu'),
+    'MANUAL',
+    'INFO',
+    NULL,
+    'Colleague update: Armand administrative appointment',
+    'Armand will be absent on the morning of 15/01/2026.',
+    '2026-01-15 13:00:00'
+  ),
+
+  -- Clément reports on Gaspard's vacation (Clément as author)
+  (
+    (SELECT id FROM users WHERE email='clement.hamimi@epitech.eu'),
+    (SELECT id FROM users WHERE email='gaspard.malmon@epitech.eu'),
+    (SELECT id FROM users WHERE email='gaspard.malmon@epitech.eu'),
+    'MANUAL',
+    'INFO',
+    NULL,
+    'Manager vacation: Gaspard away',
+    'Gaspard is on paid vacation from 26/01/2026 to 30/01/2026.',
+    '2026-01-26 10:00:00'
+  ),
+
+  -- Armand reports on Gaspard's vacation (Armand as author)
+  (
+    (SELECT id FROM users WHERE email='armand.braud@epitech.eu'),
+    (SELECT id FROM users WHERE email='gaspard.malmon@epitech.eu'),
+    (SELECT id FROM users WHERE email='gaspard.malmon@epitech.eu'),
+    'MANUAL',
+    'INFO',
+    NULL,
+    'Manager vacation: Gaspard away',
+    'Gaspard is on paid vacation from 26/01/2026 to 30/01/2026.',
+    '2026-01-26 10:00:00'
+  )
+;
 
 -- ==========================================================
 -- LEAVE TYPES
@@ -793,4 +1035,17 @@ VALUES (
   1.00,
   @abs_armand_sick_2026_jan06,
   'Sick leave - 06/01/2026 (1 day)'
+);
+
+-- Armand : PERSONAL AM 15/01 => -0.50 PERSONAL (if tracking)
+INSERT INTO leave_ledger (account_id, entry_date, kind, amount, reference_absence_id, note)
+VALUES (
+  (SELECT id FROM leave_accounts
+   WHERE user_id = (SELECT id FROM users WHERE email='armand.braud@epitech.eu')
+     AND leave_type='RTT'),
+  '2026-01-15',
+  'DEBIT',
+  0.50,
+  @abs_armand_personal_am_2026_jan,
+  'Personal leave (half-day AM) - 15/01/2026'
 );
