@@ -19,6 +19,7 @@ import { AuthService, Role } from '@core/services/auth';
 import { ActivatedRoute, Router } from '@angular/router';
 import { environment } from '@environments/environment';
 import { NotificationService } from '@core/services/notification';
+import { SecurityValidationService } from '@core/services/security-validation';
 
 // components
 import { AnimatedBubblesComponent } from '@shared/components/animated-bubbles/animated-bubbles';
@@ -75,6 +76,7 @@ export class LoginComponent implements OnInit {
   private notify = inject(NotificationService);
   private router = inject(Router);
   private dialog = inject(MatDialog);
+  private security = inject(SecurityValidationService);
 
   submit() {
     if (this.form.invalid) {
@@ -85,9 +87,15 @@ export class LoginComponent implements OnInit {
 
     (async () => {
       try {
-        const email = this.form.value.email!;
-        const password = this.form.value.password!;
-        const remember = !!this.form.value.remember;
+        const rawData = {
+          email: this.form.value.email!,
+          password: this.form.value.password!,
+          remember: this.form.value.remember,
+        };
+        const validated = this.security.validateLogin(rawData);
+        const email = validated.email;
+        const password = validated.password;
+        const remember = !!validated.remember;
 
         const session = await this.auth.login(email, password, remember);
         

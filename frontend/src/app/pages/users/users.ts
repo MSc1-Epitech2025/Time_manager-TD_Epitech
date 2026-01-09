@@ -12,6 +12,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatDialog } from '@angular/material/dialog';
 import { UserService, User, CreateUserInput, UpdateUserInput } from '@core/services/user';
 import { DeleteUserModalComponent } from '@modal/delete-user-modal/delete-user-modal';
+import { SecurityValidationService } from '@core/services/security-validation';
 
 @Component({
   selector: 'app-users',
@@ -54,7 +55,8 @@ export class UsersComponent implements OnInit {
 
   constructor(
     private readonly userService: UserService,
-    private readonly dialog: MatDialog
+    private readonly dialog: MatDialog,
+    private readonly security: SecurityValidationService
   ) { }
 
   ngOnInit(): void {
@@ -144,6 +146,13 @@ export class UsersComponent implements OnInit {
       return;
     }
 
+    try {
+      this.security.validateUserCreation(this.formData);
+    } catch (err: any) {
+      alert(err?.message || 'Invalid input detected');
+      return;
+    }
+
     const input: CreateUserInput = {
       firstName: this.formData.firstName,
       lastName: this.formData.lastName,
@@ -171,6 +180,13 @@ export class UsersComponent implements OnInit {
 
     if (!this.formData.firstName || !this.formData.lastName || !this.formData.email) {
       alert('Please fill in all required fields (First Name, Last Name, Email)');
+      return;
+    }
+
+    try {
+      this.security.validateUserUpdate(this.formData);
+    } catch (err: any) {
+      alert(err?.message || 'Invalid input detected');
       return;
     }
 

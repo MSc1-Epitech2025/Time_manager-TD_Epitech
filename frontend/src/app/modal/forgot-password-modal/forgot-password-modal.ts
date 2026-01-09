@@ -9,6 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '@core/services/auth';
 import { NotificationService } from '@core/services/notification';
+import { SecurityValidationService } from '@core/services/security-validation';
 
 @Component({
   selector: 'app-forgot-password-modal',
@@ -31,6 +32,7 @@ export class ForgotPasswordModalComponent {
   private dialogRef = inject(MatDialogRef<ForgotPasswordModalComponent>);
   private auth = inject(AuthService);
   private notify = inject(NotificationService);
+  private security = inject(SecurityValidationService);
 
   loading = signal(false);
   submitted = signal(false);
@@ -50,7 +52,8 @@ export class ForgotPasswordModalComponent {
     this.errorMessage.set(null);
 
     try {
-      const email = this.form.value.email!;
+      const validated = this.security.validateForgotPassword(this.form.value);
+      const email = validated.email;
       await this.auth.requestPasswordResetWithTemp(email);
       this.submitted.set(true);
       this.notify.success('Password reset email sent successfully');

@@ -6,6 +6,7 @@ import { MatInputModule } from '@angular/material/input';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { SecurityValidationService } from '@core/services/security-validation';
 
 @Component({
   selector: 'app-create-team-modal',
@@ -17,7 +18,10 @@ export class CreateTeamModal {
   teamName: string = '';
   description: string = '';
 
-  constructor(private dialogRef: MatDialogRef<CreateTeamModal>) {}
+  constructor(
+    private dialogRef: MatDialogRef<CreateTeamModal>,
+    private security: SecurityValidationService
+  ) {}
 
   onCancel(): void {
     this.dialogRef.close();
@@ -25,6 +29,16 @@ export class CreateTeamModal {
 
   onCreate(): void {
     if (this.teamName.trim()) {
+      try {
+        this.security.validateTeam({
+          name: this.teamName,
+          description: this.description
+        });
+      } catch (err: any) {
+        alert(err?.message || 'Invalid input detected');
+        return;
+      }
+      
       this.dialogRef.close({
         name: this.teamName,
         description: this.description

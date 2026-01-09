@@ -14,6 +14,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 // Services
 import { AuthService } from '@core/services/auth';
 import { NotificationService } from '@core/services/notification';
+import { SecurityValidationService } from '@core/services/security-validation';
 
 // Components
 import { AnimatedBubblesComponent } from '@shared/components/animated-bubbles/animated-bubbles';
@@ -40,6 +41,7 @@ export class FirstLoginResetComponent {
   private auth = inject(AuthService);
   private notify = inject(NotificationService);
   private router = inject(Router);
+  private security = inject(SecurityValidationService);
 
   hideCurrentPwd = signal(true);
   hideNewPwd = signal(true);
@@ -69,8 +71,9 @@ export class FirstLoginResetComponent {
     this.loading.set(true);
 
     try {
-      const currentPassword = this.form.value.currentPassword!;
-      const newPassword = this.form.value.newPassword!;
+      const validated = this.security.validatePasswordReset(this.form.value);
+      const currentPassword = validated.currentPassword;
+      const newPassword = validated.newPassword;
       await this.auth.resetPasswordFirstLogin(currentPassword, newPassword);
       this.notify.success('Password successfully updated');
       
