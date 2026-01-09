@@ -59,16 +59,16 @@ export function getCurrentQuarter(date: Date = new Date()): { start: Date; end: 
   let quarterEnd: Date;
 
   if (currentMonth >= 0 && currentMonth <= 2) {
-    quarterStart = new Date(date.getFullYear(), 0, 1);
+    quarterStart = new Date(date.getFullYear() - 1, 9, 1);
     quarterEnd = new Date(date.getFullYear(), 2, 31, 23, 59, 59);
   } else if (currentMonth >= 3 && currentMonth <= 5) {
-    quarterStart = new Date(date.getFullYear(), 3, 1);
+    quarterStart = new Date(date.getFullYear(), 0, 1);
     quarterEnd = new Date(date.getFullYear(), 5, 30, 23, 59, 59);
   } else if (currentMonth >= 6 && currentMonth <= 8) {
-    quarterStart = new Date(date.getFullYear(), 6, 1);
+    quarterStart = new Date(date.getFullYear(), 3, 1);
     quarterEnd = new Date(date.getFullYear(), 8, 30, 23, 59, 59);
   } else {
-    quarterStart = new Date(date.getFullYear(), 9, 1);
+    quarterStart = new Date(date.getFullYear(), 6, 1);
     quarterEnd = new Date(date.getFullYear(), 11, 31, 23, 59, 59);
   }
 

@@ -15,7 +15,7 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '@environments/environment';
 import { formatTimeHHMM, formatHoursMinutes } from '@shared/utils/formatting.utils';
-import { formatDateToYYYYMMDD } from '@shared/utils/date.utils';
+import { formatDateToYYYYMMDD, getCurrentQuarter, getYearRange } from '@shared/utils/date.utils';
 
 // Services
 import {
@@ -72,7 +72,7 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
   }
 
   private _selectedTeam = '';
-  private _selectedPeriod: 'last_week' | 'quarter' | 'year' = 'last_week';
+  private _selectedPeriod: 'last_week' | 'quarter' | 'year' = 'quarter';
   private readonly GRAPHQL_ENDPOINT = environment.GRAPHQL_ENDPOINT;
 
   get selectedTeam(): string {
@@ -354,7 +354,7 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
   private getDateRange(): { startDate: string; endDate: string } {
     const now = new Date();
     let startDate: Date;
-    let endDate = new Date();
+    let endDate: Date;
 
     switch (this._selectedPeriod) {
       case 'last_week':
@@ -366,16 +366,19 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
         endDate.setDate(startDate.getDate() + 6);
         break;
       case 'quarter':
-        startDate = new Date(now);
-        startDate.setMonth(now.getMonth() - 3);
+        const quarter = getCurrentQuarter();
+        startDate = quarter.start;
+        endDate = quarter.end;
         break;
       case 'year':
-        startDate = new Date(now);
-        startDate.setFullYear(now.getFullYear() - 1);
+        const year = getYearRange();
+        startDate = year.start;
+        endDate = year.end;
         break;
       default:
         startDate = new Date(now);
         startDate.setMonth(now.getMonth() - 1);
+        endDate = new Date();
     }
 
     return {
@@ -555,9 +558,9 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
       
       byName[kpi.fullName] = presenceRate;
       
-      if (presenceRate > 80) {
+      if (presenceRate >= 50) {
         totalPresent++;
-      } else if (presenceRate > 50) {
+      } else if (lateRate > 20) {
         totalLate++;
       } else {
         totalAbsent++;

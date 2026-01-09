@@ -176,9 +176,9 @@
               <div class="kpi-bar-item">
                 <div class="kpi-bar-header">
                   <span class="kpi-bar-label">Overtime</span>
-                  <span class="kpi-bar-value">{{ employeeKpiData.overtimeHours | number:'1.1-1' }}h</span>
+                  <span class="kpi-bar-value">{{ Math.max(0, employeeKpiData.overtimeHours) | number:'1.1-1' }}h</span>
                 </div>
-                <mat-progress-bar class="overtime" mode="determinate" [value]="Math.min((employeeKpiData.overtimeHours / 10) * 100, 100)"></mat-progress-bar>
+                <mat-progress-bar class="overtime" mode="determinate" [value]="Math.min(Math.max(0, employeeKpiData.overtimeHours) / 10 * 100, 100)"></mat-progress-bar>
               </div>
 
               <!-- Punctuality -->
