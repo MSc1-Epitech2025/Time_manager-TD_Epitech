@@ -49,6 +49,43 @@ export const userCreationSchema = z.object({
 // generic text
 export const textInputSchema = z.string().pipe(xssProtection);
 
+// password reset
+export const passwordResetSchema = z.object({
+  currentPassword: z.string().min(1).max(128),
+  newPassword: z.string().min(8).max(128),
+  confirmPassword: z.string().min(8).max(128),
+});
+
+// forgot password
+export const forgotPasswordSchema = z.object({
+  email: safeEmail,
+});
+
+// absence request
+export const absenceRequestSchema = z.object({
+  reason: xssProtection.max(500).optional(),
+  type: z.string(),
+  startDate: z.string(),
+  endDate: z.string(),
+});
+
+// team creation/update
+export const teamSchema = z.object({
+  name: safeString.min(1).max(100),
+  description: xssProtection.max(500).optional(),
+});
+
+// user update
+export const userUpdateSchema = z.object({
+  id: z.string().optional(),
+  firstName: safeString.min(1).max(50),
+  lastName: safeString.min(1).max(50),
+  email: safeEmail,
+  phone: safeString.max(20).optional(),
+  role: z.enum(['ADMIN', 'MANAGER', 'EMPLOYEE']).optional(),
+  poste: safeString.max(100).optional(),
+});
+
 @Injectable({ providedIn: 'root' })
 export class SecurityValidationService {
   validateLogin(data: unknown) {
@@ -57,6 +94,26 @@ export class SecurityValidationService {
 
   validateUserCreation(data: unknown) {
     return userCreationSchema.parse(data);
+  }
+
+  validateUserUpdate(data: unknown) {
+    return userUpdateSchema.parse(data);
+  }
+
+  validatePasswordReset(data: unknown) {
+    return passwordResetSchema.parse(data);
+  }
+
+  validateForgotPassword(data: unknown) {
+    return forgotPasswordSchema.parse(data);
+  }
+
+  validateAbsenceRequest(data: unknown) {
+    return absenceRequestSchema.parse(data);
+  }
+
+  validateTeam(data: unknown) {
+    return teamSchema.parse(data);
   }
 
   validateText(text: string) {
