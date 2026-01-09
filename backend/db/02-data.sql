@@ -378,7 +378,7 @@ VALUES
 -- ==========================================================
 -- REPORTS — Dec 2025 → Jan 2026 (associated with the new absences)
 -- ==========================================================
-INSERT INTO reports (author_id, target_user_id, subject_user_id, type, severity, rule_key, title, body)
+INSERT INTO reports (author_id, target_user_id, subject_user_id, type, severity, rule_key, title, body, created_at)
 VALUES
   -- Clément — RTT PM — 04/12/2025
   (
@@ -389,7 +389,8 @@ VALUES
     'INFO',
     NULL,
     'Partial absence: Clément RTT afternoon',
-    'Clément was on RTT on the afternoon of 04/12/2025.'
+    'Clément was on RTT on the afternoon of 04/12/2025.',
+    '2025-12-04 17:15:00'
   ),
 
   -- Armand — Personal leave FULL DAY — 10/12/2025
@@ -401,7 +402,8 @@ VALUES
     'INFO',
     NULL,
     'Absence report: Armand personal leave',
-    'Armand was absent for a personal appointment on 10/12/2025.'
+    'Armand was absent for a personal appointment on 10/12/2025.',
+    '2025-12-10 17:30:00'
   ),
 
   -- Alex — Vacation — 15 → 19/12/2025
@@ -413,7 +415,8 @@ VALUES
     'INFO',
     NULL,
     'Alex vacation planning',
-    'Alex is on paid vacation from 15/12/2025 to 19/12/2025.'
+    'Alex is on paid vacation from 15/12/2025 to 19/12/2025.',
+    '2025-12-15 09:05:00'
   ),
 
   -- Gaspard — Other leave AM — 18/12/2025
@@ -425,11 +428,12 @@ VALUES
     'INFO',
     NULL,
     'Partial absence: Gaspard doctor appointment',
-    'Gaspard was absent on the morning of 18/12/2025 for a doctor appointment.'
+    'Gaspard was absent on the morning of 18/12/2025 for a doctor appointment.',
+    '2025-12-18 13:00:00'
   )
 ;
 
-INSERT INTO reports (author_id, target_user_id, subject_user_id, type, severity, rule_key, title, body)
+INSERT INTO reports (author_id, target_user_id, subject_user_id, type, severity, rule_key, title, body, created_at)
 VALUES
   -- Armand — Sick leave FULL DAY — 06/01/2026
   (
@@ -440,7 +444,8 @@ VALUES
     'INFO',
     NULL,
     'Absence report: Armand sick leave',
-    'Armand was on sick leave on 06/01/2026.'
+    'Armand was on sick leave on 06/01/2026.',
+    '2026-01-06 17:15:00'
   ),
 
   -- Clément — Sick leave — 19 → 20/01/2026
@@ -452,7 +457,8 @@ VALUES
     'INFO',
     NULL,
     'Absence report: Clément sick leave',
-    'Clément was on sick leave from 19/01/2026 to 20/01/2026.'
+    'Clément was on sick leave from 19/01/2026 to 20/01/2026.',
+    '2026-01-20 17:20:00'
   ),
 
   -- Gaspard — Vacation — 26 → 30/01/2026
@@ -464,7 +470,8 @@ VALUES
     'INFO',
     NULL,
     'Gaspard vacation planning',
-    'Gaspard is on paid vacation from 26/01/2026 to 30/01/2026.'
+    'Gaspard is on paid vacation from 26/01/2026 to 30/01/2026.',
+    '2026-01-26 09:10:00'
   )
 ;
 
