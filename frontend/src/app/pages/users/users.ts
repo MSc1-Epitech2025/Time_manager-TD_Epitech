@@ -139,23 +139,44 @@ export class UsersComponent implements OnInit {
   async selectUser(user: User): Promise<void> {
     this.selectedUser = user;
     this.isCreating = false;
+    
+    // Extract role
+    let roleValue = '';
+    if (user.role) {
+      try {
+        // Parse if it's a JSON string
+        const parsed = JSON.parse(user.role);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          roleValue = String(parsed[0]).toUpperCase();
+        } else {
+          roleValue = String(parsed).toUpperCase();
+        }
+      } catch {
+        // If parsing fails, treat as normal string
+        roleValue = String(user.role).toUpperCase();
+      }
+    }
+    
     this.formData = {
       id: user.id,
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
       phone: user.phone ?? '',
-      role: user.role ?? '',
+      role: roleValue,
       poste: user.poste ?? '',
     };
     
     // Load user teams
     try {
       const teams = await firstValueFrom(this.teamService.listAllTeams());
-      const userTeams = teams.filter((team: Team) => 
-        team.members.some((member: any) => member.id === user.id)
+      const teamsWithMembers = await firstValueFrom(this.teamService.populateTeamsWithMembers(teams));
+      
+      const userTeams = teamsWithMembers.filter((team: Team) => 
+        team.members && team.members.some((member: any) => String(member.id) === String(user.id))
       );
-      this.selectedTeamIds = userTeams.map(t => t.id);
+      
+      this.selectedTeamIds = userTeams.map(t => String(t.id));
       this.originalTeamIds = [...this.selectedTeamIds];
     } catch (error) {
       console.error('Failed to load user teams:', error);
