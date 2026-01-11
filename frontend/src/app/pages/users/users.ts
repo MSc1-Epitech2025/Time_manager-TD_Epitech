@@ -11,6 +11,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatDialog } from '@angular/material/dialog';
 import { UserService, User, CreateUserInput, UpdateUserInput } from '@core/services/user';
+import { TeamService, Team } from '@core/services/team';
 import { DeleteUserModalComponent } from '@modal/delete-user-modal/delete-user-modal';
 import { SecurityValidationService } from '@core/services/security-validation';
 
@@ -38,19 +39,22 @@ export class UsersComponent implements OnInit {
   searchTerm = '';
   users: User[] = [];
   filteredUsers: User[] = [];
+  teams: Team[] = [];
   isLoading = false;
   lastError: string | null = null;
 
   selectedUser: User | null = null;
   isCreating = false;
+  originalTeamId: string = '';
 
-  formData: CreateUserInput & { id?: string } = {
+  formData: CreateUserInput & { id?: string; teamId?: string } = {
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
     role: 'EMPLOYEE',
     poste: '',
+    teamId: '',
   };
 
   constructor(
@@ -61,6 +65,18 @@ export class UsersComponent implements OnInit {
 
   ngOnInit(): void {
     this.refreshUsers();
+    this.loadTeams();
+  }
+
+  loadTeams(): void {
+    this.teamService.listAllTeams().subscribe({
+      next: (teams) => {
+        this.teams = teams;
+      },
+      error: (error) => {
+        console.error('Failed to load teams:', error);
+      },
+    });
   }
 
   refreshUsers(): void {
@@ -108,11 +124,12 @@ export class UsersComponent implements OnInit {
       phone: '',
       role: 'EMPLOYEE',
       poste: '',
+      teamId: '',
     };
     this.scrollFormToTop();
   }
 
-  selectUser(user: User): void {
+  async selectUser(user: User): Promise<void> {
     this.selectedUser = user;
     this.isCreating = false;
     this.formData = {
@@ -123,7 +140,25 @@ export class UsersComponent implements OnInit {
       phone: user.phone ?? '',
       role: user.role ?? 'EMPLOYEE',
       poste: user.poste ?? '',
+      teamId: '',
     };
+    
+    // Load current team
+    try {
+      const teams = await firstValueFrom(this.teamService.listAllTeams());
+      const userTeam = teams.find(team => 
+        team.members.some(member => member.id === user.id)
+      );
+      if (userTeam) {
+        this.formData.teamId = userTeam.id;
+        this.originalTeamId = userTeam.id;
+      } else {
+        this.originalTeamId = '';
+      }
+    } catch (error) {
+      console.error('Failed to load user team:', error);
+    }
+    
     this.scrollFormToTop();
   }
 
@@ -137,10 +172,11 @@ export class UsersComponent implements OnInit {
       phone: '',
       role: 'EMPLOYEE',
       poste: '',
+      teamId: '',
     };
   }
 
-  createUser(): void {
+  async createUser(): Promise<void> {
     if (!this.formData.firstName || !this.formData.lastName || !this.formData.email) {
       alert('Please fill in all required fields (First Name, Last Name, Email)');
       return;
@@ -163,19 +199,30 @@ export class UsersComponent implements OnInit {
     };
 
     this.isLoading = true;
-    this.userService.createUser(input).subscribe({
-      next: (newUser) => {
-        this.refreshUsers();
-        this.cancelForm();
-      },
-      error: (error) => {
-        this.isLoading = false;
-        alert(`Error creating user: ${error?.message ?? 'Unknown error'}`);
-      },
-    });
+    try {
+      const newUser = await firstValueFrom(this.userService.createUser(input));
+      
+      // Add to team if selected
+      if (this.formData.teamId) {
+        try {
+          await firstValueFrom(
+            this.teamService.addTeamMember(this.formData.teamId, newUser.id)
+          );
+        } catch (error) {
+          console.error('Failed to add user to team:', error);
+          alert('User created but failed to add to team');
+        }
+      }
+      
+      this.refreshUsers();
+      this.cancelForm();
+    } catch (error: any) {
+      this.isLoading = false;
+      alert(`Error creating user: ${error?.message ?? 'Unknown error'}`);
+    }
   }
 
-  updateUser(): void {
+  async updateUser(): Promise<void> {
     if (!this.selectedUser) return;
 
     if (!this.formData.firstName || !this.formData.lastName || !this.formData.email) {
@@ -201,16 +248,42 @@ export class UsersComponent implements OnInit {
     };
 
     this.isLoading = true;
-    this.userService.updateUser(input).subscribe({
-      next: (updatedUser) => {
-        this.refreshUsers();
-        this.cancelForm();
-      },
-      error: (error) => {
-        this.isLoading = false;
-        alert(`Error updating user: ${error?.message ?? 'Unknown error'}`);
-      },
-    });
+    try {
+      await firstValueFrom(this.userService.updateUser(input));
+      
+      // Handle team changes
+      const newTeamId = this.formData.teamId || '';
+      if (this.originalTeamId !== newTeamId) {
+        // Remove from old team
+        if (this.originalTeamId) {
+          try {
+            await firstValueFrom(
+              this.teamService.removeTeamMember(this.originalTeamId, this.selectedUser.id)
+            );
+          } catch (error) {
+            console.error('Failed to remove user from old team:', error);
+          }
+        }
+        
+        // Add to new team
+        if (newTeamId) {
+          try {
+            await firstValueFrom(
+              this.teamService.addTeamMember(newTeamId, this.selectedUser.id)
+            );
+          } catch (error) {
+            console.error('Failed to add user to new team:', error);
+            alert('User updated but failed to change team');
+          }
+        }
+      }
+      
+      this.refreshUsers();
+      this.cancelForm();
+    } catch (error: any) {
+      this.isLoading = false;
+      alert(`Error updating user: ${error?.message ?? 'Unknown error'}`);
+    }
   }
 
   deleteUser(): void {
