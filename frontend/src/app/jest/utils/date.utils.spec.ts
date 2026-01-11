@@ -223,115 +223,99 @@ describe('date.utils', () => {
   });
 
   describe('getCurrentQuarter', () => {
-    it('should return Q1 for January', () => {
+    it('Jan → Mar returns Oct (previous year) → Mar', () => {
       const date = new Date(2024, 0, 15);
       const { start, end } = getCurrentQuarter(date);
 
-      expect(start.getMonth()).toBe(0);
-      expect(start.getDate()).toBe(1);
+      expect(start).toEqual(new Date(2023, 9, 1, 0, 0, 0, 0));
+
+      expect(end.getFullYear()).toBe(2024);
       expect(end.getMonth()).toBe(2);
       expect(end.getDate()).toBe(31);
+      expect(end.getHours()).toBe(23);
+      expect(end.getMinutes()).toBe(59);
+      expect(end.getSeconds()).toBe(59);
     });
 
-    it('should return Q1 for February', () => {
-      const date = new Date(2024, 1, 15);
+    it('Feb → Mar returns Oct (previous year) → Mar', () => {
+      const date = new Date(2024, 1, 10);
       const { start, end } = getCurrentQuarter(date);
 
-      expect(start.getMonth()).toBe(0);
+      expect(start.getMonth()).toBe(9);
       expect(end.getMonth()).toBe(2);
     });
 
-    it('should return Q1 for March', () => {
-      const date = new Date(2024, 2, 15);
-      const { start, end } = getCurrentQuarter(date);
-
-      expect(start.getMonth()).toBe(0);
-      expect(end.getMonth()).toBe(2);
-    });
-
-    it('should return Q2 for April', () => {
+    it('Apr → Jun returns Jan → Jun', () => {
       const date = new Date(2024, 3, 15);
       const { start, end } = getCurrentQuarter(date);
 
-      expect(start.getMonth()).toBe(3);
-      expect(start.getDate()).toBe(1);
+      expect(start).toEqual(new Date(2024, 0, 1, 0, 0, 0, 0));
+      expect(end.getFullYear()).toBe(2024);
       expect(end.getMonth()).toBe(5);
       expect(end.getDate()).toBe(30);
+      expect(end.getHours()).toBe(23);
+      expect(end.getMinutes()).toBe(59);
+      expect(end.getSeconds()).toBe(59);
     });
 
-    it('should return Q2 for May', () => {
-      const date = new Date(2024, 4, 15);
+    it('May → Jun returns Jan → Jun', () => {
+      const date = new Date(2024, 4, 5);
       const { start, end } = getCurrentQuarter(date);
 
-      expect(start.getMonth()).toBe(3);
+      expect(start.getMonth()).toBe(0);
       expect(end.getMonth()).toBe(5);
     });
 
-    it('should return Q2 for June', () => {
-      const date = new Date(2024, 5, 15);
-      const { start, end } = getCurrentQuarter(date);
-
-      expect(start.getMonth()).toBe(3);
-      expect(end.getMonth()).toBe(5);
-    });
-
-    it('should return Q3 for July', () => {
+    it('Jul → Sep returns Apr → Sep', () => {
       const date = new Date(2024, 6, 15);
       const { start, end } = getCurrentQuarter(date);
 
-      expect(start.getMonth()).toBe(6);
-      expect(start.getDate()).toBe(1);
+      expect(start).toEqual(new Date(2024, 3, 1, 0, 0, 0, 0));
+
+      expect(end.getFullYear()).toBe(2024);
       expect(end.getMonth()).toBe(8);
       expect(end.getDate()).toBe(30);
+      expect(end.getHours()).toBe(23);
+      expect(end.getMinutes()).toBe(59);
+      expect(end.getSeconds()).toBe(59);
     });
 
-    it('should return Q3 for August', () => {
-      const date = new Date(2024, 7, 15);
+    it('Aug → Sep returns Apr → Sep', () => {
+      const date = new Date(2024, 7, 20);
       const { start, end } = getCurrentQuarter(date);
 
-      expect(start.getMonth()).toBe(6);
+      expect(start.getMonth()).toBe(3);
       expect(end.getMonth()).toBe(8);
     });
 
-    it('should return Q3 for September', () => {
-      const date = new Date(2024, 8, 15);
+    it('Oct → Dec returns Jul → Dec', () => {
+      const date = new Date(2024, 9, 10);
       const { start, end } = getCurrentQuarter(date);
 
-      expect(start.getMonth()).toBe(6);
-      expect(end.getMonth()).toBe(8);
-    });
+      expect(start).toEqual(new Date(2024, 6, 1, 0, 0, 0, 0));
 
-    it('should return Q4 for October', () => {
-      const date = new Date(2024, 9, 15);
-      const { start, end } = getCurrentQuarter(date);
-
-      expect(start.getMonth()).toBe(9);
-      expect(start.getDate()).toBe(1);
+      expect(end.getFullYear()).toBe(2024);
       expect(end.getMonth()).toBe(11);
       expect(end.getDate()).toBe(31);
+      expect(end.getHours()).toBe(23);
+      expect(end.getMinutes()).toBe(59);
+      expect(end.getSeconds()).toBe(59);
     });
 
-    it('should return Q4 for November', () => {
-      const date = new Date(2024, 10, 15);
+    it('Nov → Dec returns Jul → Dec', () => {
+      const date = new Date(2024, 10, 25);
       const { start, end } = getCurrentQuarter(date);
 
-      expect(start.getMonth()).toBe(9);
+      expect(start.getMonth()).toBe(6);
       expect(end.getMonth()).toBe(11);
     });
 
-    it('should return Q4 for December', () => {
-      const date = new Date(2024, 11, 15);
-      const { start, end } = getCurrentQuarter(date);
-
-      expect(start.getMonth()).toBe(9);
-      expect(end.getMonth()).toBe(11);
-    });
-
-    it('should use current date when no parameter provided', () => {
+    it('uses current date if no argument provided', () => {
       const { start, end } = getCurrentQuarter();
 
       expect(start).toBeInstanceOf(Date);
       expect(end).toBeInstanceOf(Date);
+      expect(start.getTime()).toBeLessThan(end.getTime());
     });
   });
 
