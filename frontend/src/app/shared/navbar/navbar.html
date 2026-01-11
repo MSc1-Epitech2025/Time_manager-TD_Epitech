@@ -8,6 +8,12 @@
 
     <nav class="menu">
 
+                <!-- today -->
+        <button class="menu-btn" *ngIf="isManager()" [routerLink]="['/app/today']" routerLinkActive="active">
+            <mat-icon>today</mat-icon>
+            Today
+        </button>
+
         <!-- admin -->
         <button class="menu-btn" *ngIf="isAdmin()" [routerLink]="['/app/enterprise']" routerLinkActive="active">
             <mat-icon>admin_panel_settings</mat-icon>

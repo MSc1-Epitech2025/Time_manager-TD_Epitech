@@ -1,0 +1,160 @@
+<div class="today-dashboard">
+  <main class="main-content">
+    <!-- Header Card -->
+    <mat-card class="header-card" appearance="outlined">
+      <mat-card-content>
+        <div class="header-section">
+          <div class="header-info">
+            <h1>Today's Activity</h1>
+            <p>Real-time employee presence monitoring</p>
+          </div>
+          <div class="header-stats">
+            <div class="stat-box present">
+              <mat-icon>check_circle</mat-icon>
+              <div class="stat-content">
+                <span class="stat-label">Present</span>
+                <span class="stat-value">{{ presentCount }}/{{ totalEmployees }}</span>
+              </div>
+            </div>
+            <div class="stat-box absent">
+              <mat-icon>cancel</mat-icon>
+              <div class="stat-content">
+                <span class="stat-label">Absent</span>
+                <span class="stat-value">{{ absentCount }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Filter Card -->
+    <mat-card class="filter-card" appearance="outlined">
+      <mat-card-content>
+        <mat-form-field appearance="outline" class="team-filter">
+          <mat-label>Team</mat-label>
+          <mat-select [(ngModel)]="selectedTeam" (selectionChange)="onTeamChange()">
+            <mat-option value="">All Teams</mat-option>
+            <mat-option *ngFor="let team of teams" [value]="team">
+              {{ team }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Main Content Area -->
+    <div class="dashboard-content">
+      <!-- Chart and List Section -->
+      <div class="content-row">
+        <!-- Chart Card -->
+        <mat-card class="chart-card" appearance="outlined">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>bar_chart</mat-icon>
+              <span>Present Employees</span>
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div *ngIf="loading" class="loading-spinner">
+              <mat-icon class="spin">refresh</mat-icon>
+              <p>Loading data...</p>
+            </div>
+            <div *ngIf="!loading" class="chart-wrapper">
+              <app-kpi-bar-chart [data]="barChartData" [selectedKpi]="'today'">
+              </app-kpi-bar-chart>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Present List Card -->
+        <mat-card class="list-card" appearance="outlined">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>people</mat-icon>
+              <span>Present Now</span>
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div *ngIf="loading" class="loading-spinner">
+              <mat-icon class="spin">refresh</mat-icon>
+              <p>Loading data...</p>
+            </div>
+
+            <div *ngIf="!loading && presentEmployees.length === 0" class="empty-state">
+              <mat-icon>info</mat-icon>
+              <p>No employees present</p>
+            </div>
+
+            <div *ngIf="!loading && presentEmployees.length > 0" class="employee-list-wrapper">
+              <div class="employee-list">
+                <div class="employee-item" *ngFor="let emp of presentEmployees; let i = index">
+                  <div class="rank">{{ i + 1 }}</div>
+                  <div class="employee-info">
+                    <span class="name">{{ emp.name }}</span>
+                    <span class="team">{{ emp.team }}</span>
+                  </div>
+                  <mat-chip class="time-chip">{{ emp.clockIn }}</mat-chip>
+                </div>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <!-- Details Table Section -->
+      <mat-card class="details-card" appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>table_chart</mat-icon>
+            <span>Today's Details</span>
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div *ngIf="loading" class="loading-spinner">
+            <mat-icon class="spin">refresh</mat-icon>
+            <p>Loading data...</p>
+          </div>
+
+          <div *ngIf="!loading" class="table-wrapper">
+            <table class="details-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Team</th>
+                  <th>Clock In</th>
+                  <th>Clock Out</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let emp of filteredEmployees">
+                  <td>{{ emp.name }}</td>
+                  <td>
+                    <mat-chip class="team-chip">{{ emp.team }}</mat-chip>
+                  </td>
+                  <td>
+                    <span class="time-badge">{{ emp.clockIn }}</span>
+                  </td>
+                  <td>
+                    <span class="time-badge" *ngIf="emp.clockOut">{{ emp.clockOut }}</span>
+                    <span class="time-badge muted" *ngIf="!emp.clockOut">-</span>
+                  </td>
+                  <td>
+                    <mat-chip class="status-chip present" *ngIf="emp.isPresent">Present</mat-chip>
+                    <mat-chip class="status-chip absent" *ngIf="!emp.isPresent">Left</mat-chip>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div *ngIf="filteredEmployees.length === 0" class="empty-state">
+              <mat-icon>info</mat-icon>
+              <p>No activity recorded today</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </main>
+</div>

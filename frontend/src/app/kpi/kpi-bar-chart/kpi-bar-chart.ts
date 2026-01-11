@@ -92,9 +92,29 @@ export class KpiBarChartComponent implements AfterViewInit, OnChanges {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        layout: {
+          padding: {
+            top: 10,
+            right: 10,
+            bottom: 10,
+            left: 10
+          }
+        },
         plugins: {
           legend: {
             display: false
+          },
+          title: {
+            display: true,
+            text: this.title,
+            color: '#f9fafb',
+            font: {
+              size: 16,
+              weight: 'bold'
+            },
+            padding: {
+              bottom: 20
+            }
           },
           tooltip: {
             callbacks: {
@@ -128,8 +148,8 @@ export class KpiBarChartComponent implements AfterViewInit, OnChanges {
           x: {
             ticks: {
               color: '#9ca3af',
-              maxRotation: 45,
-              minRotation: 45
+              maxRotation: 0,
+              minRotation: 0
             },
             grid: {
               display: false
