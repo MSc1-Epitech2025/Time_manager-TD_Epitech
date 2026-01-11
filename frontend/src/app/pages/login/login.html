@@ -5,34 +5,31 @@
         <app-animated-bubbles [widthFactor]="0.55" [bubbleCount]="8" [enableMouseInteraction]="true"></app-animated-bubbles>
 
         <div class="welcome">
-            <h2>Login Page</h2>
-            <p>Sign in to your account</p>
+            <h2>DaTrack Portal</h2>
+            <p>PrimeBank Secure Access</p>
         </div>
     </aside>
-
-
 
     <section class="panel">
         <div class="panel-head">
             <div class="greet">
-                <p class="hello">Hello !</p>
-                <h3 class="accent">Good Morning</h3>
-                <p><strong>Login</strong> your account</p>
+                <p class="hello">Welcome Back</p>
+                <h3 class="accent">PrimeBank Staff</h3>
+                <p><strong>Authenticate</strong> to access your dashboard</p>
             </div>
         </div>
 
         <mat-card class="auth-card mat-elevation-z8">
             <form [formGroup]="form" (ngSubmit)="submit()">
                 <mat-form-field appearance="outline" class="full">
-                    <mat-label>Email address</mat-label>
-                    <input matInput type="email" formControlName="email" placeholder="you@notyou.com">
-                    <mat-icon matSuffix>mail</mat-icon>
-                    <mat-error *ngIf="email?.hasError('required')">Email is required</mat-error>
-                    <mat-error *ngIf="email?.hasError('email')">Invalid email</mat-error>
+                    <mat-label>Professional Email</mat-label>
+                    <input matInput type="email" formControlName="email" placeholder="name@primebank.eu">
+                    <mat-icon matSuffix>badge</mat-icon> <mat-error *ngIf="email?.hasError('required')">Email is required</mat-error>
+                    <mat-error *ngIf="email?.hasError('email')">Invalid email format</mat-error>
                 </mat-form-field>
 
                 <mat-form-field appearance="outline" class="full">
-                    <mat-label>Password</mat-label>
+                    <mat-label>Secure Password</mat-label>
                     <input matInput [type]="hidePwd() ? 'password' : 'text'" formControlName="password">
                     <button type="button" mat-icon-button matSuffix (click)="hidePwd.set(!hidePwd())"
                         aria-label="Afficher/Masquer">
@@ -44,12 +41,12 @@
 
 
                 <button class="cta full" mat-flat-button color="primary" type="submit" [disabled]="loading()">
-                    <ng-container *ngIf="!loading(); else loadingTpl">SUBMIT</ng-container>
+                    <ng-container *ngIf="!loading(); else loadingTpl">SECURE CONNECT</ng-container>
                 </button>
                 <ng-template #loadingTpl>
                     <span class="spinner">
                         <mat-progress-spinner diameter="18" mode="indeterminate"></mat-progress-spinner>
-                        <span>Connecting…</span>
+                        <span>Authenticating…</span>
                     </span>
                 </ng-template>
 
@@ -58,7 +55,7 @@
                 </button>
 
                 <div class="divider">
-                    <span>OR</span>
+                    <span>Use SSO</span>
                 </div>
 
                 <button class="microsoft-btn full" mat-stroked-button type="button" (click)="loginWithMicrosoft()">
@@ -68,7 +65,7 @@
                         <rect y="11" width="10" height="10" fill="#00A4EF"/>
                         <rect x="11" y="11" width="10" height="10" fill="#FFB900"/>
                     </svg>
-                    Sign in with Microsoft
+                    PrimeBank SSO (Microsoft)
                 </button>
             </form>
         </mat-card>
