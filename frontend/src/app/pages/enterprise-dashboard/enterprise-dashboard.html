@@ -35,7 +35,7 @@
               </div>
               <div class="kpi-btn-content">
                 <span class="kpi-btn-label">Attendance</span>
-                <span class="kpi-btn-value" *ngIf="(attendanceStats?.present || 0) > 0">{{ attendanceStats?.present }}</span>
+                <span class="kpi-btn-value">{{ attendanceStats?.present || 0 }}/{{ users.length || 0 }}</span>
               </div>
             </button>
             <button mat-raised-button class="kpi-stat-btn" [class.active]="selectedKpi === 'absenteeism'"

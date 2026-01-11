@@ -194,9 +194,9 @@
               <div class="kpi-bar-item">
                 <div class="kpi-bar-header">
                   <span class="kpi-bar-label">Avg Delay</span>
-                  <span class="kpi-bar-value">{{ employeeKpiData.punctuality.avgDelayMinutes | number:'1.0-0' }}min</span>
+                  <span class="kpi-bar-value">{{ Math.max(0, employeeKpiData.punctuality.avgDelayMinutes) | number:'1.0-0' }}min</span>
                 </div>
-                <mat-progress-bar class="warning" mode="determinate" [value]="Math.min((employeeKpiData.punctuality.avgDelayMinutes / 30) * 100, 100)"></mat-progress-bar>
+                <mat-progress-bar class="warning" mode="determinate" [value]="Math.min((Math.max(0, employeeKpiData.punctuality.avgDelayMinutes) / 30) * 100, 100)"></mat-progress-bar>
               </div>
 
               <!-- Absence Days -->
