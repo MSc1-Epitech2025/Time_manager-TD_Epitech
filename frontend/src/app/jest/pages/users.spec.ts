@@ -6,6 +6,7 @@ import { SecurityValidationService } from '@core/services/security-validation';
 import { MatDialog } from '@angular/material/dialog';
 import { of, throwError } from 'rxjs';
 import { ElementRef } from '@angular/core';
+import { AuthService } from '@core/services/auth';
 
 describe('UsersComponent – Jest (100% coverage)', () => {
   let component: UsersComponent;
@@ -22,6 +23,10 @@ describe('UsersComponent – Jest (100% coverage)', () => {
     listAllTeams: jest.Mock;
     addTeamMember: jest.Mock;
     removeTeamMember: jest.Mock;
+  };
+
+  let authService: {
+    session: any;
   };
 
   let securityService: {
@@ -65,6 +70,14 @@ describe('UsersComponent – Jest (100% coverage)', () => {
       removeTeamMember: jest.fn().mockReturnValue(of({})),
     };
 
+    authService = {
+      session: {
+        user: {
+          id: '999',
+        },
+      },
+    };
+
     securityService = {
       validateUserCreation: jest.fn(),
       validateUserUpdate: jest.fn(),
@@ -81,6 +94,7 @@ describe('UsersComponent – Jest (100% coverage)', () => {
         { provide: TeamService, useValue: teamService },
         { provide: SecurityValidationService, useValue: securityService },
         { provide: MatDialog, useValue: dialog },
+        { provide: AuthService, useValue: authService },
       ],
     }).compileComponents();
 
@@ -188,6 +202,7 @@ describe('UsersComponent – Jest (100% coverage)', () => {
     userService.createUser.mockReturnValue(of(mockUsers[0]));
     userService.getAllUsers.mockReturnValue(of(mockUsers));
 
+    component.selectedTeamIds = ['team-1'];
     component.formData = {
       firstName: 'A',
       lastName: 'B',
@@ -251,6 +266,8 @@ describe('UsersComponent – Jest (100% coverage)', () => {
     userService.getAllUsers.mockReturnValue(of(mockUsers));
 
     component.selectedUser = mockUsers[0];
+    component.selectedTeamIds = ['team-1'];
+    component.originalTeamIds = ['team-1'];
     component.formData = { ...mockUsers[0] };
 
     await component.updateUser();
@@ -259,6 +276,7 @@ describe('UsersComponent – Jest (100% coverage)', () => {
     expect(refreshSpy).toHaveBeenCalled();
     expect(cancelSpy).toHaveBeenCalled();
   });
+
 
   it('updateUser error', async () => {
     jest.spyOn(window, 'alert').mockImplementation();
@@ -370,7 +388,7 @@ describe('UsersComponent – Jest (100% coverage)', () => {
     await component.selectUser(userWithoutOptionalFields);
 
     expect(component.formData.phone).toBe('');
-    expect(component.formData.role).toBe('EMPLOYEE');
+    expect(component.formData.role).toBe('');
     expect(component.formData.poste).toBe('');
   });
 
@@ -396,10 +414,10 @@ describe('UsersComponent – Jest (100% coverage)', () => {
 
   it('createUser error without message shows fallback alert', async () => {
     const alertSpy = jest.spyOn(window, 'alert').mockImplementation();
-    jest.spyOn(console, 'error').mockImplementation();
 
     userService.createUser.mockReturnValue(throwError(() => ({})));
 
+    component.selectedTeamIds = ['team-1'];
     component.formData = {
       firstName: 'A',
       lastName: 'B',
@@ -442,11 +460,12 @@ describe('UsersComponent – Jest (100% coverage)', () => {
 
   it('updateUser error without message shows fallback alert', async () => {
     const alertSpy = jest.spyOn(window, 'alert').mockImplementation();
-    jest.spyOn(console, 'error').mockImplementation();
 
     userService.updateUser.mockReturnValue(throwError(() => ({})));
 
     component.selectedUser = mockUsers[0];
+    component.selectedTeamIds = ['team-1'];
+    component.originalTeamIds = ['team-1'];
     component.formData = { ...mockUsers[0] };
 
     await component.updateUser();

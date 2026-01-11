@@ -53,7 +53,7 @@ export class TodayDashboard implements OnInit {
   
   barChartData: BarChartData[] = [];
   
-  private userRole: string = '';
+  userRole: string = '';
 
   get presentEmployees(): TodayEmployee[] {
     return this.filteredEmployees.filter(e => e.isPresent);
@@ -83,9 +83,15 @@ export class TodayDashboard implements OnInit {
 
   private async loadTeamsAndUsers(): Promise<void> {
     try {
-      const teams = await firstValueFrom(
-        this.teamService.listTeams()
-      );
+      let teams;
+      
+      if (this.userRole === 'ADMIN') {
+        teams = await firstValueFrom(this.teamService.listAllTeams());
+      } else if (this.userRole === 'MANAGER') {
+        teams = await firstValueFrom(this.teamService.listMyTeamMembers());
+      } else {
+        teams = await firstValueFrom(this.teamService.listMyTeams());
+      }
 
       const teamsWithMembers = await firstValueFrom(
         this.teamService.populateTeamsWithMembers(teams)
@@ -96,12 +102,7 @@ export class TodayDashboard implements OnInit {
       if (this.userRole === 'ADMIN') {
         this.teams = this.allTeams.map(t => t.name);
       } else if (this.userRole === 'MANAGER') {
-        const userId = this.auth.session?.user.id;
-        const userTeams = this.allTeams.filter(team =>
-          team.members.some((member: any) => member.id === userId)
-        );
-        this.teams = userTeams.map(t => t.name);
-        this.allTeams = userTeams;
+        this.teams = this.allTeams.map(t => t.name);
       }
       
       const usersMap = new Map<string, any>();

@@ -104,7 +104,7 @@
               <mat-form-field appearance="outline">
                 <mat-label>Email</mat-label>
                 <input matInput type="email" [(ngModel)]="formData.email" name="email" 
-                  required email pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}" #emailField="ngModel" />
+                  required email pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}" #emailField="ngModel" [disabled]="isEditingCurrentUser() || isSelectedUserAdmin()" />
                 <mat-icon matPrefix>email</mat-icon>
                 <mat-error *ngIf="emailField.invalid && emailField.touched">
                   <span *ngIf="emailField.errors?.['required']">Email is required</span>
@@ -120,23 +120,39 @@
 
               <mat-form-field appearance="outline">
                 <mat-label>Role</mat-label>
-                <mat-select [(ngModel)]="formData.role" name="role">
+                <mat-select [(ngModel)]="formData.role" name="role" required [disabled]="isEditingCurrentUser() || isSelectedUserAdmin()">
+                  <mat-option value="">Select a role</mat-option>
                   <mat-option value="EMPLOYEE">Employee</mat-option>
                   <mat-option value="MANAGER">Manager</mat-option>
+                  <mat-option value="ADMIN" *ngIf="isSelectedUserAdmin()" [disabled]="true">Admin</mat-option>
                 </mat-select>
                 <mat-icon matPrefix>badge</mat-icon>
               </mat-form-field>
 
-              <mat-form-field appearance="outline">
-                <mat-label>Team (Optional)</mat-label>
-                <mat-select [(ngModel)]="formData.teamId" name="teamId">
-                  <mat-option value="">No Team</mat-option>
-                  <mat-option *ngFor="let team of teams" [value]="team.id">
+              <!-- Teams Selection -->
+              <div class="teams-section">
+                <div class="teams-header">
+                  <mat-icon>groups</mat-icon>
+                  <span>Teams *</span>
+                </div>
+
+                <div class="teams-list" *ngIf="teams.length > 0">
+                  <mat-checkbox 
+                    *ngFor="let team of teams" 
+                    [checked]="isTeamSelected(team.id)"
+                    (change)="toggleTeam(team.id)"
+                    class="team-checkbox">
                     {{ team.name }}
-                  </mat-option>
-                </mat-select>
-                <mat-icon matPrefix>groups</mat-icon>
-              </mat-form-field>
+                  </mat-checkbox>
+                </div>
+
+                <div class="no-teams-message" *ngIf="teams.length === 0">
+                  <p>No created team, please create one</p>
+                  <button mat-button class="link-btn" (click)="navigateToTeamManagement()">
+                    Go to Team Management
+                  </button>
+                </div>
+              </div>
 
               <mat-form-field appearance="outline">
                 <mat-label>Position</mat-label>
@@ -146,13 +162,13 @@
 
               <div class="form-actions">
                 <button mat-raised-button class="btn-create" type="button" *ngIf="isCreating"
-                  [disabled]="!userForm.valid || isLoading" (click)="createUser()">
+                  [disabled]="!userForm.valid || isLoading || !isFormValid()" (click)="createUser()">
                   <mat-icon>add</mat-icon>
                   <span>Create</span>
                 </button>
 
                 <button mat-raised-button class="btn-update" type="button" *ngIf="!isCreating"
-                  [disabled]="!userForm.valid || isLoading" (click)="updateUser()">
+                  [disabled]="!userForm.valid || isLoading || !isFormValid()" (click)="updateUser()">
                   <mat-icon>save</mat-icon>
                   <span>Update</span>
                 </button>
