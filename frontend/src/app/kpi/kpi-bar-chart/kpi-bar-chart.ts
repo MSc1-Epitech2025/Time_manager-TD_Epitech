@@ -17,7 +17,7 @@ export class KpiBarChartComponent implements AfterViewInit, OnChanges {
 
   @ViewChild('barChart', { static: false }) chartRef!: ElementRef<HTMLCanvasElement>;
   @Input() data: BarChartData[] = [];
-  @Input() selectedKpi: 'absenteeism' | 'attendance' | 'productivity' = 'absenteeism';
+  @Input() selectedKpi: 'absenteeism' | 'attendance' | 'productivity' | 'today' = 'absenteeism';
 
   chart?: Chart;
   title = '';
@@ -38,6 +38,7 @@ export class KpiBarChartComponent implements AfterViewInit, OnChanges {
 
   updateTitle() {
     switch (this.selectedKpi) {
+      case 'today': this.title = 'Present Today'; break;
       case 'absenteeism': this.title = 'Absences by Person'; break;
       case 'attendance': this.title = 'Attendance by Person'; break;
       case 'productivity': this.title = 'Work Hours by Person'; break;
@@ -46,6 +47,7 @@ export class KpiBarChartComponent implements AfterViewInit, OnChanges {
 
   getBarColor() {
     switch (this.selectedKpi) {
+      case 'today': return '#3b82f6';
       case 'absenteeism': return '#ef4444';
       case 'attendance': return '#22c55e';
       case 'productivity': return '#f472b6';

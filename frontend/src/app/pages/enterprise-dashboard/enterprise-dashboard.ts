@@ -61,12 +61,12 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
   allUsersKpi: any[] = [];
   allTeams: any[] = [];
 
-  private _selectedKpi: 'absenteeism' | 'attendance' | 'productivity' = 'attendance';
+  private _selectedKpi: 'absenteeism' | 'attendance' | 'productivity' | 'today' = 'today';
   
-  get selectedKpi(): 'absenteeism' | 'attendance' | 'productivity' {
+  get selectedKpi(): 'absenteeism' | 'attendance' | 'productivity' | 'today' {
     return this._selectedKpi;
   }
-  set selectedKpi(value: 'absenteeism' | 'attendance' | 'productivity') {
+  set selectedKpi(value: 'absenteeism' | 'attendance' | 'productivity' | 'today') {
     this._selectedKpi = value;
     this.updateBarChartData();
   }
@@ -119,6 +119,10 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
     present: boolean;
     late?: boolean;
   }> = [];
+
+  todayStats: { present: number; absent: number } | null = null;
+  todayPresentList: Array<{ name: string; team: string; clockIn: string; clockOut?: string; isPresent: boolean }> = [];
+  todayChartData: BarChartData[] = [];
 
   productivityStats: {
     totalHours: number;
@@ -471,7 +475,7 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
     this.filteredByPeriod = this.filterByPeriod(this.users);
   }
 
-  selectKpi(kpi: 'absenteeism' | 'attendance' | 'productivity') {
+  selectKpi(kpi: 'absenteeism' | 'attendance' | 'productivity' | 'today') {
     this.selectedKpi = kpi;
     this.loadKpiData();
   }
@@ -483,6 +487,7 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
     this.loadAbsenteeismData(filtered);
     this.loadAttendanceData(filtered);
     this.loadProductivityData(filtered);
+    this.loadTodayData();
   }
 
   loadAbsenteeismData(
@@ -651,6 +656,9 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
 
   private updateBarChartData() {
     switch (this.selectedKpi) {
+      case 'today':
+        this.barChartData = this.todayChartData;
+        break;
       case 'absenteeism':
         this.barChartData = this.absenteeismChartData;
         break;
@@ -660,6 +668,101 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
       case 'productivity':
         this.barChartData = this.productivityChartData;
         break;
+    }
+  }
+
+  private async loadTodayData() {
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+    
+    const fromStr = todayStart.toISOString();
+    const toStr = todayEnd.toISOString();
+
+    const presentList: Array<{ name: string; team: string; clockIn: string; clockOut?: string; isPresent: boolean; userId: string }> = [];
+
+    // Load clocks for all users
+    for (const user of this.users) {
+      if (this._selectedTeam && user.equipe !== this._selectedTeam) continue;
+
+      try {
+        const clocksQuery = `
+          query($userId: ID!, $from: String, $to: String) {
+            clocksForUser(userId: $userId, from: $from, to: $to) {
+              id
+              kind
+              at
+            }
+          }
+        `;
+
+        const response = await firstValueFrom(
+          this.http.post<GraphQLResponse<{ clocksForUser: any[] }>>(
+            this.GRAPHQL_ENDPOINT,
+            { query: clocksQuery, variables: { userId: user.id, from: fromStr, to: toStr } },
+            { withCredentials: true }
+          )
+        );
+
+        const clocks = response?.data?.clocksForUser || [];
+        const inClocks = clocks.filter(c => c.kind === 'IN').sort((a, b) => 
+          new Date(a.at).getTime() - new Date(b.at).getTime()
+        );
+        const outClocks = clocks.filter(c => c.kind === 'OUT').sort((a, b) => 
+          new Date(a.at).getTime() - new Date(b.at).getTime()
+        );
+
+        const isPresent = inClocks.length > outClocks.length;
+        const firstIn = inClocks[0];
+        const lastOut = outClocks.length > 0 ? outClocks[outClocks.length - 1] : null;
+
+        if (firstIn) {
+          const clockInTime = new Date(firstIn.at).toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+
+          const clockOutTime = lastOut ? new Date(lastOut.at).toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit'
+          }) : undefined;
+
+          presentList.push({
+            name: user.nom,
+            team: user.equipe,
+            clockIn: clockInTime,
+            clockOut: clockOutTime,
+            isPresent: isPresent,
+            userId: user.id
+          });
+        }
+      } catch (error) {
+        // skip error
+      }
+    }
+
+    this.todayPresentList = presentList.sort((a, b) => {
+      if (a.isPresent && !b.isPresent) return -1;
+      if (!a.isPresent && b.isPresent) return 1;
+      return a.name.localeCompare(b.name);
+    });
+
+    this.todayStats = {
+      present: presentList.filter(p => p.isPresent).length,
+      absent: this.users.length - presentList.length
+    };
+
+    // Chart data
+    this.todayChartData = presentList
+      .filter(p => p.isPresent)
+      .map(p => ({ 
+        name: p.name.split(' ')[0],
+        value: 1 
+      }))
+      .slice(0, 10);
+
+    if (this.selectedKpi === 'today') {
+      this.barChartData = this.todayChartData;
     }
   }
 

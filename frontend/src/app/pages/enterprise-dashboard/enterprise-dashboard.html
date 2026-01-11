@@ -28,6 +28,16 @@
       <mat-card-content>
         <div class="controls-wrapper">
           <div class="kpi-tabs">
+            <button mat-raised-button class="kpi-stat-btn" [class.active]="selectedKpi === 'today'"
+              (click)="selectKpi('today')">
+              <div class="kpi-btn-icon">
+                <mat-icon>today</mat-icon>
+              </div>
+              <div class="kpi-btn-content">
+                <span class="kpi-btn-label">Today</span>
+                <span class="kpi-btn-value">{{ todayStats?.present || 0 }}/{{ users.length || 0 }}</span>
+              </div>
+            </button>
             <button mat-raised-button class="kpi-stat-btn" [class.active]="selectedKpi === 'attendance'"
               (click)="selectKpi('attendance')">
               <div class="kpi-btn-icon">
@@ -98,6 +108,7 @@
             <mat-card-title>
               <mat-icon>pie_chart</mat-icon>
               <span>{{
+                selectedKpi === 'today' ? 'Today' :
                 selectedKpi === 'attendance' ? 'Attendance' :
                 selectedKpi === 'absenteeism' ? 'Absenteeism' :
                 'Productivity'
@@ -118,7 +129,9 @@
             <mat-card-title>
               <mat-icon>leaderboard</mat-icon>
               <span>{{
-                selectedKpi === 'absenteeism'
+                selectedKpi === 'today'
+                ? 'Present Today'
+                : selectedKpi === 'absenteeism'
                 ? 'Absenteeism Ranking'
                 : selectedKpi === 'attendance'
                 ? 'Attendance Ranking'
@@ -133,6 +146,17 @@
             </div>
 
             <div *ngIf="!loading" class="top-list-content">
+              <!-- Today List -->
+              <div *ngIf="selectedKpi === 'today'">
+                <div *ngIf="todayPresentList.length > 0; else noData" class="ranking-list">
+                  <div class="ranking-item" *ngFor="let item of todayPresentList; let i = index">
+                    <span class="rank">{{ i + 1 }}</span>
+                    <span class="name">{{ item.name }}</span>
+                    <mat-chip class="value-chip">{{ item.clockIn }}</mat-chip>
+                  </div>
+                </div>
+              </div>
+
               <!-- Absenteeism List -->
               <div *ngIf="selectedKpi === 'absenteeism'">
                 <div *ngIf="topAbsences.length > 0; else noData" class="ranking-list">
@@ -183,6 +207,7 @@
           <mat-card-title>
             <mat-icon>table_chart</mat-icon>
             <span>{{
+              selectedKpi === 'today' ? 'Today Details' :
               selectedKpi === 'productivity' ? 'Work Hours Details' :
               selectedKpi === 'attendance' ? 'Attendance Details' :
               'Absenteeism Details'
@@ -193,6 +218,40 @@
           <div class="loading-spinner" *ngIf="loading">
             <mat-icon class="spin">refresh</mat-icon>
             <p>Loading data...</p>
+          </div>
+
+          <!-- Today Table -->
+          <div *ngIf="!loading && selectedKpi === 'today'" class="table-wrapper">
+            <table class="details-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Team</th>
+                  <th>Clock In</th>
+                  <th>Clock Out</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of todayPresentList">
+                  <td>{{ item.name }}</td>
+                  <td>
+                    <mat-chip class="team-chip">{{ item.team }}</mat-chip>
+                  </td>
+                  <td>
+                    <span class="time-badge">{{ item.clockIn }}</span>
+                  </td>
+                  <td>
+                    <span class="time-badge" *ngIf="item.clockOut">{{ item.clockOut }}</span>
+                    <span class="time-badge" *ngIf="!item.clockOut">-</span>
+                  </td>
+                  <td>
+                    <mat-chip class="presence-chip" *ngIf="item.isPresent">Present</mat-chip>
+                    <mat-chip class="absence-chip" *ngIf="!item.isPresent">Absent</mat-chip>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
 
           <!-- Productivity Table -->
