@@ -326,7 +326,7 @@ export class TeamManagement implements OnInit {
   }
 
   private updateFilteredUsers(): void {
-    const input = this.newMemberInput.trim().toLowerCase();
+    const input = (this.newMemberInput || '').trim().toLowerCase();
     const currentMemberIds = new Set(this.formData.members.map((m) => String(m.id)));
 
     this.filteredUsers = new Observable((observer) => {
