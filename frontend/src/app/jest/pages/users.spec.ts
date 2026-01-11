@@ -371,7 +371,7 @@ describe('UsersComponent – Jest (100% coverage)', () => {
       lastName: 'B',
       email: 'a@b.com',
       phone: '',
-      role: '',        // 👈 clé du test
+      role: '',        // test key
       poste: '',
     };
 

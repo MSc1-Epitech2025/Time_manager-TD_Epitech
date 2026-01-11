@@ -7,16 +7,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatChipsModule } from '@angular/material/chips';
-import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { environment } from '@environments/environment';
 import { AuthService } from '@core/services/auth';
+import { TeamService } from '@core/services/team';
+import { ClockService } from '@core/services/clock';
 import { KpiBarChartComponent, BarChartData } from '@kpi/kpi-bar-chart/kpi-bar-chart';
-
-interface GraphQLResponse<T> {
-  data: T;
-  errors?: any[];
-}
 
 interface TodayEmployee {
   id: string;
@@ -58,7 +53,6 @@ export class TodayDashboard implements OnInit {
   
   barChartData: BarChartData[] = [];
   
-  private readonly GRAPHQL_ENDPOINT = environment.GRAPHQL_ENDPOINT;
   private userRole: string = '';
 
   get presentEmployees(): TodayEmployee[] {
@@ -66,8 +60,9 @@ export class TodayDashboard implements OnInit {
   }
 
   constructor(
-    private http: HttpClient,
-    private auth: AuthService
+    private auth: AuthService,
+    private teamService: TeamService,
+    private clockService: ClockService
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -87,62 +82,42 @@ export class TodayDashboard implements OnInit {
   }
 
   private async loadTeamsAndUsers(): Promise<void> {
-    const teamsQuery = `
-      query {
-        teams {
-          id
-          name
-          members {
-            id
-            firstName
-            lastName
-            email
-          }
-        }
-      }
-    `;
-
     try {
-      const response = await firstValueFrom(
-        this.http.post<GraphQLResponse<{ teams: any[] }>>(
-          this.GRAPHQL_ENDPOINT,
-          { query: teamsQuery },
-          { withCredentials: true }
-        )
+      const teams = await firstValueFrom(
+        this.teamService.listTeams()
       );
 
-      if (response?.data?.teams) {
-        this.allTeams = response.data.teams;
-        
-        // Filter teams based on role
-        if (this.userRole === 'ADMIN') {
-          this.teams = this.allTeams.map(t => t.name);
-        } else if (this.userRole === 'MANAGER') {
-          // Filter only teams where user is a member
-          const userId = this.auth.session?.user.id;
-          const userTeams = this.allTeams.filter(team =>
-            team.members.some((member: any) => member.id === userId)
-          );
-          this.teams = userTeams.map(t => t.name);
-          this.allTeams = userTeams;
-        }
-        
-        // Build users list
-        const usersMap = new Map<string, any>();
-        this.allTeams.forEach(team => {
-          team.members.forEach((member: any) => {
-            if (!usersMap.has(member.id)) {
-              usersMap.set(member.id, {
-                id: member.id,
-                name: `${member.firstName} ${member.lastName}`,
-                team: team.name,
-              });
-            }
-          });
-        });
-        
-        this.allUsers = Array.from(usersMap.values());
+      const teamsWithMembers = await firstValueFrom(
+        this.teamService.populateTeamsWithMembers(teams)
+      );
+
+      this.allTeams = teamsWithMembers;
+      
+      if (this.userRole === 'ADMIN') {
+        this.teams = this.allTeams.map(t => t.name);
+      } else if (this.userRole === 'MANAGER') {
+        const userId = this.auth.session?.user.id;
+        const userTeams = this.allTeams.filter(team =>
+          team.members.some((member: any) => member.id === userId)
+        );
+        this.teams = userTeams.map(t => t.name);
+        this.allTeams = userTeams;
       }
+      
+      const usersMap = new Map<string, any>();
+      this.allTeams.forEach(team => {
+        team.members.forEach((member: any) => {
+          if (!usersMap.has(member.id)) {
+            usersMap.set(member.id, {
+              id: member.id,
+              name: member.name,
+              team: team.name,
+            });
+          }
+        });
+      });
+      
+      this.allUsers = Array.from(usersMap.values());
     } catch (error) {
       console.error('Failed to load teams:', error);
     }
@@ -160,29 +135,13 @@ export class TodayDashboard implements OnInit {
 
     for (const user of this.allUsers) {
       try {
-        const clocksQuery = `
-          query($userId: ID!, $from: String, $to: String) {
-            clocksForUser(userId: $userId, from: $from, to: $to) {
-              id
-              kind
-              at
-            }
-          }
-        `;
-
-        const response = await firstValueFrom(
-          this.http.post<GraphQLResponse<{ clocksForUser: any[] }>>(
-            this.GRAPHQL_ENDPOINT,
-            { query: clocksQuery, variables: { userId: user.id, from: fromStr, to: toStr } },
-            { withCredentials: true }
-          )
+        const clocks = await firstValueFrom(
+          this.clockService.getClocksForUser(user.id, fromStr, toStr)
         );
-
-        const clocks = response?.data?.clocksForUser || [];
-        const inClocks = clocks.filter(c => c.kind === 'IN').sort((a, b) => 
+        const inClocks = clocks.filter((c: any) => c.kind === 'IN').sort((a: any, b: any) => 
           new Date(a.at).getTime() - new Date(b.at).getTime()
         );
-        const outClocks = clocks.filter(c => c.kind === 'OUT').sort((a, b) => 
+        const outClocks = clocks.filter((c: any) => c.kind === 'OUT').sort((a: any, b: any) => 
           new Date(a.at).getTime() - new Date(b.at).getTime()
         );
 
