@@ -15,6 +15,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialog } from '@angular/material/dialog';
 import { UserService, User, CreateUserInput, UpdateUserInput } from '@core/services/user';
 import { TeamService, Team } from '@core/services/team';
+import { AuthService } from '@core/services/auth';
 import { DeleteUserModalComponent } from '@modal/delete-user-modal/delete-user-modal';
 import { SecurityValidationService } from '@core/services/security-validation';
 
@@ -66,7 +67,8 @@ export class UsersComponent implements OnInit {
     private readonly teamService: TeamService,
     private readonly dialog: MatDialog,
     private readonly security: SecurityValidationService,
-    private readonly router: Router
+    private readonly router: Router,
+    private readonly auth: AuthService
   ) { }
 
   ngOnInit(): void {
@@ -385,6 +387,15 @@ export class UsersComponent implements OnInit {
 
   navigateToTeamManagement(): void {
     this.router.navigate(['/app/teams']);
+  }
+
+  isEditingCurrentUser(): boolean {
+    const currentUserId = this.auth.session?.user?.id;
+    return !this.isCreating && this.selectedUser !== null && currentUserId === this.selectedUser.id;
+  }
+
+  isSelectedUserAdmin(): boolean {
+    return !this.isCreating && this.formData.role === 'ADMIN';
   }
 
   private scrollFormToTop(): void {

@@ -53,7 +53,7 @@ export class TodayDashboard implements OnInit {
   
   barChartData: BarChartData[] = [];
   
-  private userRole: string = '';
+  userRole: string = '';
 
   get presentEmployees(): TodayEmployee[] {
     return this.filteredEmployees.filter(e => e.isPresent);

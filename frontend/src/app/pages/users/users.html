@@ -104,7 +104,7 @@
               <mat-form-field appearance="outline">
                 <mat-label>Email</mat-label>
                 <input matInput type="email" [(ngModel)]="formData.email" name="email" 
-                  required email pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}" #emailField="ngModel" />
+                  required email pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}" #emailField="ngModel" [disabled]="isEditingCurrentUser() || isSelectedUserAdmin()" />
                 <mat-icon matPrefix>email</mat-icon>
                 <mat-error *ngIf="emailField.invalid && emailField.touched">
                   <span *ngIf="emailField.errors?.['required']">Email is required</span>
@@ -120,10 +120,11 @@
 
               <mat-form-field appearance="outline">
                 <mat-label>Role</mat-label>
-                <mat-select [(ngModel)]="formData.role" name="role" required>
+                <mat-select [(ngModel)]="formData.role" name="role" required [disabled]="isEditingCurrentUser() || isSelectedUserAdmin()">
                   <mat-option value="">Select a role</mat-option>
                   <mat-option value="EMPLOYEE">Employee</mat-option>
                   <mat-option value="MANAGER">Manager</mat-option>
+                  <mat-option value="ADMIN" *ngIf="isSelectedUserAdmin()" [disabled]="true">Admin</mat-option>
                 </mat-select>
                 <mat-icon matPrefix>badge</mat-icon>
               </mat-form-field>

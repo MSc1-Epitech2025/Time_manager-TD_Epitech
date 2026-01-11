@@ -34,7 +34,7 @@
         <mat-form-field appearance="outline" class="team-filter">
           <mat-label>Team</mat-label>
           <mat-select [(ngModel)]="selectedTeam" (selectionChange)="onTeamChange()">
-            <mat-option value="">All Teams</mat-option>
+            <mat-option value="">{{ userRole === 'MANAGER' ? 'My Teams' : 'All Teams' }}</mat-option>
             <mat-option *ngFor="let team of teams" [value]="team">
               {{ team }}
             </mat-option>
