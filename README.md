@@ -84,12 +84,11 @@ npm run sonar:all
 | Service                   | URL                                            | Description                                                                                                              |
 |---------------------------|------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
 | **Frontend (Angular)**    | [http://localhost:4200](http://localhost:4200) | Angular web app (dev mode with live reload)                                                                              |
-| **Backend (Spring Boot)** | [http://localhost:8080](http://localhost:8080) | REST or GRAPHQL API server                                                                                               |
-| **GraphQL Playground**    | [http://localhost:8080/graphiql](http://localhost:8080/graphiql) | Interactive GraphQL API documentation and playground.                                                                    |
-
+| **Backend (Spring Boot)** | [http://localhost:8080](http://localhost:8080) | REST or GraphQL API server                                                                                               |
+| **GraphQL Playground**    | [http://localhost:8080/graphiql](http://localhost:8080/graphiql) | Interactive GraphQL API documentation and playground                                                                    |
 | **Database (MariaDB)**    | `localhost:3307`                               | SQL access (user: `root`, password: `root`)                                                                              |
-| **Reverse proxy (Nginx)** | [http://localhost:3030](http://localhost:3030) | Reserve proxy for secure api call make by client               |                                                           |
-| **SonarQube**             | [http://localhost:9000](http://localhost:9000) | SonarQube for analyze all code in the project.<br/>More détails here [➡️ Documentation SonarQube](./sonarqube/README.md) |
+| **Reverse proxy (Nginx)** | [http://localhost:8030](http://localhost:8030) | Reverse proxy for secure API calls made by client                                                                        |
+| **SonarQube**             | [http://localhost:9000](http://localhost:9000) | SonarQube for analyzing all code in the project.<br/>More details here [➡️ Documentation SonarQube](./sonarqube/README.md) |
 ---
 
 ## 🧱 Project Structure
@@ -154,13 +153,7 @@ BACKEND_CONTEXT=./xxxxxxxxxxxxxxxxxxxx
 BACKEND_DOCKERFILE=xxxxxxxxxxxxxxxxxxxx
 SPRING_PROFILES_ACTIVE=xxxxxxxxxxxxxxxxxxxx
 
-SECURITY_JWT_SECRET=xxxxxxxxxxxxxxxxxxxx
-SECURITY_JWT_ISSUER=xxxxxxxxxxxxxxxxxxxx
-SECURITY_JWT_EXPMINUTES=xxxxxxxxxxxxxxxxxxxx
-SECURITY_JWT_REFRESH_SECRET=xxxxxxxxxxxxxxxxxxxx
-SECURITY_JWT_REFRESH_DAYS=xxxxxxxxxxxxxxxxxxxx
-
-# JWT
+# 🔐 JWT
 SECURITY_JWT_SECRET=xxxxxxxxxxxxxxxxxxxx
 SECURITY_JWT_ISSUER=xxxxxxxxxxxxxxxxxxxx
 SECURITY_JWT_EXPMINUTES=xxxxxxxxxxxxxxxxxxxx
@@ -178,16 +171,12 @@ DB_CONTAINER_NAME=xxxxxxxxxxxxxxxxxxxx
 # 🔥 Hot reload Angular
 CHOKIDAR_USEPOLLING=xxxxxxxxxxxxxxxxxxxx
 
-# SonarQube
-SONAR_HOST_URL=http://sonarqube:9000
-SONAR_TOKEN=xxxxxxxxxxxxxxxxxxxx
-
-#SonarQube
+# 📊 SonarQube
 SONAR_HOST_URL=http://sonarqube:9000/
-BACKEND_SONAR_TOKEN=sqp_2960016f5afbfdc7bdf3d03618ec93573c1797a7
-FRONTEND_SONAR_TOKEN=sqp_2826e32b7be647f57f741e34ca7b0b17d5ea1ea1
+BACKEND_SONAR_TOKEN=xxxxxxxxxxxxxxxxxxxx
+FRONTEND_SONAR_TOKEN=xxxxxxxxxxxxxxxxxxxx
 
-#Azure
+# ☁️ Azure
 AZURE_CLIENT_SECRET=Yzxxxxxxxxxxxxxxxxxxxx
 AZURE_TENANT_ID=90xxxxxxxxxxxxxxxxxxxx
 AZURE_CLIENT_ID=axxxxxxxxxxxxxxxxxxxx
@@ -310,7 +299,7 @@ query {
 **Create a Clock Entry:**
 ```graphql
 mutation {
-  createClockForMe(input: { kind: IN, at: "2025-11-23T09:00:00Z" }) {
+  createClockForMe(input: { kind: IN, at: "2026-01-11T09:00:00Z" }) {
     id kind at
   }
 }
@@ -326,11 +315,16 @@ mutation {
 | Mutation | Input | Auth | Role | Description |
 |----------|-------|------|------|-------------|
 | `login` | `{ email, password }` | ❌ | - | Authenticate and receive JWT cookies |
-| `refresh` | `{ token? }` | ❌ | - | Refresh access token using refresh token |
+| `refresh` | `{ refreshToken? }` | ❌ | - | Refresh access token using refresh token |
 | `logout` | - | ✅ | any | Clear authentication cookies |
 | `register` | `{ firstName, lastName, email, phone?, role?, poste?, password, avatarUrl? }` | ✅ | `ADMIN` | Create a new user |
+| `requestPasswordReset` | `{ email }` | ❌ | - | Request password reset via email |
+| `requestPasswordResetWithTemp` | `{ email }` | ❌ | - | Request password reset with temporary password |
+| `resetPassword` | `{ token, newPassword }` | ❌ | - | Reset password using token |
+| `changeMyPassword` | `{ currentPassword, newPassword }` | ✅ | any | Change own password |
+| `updateUserAvatar` | `id: ID!, avatarUrl: String!` | ✅ | `ADMIN` | Update user avatar |
 | `updateUser` | `{ id, firstName?, lastName?, email?, phone?, role?, poste?, avatarUrl?, password? }` | ✅ | `ADMIN` | Update user information |
-| `deleteUser` | `{ id }` | ✅ | `ADMIN` | Delete a user |
+| `deleteUser` | `id: ID!` | ✅ | `ADMIN` | Delete a user |
 
 #### Queries
 | Query | Parameters | Auth | Role | Description |
@@ -469,6 +463,7 @@ mutation {
 |-------|------------|------|------|-------------|
 | `leaveAccount` | `id: ID!` | ✅ | any | Get specific leave account |
 | `leaveAccountsByUser` | `userId: ID!` | ✅ | any | Leave accounts for a user |
+| `myLeaveAccounts` | - | ✅ | any | Current user's leave accounts |
 
 **Mutations:**
 | Mutation | Input | Auth | Role | Description |
@@ -483,6 +478,7 @@ mutation {
 | Query | Parameters | Auth | Role | Description |
 |-------|------------|------|------|-------------|
 | `leaveLedgerByAccount` | `accountId: ID!, from?: String, to?: String` | ✅ | any | Ledger entries for an account |
+| `myLeaveLedger` | `from?: String, to?: String` | ✅ | any | Current user's leave ledger entries |
 
 **Mutations:**
 | Mutation | Input | Auth | Role | Description |
@@ -503,6 +499,7 @@ mutation {
 | `globalKpi` | `startDate: String!, endDate: String!` | ✅ | `ADMIN` | Global company KPIs |
 | `teamKpi` | `teamId: ID!, startDate: String!, endDate: String!` | ✅ | `MANAGER` or `ADMIN` | Team performance KPIs |
 | `userKpi` | `userId: ID!, startDate: String!, endDate: String!` | ✅ | any | Individual user KPIs |
+| `myKpi` | `startDate: String!, endDate: String!` | ✅ | any | Current user's KPIs |
 
 **KPI Metrics include:**
 - Headcount & role distribution
