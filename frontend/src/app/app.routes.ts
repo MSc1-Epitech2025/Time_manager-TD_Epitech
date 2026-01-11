@@ -58,6 +58,14 @@ export const routes: Routes = [
                     .then(m => m.EnterpriseDashboard),
             },
 
+            // Today Dashboard (Admin and Manager)
+            {
+                path: 'today',
+                canActivate: [managerGuard],
+                loadComponent: () => import('./pages/today-dashboard/today-dashboard')
+                    .then(m => m.TodayDashboard),
+            },
+
             // Manager detail
             {
                 path: 'manager/employee/:id',

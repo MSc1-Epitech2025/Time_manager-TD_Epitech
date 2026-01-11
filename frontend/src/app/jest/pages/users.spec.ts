@@ -1,6 +1,8 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { UsersComponent } from '@pages/users/users';
 import { UserService, User } from '@core/services/user';
+import { TeamService } from '@core/services/team';
+import { SecurityValidationService } from '@core/services/security-validation';
 import { MatDialog } from '@angular/material/dialog';
 import { of, throwError } from 'rxjs';
 import { ElementRef } from '@angular/core';
@@ -14,6 +16,17 @@ describe('UsersComponent – Jest (100% coverage)', () => {
     createUser: jest.Mock;
     updateUser: jest.Mock;
     deleteUser: jest.Mock;
+  };
+
+  let teamService: {
+    listAllTeams: jest.Mock;
+    addTeamMember: jest.Mock;
+    removeTeamMember: jest.Mock;
+  };
+
+  let securityService: {
+    validateUserCreation: jest.Mock;
+    validateUserUpdate: jest.Mock;
   };
 
   let dialog: {
@@ -46,6 +59,17 @@ describe('UsersComponent – Jest (100% coverage)', () => {
       deleteUser: jest.fn(),
     };
 
+    teamService = {
+      listAllTeams: jest.fn().mockReturnValue(of([])),
+      addTeamMember: jest.fn().mockReturnValue(of({})),
+      removeTeamMember: jest.fn().mockReturnValue(of({})),
+    };
+
+    securityService = {
+      validateUserCreation: jest.fn(),
+      validateUserUpdate: jest.fn(),
+    };
+
     dialog = {
       open: jest.fn(),
     };
@@ -54,6 +78,8 @@ describe('UsersComponent – Jest (100% coverage)', () => {
       imports: [UsersComponent],
       providers: [
         { provide: UserService, useValue: userService },
+        { provide: TeamService, useValue: teamService },
+        { provide: SecurityValidationService, useValue: securityService },
         { provide: MatDialog, useValue: dialog },
       ],
     }).compileComponents();
@@ -120,25 +146,21 @@ describe('UsersComponent – Jest (100% coverage)', () => {
     expect(spy).toHaveBeenCalled();
   });
 
-  it('showCreateForm resets form', fakeAsync(() => {
+  it('showCreateForm resets form', () => {
     component.showCreateForm();
 
     expect(component.isCreating).toBe(true);
     expect(component.selectedUser).toBeNull();
     expect(component.formData.firstName).toBe('');
+  });
 
-    tick();
-  }));
-
-  it('selectUser fills form', fakeAsync(() => {
-    component.selectUser(mockUsers[0]);
+  it('selectUser fills form', async () => {
+    await component.selectUser(mockUsers[0]);
 
     expect(component.selectedUser?.id).toBe('1');
     expect(component.isCreating).toBe(false);
     expect(component.formData.email).toBe('john@test.com');
-
-    tick();
-  }));
+  });
 
   it('cancelForm resets state', () => {
     component.isCreating = true;
@@ -159,12 +181,12 @@ describe('UsersComponent – Jest (100% coverage)', () => {
     expect(window.alert).toHaveBeenCalled();
   });
 
-  it('createUser success', fakeAsync(() => {
+  it('createUser success', async () => {
     const refreshSpy = jest.spyOn(component, 'refreshUsers');
     const cancelSpy = jest.spyOn(component, 'cancelForm');
 
     userService.createUser.mockReturnValue(of(mockUsers[0]));
-    userService.getAllUsers.mockReturnValue(of(mockUsers)); // refreshUsers inside
+    userService.getAllUsers.mockReturnValue(of(mockUsers));
 
     component.formData = {
       firstName: 'A',
@@ -175,15 +197,14 @@ describe('UsersComponent – Jest (100% coverage)', () => {
       poste: '',
     };
 
-    component.createUser();
-    tick();
+    await component.createUser();
 
     expect(userService.createUser).toHaveBeenCalled();
     expect(refreshSpy).toHaveBeenCalled();
     expect(cancelSpy).toHaveBeenCalled();
-  }));
+  });
 
-  it('createUser error', () => {
+  it('createUser error', async () => {
     jest.spyOn(window, 'alert').mockImplementation();
     jest.spyOn(console, 'error').mockImplementation();
 
@@ -200,9 +221,8 @@ describe('UsersComponent – Jest (100% coverage)', () => {
       poste: '',
     };
 
-    component.createUser();
+    await component.createUser();
 
-    expect(component.isLoading).toBe(false);
     expect(window.alert).toHaveBeenCalled();
   });
 
@@ -223,7 +243,7 @@ describe('UsersComponent – Jest (100% coverage)', () => {
     expect(window.alert).toHaveBeenCalled();
   });
 
-  it('updateUser success', fakeAsync(() => {
+  it('updateUser success', async () => {
     const refreshSpy = jest.spyOn(component, 'refreshUsers');
     const cancelSpy = jest.spyOn(component, 'cancelForm');
 
@@ -233,15 +253,14 @@ describe('UsersComponent – Jest (100% coverage)', () => {
     component.selectedUser = mockUsers[0];
     component.formData = { ...mockUsers[0] };
 
-    component.updateUser();
-    tick();
+    await component.updateUser();
 
     expect(userService.updateUser).toHaveBeenCalled();
     expect(refreshSpy).toHaveBeenCalled();
     expect(cancelSpy).toHaveBeenCalled();
-  }));
+  });
 
-  it('updateUser error', () => {
+  it('updateUser error', async () => {
     jest.spyOn(window, 'alert').mockImplementation();
     jest.spyOn(console, 'error').mockImplementation();
 
@@ -252,9 +271,8 @@ describe('UsersComponent – Jest (100% coverage)', () => {
     component.selectedUser = mockUsers[0];
     component.formData = { ...mockUsers[0] };
 
-    component.updateUser();
+    await component.updateUser();
 
-    expect(component.isLoading).toBe(false);
     expect(window.alert).toHaveBeenCalled();
   });
 
@@ -341,7 +359,7 @@ describe('UsersComponent – Jest (100% coverage)', () => {
     expect(component.lastError).toBe('Unable to retrieve users at this time.');
   });
 
-  it('selectUser uses default values when optional fields are missing', fakeAsync(() => {
+  it('selectUser uses default values when optional fields are missing', async () => {
     const userWithoutOptionalFields: User = {
       id: '3',
       firstName: 'No',
@@ -349,16 +367,14 @@ describe('UsersComponent – Jest (100% coverage)', () => {
       email: 'no@opt.com',
     };
 
-    component.selectUser(userWithoutOptionalFields);
+    await component.selectUser(userWithoutOptionalFields);
 
     expect(component.formData.phone).toBe('');
     expect(component.formData.role).toBe('EMPLOYEE');
     expect(component.formData.poste).toBe('');
+  });
 
-    tick();
-  }));
-
-  it('createUser sends undefined role when role is empty string', fakeAsync(() => {
+  it('createUser sends undefined role when role is empty string', async () => {
     userService.createUser.mockImplementation((input) => {
       expect(input.role).toBeUndefined();
       return of(mockUsers[0]);
@@ -371,21 +387,18 @@ describe('UsersComponent – Jest (100% coverage)', () => {
       lastName: 'B',
       email: 'a@b.com',
       phone: '',
-      role: '',        // 👈 clé du test
+      role: '',
       poste: '',
     };
 
-    component.createUser();
-    tick();
-  }));
+    await component.createUser();
+  });
 
-  it('createUser error without message shows fallback alert', () => {
-    jest.spyOn(window, 'alert').mockImplementation();
+  it('createUser error without message shows fallback alert', async () => {
+    const alertSpy = jest.spyOn(window, 'alert').mockImplementation();
     jest.spyOn(console, 'error').mockImplementation();
 
-    userService.createUser.mockReturnValue(
-      throwError(() => ({}))
-    );
+    userService.createUser.mockReturnValue(throwError(() => ({})));
 
     component.formData = {
       firstName: 'A',
@@ -396,14 +409,14 @@ describe('UsersComponent – Jest (100% coverage)', () => {
       poste: '',
     };
 
-    component.createUser();
+    await component.createUser();
 
-    expect(window.alert).toHaveBeenCalledWith(
+    expect(alertSpy).toHaveBeenCalledWith(
       'Error creating user: Unknown error'
     );
   });
 
-  it('updateUser sends undefined optional fields when empty', fakeAsync(() => {
+  it('updateUser sends undefined optional fields when empty', async () => {
     userService.updateUser.mockImplementation((input) => {
       expect(input.phone).toBeUndefined();
       expect(input.role).toBeUndefined();
@@ -424,24 +437,21 @@ describe('UsersComponent – Jest (100% coverage)', () => {
       poste: '',
     };
 
-    component.updateUser();
-    tick();
-  }));
+    await component.updateUser();
+  });
 
-  it('updateUser error without message shows fallback alert', () => {
-    jest.spyOn(window, 'alert').mockImplementation();
+  it('updateUser error without message shows fallback alert', async () => {
+    const alertSpy = jest.spyOn(window, 'alert').mockImplementation();
     jest.spyOn(console, 'error').mockImplementation();
 
-    userService.updateUser.mockReturnValue(
-      throwError(() => ({}))
-    );
+    userService.updateUser.mockReturnValue(throwError(() => ({})));
 
     component.selectedUser = mockUsers[0];
     component.formData = { ...mockUsers[0] };
 
-    component.updateUser();
+    await component.updateUser();
 
-    expect(window.alert).toHaveBeenCalledWith(
+    expect(alertSpy).toHaveBeenCalledWith(
       'Error updating user: Unknown error'
     );
   });

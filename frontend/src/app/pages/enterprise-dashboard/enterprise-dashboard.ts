@@ -11,28 +11,20 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
 import { NgChartsModule } from 'ng2-charts';
 import { ChartOptions } from 'chart.js';
-import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { environment } from '@environments/environment';
 import { formatTimeHHMM, formatHoursMinutes } from '@shared/utils/formatting.utils';
-import { formatDateToYYYYMMDD } from '@shared/utils/date.utils';
+import { formatDateToYYYYMMDD, getCurrentQuarter, getYearRange } from '@shared/utils/date.utils';
 
-// Services
 import {
   KpiService,
   Utilisateur,
   PresenceDuJour,
 } from '@core/services/kpi';
+import { TeamService } from '@core/services/team';
 import { ReportService, ReportableEmployee } from '@core/services/report';
 import { ReportPdfService } from '@core/services/reportPdf';
 
-// Kpi Components
 import { KpiBarChartComponent, BarChartData } from '@kpi/kpi-bar-chart/kpi-bar-chart';
-
-interface GraphQLResponse<T> {
-  data: T;
-  errors?: any[];
-}
 
 
 @Component({
@@ -72,8 +64,7 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
   }
 
   private _selectedTeam = '';
-  private _selectedPeriod: 'last_week' | 'quarter' | 'year' = 'last_week';
-  private readonly GRAPHQL_ENDPOINT = environment.GRAPHQL_ENDPOINT;
+  private _selectedPeriod: 'last_week' | 'quarter' | 'year' = 'quarter';
 
   get selectedTeam(): string {
     return this._selectedTeam;
@@ -164,7 +155,7 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
 
   constructor(
     private kpiService: KpiService,
-    private http: HttpClient,
+    private teamService: TeamService,
     private reportPdfService: ReportPdfService, 
     private reportService: ReportService
   ) {}
@@ -247,51 +238,33 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
   }
 
   private async loadTeamsAndUsers(): Promise<void> {
-    const teamsQuery = `
-      query {
-        teams {
-          id
-          name
-          members {
-            id
-            firstName
-            lastName
-            email
-          }
-        }
-      }
-    `;
-
     try {
-      const response = await firstValueFrom(
-        this.http.post<GraphQLResponse<{ teams: any[] }>>(
-          this.GRAPHQL_ENDPOINT,
-          { query: teamsQuery },
-          { withCredentials: true }
-        )
+      const teams = await firstValueFrom(
+        this.teamService.listTeams()
       );
 
-      if (response?.data?.teams) {
-        this.allTeams = response.data.teams;
-        
-        // Build users list from teams
-        const usersMap = new Map<string, any>();
-        this.allTeams.forEach(team => {
-          team.members.forEach((member: any) => {
-            if (!usersMap.has(member.id)) {
-              usersMap.set(member.id, {
-                id: member.id,
-                nom: `${member.firstName} ${member.lastName}`,
-                equipe: team.name,
-                historique: []
-              });
-            }
-          });
+      const teamsWithMembers = await firstValueFrom(
+        this.teamService.populateTeamsWithMembers(teams)
+      );
+
+      this.allTeams = teamsWithMembers;
+      
+      const usersMap = new Map<string, any>();
+      this.allTeams.forEach(team => {
+        team.members.forEach((member: any) => {
+          if (!usersMap.has(member.id)) {
+            usersMap.set(member.id, {
+              id: member.id,
+              nom: member.name,
+              equipe: team.name,
+              historique: []
+            });
+          }
         });
-        
-        this.users = Array.from(usersMap.values());
-        this.updateFilteredUsers();
-      }
+      });
+      
+      this.users = Array.from(usersMap.values());
+      this.updateFilteredUsers();
     } catch (error) {
     }
   }
@@ -311,41 +284,11 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
   }
 
   private async loadUserKpi(userId: string, startDate: string, endDate: string): Promise<any> {
-    const query = `
-      query($userId: ID!, $startDate: String!, $endDate: String!) {
-        userKpi(userId: $userId, startDate: $startDate, endDate: $endDate) {
-          userId
-          fullName
-          presenceRate
-          avgHoursPerDay
-          overtimeHours
-          punctuality {
-            lateRate
-            avgDelayMinutes
-          }
-          absenceDays
-          absenceByType {
-            type
-            days
-          }
-          reportsAuthored
-          reportsReceived
-          periodStart
-          periodEnd
-        }
-      }
-    `;
-
     try {
       const response = await firstValueFrom(
-        this.http.post<GraphQLResponse<{ userKpi: any }>>(
-          this.GRAPHQL_ENDPOINT,
-          { query, variables: { userId, startDate, endDate } },
-          { withCredentials: true }
-        )
+        this.kpiService.getUserKpi(userId, startDate, endDate)
       );
-
-      return response?.data?.userKpi || null;
+      return response || null;
     } catch (error) {
       return null;
     }
@@ -354,7 +297,7 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
   private getDateRange(): { startDate: string; endDate: string } {
     const now = new Date();
     let startDate: Date;
-    let endDate = new Date();
+    let endDate: Date;
 
     switch (this._selectedPeriod) {
       case 'last_week':
@@ -366,16 +309,19 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
         endDate.setDate(startDate.getDate() + 6);
         break;
       case 'quarter':
-        startDate = new Date(now);
-        startDate.setMonth(now.getMonth() - 3);
+        const quarter = getCurrentQuarter();
+        startDate = quarter.start;
+        endDate = quarter.end;
         break;
       case 'year':
-        startDate = new Date(now);
-        startDate.setFullYear(now.getFullYear() - 1);
+        const year = getYearRange();
+        startDate = year.start;
+        endDate = year.end;
         break;
       default:
         startDate = new Date(now);
         startDate.setMonth(now.getMonth() - 1);
+        endDate = new Date();
     }
 
     return {
@@ -555,9 +501,9 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
       
       byName[kpi.fullName] = presenceRate;
       
-      if (presenceRate > 80) {
+      if (presenceRate >= 50) {
         totalPresent++;
-      } else if (presenceRate > 50) {
+      } else if (lateRate > 20) {
         totalLate++;
       } else {
         totalAbsent++;

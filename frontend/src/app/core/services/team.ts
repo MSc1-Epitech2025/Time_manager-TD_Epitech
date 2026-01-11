@@ -132,7 +132,7 @@ export class TeamService {
       map((payload) => {
         const team = payload?.team;
         if (!team) {
-          throw new Error('Equipe introuvable');
+          throw new Error('Team not found');
         }
         return this.mapTeam(team);
       })

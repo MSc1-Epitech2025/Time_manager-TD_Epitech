@@ -17,7 +17,7 @@ export class KpiBarChartComponent implements AfterViewInit, OnChanges {
 
   @ViewChild('barChart', { static: false }) chartRef!: ElementRef<HTMLCanvasElement>;
   @Input() data: BarChartData[] = [];
-  @Input() selectedKpi: 'absenteeism' | 'attendance' | 'productivity' = 'absenteeism';
+  @Input() selectedKpi: 'absenteeism' | 'attendance' | 'productivity' | 'today' = 'absenteeism';
 
   chart?: Chart;
   title = '';
@@ -38,6 +38,7 @@ export class KpiBarChartComponent implements AfterViewInit, OnChanges {
 
   updateTitle() {
     switch (this.selectedKpi) {
+      case 'today': this.title = 'Present Today'; break;
       case 'absenteeism': this.title = 'Absences by Person'; break;
       case 'attendance': this.title = 'Attendance by Person'; break;
       case 'productivity': this.title = 'Work Hours by Person'; break;
@@ -46,6 +47,7 @@ export class KpiBarChartComponent implements AfterViewInit, OnChanges {
 
   getBarColor() {
     switch (this.selectedKpi) {
+      case 'today': return '#3b82f6';
       case 'absenteeism': return '#ef4444';
       case 'attendance': return '#22c55e';
       case 'productivity': return '#f472b6';
@@ -90,9 +92,29 @@ export class KpiBarChartComponent implements AfterViewInit, OnChanges {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        layout: {
+          padding: {
+            top: 10,
+            right: 10,
+            bottom: 10,
+            left: 10
+          }
+        },
         plugins: {
           legend: {
             display: false
+          },
+          title: {
+            display: true,
+            text: this.title,
+            color: '#f9fafb',
+            font: {
+              size: 16,
+              weight: 'bold'
+            },
+            padding: {
+              bottom: 20
+            }
           },
           tooltip: {
             callbacks: {
@@ -126,8 +148,8 @@ export class KpiBarChartComponent implements AfterViewInit, OnChanges {
           x: {
             ticks: {
               color: '#9ca3af',
-              maxRotation: 45,
-              minRotation: 45
+              maxRotation: 0,
+              minRotation: 0
             },
             grid: {
               display: false

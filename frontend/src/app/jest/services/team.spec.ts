@@ -168,11 +168,10 @@ describe('TeamService', () => {
       req.flush({ data: { team: mockGraphqlTeam } });
     });
 
-// Fix for getTeam tests - use the French message
     it('should throw error when team not found', (done) => {
       service.getTeam('999').subscribe({
         error: (error) => {
-          expect(error.message).toContain('Equipe introuvable');
+          expect(error.message).toContain('Team not found');
           done();
         },
       });
@@ -184,7 +183,7 @@ describe('TeamService', () => {
     it('should handle undefined payload', (done) => {
       service.getTeam('1').subscribe({
         error: (error) => {
-          expect(error.message).toContain('Equipe introuvable');
+          expect(error.message).toContain('Team not found');
           done();
         },
       });
