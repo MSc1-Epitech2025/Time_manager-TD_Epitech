@@ -1,6 +1,7 @@
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
+import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,6 +11,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatListModule } from '@angular/material/list';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialog } from '@angular/material/dialog';
 import { UserService, User, CreateUserInput, UpdateUserInput } from '@core/services/user';
 import { TeamService, Team } from '@core/services/team';
@@ -30,6 +32,7 @@ import { SecurityValidationService } from '@core/services/security-validation';
     MatSelectModule,
     MatListModule,
     MatDividerModule,
+    MatCheckboxModule,
   ],
   templateUrl: './users.html',
   styleUrl: './users.scss',
@@ -46,23 +49,24 @@ export class UsersComponent implements OnInit {
 
   selectedUser: User | null = null;
   isCreating = false;
-  originalTeamId: string = '';
+  selectedTeamIds: string[] = [];
+  originalTeamIds: string[] = [];
 
-  formData: CreateUserInput & { id?: string; teamId?: string } = {
+  formData: CreateUserInput & { id?: string } = {
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
-    role: 'EMPLOYEE',
+    role: '',
     poste: '',
-    teamId: '',
   };
 
   constructor(
     private readonly userService: UserService,
     private readonly teamService: TeamService,
     private readonly dialog: MatDialog,
-    private readonly security: SecurityValidationService
+    private readonly security: SecurityValidationService,
+    private readonly router: Router
   ) { }
 
   ngOnInit(): void {
@@ -119,14 +123,15 @@ export class UsersComponent implements OnInit {
   showCreateForm(): void {
     this.isCreating = true;
     this.selectedUser = null;
+    this.selectedTeamIds = [];
+    this.originalTeamIds = [];
     this.formData = {
       firstName: '',
       lastName: '',
       email: '',
       phone: '',
-      role: 'EMPLOYEE',
+      role: '',
       poste: '',
-      teamId: '',
     };
     this.scrollFormToTop();
   }
@@ -140,25 +145,22 @@ export class UsersComponent implements OnInit {
       lastName: user.lastName,
       email: user.email,
       phone: user.phone ?? '',
-      role: user.role ?? 'EMPLOYEE',
+      role: user.role ?? '',
       poste: user.poste ?? '',
-      teamId: '',
     };
     
-    // Load current team
+    // Load user teams
     try {
       const teams = await firstValueFrom(this.teamService.listAllTeams());
-      const userTeam = teams.find((team: Team) => 
+      const userTeams = teams.filter((team: Team) => 
         team.members.some((member: any) => member.id === user.id)
       );
-      if (userTeam) {
-        this.formData.teamId = userTeam.id;
-        this.originalTeamId = userTeam.id;
-      } else {
-        this.originalTeamId = '';
-      }
+      this.selectedTeamIds = userTeams.map(t => t.id);
+      this.originalTeamIds = [...this.selectedTeamIds];
     } catch (error) {
-      console.error('Failed to load user team:', error);
+      console.error('Failed to load user teams:', error);
+      this.selectedTeamIds = [];
+      this.originalTeamIds = [];
     }
     
     this.scrollFormToTop();
@@ -167,20 +169,31 @@ export class UsersComponent implements OnInit {
   cancelForm(): void {
     this.isCreating = false;
     this.selectedUser = null;
+    this.selectedTeamIds = [];
+    this.originalTeamIds = [];
     this.formData = {
       firstName: '',
       lastName: '',
       email: '',
       phone: '',
-      role: 'EMPLOYEE',
+      role: '',
       poste: '',
-      teamId: '',
     };
   }
 
   async createUser(): Promise<void> {
     if (!this.formData.firstName || !this.formData.lastName || !this.formData.email) {
       alert('Please fill in all required fields (First Name, Last Name, Email)');
+      return;
+    }
+
+    if (!this.formData.role) {
+      alert('Please select a role');
+      return;
+    }
+
+    if (this.selectedTeamIds.length === 0) {
+      alert('Please select at least one team');
       return;
     }
 
@@ -204,15 +217,14 @@ export class UsersComponent implements OnInit {
     try {
       const newUser = await firstValueFrom(this.userService.createUser(input));
       
-      // Add to team if selected
-      if (this.formData.teamId) {
+      // Add to selected teams
+      for (const teamId of this.selectedTeamIds) {
         try {
           await firstValueFrom(
-            this.teamService.addTeamMember(this.formData.teamId, newUser.id)
+            this.teamService.addTeamMember(teamId, newUser.id)
           );
         } catch (error) {
           console.error('Failed to add user to team:', error);
-          alert('User created but failed to add to team');
         }
       }
       
@@ -229,6 +241,16 @@ export class UsersComponent implements OnInit {
 
     if (!this.formData.firstName || !this.formData.lastName || !this.formData.email) {
       alert('Please fill in all required fields (First Name, Last Name, Email)');
+      return;
+    }
+
+    if (!this.formData.role) {
+      alert('Please select a role');
+      return;
+    }
+
+    if (this.selectedTeamIds.length === 0) {
+      alert('Please select at least one team');
       return;
     }
 
@@ -254,29 +276,28 @@ export class UsersComponent implements OnInit {
       await firstValueFrom(this.userService.updateUser(input));
       
       // Handle team changes
-      const newTeamId = this.formData.teamId || '';
-      if (this.originalTeamId !== newTeamId) {
-        // Remove from old team
-        if (this.originalTeamId) {
-          try {
-            await firstValueFrom(
-              this.teamService.removeTeamMember(this.originalTeamId, this.selectedUser.id)
-            );
-          } catch (error) {
-            console.error('Failed to remove user from old team:', error);
-          }
+      const teamsToRemove = this.originalTeamIds.filter(id => !this.selectedTeamIds.includes(id));
+      const teamsToAdd = this.selectedTeamIds.filter(id => !this.originalTeamIds.includes(id));
+
+      // Remove from old teams
+      for (const teamId of teamsToRemove) {
+        try {
+          await firstValueFrom(
+            this.teamService.removeTeamMember(teamId, this.selectedUser.id)
+          );
+        } catch (error) {
+          console.error('Failed to remove user from team:', error);
         }
-        
-        // Add to new team
-        if (newTeamId) {
-          try {
-            await firstValueFrom(
-              this.teamService.addTeamMember(newTeamId, this.selectedUser.id)
-            );
-          } catch (error) {
-            console.error('Failed to add user to new team:', error);
-            alert('User updated but failed to change team');
-          }
+      }
+
+      // Add to new teams
+      for (const teamId of teamsToAdd) {
+        try {
+          await firstValueFrom(
+            this.teamService.addTeamMember(teamId, this.selectedUser.id)
+          );
+        } catch (error) {
+          console.error('Failed to add user to team:', error);
         }
       }
       
@@ -322,6 +343,27 @@ export class UsersComponent implements OnInit {
 
   get showForm(): boolean {
     return this.isCreating || this.selectedUser !== null;
+  }
+
+  isFormValid(): boolean {
+    return !!(this.formData.role && this.formData.role !== '' && this.selectedTeamIds.length > 0);
+  }
+
+  isTeamSelected(teamId: string): boolean {
+    return this.selectedTeamIds.includes(teamId);
+  }
+
+  toggleTeam(teamId: string): void {
+    const index = this.selectedTeamIds.indexOf(teamId);
+    if (index > -1) {
+      this.selectedTeamIds.splice(index, 1);
+    } else {
+      this.selectedTeamIds.push(teamId);
+    }
+  }
+
+  navigateToTeamManagement(): void {
+    this.router.navigate(['/app/teams']);
   }
 
   private scrollFormToTop(): void {
