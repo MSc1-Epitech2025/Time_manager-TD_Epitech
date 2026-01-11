@@ -1,6 +1,7 @@
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -59,6 +60,7 @@ export class UsersComponent implements OnInit {
 
   constructor(
     private readonly userService: UserService,
+    private readonly teamService: TeamService,
     private readonly dialog: MatDialog,
     private readonly security: SecurityValidationService
   ) { }
@@ -70,10 +72,10 @@ export class UsersComponent implements OnInit {
 
   loadTeams(): void {
     this.teamService.listAllTeams().subscribe({
-      next: (teams) => {
+      next: (teams: Team[]) => {
         this.teams = teams;
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Failed to load teams:', error);
       },
     });
@@ -146,8 +148,8 @@ export class UsersComponent implements OnInit {
     // Load current team
     try {
       const teams = await firstValueFrom(this.teamService.listAllTeams());
-      const userTeam = teams.find(team => 
-        team.members.some(member => member.id === user.id)
+      const userTeam = teams.find((team: Team) => 
+        team.members.some((member: any) => member.id === user.id)
       );
       if (userTeam) {
         this.formData.teamId = userTeam.id;
