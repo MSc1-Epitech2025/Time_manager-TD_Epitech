@@ -5,16 +5,16 @@ INSERT INTO users (id, first_name, last_name, email, phone, role, poste, passwor
 VALUES
   (UUID(), 'Alex', 'Fraioli', 'alex.fraioli@epitech.eu', '0600000001', JSON_ARRAY('ADMIN'), 'HR Director', '$2a$12$AiWFHiPzTeqWJhKtjMj5B.6ldZgGY0hcHJ3sn.o2wmoPgcXLGENDS', FALSE),
   (UUID(), 'Gaspard', 'Malmon', 'gaspard.malmon@epitech.eu', '0600000002', JSON_ARRAY('MANAGER'), 'Project Manager', '$2a$12$F0einImE6HfpUWpCdlXES.i0Nu64CFvCgd/DWT43HY4D.NgElUxfu', FALSE),
-  (UUID(), 'Clement', 'Hamimi', 'clement.hamimi@epitech.eu', '0600000003', JSON_ARRAY('EMPLOYEE'), 'Developer', '$2a$12$FAZaPBuJDxXp5UcPBJjlMuY8cltPiUqBE7BAJDvJuboTNoCteX2FC', FALSE),
-  (UUID(), 'Armand', 'Braud', 'armand.braud@epitech.eu', '0600000004', JSON_ARRAY('EMPLOYEE'), 'QA Engineer', '$2a$12$Wc2LamaRHkps9PShOR1Mq.xYYm2geR.RCDLVzhe3Zg.cBz7QFjSHS', TRUE);
+  (UUID(), 'Clement', 'Hamimi', 'clement.hamimi@epitech.eu', '0600000003', JSON_ARRAY('EMPLOYEE'), 'Accountant', '$2a$12$FAZaPBuJDxXp5UcPBJjlMuY8cltPiUqBE7BAJDvJuboTNoCteX2FC', FALSE),
+  (UUID(), 'Armand', 'Braud', 'armand.braud@epitech.eu', '0600000004', JSON_ARRAY('EMPLOYEE'), 'Developer', '$2a$12$Wc2LamaRHkps9PShOR1Mq.xYYm2geR.RCDLVzhe3Zg.cBz7QFjSHS', FALSE);
 
 -- ==========================================================
 -- TEAMS
 -- ==========================================================
 INSERT INTO teams (id, name, description)
 VALUES
-  (1, 'Backend Team', 'Handles backend services and APIs'),
-  (2, 'Frontend Team', 'Responsible for UI and UX development')
+  (1, 'Human Resources', 'Handles recruitment, employee relations, and benefits'),
+  (2, 'Development', 'Develops and maintains software applications')
 ON DUPLICATE KEY UPDATE
   name = VALUES(name),
   description = VALUES(description);
@@ -24,11 +24,9 @@ ON DUPLICATE KEY UPDATE
 -- ==========================================================
 INSERT INTO team_members (team_id, user_id)
 VALUES
-  (1, (SELECT id FROM users WHERE email = 'gaspard.malmon@epitech.eu')), -- Gaspard (manager)
-  (1, (SELECT id FROM users WHERE email = 'clement.hamimi@epitech.eu')), -- Clement
-  (1, (SELECT id FROM users WHERE email = 'armand.braud@epitech.eu')),  -- Armand
+  (2, (SELECT id FROM users WHERE email = 'armand.braud@epitech.eu')),  -- Armand
   (2, (SELECT id FROM users WHERE email = 'gaspard.malmon@epitech.eu')), -- Gaspard (manager)
-  (2, (SELECT id FROM users WHERE email = 'alex.fraioli@epitech.eu'))   -- Alex
+  (1, (SELECT id FROM users WHERE email = 'alex.fraioli@epitech.eu'))   -- Alex
 ;
 
 -- ==========================================================
