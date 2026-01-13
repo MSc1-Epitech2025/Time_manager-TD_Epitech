@@ -64,7 +64,7 @@ export class EnterpriseDashboard implements OnInit, OnDestroy {
   }
 
   private _selectedTeam = '';
-  private _selectedPeriod: 'last_week' | 'quarter' | 'year' = 'quarter';
+  private _selectedPeriod: 'last_week' | 'quarter' | 'year' = 'last_week';
 
   get selectedTeam(): string {
     return this._selectedTeam;
